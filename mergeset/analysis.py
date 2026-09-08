@@ -477,7 +477,9 @@ def _failure_detail(evaluation) -> str:
         tail = (validation.stdout_tail or "").strip().splitlines()
         if tail:
             return f"exit {validation.returncode}: " + " / ".join(tail[-3:])
-        return f"the validation command exited {validation.returncode} and printed nothing"
+        return (
+            f"the validation command exited {validation.returncode} and printed nothing"
+        )
     if evaluation.merge is not None and not evaluation.merge.ok:
         return evaluation.merge.detail or "the merge failed"
     return evaluation.note or "no detail was reported"
