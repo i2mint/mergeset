@@ -33,8 +33,8 @@ def main():
             lint="pnpm run lint:ci",
         ),
         log_path=f"{OUT}/evaluations.jsonl",
-        worktree_root="/Users/thorwhalen/Dropbox/py/proj/c/_worktrees/c-mergeset-test/tool-worktrees",
-        reuse_worktree="/Users/thorwhalen/Dropbox/py/proj/c/_worktrees/c-mergeset-test/tool-eval",
+        worktree_root="<tool-worktrees>",
+        reuse_worktree="<tool-eval-worktree>",
         on_event=lambda e, p: print(f"  · {e} {p}", flush=True),
     )
     md = markdown_report(analysis, title=TITLE)

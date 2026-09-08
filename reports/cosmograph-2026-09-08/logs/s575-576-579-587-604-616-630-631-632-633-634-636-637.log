@@ -1,0 +1,452 @@
+Preparing worktree (detached HEAD dfcf35d9)
+HEAD is now at dfcf35d9 merge wt/ssot-events
+=== pnpm install ===
+Scope: all 8 workspace projects
+✓ Lockfile passes supply-chain policies (verified 16h ago)
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +2302
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 2302, reused 131, downloaded 0, added 0
+Progress: resolved 2302, reused 675, downloaded 0, added 0
+Packages are cloned from the content-addressable store to the virtual store.
+  Content-addressable store is at: ~/Library/pnpm/store/v11
+  Virtual store is at:             node_modules/.pnpm
+Progress: resolved 2302, reused 2292, downloaded 0, added 1
+Progress: resolved 2302, reused 2294, downloaded 0, added 56
+Progress: resolved 2302, reused 2294, downloaded 0, added 123
+Progress: resolved 2302, reused 2294, downloaded 0, added 199
+Progress: resolved 2302, reused 2294, downloaded 0, added 244
+Progress: resolved 2302, reused 2294, downloaded 0, added 293
+Progress: resolved 2302, reused 2294, downloaded 0, added 437
+Progress: resolved 2302, reused 2294, downloaded 0, added 508
+Progress: resolved 2302, reused 2294, downloaded 0, added 599
+Progress: resolved 2302, reused 2294, downloaded 0, added 618
+Progress: resolved 2302, reused 2294, downloaded 0, added 653
+Progress: resolved 2302, reused 2294, downloaded 0, added 711
+Progress: resolved 2302, reused 2294, downloaded 0, added 725
+Progress: resolved 2302, reused 2294, downloaded 0, added 755
+Progress: resolved 2302, reused 2294, downloaded 0, added 762
+Progress: resolved 2302, reused 2294, downloaded 0, added 799
+Progress: resolved 2302, reused 2294, downloaded 0, added 840
+Progress: resolved 2302, reused 2294, downloaded 0, added 930
+Progress: resolved 2302, reused 2294, downloaded 0, added 987
+Progress: resolved 2302, reused 2294, downloaded 0, added 1130
+Progress: resolved 2302, reused 2294, downloaded 0, added 1277
+Progress: resolved 2302, reused 2294, downloaded 0, added 1476
+Progress: resolved 2302, reused 2294, downloaded 0, added 1824
+Progress: resolved 2302, reused 2294, downloaded 0, added 1988
+Progress: resolved 2302, reused 2294, downloaded 0, added 2204
+Progress: resolved 2302, reused 2294, downloaded 0, added 2298
+Progress: resolved 2302, reused 2294, downloaded 0, added 2301
+Progress: resolved 2302, reused 2294, downloaded 0, added 2302
+Progress: resolved 2302, reused 2294, downloaded 0, added 2302, done
+[WARN] Failed to create bin at <eval-worktree>/node_modules/.pnpm/@duckdb+duckdb-wasm@1.33.1-dev57.0/node_modules/@duckdb/duckdb-wasm/node_modules/.bin/arrow2csv. ENOENT: no such file or directory, open '<eval-worktree>/node_modules/.pnpm/apache-arrow@17.0.0/node_modules/apache-arrow/bin/arrow2csv.cjs'
+[WARN] Failed to create bin at <eval-worktree>/node_modules/.pnpm/@sqlrooms+ai@0.29.0-rc.12_@types+react-dom@18.3.7_@types+react@18.3.31__@types+react@18_722956a7c40c36cdcb7efd29b22062fe/node_modules/@sqlrooms/ai/node_modules/.bin/arrow2csv. ENOENT: no such file or directory, open '<eval-worktree>/node_modules/.pnpm/apache-arrow@17.0.0/node_modules/apache-arrow/bin/arrow2csv.cjs'
+[WARN] Failed to create bin at <eval-worktree>/node_modules/.pnpm/@sqlrooms+duckdb@0.29.0-rc.12_@types+react@18.3.31_apache-arrow@17.0.0_react-dom@18.2.0_d2aec2a7fb6b3e932870a2712a871f1d/node_modules/@sqlrooms/duckdb/node_modules/.bin/arrow2csv. ENOENT: no such file or directory, open '<eval-worktree>/node_modules/.pnpm/apache-arrow@17.0.0/node_modules/apache-arrow/bin/arrow2csv.cjs'
+[WARN] Failed to create bin at <eval-worktree>/node_modules/.pnpm/@sqlrooms+data-table@0.29.0-rc.12_@types+react-dom@18.3.7_@types+react@18.3.31__@types+_ef4f0f2c6be75e53b7fcdc6c35cbe896/node_modules/@sqlrooms/data-table/node_modules/.bin/arrow2csv. ENOENT: no such file or directory, open '<eval-worktree>/node_modules/.pnpm/apache-arrow@17.0.0/node_modules/apache-arrow/bin/arrow2csv.cjs'
+[WARN] Failed to create bin at <eval-worktree>/node_modules/.pnpm/@sqlrooms+room-shell@0.29.0-rc.12_@types+react-dom@18.3.7_@types+react@18.3.31__@types+_00da1bd6ca580f5a609b4cd347da193e/node_modules/@sqlrooms/room-shell/node_modules/.bin/arrow2csv. ENOENT: no such file or directory, open '<eval-worktree>/node_modules/.pnpm/apache-arrow@17.0.0/node_modules/apache-arrow/bin/arrow2csv.cjs'
+[WARN] Failed to create bin at <eval-worktree>/node_modules/.pnpm/@sqlrooms+vega@0.29.0-rc.12_@codemirror+lint@6.9.7_@floating-ui+dom@1.8.0_@sinclair+typ_57d6d50aeee2bf8059f19ced60b4a51a/node_modules/@sqlrooms/vega/node_modules/.bin/arrow2csv. ENOENT: no such file or directory, open '<eval-worktree>/node_modules/.pnpm/apache-arrow@17.0.0/node_modules/apache-arrow/bin/arrow2csv.cjs'
+[WARN] Failed to create bin at <eval-worktree>/node_modules/.pnpm/@sqlrooms+sql-editor@0.29.0-rc.12_@codemirror+lint@6.9.7_@sinclair+typebox@0.27.12_@sta_9b275b688a575c67c73da6b39ef90146/node_modules/@sqlrooms/sql-editor/node_modules/.bin/arrow2csv. ENOENT: no such file or directory, open '<eval-worktree>/node_modules/.pnpm/apache-arrow@17.0.0/node_modules/apache-arrow/bin/arrow2csv.cjs'
+[WARN] Failed to create bin at <eval-worktree>/node_modules/.pnpm/@sqlrooms+duckdb-core@0.29.0-rc.12_apache-arrow@17.0.0_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/@sqlrooms/duckdb-core/node_modules/.bin/arrow2csv. ENOENT: no such file or directory, open '<eval-worktree>/node_modules/.pnpm/apache-arrow@17.0.0/node_modules/apache-arrow/bin/arrow2csv.cjs'
+[WARN] Failed to create bin at <eval-worktree>/node_modules/.pnpm/@sqlrooms+db@0.29.0-rc.12_@types+react@18.3.31_apache-arrow@17.0.0_react-dom@18.2.0_rea_dd10f06485875ab482041255867a4b68/node_modules/@sqlrooms/db/node_modules/.bin/arrow2csv. ENOENT: no such file or directory, open '<eval-worktree>/node_modules/.pnpm/apache-arrow@17.0.0/node_modules/apache-arrow/bin/arrow2csv.cjs'
+.../node_modules/@parcel/watcher install$ node scripts/build-from-source.js
+.../node_modules/unrs-resolver postinstall$ node postinstall.js
+.../sharp@0.34.5/node_modules/sharp install$ node install/check.js || npm run build
+.../node_modules/@sentry/cli postinstall$ node ./scripts/install.js
+.../node_modules/@parcel/watcher install: Done
+.../node_modules/unrs-resolver postinstall: Done
+.../sharp@0.33.5/node_modules/sharp install$ node install/check
+.../node_modules/@sentry/cli postinstall: Done
+.../sharp@0.33.5/node_modules/sharp install: Done
+.../sharp@0.34.5/node_modules/sharp install: Done
+[WARN] Failed to create bin at <eval-worktree>/node_modules/.bin/arrow2csv. ENOENT: no such file or directory, open '<eval-worktree>/node_modules/.pnpm/apache-arrow@17.0.0/node_modules/apache-arrow/bin/arrow2csv.cjs'
+[WARN] Failed to create bin at <eval-worktree>/packages/app/node_modules/.bin/arrow2csv. ENOENT: no such file or directory, open '<eval-worktree>/node_modules/.pnpm/apache-arrow@17.0.0/node_modules/apache-arrow/bin/arrow2csv.cjs'
+[WARN] Failed to create bin at <eval-worktree>/packages/cosmograph/node_modules/.bin/arrow2csv. ENOENT: no such file or directory, open '<eval-worktree>/node_modules/.pnpm/apache-arrow@17.0.0/node_modules/apache-arrow/bin/arrow2csv.cjs'
+
+dependencies:
++ @duckdb/duckdb-wasm 1.33.1-dev57.0
++ @uwdata/mosaic-core 0.30.0
++ @uwdata/mosaic-plot 0.30.0
++ @uwdata/mosaic-sql 0.30.0
++ @uwdata/vgplot 0.30.0
++ ai 6.0.176
++ apache-arrow 17.0.0
++ cookie 1.1.1
++ lightningcss 1.33.0
++ sharp 0.34.5
++ tailwindcss 4.3.3
++ typescript 5.9.3
+
+devDependencies:
++ @cosmograph/cosmograph 2.5.1 <- packages/cosmograph
++ @cosmograph/cosmos 3.4.1 <- packages/cosmos
++ @cosmograph/ui 2.5.1 <- packages/ui
++ @eslint/js 9.39.5
++ @faker-js/faker 10.5.0
++ @next/eslint-plugin-next 16.3.0
++ @playwright/test 1.62.1
++ @stylistic/eslint-plugin 5.10.0
++ @supabase/ssr 0.8.0
++ @testing-library/jest-dom 6.10.0
++ @testing-library/react 16.3.2
++ @testing-library/user-event 14.6.4
++ @trpc/client 11.18.0
++ @types/node 18.19.130
++ @typescript-eslint/eslint-plugin 8.67.0
++ @typescript-eslint/parser 8.67.0
++ @vitejs/plugin-react 5.2.0
++ @vitest/coverage-v8 3.2.7
++ @vitest/ui 3.2.7
++ eslint 9.39.5
++ eslint-import-resolver-alias 1.1.2
++ eslint-import-resolver-typescript 3.10.1
++ eslint-plugin-css-modules 2.12.0
++ eslint-plugin-file-progress 1.5.0
++ eslint-plugin-import 2.32.0
++ eslint-plugin-import-newlines 1.4.1
++ eslint-plugin-n 17.24.0
++ eslint-plugin-node 11.1.0
++ eslint-plugin-promise 7.3.0
++ eslint-plugin-storybook 0.11.6
++ fake-indexeddb 6.2.5
++ globals 15.15.0
++ husky 9.1.7
++ jsdom 27.4.0
++ react 18.2.0
++ react-dom 18.2.0
++ typedoc 0.28.20
++ typedoc-plugin-markdown 4.12.0
++ typedoc-plugin-missing-exports 4.1.4
++ typescript-eslint 8.67.0
++ vitest 3.2.7
++ zod 4.4.3
+
+[WARN] Failed to create bin at <eval-worktree>/packages/cosmograph/node_modules/.bin/arrow2csv. ENOENT: no such file or directory, open '<eval-worktree>/packages/cosmograph/node_modules/apache-arrow/bin/arrow2csv.cjs'
+[WARN] Failed to create bin at <eval-worktree>/node_modules/.bin/arrow2csv. ENOENT: no such file or directory, open '<eval-worktree>/node_modules/apache-arrow/bin/arrow2csv.cjs'
+. prepare$ husky
+. prepare: Done
+packages/website postinstall$ patch-package
+[WARN] Failed to create bin at <eval-worktree>/packages/app/node_modules/.bin/arrow2csv. ENOENT: no such file or directory, open '<eval-worktree>/packages/app/node_modules/apache-arrow/bin/arrow2csv.cjs'
+packages/website postinstall: patch-package 8.0.1
+packages/website postinstall: Applying patches...
+packages/website postinstall: nextra@3.2.5 ✔
+packages/website postinstall: Warning: patch-package detected a patch file version mismatch
+packages/website postinstall:   Don't worry! This is probably fine. The patch was still applied
+packages/website postinstall:   successfully. Here's the deets:
+packages/website postinstall:   Patch file created for
+packages/website postinstall:     nextra@3.2.5
+packages/website postinstall:   applied to
+packages/website postinstall:     nextra@3.3.1
+packages/website postinstall:   
+packages/website postinstall:   At path
+packages/website postinstall:   
+packages/website postinstall:     node_modules/nextra
+packages/website postinstall:   This warning is just to give you a heads-up. There is a small chance of
+packages/website postinstall:   breakage even though the patch was applied successfully. Make sure the package
+packages/website postinstall:   still behaves like you expect (you wrote tests, right?) and then run
+packages/website postinstall:     patch-package nextra
+packages/website postinstall:   to update the version in the patch file name and make this warning go away.
+packages/website postinstall: ---
+packages/website postinstall: patch-package finished with 1 warning(s).
+packages/website postinstall: Done
+Done in 37.2s using pnpm v11.21.0
+=== build:cosmos ===
+$ pnpm --filter @cosmograph/cosmos build
+$ vite build --mode es && vite build --mode umd
+vite v6.4.3 building for es...
+transforming...
+✓ 73 modules transformed.
+rendering chunks...
+
+[vite:dts] Start generate declaration files...
+computing gzip size...
+dist/index.js  525.08 kB │ gzip: 111.07 kB
+[vite:dts] Declaration files built in 2512ms.
+
+✓ built in 3.20s
+vite v6.4.3 building for umd...
+transforming...
+✓ 630 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.min.js  788.40 kB │ gzip: 202.46 kB
+✓ built in 3.13s
+=== test ===
+$ vitest run --reporter=dot
+
+ RUN  v3.2.7 <eval-worktree>
+
+············································································································································································································································································································································································································································································································································································································································xx
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/params-ssot.test.ts > generated AI artifacts > ai/schemas/'cosmograph-config.schema.json' matches the TypeScript sources (pnpm run ai:schemas)
+ FAIL  tests/unit/params-ssot.test.ts > generated AI artifacts > ai/schemas/'cosmograph-data-prep-config.schema.js…' matches the TypeScript sources (pnpm run ai:schemas)
+AssertionError: expected { …(7) } to deeply equal { …(7) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -1978,10 +1978,29 @@[39m
+[2m            "$ref": "#/definitions/NumericDomain",[22m
+[2m            "description": "Fixed numeric domain used for point color scales.[22m
+
+[2m  Applies to numeric  {@link  pointColorBy }  values when  {@link  pointColorStrategy }  is `'continuous'` or numeric `'categorical'`. Values outside the domain are clamped to the first or last palette color. Invalid domains fall back to data-derived extents.",[22m
+[2m          },[22m
+[31m+         "pointColorHopDirection": {[39m
+[31m+           "$ref": "#/definitions/TraversalDirectionType",[39m
+[31m+           "description": "Which link directions the `'hopDistance'` gradient follows. Defaults to `'both'`, i.e. distance ignoring link direction.[39m
+[31m+[39m
+[31m+ Use `'outgoing'` to shade a seed's descendants and `'incoming'` to shade its ancestors — on a directed graph those are different neighborhoods.[39m
+[31m+[39m
+[31m+ **Has effect only when  {@link  pointColorStrategy }  is `'hopDistance'`.**",[39m
+[31m+         },[39m
+[31m+         "pointColorHopSeeds": {[39m
+[31m+           "description": "Point indices to measure hop distance from, when  {@link  pointColorStrategy }  is `'hopDistance'`.[39m
+[31m+[39m
+[31m+ Every point is colored by how many links separate it from the *nearest* seed; points no seed can reach take  {@link  unknownColor  } . Typically the current selection, so that expanding a selection shows its shape rather than a flat blob.[39m
+[31m+[39m
+[31m+ **Has effect only when  {@link  pointColorStrategy }  is `'hopDistance'`.** The strategy is never resolved automatically, because nothing else in the config implies a seed.",[39m
+[31m+           "items": {[39m
+[31m+             "type": "number",[39m
+[31m+           },[39m
+[31m+           "type": "array",[39m
+[31m+         },[39m
+[2m          "pointColorPalette": {[22m
+[2m            "description": "An optional array of color strings that can be used to color the points in the visualization. If provided, the points will be colored using the colors in this palette, cycling through the array as needed.[22m
+
+[2m  **Used when  {@link  pointColorStrategy }  is set to `'categorical'`, `'continuous'`, or `'degree'`.**`",[22m
+[2m            "items": {[22m
+[33m@@ -3365,10 +3384,11 @@[39m
+[2m          "continuous",[22m
+[2m          "map",[22m
+[2m          "degree",[22m
+[2m          "preciseDegree",[22m
+[2m          "linkDirection",[22m
+[31m+         "hopDistance",[39m
+[2m          "direct",[22m
+[2m          "single",[22m
+[2m        ],[22m
+[2m        "type": "string",[22m
+[2m      },[22m
+[33m@@ -3643,10 +3663,19 @@[39m
+[2m          "exp-out",[22m
+[2m          "exp-in-out",[22m
+[2m          "circle-in",[22m
+[2m          "circle-out",[22m
+[2m          "circle-in-out",[22m
+[31m+       ],[39m
+[31m+       "type": "string",[39m
+[31m+     },[39m
+[31m+     "TraversalDirectionType": {[39m
+[31m+       "description": "{@link  TraversalDirection }  as a string union, for config surfaces that persist strings.",[39m
+[31m+       "enum": [[39m
+[31m+         "outgoing",[39m
+[31m+         "incoming",[39m
+[31m+         "both",[39m
+[2m        ],[22m
+[2m        "type": "string",[22m
+[2m      },[22m
+[2m      "Type.Struct": {[22m
+[2m        "const": 13,[22m
+
+ ❯ tests/unit/params-ssot.test.ts:139:44
+    137|     'ai/schemas/$outFile matches the TypeScript sources (pnpm run ai:s…
+    138|     async (target) => {
+    139|       expect(await generateSchema(target)).toEqual(readJson(`ai/schema…
+       |                                            ^
+    140|     },
+    141|     30_000
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed | 41 passed (42)
+      Tests  2 failed | 620 passed (622)
+   Start at  16:44:11
+   Duration  21.93s (transform 4.79s, setup 17.33s, collect 36.08s, tests 20.72s, environment 63.24s, prepare 10.90s)
+
+[ELIFECYCLE] Test failed. See above for more details.
+=== lint:ci ===
+$ eslint ./packages/ --ext .js,.jsx,.ts,.tsx --ignore-pattern .gitignore
+
+<eval-worktree>/packages/app/features/project-builder/assistant-panel/AiAssistantSettingsDialog.tsx
+  47:37  warning  'AssistantProviderKeysSettings' was used before it was defined  @typescript-eslint/no-use-before-define
+  47:73  warning  'TeamApiKeySettingsNotice' was used before it was defined       @typescript-eslint/no-use-before-define
+  77:10  warning  'ProviderApiKeyInput' was used before it was defined            @typescript-eslint/no-use-before-define
+
+<eval-worktree>/packages/app/features/project-builder/assistant-panel/AssistantContextUsageIndicator.tsx
+   28:37   warning  'estimateAssistantContextTokens' was used before it was defined       @typescript-eslint/no-use-before-define
+   29:42   warning  'buildConversationText' was used before it was defined                @typescript-eslint/no-use-before-define
+   41:17   warning  'requestManagedConversationSummary' was used before it was defined    @typescript-eslint/no-use-before-define
+   50:34   warning  'waitForCurrentSessionWithChatSender' was used before it was defined  @typescript-eslint/no-use-before-define
+   84:23   warning  'getAssistantContextStrokeColor' was used before it was defined       @typescript-eslint/no-use-before-define
+   87:10   warning  'formatTokenCount' was used before it was defined                     @typescript-eslint/no-use-before-define
+  143:41   warning  'formatTokenCount' was used before it was defined                     @typescript-eslint/no-use-before-define
+  143:76   warning  'formatTokenCount' was used before it was defined                     @typescript-eslint/no-use-before-define
+  143:112  warning  'formatTokenCount' was used before it was defined                     @typescript-eslint/no-use-before-define
+  225:28   warning  'estimateTextTokens' was used before it was defined                   @typescript-eslint/no-use-before-define
+  232:28   warning  'estimateTextTokens' was used before it was defined                   @typescript-eslint/no-use-before-define
+
+<eval-worktree>/packages/app/features/project-builder/assistant-panel/CosmographModelSelector.tsx
+  27:30  warning  'getModelSelectKey' was used before it was defined    @typescript-eslint/no-use-before-define
+  28:31  warning  'ASSISTANT_MODELS' was used before it was defined     @typescript-eslint/no-use-before-define
+  31:28  warning  'ASSISTANT_MODELS' was used before it was defined     @typescript-eslint/no-use-before-define
+  41:24  warning  'parseModelSelectKey' was used before it was defined  @typescript-eslint/no-use-before-define
+  43:35  warning  'providerNeedsApiKey' was used before it was defined  @typescript-eslint/no-use-before-define
+  60:18  warning  'formatProviderLabel' was used before it was defined  @typescript-eslint/no-use-before-define
+  61:18  warning  'providerNeedsApiKey' was used before it was defined  @typescript-eslint/no-use-before-define
+  62:40  warning  'providerNeedsApiKey' was used before it was defined  @typescript-eslint/no-use-before-define
+  66:24  warning  'getModelSelectKey' was used before it was defined    @typescript-eslint/no-use-before-define
+  67:26  warning  'getModelSelectKey' was used before it was defined    @typescript-eslint/no-use-before-define
+  71:44  warning  'providerNeedsApiKey' was used before it was defined  @typescript-eslint/no-use-before-define
+
+<eval-worktree>/packages/app/features/project-builder/assistant-panel/assistantConstants.ts
+  142:7   warning  'isCosmographAssistantMode' was used before it was defined       @typescript-eslint/no-use-before-define
+  155:30  warning  'isCosmographAssistantCodeModel' was used before it was defined  @typescript-eslint/no-use-before-define
+
+<eval-worktree>/packages/app/features/project-builder/assistant-panel/assistantError.tsx
+   7:19  warning  'getAssistantErrorContent' was used before it was defined        @typescript-eslint/no-use-before-define
+  25:22  warning  'normalizeAssistantErrorMessage' was used before it was defined  @typescript-eslint/no-use-before-define
+  26:29  warning  'getAssistantErrorKind' was used before it was defined           @typescript-eslint/no-use-before-define
+
+<eval-worktree>/packages/app/features/project-builder/assistant-panel/assistantStatus.tsx
+  12:13  warning  'AssistantUsageRows' was used before it was defined   @typescript-eslint/no-use-before-define
+  27:25  warning  'clampPercent' was used before it was defined         @typescript-eslint/no-use-before-define
+  29:7   warning  'clampPercent' was used before it was defined         @typescript-eslint/no-use-before-define
+  33:6   warning  'AssistantUsageMeter' was used before it was defined  @typescript-eslint/no-use-before-define
+  35:25  warning  'formatQuotaCount' was used before it was defined     @typescript-eslint/no-use-before-define
+  35:75  warning  'formatQuotaCount' was used before it was defined     @typescript-eslint/no-use-before-define
+
+<eval-worktree>/packages/app/features/project-builder/assistant-panel/managedToolRenderers.tsx
+   59:18  warning  'output' is assigned a value but never used                  @typescript-eslint/no-unused-vars
+   95:13  warning  'ToolStatus' was used before it was defined                  @typescript-eslint/no-use-before-define
+   98:11  warning  'ToolStatus' was used before it was defined                  @typescript-eslint/no-use-before-define
+  104:11  warning  'ManagedCommandToolRenderer' was used before it was defined  @typescript-eslint/no-use-before-define
+  110:11  warning  'ManagedCommandToolRenderer' was used before it was defined  @typescript-eslint/no-use-before-define
+  153:13  warning  'ToolStatus' was used before it was defined                  @typescript-eslint/no-use-before-define
+  157:13  warning  'CommandToolStatus' was used before it was defined           @typescript-eslint/no-use-before-define
+  160:11  warning  'ToolStatus' was used before it was defined                  @typescript-eslint/no-use-before-define
+  160:42  warning  'formatToolName' was used before it was defined              @typescript-eslint/no-use-before-define
+  166:13  warning  'ToolStatus' was used before it was defined                  @typescript-eslint/no-use-before-define
+  171:11  warning  'ToolStatus' was used before it was defined                  @typescript-eslint/no-use-before-define
+
+<eval-worktree>/packages/app/features/project-builder/resources/collectionProvider.ts
+  177:17  warning  'compareMetadata' was used before it was defined  @typescript-eslint/no-use-before-define
+
+<eval-worktree>/packages/app/features/project-builder/resources/indexedDbProvider.ts
+  287:16  warning  'moveScope' was used before it was defined           @typescript-eslint/no-use-before-define
+  291:16  warning  'moveScope' was used before it was defined           @typescript-eslint/no-use-before-define
+  342:10  warning  'shouldUseIndexedDB' was used before it was defined  @typescript-eslint/no-use-before-define
+
+<eval-worktree>/packages/app/features/project-builder/store/CosmographProjectStore.ts
+  103:60  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+<eval-worktree>/packages/app/features/project-builder/story/playbackEngine.ts
+   98:7  warning  'advance' was used before it was defined       @typescript-eslint/no-use-before-define
+  108:9  warning  'goToInternal' was used before it was defined  @typescript-eslint/no-use-before-define
+  110:9  warning  'stop' was used before it was defined          @typescript-eslint/no-use-before-define
+  113:7  warning  'goToInternal' was used before it was defined  @typescript-eslint/no-use-before-define
+
+<eval-worktree>/packages/app/features/project-builder/story/storyOperations.ts
+  33:19  warning  'reindexEntries' was used before it was defined  @typescript-eslint/no-use-before-define
+
+<eval-worktree>/packages/app/pages/_app.tsx
+  10:10  warning  'ReactQueryDevtools' is defined but never used  @typescript-eslint/no-unused-vars
+
+<eval-worktree>/packages/app/pages/api/assistant/byok/[provider]/[...path].ts
+   29:24  warning  'getProviderName' was used before it was defined        @typescript-eslint/no-use-before-define
+   32:11  warning  'handleRequest' was used before it was defined          @typescript-eslint/no-use-before-define
+   39:5   warning  'sendProviderError' was used before it was defined      @typescript-eslint/no-use-before-define
+   50:5   warning  'sendProviderError' was used before it was defined      @typescript-eslint/no-use-before-define
+   56:5   warning  'sendProviderError' was used before it was defined      @typescript-eslint/no-use-before-define
+   62:5   warning  'sendProviderError' was used before it was defined      @typescript-eslint/no-use-before-define
+   66:16  warning  'getRoutePath' was used before it was defined           @typescript-eslint/no-use-before-define
+   68:5   warning  'sendProviderError' was used before it was defined      @typescript-eslint/no-use-before-define
+   72:8   warning  'isAllowedPath' was used before it was defined          @typescript-eslint/no-use-before-define
+   73:5   warning  'sendProviderError' was used before it was defined      @typescript-eslint/no-use-before-define
+   76:8   warning  'isAllowedModelRequest' was used before it was defined  @typescript-eslint/no-use-before-define
+   77:5   warning  'sendProviderError' was used before it was defined      @typescript-eslint/no-use-before-define
+   77:62  warning  'formatProviderName' was used before it was defined     @typescript-eslint/no-use-before-define
+   92:18  warning  'getForwardHeaders' was used before it was defined      @typescript-eslint/no-use-before-define
+   99:7   warning  'sendProviderError' was used before it was defined      @typescript-eslint/no-use-before-define
+   99:68  warning  'formatProviderName' was used before it was defined     @typescript-eslint/no-use-before-define
+  104:5   warning  'copyResponseHeaders' was used before it was defined    @typescript-eslint/no-use-before-define
+  126:5   warning  'sendProviderError' was used before it was defined      @typescript-eslint/no-use-before-define
+  126:66  warning  'formatProviderName' was used before it was defined     @typescript-eslint/no-use-before-define
+  185:27  warning  'createProviderError' was used before it was defined    @typescript-eslint/no-use-before-define
+  193:15  warning  'getAnthropicErrorType' was used before it was defined  @typescript-eslint/no-use-before-define
+  204:17  warning  'getGoogleErrorStatus' was used before it was defined   @typescript-eslint/no-use-before-define
+
+<eval-worktree>/packages/app/pages/api/assistant/chat.ts
+   49:26  warning  'handleChatRequest' was used before it was defined             @typescript-eslint/no-use-before-define
+   50:9   warning  'sendWebResponse' was used before it was defined               @typescript-eslint/no-use-before-define
+   57:12  warning  'jsonError' was used before it was defined                     @typescript-eslint/no-use-before-define
+   61:12  warning  'jsonError' was used before it was defined                     @typescript-eslint/no-use-before-define
+   78:23  warning  'jsonError' was used before it was defined                     @typescript-eslint/no-use-before-define
+   82:23  warning  'jsonError' was used before it was defined                     @typescript-eslint/no-use-before-define
+   86:23  warning  'jsonError' was used before it was defined                     @typescript-eslint/no-use-before-define
+   90:27  warning  'insertUsageEvent' was used before it was defined              @typescript-eslint/no-use-before-define
+  114:12  warning  'createSummaryResponse' was used before it was defined         @typescript-eslint/no-use-before-define
+  117:28  warning  'createEmptyUsage' was used before it was defined              @typescript-eslint/no-use-before-define
+  120:19  warning  'createServerInstructions' was used before it was defined      @typescript-eslint/no-use-before-define
+  121:12  warning  'createManagedCosmographTools' was used before it was defined  @typescript-eslint/no-use-before-define
+  126:13  warning  'updateUsageEvent' was used before it was defined              @typescript-eslint/no-use-before-define
+  133:19  warning  'prepareUiMessages' was used before it was defined             @typescript-eslint/no-use-before-define
+  137:11  warning  'addUsage' was used before it was defined                      @typescript-eslint/no-use-before-define
+  146:50  warning  'normalizeAiError' was used before it was defined              @typescript-eslint/no-use-before-define
+  147:12  warning  'jsonError' was used before it was defined                     @typescript-eslint/no-use-before-define
+  147:22  warning  'createAiErrorMessage' was used before it was defined          @typescript-eslint/no-use-before-define
+  147:51  warning  'getAiErrorStatus' was used before it was defined              @typescript-eslint/no-use-before-define
+  159:12  warning  'jsonError' was used before it was defined                     @typescript-eslint/no-use-before-define
+  169:9   warning  'updateUsageEvent' was used before it was defined              @typescript-eslint/no-use-before-define
+  177:1   warning  Missing return type on function                                @typescript-eslint/explicit-function-return-type
+  197:10  warning  'sanitizeMessagesForLLM' was used before it was defined        @typescript-eslint/no-use-before-define
+  211:22  warning  'stripLargeToolOutput' was used before it was defined          @typescript-eslint/no-use-before-define
+  234:29  warning  '_agentToolCalls' is assigned a value but never used           @typescript-eslint/no-unused-vars
+  257:1   warning  Missing return type on function                                @typescript-eslint/explicit-function-return-type
+  338:22  warning  'getErrorNumber' was used before it was defined                @typescript-eslint/no-use-before-define
+  339:18  warning  'getErrorNumber' was used before it was defined                @typescript-eslint/no-use-before-define
+  340:26  warning  'getErrorNumber' was used before it was defined                @typescript-eslint/no-use-before-define
+  345:22  warning  'normalizeAiError' was used before it was defined              @typescript-eslint/no-use-before-define
+  352:1   warning  Missing return type on function                                @typescript-eslint/explicit-function-return-type
+  353:18  warning  'getErrorRecord' was used before it was defined                @typescript-eslint/no-use-before-define
+  356:27  warning  'extractProviderErrorMessage' was used before it was defined   @typescript-eslint/no-use-before-define
+  356:72  warning  'extractProviderErrorMessage' was used before it was defined   @typescript-eslint/no-use-before-define
+  368:18  warning  'getErrorRecord' was used before it was defined                @typescript-eslint/no-use-before-define
+
+<eval-worktree>/packages/app/pages/subscription.tsx
+  48:3  warning  'user' is defined but never used               @typescript-eslint/no-unused-vars
+  91:9  warning  'nextPath' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+<eval-worktree>/packages/app/server/assistant-model-metadata.ts
+   44:20  warning  'getAssistantModelIds' was used before it was defined                     @typescript-eslint/no-use-before-define
+   60:11  warning  'refreshOpenRouterAssistantModelMetadata' was used before it was defined  @typescript-eslint/no-use-before-define
+   68:24  warning  'getAssistantModelIds' was used before it was defined                     @typescript-eslint/no-use-before-define
+  114:9   warning  'parseOpenRouterPrice' was used before it was defined                     @typescript-eslint/no-use-before-define
+  115:9   warning  'parseOpenRouterPrice' was used before it was defined                     @typescript-eslint/no-use-before-define
+  116:9   warning  'parseOpenRouterPrice' was used before it was defined                     @typescript-eslint/no-use-before-define
+  117:9   warning  'parseOpenRouterPrice' was used before it was defined                     @typescript-eslint/no-use-before-define
+  118:9   warning  'parseOpenRouterPrice' was used before it was defined                     @typescript-eslint/no-use-before-define
+  119:9   warning  'parseOpenRouterPrice' was used before it was defined                     @typescript-eslint/no-use-before-define
+  150:12  warning  'getFallbackAssistantModelPricing' was used before it was defined         @typescript-eslint/no-use-before-define
+
+<eval-worktree>/packages/app/server/assistant-usage.ts
+    7:8   warning  Absolute imports should come before relative imports  import/first
+   99:18  warning  'getRatio' was used before it was defined             @typescript-eslint/no-use-before-define
+  100:23  warning  'getRemainingRatio' was used before it was defined    @typescript-eslint/no-use-before-define
+  103:18  warning  'getRatio' was used before it was defined             @typescript-eslint/no-use-before-define
+  116:22  warning  'extractCostUsd' was used before it was defined       @typescript-eslint/no-use-before-define
+
+<eval-worktree>/packages/app/server/billing.ts
+  919:20  warning  'getExpandedStripeProduct' was used before it was defined  @typescript-eslint/no-use-before-define
+  921:24  warning  'getExpandedStripeProduct' was used before it was defined  @typescript-eslint/no-use-before-define
+  944:20  warning  'getExpandedStripeProduct' was used before it was defined  @typescript-eslint/no-use-before-define
+  946:24  warning  'getExpandedStripeProduct' was used before it was defined  @typescript-eslint/no-use-before-define
+
+<eval-worktree>/packages/app/server/routers/teams.ts
+  10:3  warning  'reconcileImpactedOwnersForUser' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 137 problems (0 errors, 137 warnings)
+
