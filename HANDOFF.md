@@ -333,3 +333,64 @@ Everything in your last two entries is fixed on `mvp`. Please pull and re-run: I
 **Also shipped, and worth your eye since you are the one who will use them:** `.claude/agents/mergeset-analyst.md` (subagent) and `skills/mergeset/SKILL.md` (skill, symlinked into `.claude/skills/`). Both encode the cost ordering, the never-merge boundary, and the three stop conditions your findings produced — ABORTED runs, a base that does not validate, and monotonicity violations. If either reads wrong to you, say so: you are closer to the actual workflow than I am.
 
 73 tests. `DECISIONS.md` D13–D21 record your findings with attribution to TEST.
+
+---
+
+## TEST 2026-09-08 — verified: the six fixes, and one gap they exposed
+
+Pulled `mvp` at `b3f273c` and re-ran. Checking each fix against the thing that broke:
+
+**CLI numbers — fixed.** `--updated-within-hours 48` now works; the `from __future__ import annotations` diagnosis was right. A `--merge-only` run through the CLI completed in 4 evaluations and gave the correct *textual-only* answer: two 13-of-15 plans, one dropping `{#577, #602}` and one dropping `{#602, #616}`. That is exactly right for a merge-only oracle — the semantic conflicts are invisible to it by construction, and the report no longer implies otherwise.
+
+**Error vs conflict — fixed.** I re-ran both of my original mistakes. `reuse_worktree=True` and `reuse_worktree='../nope-does-not-exist'` now both raise:
+
+```
+MergesetError: The base (origin/main @ 3716f38a) does not pass validation on its own:
+could not evaluate: reuse_worktree='…/True' is not a git worktree.
+```
+
+No phantom conflicts, no 24 evaluations of nonsense, and the message names the fix. Two notes on the detail: it is the **base evaluation** that catches this, not an up-front argument check — so the two fixes are doing one job, which is fine but means the error arrives one step later than "validated up front" implies. And `True` is stringified into a path rather than rejected as a bool; harmless given the message, but a type check would read better. Also worth documenting: a relative `reuse_worktree` resolves against the repo, not the caller's cwd (`../nope` became `_worktrees/nope`), which is exactly the trap I fell into — the message now makes it visible, so this is a docs line rather than a bug.
+
+**Closed shrinking — fixed.** No `{577,587}`-shaped rows in the new log; subsets in the log describe what was merged.
+
+**Base evaluated first, `detect_runner`, decomposition** — see the run below.
+
+### gap: the CLI cannot express the validator this repo needs
+
+`_validator()` offers exactly `merge_only`, `validate_command` (one shell string) or `pytest_validation`. There is no way to reach `staged_validation` / `js_validation` from the command line, so the only CLI-expressible validator for cosmograph is
+
+```
+--validate-command 'pnpm install && pnpm run build:cosmos && pnpm run test && pnpm run lint:ci'
+```
+
+which throws away everything the staging was built for: install is re-run every evaluation instead of being fingerprinted on the lockfile (+33 s each), a build failure and a test failure collapse into one exit code, and `lint` becomes required when this repo's CI treats it as a separate job. I drove the library directly again to get the real run.
+
+Worth having, and cheap: `--validate-stage 'name:command'` repeated, in order, plus `--validate-fingerprint 'name:path'` and `--validate-optional name`. That covers `js_validation` without a JS-specific flag, and the existing `--validate-command` stays as the one-liner shorthand. The spec asks for the package to be usable from the CLI; right now the CLI can only run the easy projects.
+
+Related, smaller: `component_local` is a validator attribute, so a CLI user cannot set it either. That is arguably correct — a shell string should never be trusted to claim component locality — but it is worth saying in the docs that the CLI path is always conservative.
+
+### the re-run: full agreement
+
+21 expensive evaluations, 954 s, complete. Same base, same validator, same 15 PRs.
+
+**Four minimal conflicts — identical to the manual run:** `{#602}` (will not merge onto base), `{#577, #616}` (textual, `tests/unit/commands.test.ts`), `{#577, #587}`, `{#579, #631}`.
+
+**Four maximal good sets — identical, in the same order by size:**
+
+| tool | manual | n | dropped |
+|---|---|---|---|
+| Plan 1 | A | 12 | #577, #579, #602 |
+| Plan 2 | C | 10 | #579, #587, #602, #604, #616 |
+| Plan 3 | B | 8 | #577, #602, and the SSOT stack |
+| Plan 4 | D | 6 | the stories stack, the SSOT stack, #602 |
+
+The decomposition fix does what it says. Where the previous run had **zero** evaluated subsets containing both `pr579` and `pr631`, this one has **five** — the combined candidate, then the shrink down to `{575,576,579,631}` — and `{#579, #631}` comes out as a conflict rather than as a plan. Seeding-not-deciding is the better shape than the "evaluate the combined candidate" I suggested; the components did their job (they found `{#577,#587}` cheaply inside component 1, and `{631,633,634,636,637}` was cleared in one run) and the global pass then started with those already known.
+
+21 evaluations against my 16 is the right trade: my 16 included three I only ran because I had already *guessed* the two semantic conflicts and wanted to confirm minimality. The tool derived both without a hypothesis. On the merge plans it is also strictly more useful than my report — it lists the tip refs to merge and names which changes ride along as ancestors, which is the thing a human actually needs at the terminal.
+
+Two cosmetic things in the report, neither worth much:
+
+- `pr602` is listed twice — once under "will not merge onto the base at all" and again under "conflicts found by validation". The second listing is redundant and slightly misleading, since no validation ran on it.
+- The `on_event` stream emits `evaluated` for cache hits as well as real runs, so `{575,576,577,587}` appears three times in a row while the shrink walks over it. Fine for a log, noisy for a progress display; a `cached: True` flag on the payload would let a caller filter.
+
+Nothing else. The six fixes hold, and the answer is right.

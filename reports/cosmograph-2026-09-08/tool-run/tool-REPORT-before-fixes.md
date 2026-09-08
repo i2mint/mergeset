@@ -1,61 +1,36 @@
 # mergeset — cosmograph 2026-09-08
 
-Base `origin/main` (`3716f38a`) · 15 candidate changes · 21 expensive evaluations spent · complete
+Base `origin/main` (`3716f38a`) · 15 candidate changes · 11 expensive evaluations spent · complete
 
 ## Recommended merge plans
 
-### Plan 1 — merge 12 of 15
+### Plan 1 — merge 13 of 15
 
 Merge in this order:
 
 1. [`pr630`](https://github.com/cosmograph-org/cosmograph/pull/630) — Bars: public multiselect entry points + app persists the full selection (#573)
-2. [`pr576`](https://github.com/cosmograph-org/cosmograph/pull/576) — Lib | Cosmograph: Add GraphOpsManager and public graphOps API
+2. [`pr579`](https://github.com/cosmograph-org/cosmograph/pull/579) — Lib | Cosmograph: Hop-distance point-color strategy (shade a neighborhood by distance)
 3. [`pr637`](https://github.com/cosmograph-org/cosmograph/pull/637) — Lib | Cosmograph: Describe event payloads in the params SSOT
 4. [`pr632`](https://github.com/cosmograph-org/cosmograph/pull/632) — App: Save And Reset Settled Point Positions
 5. [`pr616`](https://github.com/cosmograph-org/cosmograph/pull/616) — App: Capture And Restore The 3D Camera In Snapshots And Stories
 
-That merges 5 refs and lands 12 changes: `pr575`, `pr587`, `pr604`, `pr631`, `pr633`, `pr634`, `pr636` come along as ancestors of the branches above.
+That merges 5 refs and lands 13 changes: `pr575`, `pr576`, `pr587`, `pr604`, `pr631`, `pr633`, `pr634`, `pr636` come along as ancestors of the branches above.
 
-Dropped: `pr577`, `pr579`, `pr602` (weight 21.88)
+Dropped: `pr577`, `pr602` (weight 14.56)
 
-### Plan 2 — merge 10 of 15
-
-Merge in this order:
-
-1. [`pr630`](https://github.com/cosmograph-org/cosmograph/pull/630) — Bars: public multiselect entry points + app persists the full selection (#573)
-2. [`pr637`](https://github.com/cosmograph-org/cosmograph/pull/637) — Lib | Cosmograph: Describe event payloads in the params SSOT
-3. [`pr577`](https://github.com/cosmograph-org/cosmograph/pull/577) — App: Add graph-ops command pack (expand, reachable, path, component)
-4. [`pr632`](https://github.com/cosmograph-org/cosmograph/pull/632) — App: Save And Reset Settled Point Positions
-
-That merges 4 refs and lands 10 changes: `pr575`, `pr576`, `pr631`, `pr633`, `pr634`, `pr636` come along as ancestors of the branches above.
-
-Dropped: `pr579`, `pr587`, `pr602`, `pr604`, `pr616` (weight 73.781)
-
-### Plan 3 — merge 8 of 15
+### Plan 2 — merge 11 of 15
 
 Merge in this order:
 
 1. [`pr630`](https://github.com/cosmograph-org/cosmograph/pull/630) — Bars: public multiselect entry points + app persists the full selection (#573)
 2. [`pr579`](https://github.com/cosmograph-org/cosmograph/pull/579) — Lib | Cosmograph: Hop-distance point-color strategy (shade a neighborhood by distance)
-3. [`pr632`](https://github.com/cosmograph-org/cosmograph/pull/632) — App: Save And Reset Settled Point Positions
-4. [`pr616`](https://github.com/cosmograph-org/cosmograph/pull/616) — App: Capture And Restore The 3D Camera In Snapshots And Stories
+3. [`pr637`](https://github.com/cosmograph-org/cosmograph/pull/637) — Lib | Cosmograph: Describe event payloads in the params SSOT
+4. [`pr577`](https://github.com/cosmograph-org/cosmograph/pull/577) — App: Add graph-ops command pack (expand, reachable, path, component)
+5. [`pr632`](https://github.com/cosmograph-org/cosmograph/pull/632) — App: Save And Reset Settled Point Positions
 
-That merges 4 refs and lands 8 changes: `pr575`, `pr576`, `pr587`, `pr604` come along as ancestors of the branches above.
+That merges 5 refs and lands 11 changes: `pr575`, `pr576`, `pr631`, `pr633`, `pr634`, `pr636` come along as ancestors of the branches above.
 
-Dropped: `pr577`, `pr602`, `pr631`, `pr633`, `pr634`, `pr636`, `pr637` (weight 117.53)
-
-### Plan 4 — merge 6 of 15
-
-Merge in this order:
-
-1. [`pr630`](https://github.com/cosmograph-org/cosmograph/pull/630) — Bars: public multiselect entry points + app persists the full selection (#573)
-2. [`pr579`](https://github.com/cosmograph-org/cosmograph/pull/579) — Lib | Cosmograph: Hop-distance point-color strategy (shade a neighborhood by distance)
-3. [`pr577`](https://github.com/cosmograph-org/cosmograph/pull/577) — App: Add graph-ops command pack (expand, reachable, path, component)
-4. [`pr632`](https://github.com/cosmograph-org/cosmograph/pull/632) — App: Save And Reset Settled Point Positions
-
-That merges 4 refs and lands 6 changes: `pr575`, `pr576` come along as ancestors of the branches above.
-
-Dropped: `pr587`, `pr602`, `pr604`, `pr616`, `pr631`, `pr633`, `pr634`, `pr636`, `pr637` (weight 169.431)
+Dropped: `pr587`, `pr602`, `pr604`, `pr616` (weight 66.46)
 
 ## What stops the rest
 
@@ -72,8 +47,7 @@ Dropped: `pr587`, `pr602`, `pr604`, `pr616`, `pr631`, `pr633`, `pr634`, `pr636`,
 **Conflicts found by validation** (merged cleanly, still failed):
 
 - `pr602`
-- `pr577`, `pr587`
-- `pr579`, `pr631`
+- `pr577`, `pr587` — failing: `test: <test failed>`
 
 ## Candidates
 
@@ -127,33 +101,21 @@ These groups touch no common file, so they were solved separately and their answ
 - pr577's CI status (`success`) is against `lib/graph-ops-manager`, not `origin/main`, so it is ignored as a pre-oracle. Its mergeability here is decided by actually merging it.
 - pr576's CI status (`success`) is against `lib/graph-ops-traversal`, not `origin/main`, so it is ignored as a pre-oracle. Its mergeability here is decided by actually merging it.
 - pr602 does not merge onto the base at all (4 conflicting files). Excluded before any test ran.
-- 3 file-overlap components were searched first to find conflicts cheaply, then verified globally: a whole-repo validator can fail on changes that share no file, so component results are not assumed to combine freely (pass component_local=True if your validator cannot see across them).
 
 ## Evaluation log
 
-22 rows. Every row is re-usable: a re-run costs nothing for sets already decided.
+11 rows. Every row is re-usable: a re-run costs nothing for sets already decided.
 
 | set | verdict | stage | seconds | detail |
 | --- | --- | --- | --- | --- |
-| _(none)_ | pass | validate | 57.3 |  |
-| `pr575`, `pr576`, `pr579`, `pr587`, `pr604`, `pr616`, `pr632` | pass | validate | 53.8 |  |
-| `pr575`, `pr576`, `pr577`, `pr579`, `pr587`, `pr604`, `pr632` | fail | validate | 22.8 | `test: <test failed>` |
-| `pr575`, `pr576`, `pr577` | pass | validate | 45.1 |  |
-| `pr575`, `pr576`, `pr577`, `pr579` | pass | validate | 38.6 |  |
-| `pr575`, `pr576`, `pr577`, `pr579`, `pr587` | fail | validate | 26.6 | `test: <test failed>` |
-| `pr575`, `pr576`, `pr577`, `pr587` | fail | validate | 23.4 | `test: <test failed>` |
-| `pr575`, `pr576`, `pr577`, `pr579`, `pr632` | pass | validate | 52.2 |  |
-| `pr631`, `pr633`, `pr634`, `pr636`, `pr637` | pass | validate | 44.4 |  |
-| `pr630` | pass | validate | 46.5 |  |
-| `pr575`, `pr576`, `pr579`, `pr587`, `pr604`, `pr616`, `pr630`, `pr631`, `pr632`, `pr633`, `pr634`, `pr636`, `pr637` | fail | validate | 52.9 | `test: <test failed>` |
-| `pr575`, `pr576`, `pr579`, `pr587`, `pr604`, `pr616`, `pr630`, `pr631`, `pr632` | fail | validate | 28.4 | `test: <test failed>` |
-| `pr575`, `pr576`, `pr579`, `pr587`, `pr604`, `pr616`, `pr630` | pass | validate | 53.8 |  |
-| `pr575`, `pr576`, `pr579`, `pr587`, `pr604`, `pr616`, `pr630`, `pr631` | fail | validate | 29.3 | `test: <test failed>` |
-| `pr575`, `pr576`, `pr579`, `pr587`, `pr604`, `pr616`, `pr631` | fail | validate | 35.3 | `test: <test failed>` |
-| `pr575`, `pr576`, `pr579`, `pr631` | fail | validate | 32.1 | `test: <test failed>` |
-| `pr575`, `pr631` | pass | validate | 48.5 |  |
-| `pr575`, `pr576`, `pr631` | pass | validate | 46.5 |  |
-| `pr575`, `pr576`, `pr587`, `pr604`, `pr616`, `pr630`, `pr631`, `pr632`, `pr633`, `pr634`, `pr636`, `pr637` | pass | validate | 54.2 |  |
-| `pr575`, `pr576`, `pr579`, `pr587`, `pr604`, `pr616`, `pr630`, `pr632` | pass | validate | 52.1 |  |
-| `pr575`, `pr576`, `pr577`, `pr630`, `pr631`, `pr632`, `pr633`, `pr634`, `pr636`, `pr637` | pass | validate | 54.5 |  |
-| `pr575`, `pr576`, `pr577`, `pr579`, `pr630`, `pr632` | pass | validate | 55.4 |  |
+| `pr575`, `pr576`, `pr579`, `pr587`, `pr604`, `pr616`, `pr632` | pass | validate | 84.9 |  |
+| `pr575`, `pr576`, `pr577`, `pr579`, `pr587`, `pr604`, `pr632` | fail | validate | 28.6 | `test: <test failed>` |
+| `pr575`, `pr576`, `pr577` | pass | validate | 56.4 |  |
+| `pr575`, `pr576`, `pr577`, `pr579`, `pr587` | fail | validate | 25.5 | `test: <test failed>` |
+| `pr575`, `pr576`, `pr577`, `pr579` | pass | validate | 50.7 |  |
+| `pr575`, `pr576`, `pr577`, `pr587` | fail | validate | 28.4 | `test: <test failed>` |
+| `pr575`, `pr577`, `pr587` | fail | validate | 21.2 | `test: <test failed>` |
+| `pr577`, `pr587` | fail | validate | 19.2 | `test: <test failed>` |
+| `pr575`, `pr576`, `pr577`, `pr579`, `pr632` | pass | validate | 39.8 |  |
+| `pr631`, `pr633`, `pr634`, `pr636`, `pr637` | pass | validate | 40.8 |  |
+| `pr630` | pass | validate | 39.7 |  |

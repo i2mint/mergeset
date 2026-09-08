@@ -194,13 +194,11 @@ The loop is the one in the spec (MARCO / hitting-set-tree), run by hand:
 
 ## Cross-check: the same analysis through the `mergeset` tool
 
-The parallel workstream's package was run over the identical 15 PRs, base and validation (`reports/cosmograph-2026-09-08/tool-run/`). It agreed on the cheap findings and disagreed on the answer.
+The parallel workstream's package was run over the identical 15 PRs, base and validation (`reports/cosmograph-2026-09-08/tool-run/`). **It reaches the same answer**: the same four minimal conflicts, and the same four maximal good sets in the same order by size — its Plan 1 is set A, Plan 2 is C, Plan 3 is B, Plan 4 is D. 21 evaluations, 954 s.
 
-It got right, and got there more cleanly than the manual run: #602 excluded before any test; `{#577, #616}` found textually; `{#577, #587}` found by validation and **shrunk to exactly that pair** without needing a hypothesis, which is the part a solver should beat a human at.
+Two things it does better than this report. It derived both semantic conflicts by shrinking, without being handed a hypothesis, where the manual run guessed `{#577, #587}` and `{#579, #631}` from the failing test output and then confirmed them. And its merge plans are more directly usable at a terminal: they list the *tip* refs to merge and name which changes ride along as ancestors, rather than leaving that to be read off the stack diagram.
 
-It got the recommendation wrong. Its Plan 1 is "merge 13 of 15, dropping only #577 and #602" — a set already in this run's log as a failure, on the `params-ssot` drift test. The reason is instructive rather than embarrassing: the tool splits candidates into components that share no changed file, solves each separately, and combines the answers. #579 and #631 land in different components, so **no subset it evaluated contained both**, their conflict was never tested, and the combined plan was emitted without ever being run as a whole.
-
-The lesson generalises past this repo: **decomposition by changed-file overlap is sound for textual conflicts and unsound for anything a whole-repo test run can see** — generated artifacts, barrel exports, snapshot tests, type checking, project-wide lint. The cheap fix is to treat a combined plan as a *candidate* and evaluate it once before recommending it. Both findings are written up for the tool in `HANDOFF.md`.
+The first version of the tool got it wrong, in a way worth recording because the failure mode is general. It recommended "merge 13 of 15", dropping only #577 and #602 — a set that fails on the `params-ssot` drift test. Its solver split the candidates into components that share no changed file, solved each separately, and combined the answers; #579 and #631 fell into different components, so **no subset it evaluated contained both**, and the combined plan was emitted without ever being run as a whole. The lesson: **decomposition by changed-file overlap is sound for textual conflicts and unsound for anything a whole-repo test run can see** — generated artifacts, barrel exports, snapshot tests, type checking, project-wide lint. Both runs are archived side by side, and the findings are written up in `HANDOFF.md`.
 
 ## Files
 
