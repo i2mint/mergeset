@@ -385,8 +385,10 @@ def _grow_within_known(
     """
     grown = set(candidate)
     for extra in sorted(all_changes - candidate):
-        trial = set(grown) | {extra} | set(
-            a for a in _ancestors_within(extra, parents, all_changes)
+        trial = (
+            set(grown)
+            | {extra}
+            | set(a for a in _ancestors_within(extra, parents, all_changes))
         )
         if any(conflict <= trial for conflict in state.conflicts):
             continue

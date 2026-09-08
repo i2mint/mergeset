@@ -12,8 +12,8 @@ python -m mergeset branches feat-a feat-b feat-c --base main
 ```python
 from mergeset import analyze, branch_changes, markdown_report
 
-changes = list(branch_changes('.', ['feat-a', 'feat-b', 'feat-c'], base='main'))
-print(markdown_report(analyze('.', changes)))
+changes = list(branch_changes(".", ["feat-a", "feat-b", "feat-c"], base="main"))
+print(markdown_report(analyze(".", changes)))
 ```
 
 You get a merge plan: merge these, in this order, and here is what you lose — plus, for everything dropped, whether it was a textual conflict (and in which files) or a test failure (and which tests).
@@ -60,14 +60,19 @@ Real projects do not have "the test command". They have an install step (slow, a
 ```python
 from mergeset import ValidationStage, staged_validation, file_fingerprint
 
-validate = staged_validation([
-    ValidationStage('setup', 'pnpm install --frozen-lockfile',
-                    fingerprint=file_fingerprint('pnpm-lock.yaml')),
-    ValidationStage('build', 'pnpm run build'),
-    ValidationStage('test',  'pnpm run test'),
-    ValidationStage('lint',  'pnpm run lint', required=False),
-])
-analyze(repo, changes, validate=validate, reuse_worktree='/tmp/scratch-wt')
+validate = staged_validation(
+    [
+        ValidationStage(
+            "setup",
+            "pnpm install --frozen-lockfile",
+            fingerprint=file_fingerprint("pnpm-lock.yaml"),
+        ),
+        ValidationStage("build", "pnpm run build"),
+        ValidationStage("test", "pnpm run test"),
+        ValidationStage("lint", "pnpm run lint", required=False),
+    ]
+)
+analyze(repo, changes, validate=validate, reuse_worktree="/tmp/scratch-wt")
 ```
 
 The fingerprinted stage runs only when its inputs actually change, and `reuse_worktree` keeps one tree across the whole run — so an expensive install is paid once, not once per evaluation.

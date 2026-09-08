@@ -19,8 +19,11 @@ DATE = "2026-09-08"
 
 def main():
     sets = json.loads((WORK / "conflicts.json").read_text())["maximal_good_sets"]
-    evals = {json.loads(l)["label"]: json.loads(l)
-             for l in (WORK / "evaluations.jsonl").read_text().splitlines() if l.strip()}
+    evals = {
+        json.loads(l)["label"]: json.loads(l)
+        for l in (WORK / "evaluations.jsonl").read_text().splitlines()
+        if l.strip()
+    }
     out = []
     for m in sets:
         lab = label(closure(m["prs"]))

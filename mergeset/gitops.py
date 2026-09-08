@@ -101,7 +101,9 @@ def resolve(repo: str, rev: str) -> str:
     Raises:
         CapabilityError: if the revision cannot be resolved in ``repo``.
     """
-    return git(repo, "rev-parse", "--verify", f"{rev}^{{commit}}", check=True).stdout.strip()
+    return git(
+        repo, "rev-parse", "--verify", f"{rev}^{{commit}}", check=True
+    ).stdout.strip()
 
 
 def merge_base(repo: str, a: str, b: str) -> str:
@@ -189,8 +191,15 @@ def merge_sequence(
             )
         tree = result.stdout.splitlines()[0].strip()
         commit = git(
-            repo, "commit-tree", tree, "-p", acc, "-p", head_sha,
-            "-m", f"mergeset: merge {change_id}",
+            repo,
+            "commit-tree",
+            tree,
+            "-p",
+            acc,
+            "-p",
+            head_sha,
+            "-m",
+            f"mergeset: merge {change_id}",
             check=True,
         )
         acc = commit.stdout.strip()
@@ -285,11 +294,14 @@ def merged_worktree(
     """
     merged = merge_sequence(repo, base, heads)
     if not merged.ok:
-        yield None, MergeOutcome(
-            ok=False,
-            conflicting_files=merged.conflicting_files,
-            order=merged.order,
-            detail=merged.detail,
+        yield (
+            None,
+            MergeOutcome(
+                ok=False,
+                conflicting_files=merged.conflicting_files,
+                order=merged.order,
+                detail=merged.detail,
+            ),
         )
         return
     outcome = MergeOutcome(ok=True, order=merged.order, detail=merged.commit or "")
@@ -297,20 +309,30 @@ def merged_worktree(
     if reuse:
         reuse = os.path.abspath(os.path.expanduser(str(reuse)))
         if not os.path.isdir(reuse) or not git(reuse, "rev-parse", "--git-dir").ok:
-            yield None, MergeOutcome(
-                ok=False, reason="error", order=merged.order,
-                detail=(
-                    f"reuse_worktree={reuse!r} is not a git worktree. Create one "
-                    "with mergeset.gitops.persistent_worktree(repo, base, path), "
-                    "and pass an absolute path (it must be a str, not True)."
+            yield (
+                None,
+                MergeOutcome(
+                    ok=False,
+                    reason="error",
+                    order=merged.order,
+                    detail=(
+                        f"reuse_worktree={reuse!r} is not a git worktree. Create one "
+                        "with mergeset.gitops.persistent_worktree(repo, base, path), "
+                        "and pass an absolute path (it must be a str, not True)."
+                    ),
                 ),
             )
             return
         checkout = git(reuse, "checkout", "--force", "--detach", merged.commit)
         if not checkout.ok:
-            yield None, MergeOutcome(
-                ok=False, reason="error", order=merged.order,
-                detail=f"could not check out into {reuse}: {checkout.stderr.strip()}",
+            yield (
+                None,
+                MergeOutcome(
+                    ok=False,
+                    reason="error",
+                    order=merged.order,
+                    detail=f"could not check out into {reuse}: {checkout.stderr.strip()}",
+                ),
             )
             return
         git(reuse, "clean", "-fd")
@@ -325,9 +347,14 @@ def merged_worktree(
     try:
         add = git(repo, "worktree", "add", "--detach", path, merged.commit)
         if not add.ok:
-            yield None, MergeOutcome(
-                ok=False, reason="error", order=merged.order,
-                detail=f"could not create worktree: {add.stderr.strip()}",
+            yield (
+                None,
+                MergeOutcome(
+                    ok=False,
+                    reason="error",
+                    order=merged.order,
+                    detail=f"could not create worktree: {add.stderr.strip()}",
+                ),
             )
             return
         added = True

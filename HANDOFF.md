@@ -105,20 +105,27 @@ python -m mergeset --help                                       # or the `merges
 Library entry point — this is the one I would actually use, the CLI is a thin projection of it:
 
 ```python
-from mergeset import analyze, pr_changes, fetch_pull_requests, markdown_report, html_report
+from mergeset import (
+    analyze,
+    pr_changes,
+    fetch_pull_requests,
+    markdown_report,
+    html_report,
+)
 
-prs = fetch_pull_requests('cosmograph-org/cosmograph', author='thorwhalen')
-changes = list(pr_changes(repo_path, prs))          # base defaults to each PR's own base ref
+prs = fetch_pull_requests("cosmograph-org/cosmograph", author="thorwhalen")
+changes = list(pr_changes(repo_path, prs))  # base defaults to each PR's own base ref
 analysis = analyze(
-    repo_path, changes,
-    base='origin/main',
-    validate=your_validator,                        # see "staged validation" below
-    reuse_worktree='/path/to/one/scratch/worktree', # setup paid once, not per evaluation
-    log_path='reports/cosmograph-2026-09-08/evaluations.jsonl',
+    repo_path,
+    changes,
+    base="origin/main",
+    validate=your_validator,  # see "staged validation" below
+    reuse_worktree="/path/to/one/scratch/worktree",  # setup paid once, not per evaluation
+    log_path="reports/cosmograph-2026-09-08/evaluations.jsonl",
     max_seconds=3600,
 )
-open('REPORT.md','w').write(markdown_report(analysis))
-open('report.html','w').write(html_report(analysis))
+open("REPORT.md", "w").write(markdown_report(analysis))
+open("report.html", "w").write(html_report(analysis))
 ```
 
 `analysis.merge_plan()` gives, per maximal set: `changes` (everything that lands), `merge` (**the refs you actually merge — tips only**), `dropped`, and the weights. Stack ancestors appear in `changes` but not in `merge`.
@@ -135,7 +142,9 @@ open('report.html','w').write(html_report(analysis))
 **2. Validation is a sequence, and setup is amortized.** `staged_validation([ValidationStage(...), ...])` — each stage has a name, its own command, its own exit code and `required` flag, and the failing stage's name is prefixed onto every failure id, so the log distinguishes `build: <build failed>` from `test: tests/unit/commands.test.ts::x`. A stage can carry `fingerprint=file_fingerprint('pnpm-lock.yaml')`: it re-runs only when that hash changes. Combined with `reuse_worktree=`, install is paid once per lockfile change rather than per evaluation. There is a `js_validation(install=…, build=…, test=…, lint=…, lockfile=…)` shorthand shaped like your measurements; for cosmograph I would expect:
 
 ```python
-js_validation(build='pnpm run build:cosmos', test='pnpm run test', lint='pnpm run lint:ci')
+js_validation(
+    build="pnpm run build:cosmos", test="pnpm run test", lint="pnpm run lint:ci"
+)
 ```
 
 with lint non-required so a lint regression is recorded without vetoing a set. Say the word if you want lint promoted to required.

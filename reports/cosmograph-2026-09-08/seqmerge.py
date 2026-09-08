@@ -43,11 +43,19 @@ def _commit_tree(tree, parents, msg):
     args = ["commit-tree", tree]
     for p in parents:
         args += ["-p", p]
-    env_free = git(*args, "-m", msg,
-                   env={"GIT_AUTHOR_NAME": "mergeset", "GIT_AUTHOR_EMAIL": "m@x",
-                        "GIT_COMMITTER_NAME": "mergeset", "GIT_COMMITTER_EMAIL": "m@x",
-                        "PATH": "/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin",
-                        "HOME": str(Path.home())})
+    env_free = git(
+        *args,
+        "-m",
+        msg,
+        env={
+            "GIT_AUTHOR_NAME": "mergeset",
+            "GIT_AUTHOR_EMAIL": "m@x",
+            "GIT_COMMITTER_NAME": "mergeset",
+            "GIT_COMMITTER_EMAIL": "m@x",
+            "PATH": "/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin",
+            "HOME": str(Path.home()),
+        },
+    )
     return env_free.stdout.strip()
 
 
@@ -79,6 +87,7 @@ def pairwise(refs):
 
 if __name__ == "__main__":
     import sys
+
     pr_head = json.loads((WORK / "preoracle.json").read_text())["prs"]
     heads = {int(k): v["head"] for k, v in pr_head.items()}
     if len(sys.argv) > 1:
@@ -92,7 +101,9 @@ if __name__ == "__main__":
         for n, h in sorted(heads.items()):
             r = merge_sequence([h])
             sing[n] = asdict(r)
-            print(f"  #{n} {h:<32} {'clean' if r.clean else 'CONFLICT ' + str(r.conflicted_files)}")
+            print(
+                f"  #{n} {h:<32} {'clean' if r.clean else 'CONFLICT ' + str(r.conflicted_files)}"
+            )
         print("\n== pairwise sequential merges onto origin/main ==")
         pw = {}
         for a, b in combinations(sorted(heads), 2):
@@ -101,4 +112,6 @@ if __name__ == "__main__":
             if not r.clean:
                 print(f"  #{a}+#{b}: CONFLICT at {r.failed_at}: {r.conflicted_files}")
         print("  (pairs not listed merged clean)")
-        (WORK / "seqmerge.json").write_text(json.dumps({"singletons": sing, "pairs": pw}, indent=2))
+        (WORK / "seqmerge.json").write_text(
+            json.dumps({"singletons": sing, "pairs": pw}, indent=2)
+        )

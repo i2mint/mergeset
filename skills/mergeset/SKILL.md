@@ -29,24 +29,37 @@ python -m mergeset prs OWNER/REPO --repo . --validate-command 'pnpm run test' \
 
 ```python
 from mergeset import (
-    analyze, fetch_pull_requests, pr_changes, staged_validation,
-    ValidationStage, file_fingerprint, markdown_report, html_report,
+    analyze,
+    fetch_pull_requests,
+    pr_changes,
+    staged_validation,
+    ValidationStage,
+    file_fingerprint,
+    markdown_report,
+    html_report,
 )
 
-validate = staged_validation([
-    ValidationStage('setup', 'pnpm install --frozen-lockfile',
-                    fingerprint=file_fingerprint('pnpm-lock.yaml')),
-    ValidationStage('build', 'pnpm run build'),          # a prerequisite, not a test
-    ValidationStage('test',  'pnpm run test'),
-    ValidationStage('lint',  'pnpm run lint', required=False),
-])
+validate = staged_validation(
+    [
+        ValidationStage(
+            "setup",
+            "pnpm install --frozen-lockfile",
+            fingerprint=file_fingerprint("pnpm-lock.yaml"),
+        ),
+        ValidationStage("build", "pnpm run build"),  # a prerequisite, not a test
+        ValidationStage("test", "pnpm run test"),
+        ValidationStage("lint", "pnpm run lint", required=False),
+    ]
+)
 
-prs = fetch_pull_requests('owner/repo', author='someone')
+prs = fetch_pull_requests("owner/repo", author="someone")
 analysis = analyze(
-    '.', list(pr_changes('.', prs)), base='origin/main',
+    ".",
+    list(pr_changes(".", prs)),
+    base="origin/main",
     validate=validate,
-    reuse_worktree='/tmp/mergeset-wt',   # install paid once, not per evaluation
-    log_path='reports/evaluations.jsonl',
+    reuse_worktree="/tmp/mergeset-wt",  # install paid once, not per evaluation
+    log_path="reports/evaluations.jsonl",
     max_seconds=3600,
 )
 print(markdown_report(analysis))

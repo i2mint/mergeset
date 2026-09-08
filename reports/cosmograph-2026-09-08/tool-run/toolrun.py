@@ -15,13 +15,18 @@ TITLE = "mergeset — cosmograph 2026-09-08"
 
 
 def main():
-    prs = [p for p in fetch_pull_requests("cosmograph-org/cosmograph", author="thorwhalen")
-           if p["number"] in RECENT]
+    prs = [
+        p
+        for p in fetch_pull_requests("cosmograph-org/cosmograph", author="thorwhalen")
+        if p["number"] in RECENT
+    ]
     changes = list(pr_changes(REPO, prs, base="origin/main"))
     print(f"{len(changes)} candidate changes")
 
     analysis = analyze(
-        REPO, changes, base="origin/main",
+        REPO,
+        changes,
+        base="origin/main",
         validate=js_validation(
             build="pnpm run build:cosmos",
             test="pnpm run test --reporter=dot",

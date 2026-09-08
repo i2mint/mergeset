@@ -171,9 +171,7 @@ def pytest_validation(
 
     def validate(worktree: str) -> ValidationOutcome:
         paths = list(select_paths(worktree)) if select_paths else []
-        return _run(
-            ["pytest", *args, *paths], worktree, timeout=timeout, env=env
-        )
+        return _run(["pytest", *args, *paths], worktree, timeout=timeout, env=env)
 
     return validate
 
@@ -209,7 +207,7 @@ def act_validation(
 
 
 def callable_validation(
-    func: Callable[[str], object]
+    func: Callable[[str], object],
 ) -> Callable[[str], ValidationOutcome]:
     """Adapt a plain user callable into a validator.
 
@@ -391,7 +389,9 @@ def js_validation(
     tests rather than part of them.
     """
     stages = [
-        ValidationStage("setup", install, fingerprint=file_fingerprint(lockfile), timeout=timeout)
+        ValidationStage(
+            "setup", install, fingerprint=file_fingerprint(lockfile), timeout=timeout
+        )
     ]
     if build:
         stages.append(ValidationStage("build", build, timeout=timeout))

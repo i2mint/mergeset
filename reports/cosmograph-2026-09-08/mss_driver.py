@@ -69,27 +69,48 @@ def evaluate(prs, why=""):
     t = tips(prs)
     m = merge_sequence([HEAD[n] for n in t])
     rec = {
-        "label": lab, "prs": prs, "tips": t, "why": why,
+        "label": lab,
+        "prs": prs,
+        "tips": t,
+        "why": why,
         "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
     }
     if not m.clean:
-        rec.update(verdict="fail", stage="merge", failed_at=m.failed_at,
-                   conflicted_files=m.conflicted_files, secs=0)
+        rec.update(
+            verdict="fail",
+            stage="merge",
+            failed_at=m.failed_at,
+            conflicted_files=m.conflicted_files,
+            secs=0,
+        )
         print(f"[merge-conflict] {lab} at {m.failed_at}: {m.conflicted_files}")
     else:
         git("update-ref", f"refs/mergeset/{lab}", m.commit)
-        r = subprocess.run([str(WORK / "evaluate.sh"), m.commit, lab],
-                           capture_output=True, text=True)
-        out = r.stdout.strip().splitlines()[-1] if r.stdout.strip() else "RESULT parse-fail"
+        r = subprocess.run(
+            [str(WORK / "evaluate.sh"), m.commit, lab], capture_output=True, text=True
+        )
+        out = (
+            r.stdout.strip().splitlines()[-1]
+            if r.stdout.strip()
+            else "RESULT parse-fail"
+        )
         kv = dict(p.split("=", 1) for p in out.split()[1:] if "=" in p)
         ok = kv.get("build") == "0" and kv.get("test") == "0" and kv.get("lint") == "0"
-        rec.update(verdict="pass" if ok else "fail", stage="validate", commit=m.commit,
-                   build=kv.get("build"), test=kv.get("test"), lint=kv.get("lint"),
-                   secs=int(kv.get("secs", 0)))
+        rec.update(
+            verdict="pass" if ok else "fail",
+            stage="validate",
+            commit=m.commit,
+            build=kv.get("build"),
+            test=kv.get("test"),
+            lint=kv.get("lint"),
+            secs=int(kv.get("secs", 0)),
+        )
         if not ok:
             rec["failing"] = _failing_tests(lab)
-        print(f"[{rec['verdict']}] {lab} build={kv.get('build')} test={kv.get('test')} "
-              f"lint={kv.get('lint')} {kv.get('secs')}s")
+        print(
+            f"[{rec['verdict']}] {lab} build={kv.get('build')} test={kv.get('test')} "
+            f"lint={kv.get('lint')} {kv.get('secs')}s"
+        )
     with LOG.open("a") as f:
         f.write(json.dumps(rec) + "\n")
     return rec
@@ -99,8 +120,11 @@ def _failing_tests(lab):
     p = WORK / "logs" / f"{lab}.log"
     if not p.exists():
         return []
-    keep = [ln.strip() for ln in p.read_text().splitlines()
-            if ln.strip().startswith(("FAIL", "✗", "×", "❯ ")) or " error " in ln.lower()]
+    keep = [
+        ln.strip()
+        for ln in p.read_text().splitlines()
+        if ln.strip().startswith(("FAIL", "✗", "×", "❯ ")) or " error " in ln.lower()
+    ]
     return keep[:60]
 
 

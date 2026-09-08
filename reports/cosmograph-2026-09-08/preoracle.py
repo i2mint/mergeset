@@ -17,9 +17,7 @@ BASE = "origin/main"
 
 
 def git(*args, check=True):
-    r = subprocess.run(
-        ["git", *args], cwd=REPO, capture_output=True, text=True
-    )
+    r = subprocess.run(["git", *args], cwd=REPO, capture_output=True, text=True)
     if check and r.returncode != 0:
         raise RuntimeError(f"git {' '.join(args)} -> {r.returncode}\n{r.stderr}")
     return r
@@ -38,7 +36,14 @@ def changed_files(ref):
 
 def merge_tree(a, b):
     """Return (clean, conflicted_files) for merging origin/a and origin/b."""
-    r = git("merge-tree", "--write-tree", "--name-only", f"origin/{a}", f"origin/{b}", check=False)
+    r = git(
+        "merge-tree",
+        "--write-tree",
+        "--name-only",
+        f"origin/{a}",
+        f"origin/{b}",
+        check=False,
+    )
     if r.returncode == 0:
         return True, []
     lines = r.stdout.splitlines()
@@ -64,15 +69,24 @@ def main():
         parent = head_to_pr.get(bases[n])
         anc = None
         if parent is not None:
-            anc = git(
-                "merge-base", "--is-ancestor", f"origin/{heads[parent]}", f"origin/{heads[n]}", check=False
-            ).returncode == 0
+            anc = (
+                git(
+                    "merge-base",
+                    "--is-ancestor",
+                    f"origin/{heads[parent]}",
+                    f"origin/{heads[n]}",
+                    check=False,
+                ).returncode
+                == 0
+            )
         report["prs"][n] = {
             "head": heads[n],
             "base": bases[n],
             "parent_pr": parent,
             "parent_is_ancestor": anc,
-            "commits_vs_main": int(git("rev-list", "--count", f"{BASE}..origin/{heads[n]}").stdout),
+            "commits_vs_main": int(
+                git("rev-list", "--count", f"{BASE}..origin/{heads[n]}").stdout
+            ),
             "files": sorted(files),
             "n_files": len(files),
             "insertions_deletions": git(
@@ -84,7 +98,9 @@ def main():
     pairs = {}
     for a, b in combinations(sorted(prs), 2):
         clean, conf = merge_tree(heads[a], heads[b])
-        overlap = sorted(set(report["prs"][a]["files"]) & set(report["prs"][b]["files"]))
+        overlap = sorted(
+            set(report["prs"][a]["files"]) & set(report["prs"][b]["files"])
+        )
         pairs[f"{a}+{b}"] = {
             "textually_clean": clean,
             "conflicted_files": conf,
@@ -98,8 +114,14 @@ def main():
     print("\n== stack structure ==")
     for n, d in sorted(report["prs"].items()):
         pp = f"child of #{d['parent_pr']}" if d["parent_pr"] else "on main"
-        anc = "" if d["parent_is_ancestor"] in (None, True) else "  ** BASE NOT ANCESTOR (needs rebase) **"
-        print(f"  #{n} {d['head']:<32} {pp:<14} {d['n_files']:>3} files  {d['insertions_deletions']}{anc}")
+        anc = (
+            ""
+            if d["parent_is_ancestor"] in (None, True)
+            else "  ** BASE NOT ANCESTOR (needs rebase) **"
+        )
+        print(
+            f"  #{n} {d['head']:<32} {pp:<14} {d['n_files']:>3} files  {d['insertions_deletions']}{anc}"
+        )
 
     print("\n== pairwise textual conflicts (git merge-tree) ==")
     any_c = False

@@ -23,7 +23,11 @@ GROUPS = {
 
 def load():
     pre = json.loads((WORK / "preoracle.json").read_text())
-    evals = [json.loads(l) for l in (WORK / "evaluations.jsonl").read_text().splitlines() if l.strip()]
+    evals = [
+        json.loads(l)
+        for l in (WORK / "evaluations.jsonl").read_text().splitlines()
+        if l.strip()
+    ]
     conflicts = json.loads((WORK / "conflicts.json").read_text())
     return pre, evals, conflicts
 
@@ -57,53 +61,61 @@ def render(pre, evals, conflicts, out):
         n = int(n)
         p = d["parent_pr"]
         if p:
-            x1, y1 = pos[p]; x2, y2 = pos[n]
-            svg.append(f'<line class="stack" x1="{x1}" y1="{y1+16}" x2="{x2}" y2="{y2-16}"/>')
+            x1, y1 = pos[p]
+            x2, y2 = pos[n]
+            svg.append(
+                f'<line class="stack" x1="{x1}" y1="{y1 + 16}" x2="{x2}" y2="{y2 - 16}"/>'
+            )
     # conflict edges
     for c in conflicts["minimal_conflicts"]:
         if len(c["prs"]) == 2:
             a, b = c["prs"]
-            x1, y1 = pos[a]; x2, y2 = pos[b]
+            x1, y1 = pos[a]
+            x2, y2 = pos[b]
             cls = "textual" if c["kind"] == "textual" else "semantic"
-            svg.append(f'<path class="conf {cls}" d="M{x1},{y1} Q{(x1+x2)/2},{min(y1,y2)-60} {x2},{y2}"/>')
+            svg.append(
+                f'<path class="conf {cls}" d="M{x1},{y1} Q{(x1 + x2) / 2},{min(y1, y2) - 60} {x2},{y2}"/>'
+            )
     for n in order:
         x, y = pos[n]
         svg.append(
             f'<g class="node {node_class(n)}"><circle cx="{x}" cy="{y}" r="19"/>'
-            f'<text x="{x}" y="{y+4}">{n}</text></g>'
+            f'<text x="{x}" y="{y + 4}">{n}</text></g>'
         )
     for ci, g in enumerate(cols):
-        svg.append(f'<text class="grp" x="{colw*ci+colw/2}" y="30">{esc(g)}</text>')
+        svg.append(
+            f'<text class="grp" x="{colw * ci + colw / 2}" y="30">{esc(g)}</text>'
+        )
     svg.append("</svg>")
 
     rows = []
     for e in evals:
         verdict = e["verdict"]
         detail = (
-            f"merge conflict at <code>{esc(e.get('failed_at',''))}</code>: "
+            f"merge conflict at <code>{esc(e.get('failed_at', ''))}</code>: "
             + ", ".join(f"<code>{esc(f)}</code>" for f in e.get("conflicted_files", []))
             if e.get("stage") == "merge"
             else f"build={esc(e.get('build'))} test={esc(e.get('test'))} lint={esc(e.get('lint'))}"
         )
         rows.append(
-            f"<tr class='{verdict}'><td>{' '.join('#'+str(p) for p in e['prs'])}</td>"
-            f"<td class='v'>{verdict}</td><td>{esc(e.get('secs',0))}s</td>"
-            f"<td>{detail}</td><td class='why'>{esc(e.get('why',''))}</td></tr>"
+            f"<tr class='{verdict}'><td>{' '.join('#' + str(p) for p in e['prs'])}</td>"
+            f"<td class='v'>{verdict}</td><td>{esc(e.get('secs', 0))}s</td>"
+            f"<td>{detail}</td><td class='why'>{esc(e.get('why', ''))}</td></tr>"
         )
 
     mss_rows = []
     for m in conflicts["maximal_good_sets"]:
         mss_rows.append(
             f"<tr><td class='mss'>{m['name']}</td><td>{len(m['prs'])}</td>"
-            f"<td>{' '.join('#'+str(p) for p in m['prs'])}</td>"
-            f"<td>{' '.join('#'+str(p) for p in m['dropped'])}</td>"
+            f"<td>{' '.join('#' + str(p) for p in m['prs'])}</td>"
+            f"<td>{' '.join('#' + str(p) for p in m['dropped'])}</td>"
             f"<td>{esc(m['verdict'])}</td></tr>"
         )
 
     conf_rows = []
     for c in conflicts["minimal_conflicts"]:
         conf_rows.append(
-            f"<tr><td>{' '.join('#'+str(p) for p in c['prs'])}</td>"
+            f"<tr><td>{' '.join('#' + str(p) for p in c['prs'])}</td>"
             f"<td class='{c['kind']}'>{c['kind']}</td><td>{c['evidence']}</td></tr>"
         )
 
@@ -152,11 +164,11 @@ td.mss {{ font-weight:600; white-space:nowrap }}
 </style></head><body><main>
 <h1>{esc(TITLE)}</h1>
 <p class="sub">15 open PRs by <code>thorwhalen</code> on <code>cosmograph-org/cosmograph</code>, merged onto
-<code>origin/main</code> @ <code>{esc(pre['base_sha'][:8])}</code>. Grey lines are stack relationships
+<code>origin/main</code> @ <code>{esc(pre["base_sha"][:8])}</code>. Grey lines are stack relationships
 (a PR based on another PR); coloured arcs are conflicts.</p>
 
 <h2>Changes and conflicts</h2>
-<figure>{''.join(svg)}</figure>
+<figure>{"".join(svg)}</figure>
 <div class="legend">
   <span><span class="sw" style="border-color:var(--line)"></span>stack (base → head)</span>
   <span><span class="sw" style="border-color:var(--bad)"></span>textual conflict</span>
@@ -166,17 +178,17 @@ td.mss {{ font-weight:600; white-space:nowrap }}
 
 <h2>Minimal conflicts</h2>
 <div class="wrap"><table><thead><tr><th>changes</th><th>kind</th><th>evidence</th></tr></thead>
-<tbody>{''.join(conf_rows)}</tbody></table></div>
+<tbody>{"".join(conf_rows)}</tbody></table></div>
 
 <h2>Maximal good sets</h2>
 <div class="wrap"><table><thead><tr><th>set</th><th>n</th><th>PRs</th><th>dropped</th><th>verified</th></tr></thead>
-<tbody>{''.join(mss_rows)}</tbody></table></div>
+<tbody>{"".join(mss_rows)}</tbody></table></div>
 
 <h2>Evaluation log</h2>
 <p class="sub">{len(evals)} evaluations. Validation = <code>pnpm run build:cosmos</code> +
 <code>pnpm run test</code> + <code>pnpm run lint:ci</code>, the local equivalent of CI's Lint and Unit Tests jobs.</p>
 <div class="wrap"><table><thead><tr><th>set</th><th>verdict</th><th>time</th><th>detail</th><th>why evaluated</th></tr></thead>
-<tbody>{''.join(rows)}</tbody></table></div>
+<tbody>{"".join(rows)}</tbody></table></div>
 </main></body></html>"""
     Path(out).write_text(doc)
     print(f"wrote {out}")
@@ -184,5 +196,6 @@ td.mss {{ font-weight:600; white-space:nowrap }}
 
 if __name__ == "__main__":
     import sys
+
     pre, evals, conflicts = load()
     render(pre, evals, conflicts, sys.argv[1])
