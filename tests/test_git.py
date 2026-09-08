@@ -20,7 +20,7 @@ from mergeset.gitops import (
 from mergeset.log import EvaluationLog, MemoryLines
 from mergeset.report import html_report, markdown_report
 from mergeset.sources import branch_changes
-from mergeset.validation import ValidationStage, merge_only_validation, staged_validation
+from mergeset.validation import callable_validation, merge_only_validation
 from conftest import run
 
 
@@ -135,11 +135,15 @@ def test_end_to_end_with_a_failing_validation(repo):
     changes = list(branch_changes(repo, ["feat-a", "feat-b", "feat-d"], base="main"))
     analysis = analyze(
         repo, changes, base="main",
-        # "b and d together are forbidden", expressible only by running something
-        validate=staged_validation([
-            ValidationStage("test", "test ! \\( -f other.txt -a -f new-d.txt \\) "
-                                    "|| ! grep -q 'changed by b' other.txt"),
-        ]),
+        # "b and d together are forbidden" -- a rule no textual check can see,
+        # so it can only be discovered by running something on the merged tree.
+        validate=callable_validation(
+            lambda worktree: not (
+                os.path.exists(os.path.join(worktree, "new-d.txt"))
+                and "changed by b"
+                in open(os.path.join(worktree, "other.txt")).read()
+            )
+        ),
         log=EvaluationLog(MemoryLines()),
         decompose=False,
     )

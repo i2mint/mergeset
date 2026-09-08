@@ -21,7 +21,17 @@ python -m mergeset prs OWNER/REPO --repo . --author USER --updated-within-hours 
 # 3. only now, with the project's real command and a budget
 python -m mergeset prs OWNER/REPO --repo . --validate-command 'pnpm run test' \
     --max-seconds 3600 --report-dir reports/$(date +%F) --integration-branches
+
+# ...or, when validation is a sequence rather than one command (it usually is)
+python -m mergeset prs OWNER/REPO --repo . \
+    --validate-stage 'setup:pnpm install --frozen-lockfile' \
+                     'build:pnpm run build' 'test:pnpm run test' 'lint:pnpm run lint' \
+    --validate-fingerprint 'setup:pnpm-lock.yaml' \
+    --validate-optional lint \
+    --reuse-worktree /tmp/mergeset-wt --max-seconds 3600
 ```
+
+Do not chain a sequence into one `--validate-command` string. It costs you the three things that matter: the setup stage stops being skippable (a dependency install on every evaluation), build and test failures collapse into one exit code, and an advisory lint becomes a veto.
 
 `--merge-only` costs seconds and usually finds most of the conflicts. Read that report before spending anything.
 

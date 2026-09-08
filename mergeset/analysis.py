@@ -342,9 +342,7 @@ def analyze(
         # reported as a finding rather than as the misconfiguration it is.
         baseline = evaluate(frozenset())
         if baseline.verdict is not Verdict.PASS:
-            detail = baseline.note or ""
-            if baseline.validation is not None:
-                detail = "; ".join(baseline.validation.failing_tests[:5]) or detail
+            detail = _failure_detail(baseline)
             raise MergesetError(
                 f"The base ({base} @ {base_sha[:8]}) does not pass validation on "
                 f"its own: {detail}\n\n"
@@ -463,3 +461,23 @@ def _dedupe_conflicts(conflicts: Sequence[ChangeSet]) -> List[ChangeSet]:
         (c for c in unique if not any(other < c for other in unique)),
         key=lambda c: (len(c), set_key(c)),
     )
+
+
+def _failure_detail(evaluation) -> str:
+    """The most specific thing we can say about why an evaluation failed.
+
+    Failing test ids when the runner named some; otherwise the tail of what it
+    printed, because "exit code 1 and nothing else" is exactly the case where a
+    bare verdict leaves the user with nowhere to look.
+    """
+    validation = evaluation.validation
+    if validation is not None:
+        if validation.failing_tests:
+            return "; ".join(validation.failing_tests[:5])
+        tail = (validation.stdout_tail or "").strip().splitlines()
+        if tail:
+            return f"exit {validation.returncode}: " + " / ".join(tail[-3:])
+        return f"the validation command exited {validation.returncode} and printed nothing"
+    if evaluation.merge is not None and not evaluation.merge.ok:
+        return evaluation.merge.detail or "the merge failed"
+    return evaluation.note or "no detail was reported"

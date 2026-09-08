@@ -57,6 +57,21 @@ Three things break the clean picture, and `mergeset` handles each explicitly rat
 
 Real projects do not have "the test command". They have an install step (slow, and only needed when the lockfile moved), a build step that is a *prerequisite* of testing rather than part of it, then tests, then lint. A single pass/fail bit throws away the distinction you most need — "failed to build" is not "tests failed".
 
+From the CLI, the same thing, repeatable and ordered:
+
+```bash
+python -m mergeset prs OWNER/REPO --repo . \
+    --validate-stage 'setup:pnpm install --frozen-lockfile' \
+                     'build:pnpm run build' \
+                     'test:pnpm run test' \
+                     'lint:pnpm run lint' \
+    --validate-fingerprint 'setup:pnpm-lock.yaml' \
+    --validate-optional lint \
+    --reuse-worktree /tmp/mergeset-wt
+```
+
+An optional stage's failure is recorded but does not veto the set — for a lint the project runs as a separate job rather than a gate. From the library:
+
 ```python
 from mergeset import ValidationStage, staged_validation, file_fingerprint
 
