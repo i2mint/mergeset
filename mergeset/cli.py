@@ -146,9 +146,9 @@ def _persistent_worktree(repo: str, base: Optional[str], path: str) -> str:
     """Create the reusable worktree if it is not there yet, and return its path."""
     from mergeset.gitops import persistent_worktree
 
-    return persistent_worktree(repo, base or "HEAD", os.path.abspath(
-        os.path.expanduser(path)
-    ))
+    return persistent_worktree(
+        repo, base or "HEAD", os.path.abspath(os.path.expanduser(path))
+    )
 
 
 def _emit_reports(analysis, report_dir: Optional[str], title: str) -> list:
