@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>mergeset.validation &mdash; mergeset 0.0.3 documentation</title>
+  <title>mergeset.validation &mdash; mergeset 0.0.4 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=47de8214"></script>
+      <script src="../../_static/documentation_options.js?v=8c5712d9"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -400,8 +400,11 @@
 <span class="sd">            evaluations instead of being paid every time (keyed on, say, the</span>
 <span class="sd">            hash of the lockfile).</span>
 <span class="sd">        timeout: Seconds before the stage is declared failed.</span>
-<span class="sd">        required: A failing required stage stops the sequence (the default);</span>
-<span class="sd">            a non-required stage is recorded and the sequence continues.</span>
+<span class="sd">        required: A failing required stage fails the whole validation and stops</span>
+<span class="sd">            the sequence (the default). A non-required stage's failure is</span>
+<span class="sd">            recorded in ``failing_tests`` and the set still counts as good —</span>
+<span class="sd">            for an advisory pass, such as a lint the project runs as a separate</span>
+<span class="sd">            CI job rather than a gate.</span>
 <span class="sd">    """</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
@@ -476,12 +479,16 @@
                         <span class="n">worktree</span>
                     <span class="p">)</span>
                 <span class="k">continue</span>
-            <span class="n">ok</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="n">found</span> <span class="o">=</span> <span class="n">outcome</span><span class="o">.</span><span class="n">failing_tests</span> <span class="ow">or</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"&lt;</span><span class="si">{</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> failed&gt;"</span><span class="p">]</span>
             <span class="n">failures</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">found</span><span class="p">]</span>
             <span class="n">files</span> <span class="o">+=</span> <span class="n">outcome</span><span class="o">.</span><span class="n">failing_files</span>
             <span class="k">if</span> <span class="n">stage</span><span class="o">.</span><span class="n">required</span><span class="p">:</span>
+                <span class="n">ok</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="k">break</span>
+            <span class="c1"># A non-required stage is *recorded* and does not veto. Otherwise the</span>
+            <span class="c1"># flag would be nearly pointless: an advisory lint pass would exclude</span>
+            <span class="c1"># every change set, and a project whose lint is a separate CI job</span>
+            <span class="c1"># could not be described at all.</span>
         <span class="k">return</span> <span class="n">ValidationOutcome</span><span class="p">(</span>
             <span class="n">ok</span><span class="o">=</span><span class="n">ok</span><span class="p">,</span>
             <span class="n">failing_tests</span><span class="o">=</span><span class="n">failures</span><span class="p">,</span>

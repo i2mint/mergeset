@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>mergeset.analysis &mdash; mergeset 0.0.3 documentation</title>
+  <title>mergeset.analysis &mdash; mergeset 0.0.4 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=47de8214"></script>
+      <script src="../../_static/documentation_options.js?v=8c5712d9"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -439,9 +439,7 @@
         <span class="c1"># reported as a finding rather than as the misconfiguration it is.</span>
         <span class="n">baseline</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">())</span>
         <span class="k">if</span> <span class="n">baseline</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">:</span>
-            <span class="n">detail</span> <span class="o">=</span> <span class="n">baseline</span><span class="o">.</span><span class="n">note</span> <span class="ow">or</span> <span class="s2">""</span>
-            <span class="k">if</span> <span class="n">baseline</span><span class="o">.</span><span class="n">validation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">detail</span> <span class="o">=</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">baseline</span><span class="o">.</span><span class="n">validation</span><span class="o">.</span><span class="n">failing_tests</span><span class="p">[:</span><span class="mi">5</span><span class="p">])</span> <span class="ow">or</span> <span class="n">detail</span>
+            <span class="n">detail</span> <span class="o">=</span> <span class="n">_failure_detail</span><span class="p">(</span><span class="n">baseline</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">MergesetError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"The base (</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2"> @ </span><span class="si">{</span><span class="n">base_sha</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2">) does not pass validation on "</span>
                 <span class="sa">f</span><span class="s2">"its own: </span><span class="si">{</span><span class="n">detail</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">"</span>
@@ -561,6 +559,26 @@
         <span class="p">(</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">unique</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">other</span> <span class="o">&lt;</span> <span class="n">c</span> <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">unique</span><span class="p">)),</span>
         <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">set_key</span><span class="p">(</span><span class="n">c</span><span class="p">)),</span>
     <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_failure_detail</span><span class="p">(</span><span class="n">evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The most specific thing we can say about why an evaluation failed.</span>
+
+<span class="sd">    Failing test ids when the runner named some; otherwise the tail of what it</span>
+<span class="sd">    printed, because "exit code 1 and nothing else" is exactly the case where a</span>
+<span class="sd">    bare verdict leaves the user with nowhere to look.</span>
+<span class="sd">    """</span>
+    <span class="n">validation</span> <span class="o">=</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">validation</span>
+    <span class="k">if</span> <span class="n">validation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">validation</span><span class="o">.</span><span class="n">failing_tests</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">validation</span><span class="o">.</span><span class="n">failing_tests</span><span class="p">[:</span><span class="mi">5</span><span class="p">])</span>
+        <span class="n">tail</span> <span class="o">=</span> <span class="p">(</span><span class="n">validation</span><span class="o">.</span><span class="n">stdout_tail</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">tail</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"exit </span><span class="si">{</span><span class="n">validation</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">: "</span> <span class="o">+</span> <span class="s2">" / "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tail</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"the validation command exited </span><span class="si">{</span><span class="n">validation</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2"> and printed nothing"</span>
+    <span class="k">if</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">merge</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">merge</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">merge</span><span class="o">.</span><span class="n">detail</span> <span class="ow">or</span> <span class="s2">"the merge failed"</span>
+    <span class="k">return</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">note</span> <span class="ow">or</span> <span class="s2">"no detail was reported"</span>
 </pre></div>
 
            </div>
