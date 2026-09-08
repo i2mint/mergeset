@@ -1,0 +1,36 @@
+
+ RUN  v3.2.7 /Users/thorwhalen/Dropbox/py/proj/c/_worktrees/c-mergeset-test/eval
+
+·································································································································································································································································································································································································································································
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/commands.test.ts [ tests/unit/commands.test.ts ]
+ FAIL  tests/unit/graph-ops-commands.test.ts [ tests/unit/graph-ops-commands.test.ts ]
+ FAIL  tests/unit/snapshot-scope.test.ts [ tests/unit/snapshot-scope.test.ts ]
+ FAIL  tests/unit/snapshot-story-commands.test.ts [ tests/unit/snapshot-story-commands.test.ts ]
+TypeError: Cannot convert undefined or null to object
+ ❯ Module.getEnumValues node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/util.js:15:34
+ ❯ node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/schemas.js:1657:25
+ ❯ Function.init node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/core.js:22:9
+ ❯ node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/classic/schemas.js:966:19
+ ❯ init node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/core.js:22:9
+ ❯ new ZodEnum node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/core/core.js:41:9
+ ❯ Module._enum node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/classic/schemas.js:1007:12
+ ❯ packages/app/features/project-builder/store/commands/schemas.ts:89:4
+     87| 
+     88| const TraversalDirectionField = z
+     89|   .enum(CosmographTraversalDirection)
+       |    ^
+     90|   .default(CosmographTraversalDirection.Both)
+     91|   .describe(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+
+ Test Files  4 failed | 31 passed (35)
+      Tests  449 passed (449)
+   Start at  16:48:48
+   Duration  10.82s (transform 2.83s, setup 8.96s, collect 16.19s, tests 2.74s, environment 38.36s, prepare 7.63s)
+
+[ELIFECYCLE] Test failed. See above for more details.
