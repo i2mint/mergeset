@@ -1,0 +1,130 @@
+{
+  "base": "origin/main @ 3716f38a",
+  "minimal_conflicts": [
+    {
+      "prs": [
+        602
+      ],
+      "kind": "textual",
+      "evidence": "Does not merge onto <code>main</code> at all: 4 conflicted files (<code>package-lock.json</code>, <code>packages/app/next.config.js</code>, <code>useProjectConfigSave.tsx</code>, <code>CosmographProjectStore.ts</code>). Its merge-base with <code>main</code> is <code>b88b1a08</code> \u2014 its base branch <code>stories_refactor</code> moved on without it. GitHub calls it MERGEABLE because it is targeted at <code>stories_refactor</code>, not <code>main</code>."
+    },
+    {
+      "prs": [
+        577,
+        616
+      ],
+      "kind": "textual",
+      "evidence": "One overlapping region of <code>tests/unit/commands.test.ts</code>: #577 adds four command ids to the sorted registry list, #616 rewrites the mock factory and adds 3D ids to the same file. Resolution is the union of both edits. Never binds on its own \u2014 every closed set containing #616 also contains #587, so the semantic conflict below fires first."
+    },
+    {
+      "prs": [
+        577,
+        587
+      ],
+      "kind": "semantic",
+      "evidence": "Four test files fail to load: <code>store/commands/schemas.ts:89</code> calls <code>z.enum(CosmographTraversalDirection)</code> and the symbol is <code>undefined</code> at module-evaluation time \u2014 the stories refactor reshuffles the <code>packages/cosmograph/src/cosmograph/index.ts</code> barrel. Both PRs green alone; <code>{575,576,577}</code> passes and <code>{587}</code> passes."
+    },
+    {
+      "prs": [
+        579,
+        631
+      ],
+      "kind": "semantic",
+      "evidence": "#631's drift test <code>tests/unit/params-ssot.test.ts</code> asserts the committed <code>ai/schemas/*.json</code> match the TypeScript sources; #579 adds <code>pointColorHopDirection</code>, <code>pointColorHopSeeds</code>, the <code>hopDistance</code> strategy and <code>TraversalDirectionType</code> without regenerating them. Both PRs green alone; <code>{575,576,579}</code> and <code>{575,576,631}</code> both pass. Fix is mechanical: <code>pnpm run ai:params-ssot</code> after the merge."
+    }
+  ],
+  "maximal_good_sets": [
+    {
+      "name": "A",
+      "prs": [
+        575,
+        576,
+        587,
+        604,
+        616,
+        630,
+        631,
+        632,
+        633,
+        634,
+        636,
+        637
+      ],
+      "dropped": [
+        577,
+        579,
+        602
+      ],
+      "verdict": "pass (50 s)"
+    },
+    {
+      "name": "B",
+      "prs": [
+        575,
+        576,
+        579,
+        587,
+        604,
+        616,
+        630,
+        632
+      ],
+      "dropped": [
+        577,
+        602,
+        631,
+        633,
+        634,
+        636,
+        637
+      ],
+      "verdict": "pass (40 s)"
+    },
+    {
+      "name": "C",
+      "prs": [
+        575,
+        576,
+        577,
+        630,
+        631,
+        632,
+        633,
+        634,
+        636,
+        637
+      ],
+      "dropped": [
+        579,
+        587,
+        602,
+        604,
+        616
+      ],
+      "verdict": "pass (66 s)"
+    },
+    {
+      "name": "D",
+      "prs": [
+        575,
+        576,
+        577,
+        579,
+        630,
+        632
+      ],
+      "dropped": [
+        587,
+        602,
+        604,
+        616,
+        631,
+        633,
+        634,
+        636,
+        637
+      ],
+      "verdict": "pass (43 s)"
+    }
+  ]
+}
