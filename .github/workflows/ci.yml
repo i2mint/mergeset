@@ -33,6 +33,12 @@ jobs:
     permissions:
       contents: write
       pages: write
+      id-token: write
+    # Transport: named secrets, matching every other working i2mint repo. The
+    # generated default was the JSON transport (`toJSON(toJSON(secrets))`),
+    # and with it every run on this repo came back `action_required` with no
+    # jobs and could not even be re-run. Original comment follows.
+    #
     # Transport: this repo's whole `secrets` context, serialized into the one
     # secret the reusable workflow declares. Double-encoded (toJSON twice) so
     # the value is a single line — a multiline secret would register its `{`
@@ -53,4 +59,10 @@ jobs:
     # *variable* (`gh variable set NAME`) — declared names fall back to
     # repo variables automatically.
     secrets:
-      WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}
+      PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
+      KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+      KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
