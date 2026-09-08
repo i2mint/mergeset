@@ -92,10 +92,15 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
             more = f" (+{len(files) - 5} more)" if len(files) > 5 else ""
             yield f"| `{a}` | `{b}` | {shown}{more} |"
         yield ""
+    # A conflict already explained above -- a pair that clashes textually, or a
+    # change that will not merge onto the base at all -- must not reappear here
+    # as though validation had had an opinion about it. Nothing was ever run on it.
+    explained = {frozenset({a, b}) for a, b, _ in analysis.textual_conflicts}
+    explained |= {frozenset({cid}) for cid in analysis.singleton_conflicts}
     semantic = [
         c
         for c in analysis.conflicts
-        if not any(frozenset({a, b}) == c for a, b, _ in analysis.textual_conflicts)
+        if c not in explained and not any(known <= c for known in explained)
     ]
     if semantic:
         yield "**Conflicts found by validation** (merged cleanly, still failed):"
