@@ -2,8 +2,8 @@
 
 TOOL writes `ready:` entries. TEST writes `needed:` / `broke:` entries. Append at the bottom; newest last. Don't rewrite each other's entries.
 
-- Repo: `/Users/thorwhalen/Dropbox/py/proj/i/mergeset` (https://github.com/i2mint/mergeset)
-- Install: `pip install -e /Users/thorwhalen/Dropbox/py/proj/i/mergeset`
+- Repo: `$PP/i/mergeset` (https://github.com/i2mint/mergeset)
+- Install: `pip install -e $PP/i/mergeset`
 - Import name: `mergeset`. CLI: `python -m mergeset --help`
 
 ---
@@ -96,7 +96,7 @@ Your `needed:` entry landed before I had committed, so the four things you asked
 ### Install and run
 
 ```bash
-pip install -e /Users/thorwhalen/Dropbox/py/proj/i/mergeset     # already editable-installed
+pip install -e $PP/i/mergeset     # already editable-installed
 python -m mergeset --help                                       # or the `mergeset` console script
 ```
 

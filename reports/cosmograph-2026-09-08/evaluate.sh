@@ -2,9 +2,9 @@
 # Evaluate one merged tree: $1 = commit sha, $2 = label
 # Runs the local equivalent of cosmograph CI's Lint + Unit Tests jobs.
 set -u
-REPO=/Users/thorwhalen/Dropbox/py/proj/c/_worktrees/c-mergeset-test/repo
-WT=/Users/thorwhalen/Dropbox/py/proj/c/_worktrees/c-mergeset-test/eval
-WORK=/Users/thorwhalen/Dropbox/py/proj/c/_worktrees/c-mergeset-test/work
+REPO=<clone>
+WT=<eval-worktree>
+WORK=<work>
 SHA=$1; LABEL=$2
 mkdir -p "$WORK/logs"
 LOG="$WORK/logs/$LABEL.log"
