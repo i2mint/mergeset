@@ -35,7 +35,10 @@ from mergeset.validation import (
 
 
 def _validator(
-    *, merge_only: bool, validate_command: Optional[str], timeout: Optional[float],
+    *,
+    merge_only: bool,
+    validate_command: Optional[str],
+    timeout: Optional[float],
     retries: int,
 ):
     if merge_only:
@@ -52,10 +55,14 @@ def _progress(event: str, payload: dict) -> None:
     interesting = {
         "merging": lambda p: f"  merging {', '.join(p['subset'])}",
         "validating": lambda p: f"  validating {', '.join(p['subset'])}",
-        "evaluated": lambda p: f"  -> {p['verdict']}: {', '.join(p['subset']) or '(empty)'}",
+        "evaluated": lambda p: (
+            f"  -> {p['verdict']}: {', '.join(p['subset']) or '(empty)'}"
+        ),
         "conflict": lambda p: f"  conflict: {', '.join(p['subset'])}",
         "maximal_good_set": lambda p: f"  MAXIMAL GOOD SET: {', '.join(p['subset'])}",
-        "textual_conflict": lambda p: f"  textual conflict: {p['pair'][0]} x {p['pair'][1]}",
+        "textual_conflict": lambda p: (
+            f"  textual conflict: {p['pair'][0]} x {p['pair'][1]}"
+        ),
         "component": lambda p: f"component: {', '.join(p['changes'])}",
         "assisted_merge": lambda p: f"  attempting assisted resolution of {p['files']}",
     }
@@ -126,13 +133,24 @@ def branches(
     """
     changes = list(branch_changes(repo, branch, base=base))
     return _run(
-        repo, changes, base=base, validate_command=validate_command,
-        merge_only=merge_only, timeout=timeout, retries=retries,
-        max_evaluations=max_evaluations, max_seconds=max_seconds, max_sets=max_sets,
-        log_path=log_path, report_dir=report_dir,
-        integration_branches=integration_branches, resolver=resolver,
+        repo,
+        changes,
+        base=base,
+        validate_command=validate_command,
+        merge_only=merge_only,
+        timeout=timeout,
+        retries=retries,
+        max_evaluations=max_evaluations,
+        max_seconds=max_seconds,
+        max_sets=max_sets,
+        log_path=log_path,
+        report_dir=report_dir,
+        integration_branches=integration_branches,
+        resolver=resolver,
         no_pairwise=no_pairwise,
-        no_decompose=no_decompose, quiet=quiet, title=f"mergeset — branches on {base}",
+        no_decompose=no_decompose,
+        quiet=quiet,
+        title=f"mergeset — branches on {base}",
     )
 
 
@@ -177,7 +195,8 @@ def prs(
     if updated_within_hours:
         cutoff = datetime.now(timezone.utc) - timedelta(hours=updated_within_hours)
         pull_requests = [
-            pr for pr in pull_requests
+            pr
+            for pr in pull_requests
             if pr.get("updatedAt")
             and datetime.fromisoformat(pr["updatedAt"].replace("Z", "+00:00")) >= cutoff
         ]
@@ -185,29 +204,60 @@ def prs(
         return "No pull requests matched the filters."
     changes = list(pr_changes(repo, pull_requests, base=base))
     return _run(
-        repo, changes, base=base, validate_command=validate_command,
-        merge_only=merge_only, timeout=timeout, retries=retries,
-        max_evaluations=max_evaluations, max_seconds=max_seconds, max_sets=max_sets,
-        log_path=log_path, report_dir=report_dir,
-        integration_branches=integration_branches, resolver=resolver,
+        repo,
+        changes,
+        base=base,
+        validate_command=validate_command,
+        merge_only=merge_only,
+        timeout=timeout,
+        retries=retries,
+        max_evaluations=max_evaluations,
+        max_seconds=max_seconds,
+        max_sets=max_sets,
+        log_path=log_path,
+        report_dir=report_dir,
+        integration_branches=integration_branches,
+        resolver=resolver,
         no_pairwise=no_pairwise,
-        no_decompose=no_decompose, quiet=quiet, title=f"mergeset — {repo_spec} PRs",
+        no_decompose=no_decompose,
+        quiet=quiet,
+        title=f"mergeset — {repo_spec} PRs",
     )
 
 
 def _run(
-    repo, changes, *, base, validate_command, merge_only, timeout, retries,
-    max_evaluations, max_seconds, max_sets, log_path, report_dir,
-    integration_branches, resolver, no_pairwise, no_decompose, quiet, title,
+    repo,
+    changes,
+    *,
+    base,
+    validate_command,
+    merge_only,
+    timeout,
+    retries,
+    max_evaluations,
+    max_seconds,
+    max_sets,
+    log_path,
+    report_dir,
+    integration_branches,
+    resolver,
+    no_pairwise,
+    no_decompose,
+    quiet,
+    title,
 ) -> str:
     if resolver not in ("none", "claude"):
         return f"Unknown resolver {resolver!r}; expected 'none' or 'claude'."
     try:
         analysis = _analyze(
-            repo, changes, base=base,
+            repo,
+            changes,
+            base=base,
             validate=_validator(
-                merge_only=merge_only, validate_command=validate_command,
-                timeout=timeout, retries=retries,
+                merge_only=merge_only,
+                validate_command=validate_command,
+                timeout=timeout,
+                retries=retries,
             ),
             resolver=claude_code_resolver() if resolver == "claude" else None,
             log_path=log_path,
@@ -238,7 +288,9 @@ def _integration_branches(analysis) -> list:
     for plan in analysis.merge_plan():
         name = f"integration/{date.today().isoformat()}-{plan['rank']}"
         created, detail = create_integration_branch(
-            analysis.repo, name, analysis.base_sha,
+            analysis.repo,
+            name,
+            analysis.base_sha,
             [(cid, by_id[cid].head) for cid in plan["changes"]],
         )
         out.append(f"`{name}`: {'created ' + detail[:8] if created else detail}")
@@ -265,7 +317,9 @@ def show_log(*, log_path: str = ".mergeset/evaluations.jsonl") -> str:
     lines += ["Minimal failing sets (conflicts):"]
     lines += [f"  {', '.join(sorted(s))}" for s in log.minimal_failing_sets()]
     for good, bad in log.monotonicity_violations():
-        lines.append(f"  ! monotonicity violation: {sorted(bad)} bad but {sorted(good)} good")
+        lines.append(
+            f"  ! monotonicity violation: {sorted(bad)} bad but {sorted(good)} good"
+        )
     return "\n".join(lines)
 
 

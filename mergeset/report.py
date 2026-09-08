@@ -49,8 +49,7 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
         yield "_No good set was found. Every candidate conflicts._"
     for plan in plans:
         yield (
-            f"### Plan {plan['rank']} — merge {plan['size']} of "
-            f"{len(analysis.changes)}"
+            f"### Plan {plan['rank']} — merge {plan['size']} of {len(analysis.changes)}"
         )
         yield ""
         yield "Merge in this order:"
@@ -94,10 +93,9 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
             yield f"| `{a}` | `{b}` | {shown}{more} |"
         yield ""
     semantic = [
-        c for c in analysis.conflicts
-        if not any(
-            frozenset({a, b}) == c for a, b, _ in analysis.textual_conflicts
-        )
+        c
+        for c in analysis.conflicts
+        if not any(frozenset({a, b}) == c for a, b, _ in analysis.textual_conflicts)
     ]
     if semantic:
         yield "**Conflicts found by validation** (merged cleanly, still failed):"
@@ -106,7 +104,11 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
             evidence = _failure_evidence(analysis, conflict)
             yield f"- {_fmt_set(conflict)}{evidence}"
         yield ""
-    if not analysis.textual_conflicts and not semantic and not analysis.singleton_conflicts:
+    if (
+        not analysis.textual_conflicts
+        and not semantic
+        and not analysis.singleton_conflicts
+    ):
         yield "_Nothing. Every candidate merges and validates together._"
         yield ""
 
@@ -169,7 +171,9 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
     for record in analysis.log or []:
         detail = ""
         if record.merge and not record.merge.ok:
-            detail = "conflict: " + ", ".join(f"`{f}`" for f in record.merge.conflicting_files[:3])
+            detail = "conflict: " + ", ".join(
+                f"`{f}`" for f in record.merge.conflicting_files[:3]
+            )
         elif record.validation and not record.validation.ok:
             detail = ", ".join(f"`{t}`" for t in record.validation.failing_tests[:3])
         if record.merge and record.merge.assisted:
@@ -234,14 +238,10 @@ def _analysis_jdict(analysis: Analysis) -> dict:
             for c in analysis.conflicts
             if len(c) == 2 and c not in textual_pairs
         ],
-        "big_conflicts": [
-            list(set_key(c)) for c in analysis.conflicts if len(c) > 2
-        ],
+        "big_conflicts": [list(set_key(c)) for c in analysis.conflicts if len(c) > 2],
         "plans": analysis.merge_plan(),
         "components": [list(set_key(c)) for c in analysis.components],
-        "singleton_conflicts": {
-            k: v for k, v in analysis.singleton_conflicts.items()
-        },
+        "singleton_conflicts": {k: v for k, v in analysis.singleton_conflicts.items()},
         "stacks": dict(analysis.stacks),
         "notes": analysis.notes,
         "log": [e.to_jdict() for e in (analysis.log or [])],

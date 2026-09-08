@@ -180,11 +180,7 @@ class EvaluationLog:
         the solver shrinks them further with QuickXplain as it goes.
         """
         failing = self.failing
-        return [
-            s
-            for s in failing
-            if not any(other < s for other in failing)
-        ]
+        return [s for s in failing if not any(other < s for other in failing)]
 
     def maximal_passing_sets(self) -> List[ChangeSet]:
         """Recorded passing sets with no recorded passing proper superset."""

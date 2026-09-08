@@ -161,9 +161,7 @@ def stack_roots(parents: Dependencies, changes: Iterable[ChangeId]) -> List[Chan
         while parents.get(root) is not None:
             root = parents[root]
         groups.setdefault(root, set()).add(change)
-    return sorted(
-        (frozenset(g) for g in groups.values()), key=lambda s: set_key(s)
-    )
+    return sorted((frozenset(g) for g in groups.values()), key=lambda s: set_key(s))
 
 
 def count_closed_subsets(parents: Dependencies, changes: Iterable[ChangeId]) -> int:

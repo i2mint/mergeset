@@ -85,7 +85,9 @@ def check_gh_capability() -> None:
             "`gh auth login`, or use branch/commit sources instead."
         )
     if subprocess.run(["gh", "auth", "status"], capture_output=True).returncode != 0:
-        raise CapabilityError("`gh` is installed but not authenticated. Run `gh auth login`.")
+        raise CapabilityError(
+            "`gh` is installed but not authenticated. Run `gh auth login`."
+        )
 
 
 def fetch_pull_requests(
@@ -99,8 +101,17 @@ def fetch_pull_requests(
     """Raw ``gh pr list`` records for ``repo_spec`` (``owner/name``)."""
     check_gh_capability()
     cmd = [
-        "gh", "pr", "list", "--repo", repo_spec, "--state", state,
-        "--limit", str(limit), "--json", PR_FIELDS,
+        "gh",
+        "pr",
+        "list",
+        "--repo",
+        repo_spec,
+        "--state",
+        state,
+        "--limit",
+        str(limit),
+        "--json",
+        PR_FIELDS,
     ]
     if author:
         cmd += ["--author", author]
@@ -164,9 +175,7 @@ def _rollup_state(checks: Sequence[dict]) -> Optional[str]:
     """
     if not checks:
         return None
-    states = {
-        (c.get("conclusion") or c.get("state") or "").upper() for c in checks
-    }
+    states = {(c.get("conclusion") or c.get("state") or "").upper() for c in checks}
     if {"FAILURE", "ERROR", "TIMED_OUT", "CANCELLED"} & states:
         return "failure"
     if {"PENDING", "IN_PROGRESS", "QUEUED", ""} & states:

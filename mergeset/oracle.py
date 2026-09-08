@@ -39,7 +39,9 @@ from mergeset.validation import pytest_validation
 Resolver = Callable[[str, Sequence[str]], Tuple[bool, str]]
 
 
-def merge_order(subset: ChangeSet, changes: Dict[ChangeId, Change]) -> Sequence[ChangeId]:
+def merge_order(
+    subset: ChangeSet, changes: Dict[ChangeId, Change]
+) -> Sequence[ChangeId]:
     """A deterministic merge order for a change set.
 
     Order should not matter when merges are clean; when it does, the run is
@@ -50,6 +52,7 @@ def merge_order(subset: ChangeSet, changes: Dict[ChangeId, Change]) -> Sequence[
     >>> merge_order(frozenset({'b', 'a'}), {})
     ['a', 'b']
     """
+
     def sort_key(cid: ChangeId):
         change = changes.get(cid)
         meta = change.meta if change else {}
@@ -117,7 +120,11 @@ def git_oracle(
         heads = [(cid, by_id[cid].head) for cid in order]
         emit("merging", {"subset": set_key(subset), "order": list(order)})
         with merged_worktree(
-            repo, base, heads, root=worktree_root, keep=keep_worktrees,
+            repo,
+            base,
+            heads,
+            root=worktree_root,
+            keep=keep_worktrees,
             reuse=reuse_worktree,
         ) as (worktree, outcome):
             if worktree is None and resolver is not None and outcome.conflicting_files:
@@ -148,8 +155,11 @@ def git_oracle(
             validation=validation,
             duration=time.time() - started,
             note=(
-                "assisted resolution" if outcome.assisted
-                else "base alone" if not subset else ""
+                "assisted resolution"
+                if outcome.assisted
+                else "base alone"
+                if not subset
+                else ""
             ),
         )
 
@@ -195,8 +205,15 @@ def _worktree_with_conflict(repo, base, heads, worktree_root) -> Optional[str]:
         return None
     for _, head in heads:
         res = git(
-            path, "-c", "user.email=mergeset@localhost", "-c", "user.name=mergeset",
-            "merge", "--no-edit", "--no-ff", head,
+            path,
+            "-c",
+            "user.email=mergeset@localhost",
+            "-c",
+            "user.name=mergeset",
+            "merge",
+            "--no-edit",
+            "--no-ff",
+            head,
         )
         if not res.ok:
             return path  # left conflicted on purpose
@@ -232,12 +249,17 @@ def claude_code_resolver(
     def resolve(worktree: str, files: Sequence[str]) -> Tuple[bool, str]:
         proc = subprocess.run(
             [command, "-p", policy.format(files=", ".join(files))],
-            cwd=worktree, capture_output=True, text=True, timeout=timeout,
+            cwd=worktree,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
         )
         output = (proc.stdout or "") + (proc.stderr or "")
         if "UNRESOLVED" in output or "RESOLVED" not in output:
             return False, output[-2000:]
-        unmerged = git(worktree, "diff", "--name-only", "--diff-filter=U").stdout.strip()
+        unmerged = git(
+            worktree, "diff", "--name-only", "--diff-filter=U"
+        ).stdout.strip()
         if unmerged:
             return False, f"resolver claimed success but left conflicts: {unmerged}"
         diff = git(worktree, "show", "--stat", "--patch", "HEAD").stdout

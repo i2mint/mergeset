@@ -291,7 +291,9 @@ def analyze(
     # The cheapest oracle of all: does each change even merge onto base alone?
     heads_by_id = {c.id: c.head for c in changes}
     if pairwise_preoracle:
-        for change_id, files in singleton_textual_conflicts(repo, base_sha, heads_by_id):
+        for change_id, files in singleton_textual_conflicts(
+            repo, base_sha, heads_by_id
+        ):
             known_conflicts.append(frozenset({change_id}))
             analysis.singleton_conflicts[change_id] = files
             analysis.notes.append(

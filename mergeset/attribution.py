@@ -135,8 +135,10 @@ def _touching(
     for change_id in within:
         touched = files_by_change.get(change_id) or ()
         for path in paths:
-            if any(f == path or f.endswith("/" + path) or path.endswith("/" + f)
-                   for f in touched):
+            if any(
+                f == path or f.endswith("/" + path) or path.endswith("/" + f)
+                for f in touched
+            ):
                 hits.add(change_id)
                 break
     return frozenset(hits)
@@ -162,7 +164,8 @@ def _naming(
         except Exception:  # a diff we cannot read is not evidence either way
             continue
         added = "\n".join(
-            line for line in diff.splitlines()
+            line
+            for line in diff.splitlines()
             if line.startswith("+") and not line.startswith("+++")
         )
         if any(symbol in added for symbol in wanted):
