@@ -14,10 +14,15 @@ keywords = []
 authors = [
     { name = "Thor Whalen" },
 ]
-dependencies = []
+dependencies = [
+    "cw",
+]
 
 [project.license]
 text = "mit"
+
+[project.scripts]
+mergeset = "mergeset.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/i2mint/mergeset"
