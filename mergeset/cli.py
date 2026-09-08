@@ -17,6 +17,7 @@ from typing import Optional, Sequence
 from mergeset.analysis import analyze as _analyze
 from mergeset.base import CapabilityError
 from mergeset.gitops import create_integration_branch
+from mergeset.oracle import claude_code_resolver
 from mergeset.log import EvaluationLog
 from mergeset.report import html_report, markdown_report
 from mergeset.sources import (
@@ -93,6 +94,7 @@ def branches(
     log_path: Optional[str] = None,
     report_dir: Optional[str] = None,
     integration_branches: bool = False,
+    resolver: str = "none",
     no_pairwise: bool = False,
     no_decompose: bool = False,
     quiet: bool = False,
@@ -114,6 +116,10 @@ def branches(
         log_path: Evaluation log (JSONL). Default ``<repo>/.mergeset/evaluations.jsonl``.
         report_dir: Write ``REPORT.md`` and ``report.html`` here.
         integration_branches: Create a local ``integration/*`` branch per maximal set.
+        resolver: ``none`` (default) or ``claude`` to let a Claude Code
+            subagent attempt *mechanical* conflict resolutions. Anything it
+            resolves is flagged as assisted and its diff kept — never
+            reported as a clean merge.
         no_pairwise: Skip the `git merge-tree` pre-oracle.
         no_decompose: Do not split into independent file-overlap components.
         quiet: Suppress progress output.
@@ -124,7 +130,8 @@ def branches(
         merge_only=merge_only, timeout=timeout, retries=retries,
         max_evaluations=max_evaluations, max_seconds=max_seconds, max_sets=max_sets,
         log_path=log_path, report_dir=report_dir,
-        integration_branches=integration_branches, no_pairwise=no_pairwise,
+        integration_branches=integration_branches, resolver=resolver,
+        no_pairwise=no_pairwise,
         no_decompose=no_decompose, quiet=quiet, title=f"mergeset — branches on {base}",
     )
 
@@ -147,6 +154,7 @@ def prs(
     log_path: Optional[str] = None,
     report_dir: Optional[str] = None,
     integration_branches: bool = False,
+    resolver: str = "none",
     no_pairwise: bool = False,
     no_decompose: bool = False,
     quiet: bool = False,
@@ -181,7 +189,8 @@ def prs(
         merge_only=merge_only, timeout=timeout, retries=retries,
         max_evaluations=max_evaluations, max_seconds=max_seconds, max_sets=max_sets,
         log_path=log_path, report_dir=report_dir,
-        integration_branches=integration_branches, no_pairwise=no_pairwise,
+        integration_branches=integration_branches, resolver=resolver,
+        no_pairwise=no_pairwise,
         no_decompose=no_decompose, quiet=quiet, title=f"mergeset — {repo_spec} PRs",
     )
 
@@ -189,8 +198,10 @@ def prs(
 def _run(
     repo, changes, *, base, validate_command, merge_only, timeout, retries,
     max_evaluations, max_seconds, max_sets, log_path, report_dir,
-    integration_branches, no_pairwise, no_decompose, quiet, title,
+    integration_branches, resolver, no_pairwise, no_decompose, quiet, title,
 ) -> str:
+    if resolver not in ("none", "claude"):
+        return f"Unknown resolver {resolver!r}; expected 'none' or 'claude'."
     try:
         analysis = _analyze(
             repo, changes, base=base,
@@ -198,6 +209,7 @@ def _run(
                 merge_only=merge_only, validate_command=validate_command,
                 timeout=timeout, retries=retries,
             ),
+            resolver=claude_code_resolver() if resolver == "claude" else None,
             log_path=log_path,
             pairwise_preoracle=not no_pairwise,
             decompose=not no_decompose,

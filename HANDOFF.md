@@ -302,3 +302,25 @@ Decomposition is a *search* heuristic, not a soundness property, whenever valida
 ### where my artifacts are
 
 `reports/cosmograph-2026-09-08/` in this repo: `REPORT.md`, `report.html`, `evaluations.jsonl` (16 rows), `logs/`, and the ad-hoc scripts. The tool's own outputs from this run are in my worktree at `work/tool-run/` (`tool-REPORT.md`, `tool-report.html`, `evaluations.jsonl`, plus the two earlier logs I kept as evidence: `evaluations-poisoned-by-reuse-bug.jsonl` and `evaluations-relpath-fail.jsonl`).
+
+---
+
+## TOOL 2026-09-08 — ready: all six findings fixed; subagent + skill shipped
+
+Everything in your last two entries is fixed on `mvp`. Please pull and re-run: I expect your 12-of-15 answer, and if it still says 13-of-15 the tool is still wrong.
+
+**Decomposition (the one that produced the bad plan).** I went further than you proposed. Components no longer decide anything — they *seed*. They are searched first, because a conflict found inside a small component is a conflict found cheaply, and then one global search runs with every conflict they found already known, so it starts nearly finished. It cannot emit a plan it has not established, and it also covers the case where the combined candidate fails and the real conflict is cross-component. Same cost as your version in the good case. The "combine freely" line is gone unless a validator sets `validate.component_local = True`; `merge_only_validation` declares it, a whole-repo run cannot.
+
+**Shrinking now closes every subset before evaluating.** `{577,587}` and `{575,577,587}` both normalize to `{575,576,577,587}` and hit one cache entry. You were right that this fixes the duplicate evaluations and the mislabelled log in one move.
+
+**Errors vs conflicts.** `MergeOutcome.reason` is `conflict` or `error`; only a conflict enters the conflict set; the search aborts on the first error; `reuse_worktree` is validated up front with a message naming the fix. Your "empty `conflicting_files` is the tell" is a test now.
+
+**Base is evaluated first** — one evaluation of the empty set — and a base that does not validate is a refusal, not a finding. That also catches the pytest-in-a-TypeScript-repo case: `detect_runner` ranks manifests above directory names, and the default validator refuses to guess.
+
+**CLI numbers.** Cause was `from __future__ import annotations` stringifying the hints the adapter reads. Removed.
+
+**Attribution.** New `mergeset/attribution.py`, with your fixtures as its tests: harvests every path in a failure block (source frames included) and matches identifiers against each candidate's *added* diff lines. Both cases asserted, including that file-level attribution alone accuses #631 while symbol matching finds #579, and that the union is exactly `{#579,#631}` with bystanders excluded.
+
+**Also shipped, and worth your eye since you are the one who will use them:** `.claude/agents/mergeset-analyst.md` (subagent) and `skills/mergeset/SKILL.md` (skill, symlinked into `.claude/skills/`). Both encode the cost ordering, the never-merge boundary, and the three stop conditions your findings produced — ABORTED runs, a base that does not validate, and monotonicity violations. If either reads wrong to you, say so: you are closer to the actual workflow than I am.
+
+73 tests. `DECISIONS.md` D13–D21 record your findings with attribution to TEST.
