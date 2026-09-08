@@ -246,7 +246,14 @@ def _integration_branches(analysis) -> list:
 
 
 def show_log(*, log_path: str = ".mergeset/evaluations.jsonl") -> str:
-    """Print what the evaluation log already knows, without evaluating anything."""
+    """Print what the evaluation log already knows, without evaluating anything.
+
+    Use this to answer questions about a finished run: the log is the single
+    source of truth, so re-deriving what it already says costs a reader's trust.
+    (Re-rendering the full Markdown/HTML reports needs the candidate metadata as
+    well as the log, so it is a library call — ``markdown_report(analysis)`` —
+    not a command that could pretend the log alone is enough.)
+    """
     log = EvaluationLog(log_path)
     lines = [f"{len(log)} evaluations in {log_path}", ""]
     for e in log:
@@ -262,18 +269,8 @@ def show_log(*, log_path: str = ".mergeset/evaluations.jsonl") -> str:
     return "\n".join(lines)
 
 
-def report(
-    *, log_path: str = ".mergeset/evaluations.jsonl", out: Optional[str] = None
-) -> str:
-    """Re-render reports from an existing evaluation log — no evaluation needed."""
-    log = EvaluationLog(log_path)
-    if not len(log):
-        return f"{log_path} is empty; run `mergeset branches` or `mergeset prs` first."
-    return show_log(log_path=log_path)
-
-
 #: SSOT of the CLI surface. Any adapter (cw, HTTP, MCP) consumes this list.
-_dispatch_funcs = [branches, prs, show_log, report]
+_dispatch_funcs = [branches, prs, show_log]
 
 
 def main() -> int:
