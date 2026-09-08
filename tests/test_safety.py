@@ -13,8 +13,10 @@ from mergeset.base import Evaluation, MergesetError, Verdict
 from mergeset.log import EvaluationLog, MemoryLines
 from mergeset.solve import find_maximal_good_sets
 from mergeset.sources import branch_changes
+from conftest import py_command, run
 from mergeset.validation import (
     ValidationStage,
+    callable_validation,
     command_validation,
     detect_runner,
     merge_only_validation,
@@ -109,20 +111,34 @@ def test_a_required_stage_failing_stops_the_sequence(tmp_path):
     marker = tmp_path / "ran"
     validate = staged_validation([
         ValidationStage("build", "exit 1"),
-        ValidationStage("test", f"touch {marker}"),
+        ValidationStage(
+            "test",
+            py_command(tmp_path, "mark", f"open(r{str(marker)!r}, 'w').close()"),
+        ),
     ])
     validate(str(tmp_path))
     assert not marker.exists(), "tests must not run when the build failed"
 
 
-def test_a_non_required_stage_does_not_veto(tmp_path):
+def test_a_non_required_stage_is_recorded_but_does_not_veto(tmp_path):
+    """An advisory lint pass must not exclude every change set."""
     validate = staged_validation([
         ValidationStage("test", "exit 0"),
         ValidationStage("lint", "exit 1", required=False),
     ])
     outcome = validate(str(tmp_path))
-    assert not outcome.ok, "the failure is still reported"
-    assert any(f.startswith("lint:") for f in outcome.failing_tests)
+    assert outcome.ok, "an advisory stage vetoed the set"
+    assert any(f.startswith("lint:") for f in outcome.failing_tests), "not recorded"
+
+
+def test_a_required_stage_after_an_advisory_one_still_vetoes(tmp_path):
+    validate = staged_validation([
+        ValidationStage("lint", "exit 1", required=False),
+        ValidationStage("test", "exit 1"),
+    ])
+    outcome = validate(str(tmp_path))
+    assert not outcome.ok
+    assert [f.split(":")[0] for f in outcome.failing_tests] == ["lint", "test"]
 
 
 def test_a_fingerprinted_stage_reruns_only_when_its_input_changes(tmp_path):
@@ -133,10 +149,11 @@ def test_a_fingerprinted_stage_reruns_only_when_its_input_changes(tmp_path):
     lock = worktree / "lock.txt"
     lock.write_text("v1")
     counter = worktree / "count"
+    bump = py_command(
+        tmp_path, "bump", f"open(r{str(counter)!r}, 'a').write('x\\n')"
+    )
     validate = staged_validation([
-        ValidationStage(
-            "setup", f"echo x >> {counter}", fingerprint=file_fingerprint("lock.txt")
-        ),
+        ValidationStage("setup", bump, fingerprint=file_fingerprint("lock.txt")),
         ValidationStage("test", "exit 0"),
     ])
     validate(str(worktree))
@@ -157,8 +174,12 @@ def test_components_are_not_assumed_to_combine_for_a_whole_repo_validator(repo):
     changes = list(branch_changes(repo, ["feat-b", "feat-d"], base="main"))
     analysis = analyze(
         repo, changes, base="main",
-        validate=command_validation(
-            "! ( test -f other.txt && test -f new-d.txt && grep -q 'changed by b' other.txt )"
+        validate=callable_validation(
+            lambda worktree: not (
+                os.path.exists(os.path.join(worktree, "new-d.txt"))
+                and "changed by b"
+                in open(os.path.join(worktree, "other.txt")).read()
+            )
         ),
         log=EvaluationLog(MemoryLines()),
     )
@@ -219,3 +240,100 @@ def test_shrinking_stays_inside_the_stack_closure(repo):
                 f"{sorted(subset)} names {member} without its ancestors"
             )
     assert len(seen) == len(set(seen)), "the same tree was evaluated under two labels"
+
+
+def test_cli_staged_flags_build_the_validator_the_project_needs(tmp_path):
+    """The CLI must reach a real project, not only the easy ones."""
+    from mergeset.cli import _validator
+
+    lock = tmp_path / "lock.txt"
+    lock.write_text("v1")
+    counter = tmp_path / "count"
+    bump = py_command(tmp_path, "bump2", f"open(r{str(counter)!r}, 'a').write('x\\n')")
+    validate = _validator(
+        merge_only=False, validate_command=None, timeout=None, retries=0,
+        validate_stage=[
+            f"setup:{bump}",
+            "build:exit 0",
+            "test:exit 0",
+            "lint:exit 1",
+        ],
+        validate_fingerprint=["setup:lock.txt"],
+        validate_optional=["lint"],
+    )
+    outcome = validate(str(tmp_path))
+    assert outcome.ok, "the optional stage must not veto"
+    assert outcome.failing_tests == ["lint: <lint failed>"], "but it is recorded"
+    validate(str(tmp_path))
+    assert len(counter.read_text().split()) == 1, "fingerprinted setup ran twice"
+
+
+def test_cli_staged_flags_say_what_is_wrong_with_a_bad_spec():
+    from mergeset.cli import _validator
+
+    for kwargs, expected in [
+        ({"validate_stage": ["justaname"]}, "--validate-stage expects 'name:value'"),
+        (
+            {"validate_stage": ["test:pytest"], "validate_fingerprint": ["setup:lock"]},
+            "--validate-fingerprint names no stage",
+        ),
+        (
+            {"validate_stage": ["test:pytest"], "validate_optional": ["lint"]},
+            "--validate-optional names no stage",
+        ),
+    ]:
+        with pytest.raises(ValueError) as excinfo:
+            _validator(
+                merge_only=False, validate_command=None, timeout=None, retries=0,
+                **{"validate_stage": (), "validate_fingerprint": (),
+                   "validate_optional": (), **kwargs},
+            )
+        assert expected in str(excinfo.value)
+
+
+def test_a_change_that_never_merged_is_not_reported_as_a_test_failure(repo):
+    """It was never validated, so validation has no opinion about it."""
+    from mergeset.report import markdown_report
+
+    run(repo, "checkout", "-q", "main")
+    with open(os.path.join(repo, "shared.txt"), "w") as f:
+        f.write("one\nMAIN MOVED ON\nthree\n")
+    run(repo, "add", "-A")
+    run(repo, "commit", "-qm", "main edits the same line feat-a edits")
+
+    changes = list(branch_changes(repo, ["feat-a", "feat-b"], base="main"))
+    analysis = analyze(
+        repo, changes, base="main", validate=merge_only_validation(),
+        log=EvaluationLog(MemoryLines()),
+    )
+    assert "feat-a" in analysis.singleton_conflicts
+    report = markdown_report(analysis)
+    before, _, after = report.partition("**Conflicts found by validation**")
+    assert "feat-a" not in after, "listed again as though a test had failed"
+    assert "Will not merge onto the base at all" in before
+
+
+def test_cache_hits_are_marked_in_the_progress_stream():
+    from mergeset.base import Evaluation, Verdict
+    from mergeset.solve import find_maximal_good_sets
+
+    events = []
+
+    def evaluate(subset):
+        return Evaluation(
+            frozenset(subset),
+            Verdict.FAIL if {"a", "b"} <= set(subset) else Verdict.PASS,
+        )
+
+    # A second search over the same log answers everything from cache; without
+    # the marker a caller cannot tell those apart from real, minutes-long runs.
+    log = EvaluationLog(MemoryLines())
+    cached_evaluate = log.caching(evaluate)
+    find_maximal_good_sets("abc", cached_evaluate)
+    find_maximal_good_sets(
+        "abc", cached_evaluate,
+        on_event=lambda name, payload: events.append((name, payload)),
+    )
+    evaluated = [p for name, p in events if name == "evaluated"]
+    assert evaluated, "no evaluation events were emitted"
+    assert all(p["cached"] for p in evaluated), "a free re-run looked expensive"

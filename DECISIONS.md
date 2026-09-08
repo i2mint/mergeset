@@ -118,3 +118,20 @@ Attribution is only ever a *hint*: it narrows the shrink, and a wrong hint costs
 ## D21 — An empty log is still a log
 
 `log = log or EvaluationLog(...)` silently discarded a caller-supplied log, because `__len__` makes an empty one falsy — on the first run, which is the run where it matters. `EvaluationLog.__bool__` now returns True, and the call site tests `is None`.
+
+
+## D22 — The CLI can describe a real project, not only an easy one (found by TEST)
+
+TEST's verification run reached the hand-derived answer exactly, and then reported the gap that mattered: the CLI could offer only `--merge-only`, one `--validate-command` string, or pytest. For the repository under test, the only expressible option was chaining install && build && test && lint into a single string, which throws away everything the staged validator exists for.
+
+So `--validate-stage 'name:command'` is repeatable and ordered, `--validate-fingerprint 'stage:path'` makes a stage skippable, `--validate-optional name` makes one advisory, and `--reuse-worktree` is now a CLI flag too — without it the fingerprint has nothing to persist across. `--validate-command` remains the shorthand. The point is stated in the docs as well as the code: a chained string costs a re-run of the install per evaluation, collapses build and test failures into one exit code, and turns an advisory lint into a veto.
+
+**And a correction while implementing it:** `required=False` used to record a stage's failure *and still fail the set*, which made the flag nearly useless — an advisory lint would have excluded every candidate. A non-required stage's failure is now recorded in `failing_tests` while the set still counts as good.
+
+## D23 — A refusal is a result, not a traceback
+
+`MergesetError` escaped the CLI as a stack trace with the reason at the bottom. It is now caught and rendered like any other outcome, and the detail is the most specific thing available: failing test ids when the runner named some, otherwise the exit code and the last lines of what it printed — because "exit 1 and nothing else" is exactly the case where a bare verdict leaves the user with nowhere to look.
+
+## D24 — Nothing is reported twice under two explanations (found by TEST)
+
+A change that will not merge onto the base at all was listed under "will not merge", and then again under "conflicts found by validation" — where it had no business, since nothing was ever run on it. The second section now excludes any conflict already explained by a textual clash or a singleton merge failure. In the same spirit, the `evaluated` progress event carries `cached`, so a caller can tell a free cache hit from a real, minutes-long run; the CLI's progress output no longer prints them, which had made the shrink look as if it were re-running the same set repeatedly.

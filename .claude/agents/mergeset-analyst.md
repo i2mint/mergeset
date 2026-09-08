@@ -21,7 +21,16 @@ python -m mergeset prs OWNER/REPO --repo . --author USER --updated-within-hours 
 
 Read that report before running anything expensive. It gives you the conflict graph, the stack structure, and which changes cannot merge onto the base at all.
 
-**3. Only then validate.** Give the project's *real* command — never assume pytest. Look at the repo first: `package.json` means a JS runner, `pyproject.toml` a Python one, and a build step is usually a prerequisite of the tests rather than part of them. If the project needs more than one step, use the library API with `staged_validation` so "failed to build" stays distinguishable from "tests failed", and pass `reuse_worktree=` so an expensive install is paid once.
+**3. Only then validate.** Give the project's *real* command — never assume pytest. Look at the repo first: `package.json` means a JS runner, `pyproject.toml` a Python one, and a build step is usually a prerequisite of the tests rather than part of them. If the project needs more than one step — it usually does — describe it as stages rather than chaining a shell string:
+
+```bash
+--validate-stage 'setup:pnpm install --frozen-lockfile' 'build:pnpm run build' \
+                 'test:pnpm run test' 'lint:pnpm run lint' \
+--validate-fingerprint 'setup:pnpm-lock.yaml' --validate-optional lint \
+--reuse-worktree /tmp/mergeset-wt
+```
+
+Chaining them into one command costs three things: the install is paid on every evaluation, build and test failures collapse into one exit code, and an advisory lint becomes a veto.
 
 Budget it: `--max-seconds`, `--max-evaluations`. Partial results are labelled partial and are still useful.
 

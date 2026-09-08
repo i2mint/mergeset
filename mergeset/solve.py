@@ -277,7 +277,17 @@ def find_maximal_good_sets(
         result = evaluate(subset)
         if not result.cached:
             state.evaluations += 1  # only real runs cost anything
-        emit("evaluated", {"subset": set_key(subset), "verdict": result.verdict.value})
+        emit(
+            "evaluated",
+            {
+                "subset": set_key(subset),
+                "verdict": result.verdict.value,
+                # A cache hit costs nothing, and a caller watching the stream
+                # otherwise sees the same set "evaluated" repeatedly as the
+                # shrink walks over it.
+                "cached": result.cached,
+            },
+        )
         return result
 
     # Complements of minimal hitting sets are the only candidates worth trying.

@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import sys
 import textwrap
 
 import pytest
@@ -45,3 +46,16 @@ def repo(tmp_path):
     return path
 
 
+def py_command(tmp_path, name: str, code: str) -> str:
+    """A shell command that runs ``code`` with this interpreter, on any platform.
+
+    Stage commands go through the shell, and the shell is ``sh`` on POSIX and
+    ``cmd.exe`` on Windows — they share almost no vocabulary. `touch`, `test -f`
+    and `!` are all POSIX-only, so a fixture built from them silently reduces a
+    regression test to two platforms out of three. Writing the body to a file
+    and invoking the interpreter by absolute path avoids the shell entirely
+    except for quoting.
+    """
+    script = tmp_path / f"{name}.py"
+    script.write_text(code)
+    return f'"{sys.executable}" "{script}"'

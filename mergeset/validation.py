@@ -285,8 +285,11 @@ class ValidationStage:
             evaluations instead of being paid every time (keyed on, say, the
             hash of the lockfile).
         timeout: Seconds before the stage is declared failed.
-        required: A failing required stage stops the sequence (the default);
-            a non-required stage is recorded and the sequence continues.
+        required: A failing required stage fails the whole validation and stops
+            the sequence (the default). A non-required stage's failure is
+            recorded in ``failing_tests`` and the set still counts as good —
+            for an advisory pass, such as a lint the project runs as a separate
+            CI job rather than a gate.
     """
 
     name: str
@@ -355,12 +358,16 @@ def staged_validation(
                         worktree
                     )
                 continue
-            ok = False
             found = outcome.failing_tests or [f"<{stage.name} failed>"]
             failures += [f"{stage.name}: {f}" for f in found]
             files += outcome.failing_files
             if stage.required:
+                ok = False
                 break
+            # A non-required stage is *recorded* and does not veto. Otherwise the
+            # flag would be nearly pointless: an advisory lint pass would exclude
+            # every change set, and a project whose lint is a separate CI job
+            # could not be described at all.
         return ValidationOutcome(
             ok=ok,
             failing_tests=failures,
