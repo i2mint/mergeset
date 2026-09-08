@@ -85,6 +85,9 @@ class Analysis:
     own_weights: Dict[ChangeId, float] = field(default_factory=dict)
     #: Changes that will not even merge onto base alone -> conflicting files.
     singleton_conflicts: Dict[ChangeId, List[str]] = field(default_factory=dict)
+    #: Whether the per-component answers were trusted to combine, or whether a
+    #: global search had to verify them. See ``analyze(component_local=...)``.
+    components_combined: bool = False
     log: Optional[EvaluationLog] = None
     searches: List[SearchState] = field(default_factory=list)
     notes: List[str] = field(default_factory=list)
@@ -384,6 +387,7 @@ def analyze(
 
     combined = combine_components(per_component)
     if component_local or len(analysis.components) <= 1:
+        analysis.components_combined = True
         analysis.maximal_sets = combined
     else:
         # Decomposition is sound for *textual* conflicts and unsound for

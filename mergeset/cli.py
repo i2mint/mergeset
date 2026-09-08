@@ -80,7 +80,7 @@ def _emit_reports(analysis, report_dir: Optional[str], title: str) -> list:
 
 
 def branches(
-    branch: Sequence[str],
+    branch: list[str],
     *,
     repo: str = ".",
     base: str = "HEAD",
@@ -102,7 +102,7 @@ def branches(
     """Find maximal mergeable sets among the given branches.
 
     Args:
-        branch: Branch names (repeat the flag, or pass several).
+        branch: Branch names, as positional arguments.
         repo: Path to the git repository.
         base: What to merge onto.
         validate_command: Shell command that validates a merged tree.

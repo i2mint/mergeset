@@ -133,10 +133,21 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
     if len(analysis.components) > 1:
         yield "## Independent components"
         yield ""
-        yield (
-            "These groups touch no common file, so they were solved separately "
-            "and their answers combine freely."
-        )
+        if analysis.components_combined:
+            yield (
+                "These groups touch no common file, and the validator declared "
+                "itself component-local, so they were solved separately and "
+                "their answers combine freely."
+            )
+        else:
+            yield (
+                "These groups touch no common file, so they were searched "
+                "separately to find conflicts cheaply. Their answers were then "
+                "**verified globally**: a whole-repo validator can fail on "
+                "changes that share no file — a test reading a generated "
+                "artifact, a barrel export, a snapshot, a project-wide lint — so "
+                "component results are not assumed to combine."
+            )
         yield ""
         for i, component in enumerate(analysis.components, start=1):
             yield f"{i}. {_fmt_set(component)}"
