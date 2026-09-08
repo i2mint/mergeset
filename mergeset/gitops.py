@@ -295,10 +295,21 @@ def merged_worktree(
     outcome = MergeOutcome(ok=True, order=merged.order, detail=merged.commit or "")
 
     if reuse:
+        reuse = os.path.abspath(os.path.expanduser(str(reuse)))
+        if not os.path.isdir(reuse) or not git(reuse, "rev-parse", "--git-dir").ok:
+            yield None, MergeOutcome(
+                ok=False, reason="error", order=merged.order,
+                detail=(
+                    f"reuse_worktree={reuse!r} is not a git worktree. Create one "
+                    "with mergeset.gitops.persistent_worktree(repo, base, path), "
+                    "and pass an absolute path (it must be a str, not True)."
+                ),
+            )
+            return
         checkout = git(reuse, "checkout", "--force", "--detach", merged.commit)
         if not checkout.ok:
             yield None, MergeOutcome(
-                ok=False, order=merged.order,
+                ok=False, reason="error", order=merged.order,
                 detail=f"could not check out into {reuse}: {checkout.stderr.strip()}",
             )
             return
@@ -315,7 +326,7 @@ def merged_worktree(
         add = git(repo, "worktree", "add", "--detach", path, merged.commit)
         if not add.ok:
             yield None, MergeOutcome(
-                ok=False, order=merged.order,
+                ok=False, reason="error", order=merged.order,
                 detail=f"could not create worktree: {add.stderr.strip()}",
             )
             return

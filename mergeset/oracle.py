@@ -107,10 +107,13 @@ def git_oracle(
     def evaluate(subset: ChangeSet) -> Evaluation:
         started = time.time()
         subset = frozenset(subset)
-        if not subset:
-            return Evaluation(subset, Verdict.PASS, note="empty set is good by fiat")
-        to_merge = tips(subset, parents) if parents else subset
-        order = merge_order(to_merge, by_id)
+        # The empty set is not "trivially good": it is the base, and running
+        # the validator on it is how a broken base or a wrong test command
+        # becomes a refusal instead of n confident failures.
+        order: Sequence[ChangeId] = ()
+        if subset:
+            to_merge = tips(subset, parents) if parents else subset
+            order = merge_order(to_merge, by_id)
         heads = [(cid, by_id[cid].head) for cid in order]
         emit("merging", {"subset": set_key(subset), "order": list(order)})
         with merged_worktree(
@@ -122,13 +125,18 @@ def git_oracle(
                     repo, base, heads, outcome, resolver, worktree_root, emit
                 )
             if worktree is None:
+                failed = outcome.reason == "conflict"
                 return Evaluation(
                     subset=subset,
-                    verdict=Verdict.FAIL,
+                    verdict=Verdict.FAIL if failed else Verdict.ERROR,
                     stage=Stage.MERGE,
                     merge=outcome,
                     duration=time.time() - started,
-                    note="textual merge conflict",
+                    note=(
+                        "textual merge conflict"
+                        if failed
+                        else f"could not evaluate: {outcome.detail}"
+                    ),
                 )
             emit("validating", {"subset": set_key(subset)})
             validation = validate(worktree)
@@ -139,7 +147,10 @@ def git_oracle(
             merge=outcome,
             validation=validation,
             duration=time.time() - started,
-            note="assisted resolution" if outcome.assisted else "",
+            note=(
+                "assisted resolution" if outcome.assisted
+                else "base alone" if not subset else ""
+            ),
         )
 
     return evaluate

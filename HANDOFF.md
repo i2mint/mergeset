@@ -163,3 +163,142 @@ Your `{#579, #631}` and `{#577, #587}` are the best evidence I have that the ora
 1. The friction list — that is the point of this exercise, so please be blunt.
 2. Your failing-test output for the two semantic pairs, as a fixture for test-impact mapping.
 3. Whether `merge_plan()['merge']` vs `['changes']` is the right split for the report, or whether you want the ancestors listed inline.
+
+---
+
+## TEST 2026-09-08 — broke: / needed: first run of the tool against the real PR set
+
+I ran `mergeset` against the same 15 cosmograph PRs I had already solved by hand, so the two answers can be compared line by line. Verdict first: **the parts I flagged in my last entry are all in and they work.** Stack closure, tips, the non-default-base CI rule, `staged_validation` / `js_validation` / `file_fingerprint` — that is exactly the shape the job needs, and the report explains itself better than my hand-written one does. Below is what broke and what I would change, in the order I hit it.
+
+### correction to my previous entry: the search space is 1008, not 576
+
+I wrote "6 × 6 × 4 × 4 = 576 downward-closed sets". Your report says 1008 and your report is right — I used 4 for the stories group when it has 7 (`{}`, `{587}`, `{587,602}`, `{587,604}`, `{587,602,604}`, `{587,604,616}`, `{587,602,604,616}`); I had already deleted the #602 branches in my head. 6 × 6 × 7 × 4 = 1008 before the #602 exclusion, 576 after it. My report is corrected.
+
+### broke: an infrastructure failure is recorded as a merge conflict
+
+I passed `reuse_worktree=True` (my error — it is `Optional[str]`, a path). What happened next is the bug:
+
+```json
+{"stage": "merge", "verdict": "fail", "note": "textual merge conflict",
+ "merge": {"ok": false, "conflicting_files": [],
+           "detail": "could not check out into True: fatal: cannot change to 'True': No such file or directory"}}
+```
+
+`merged_worktree` returns a failed `MergeOutcome` for a checkout failure, and the caller labels every failed `MergeOutcome` a textual merge conflict. So a bad argument became 24 "conflicts", every singleton was declared unmergeable, and the report said **"Plan 1 — merge 0 of 15 · 24 expensive evaluations spent · complete"**. Note `conflicting_files` is empty, which is the tell — a real textual conflict always names files.
+
+Two fixes, both cheap: give `MergeOutcome` a reason (`conflict` vs `error`) and never let an `error` enter the conflict set — abort the run instead, because if the worktree cannot be checked out nothing after that point is trustworthy. And validate `reuse_worktree` up front through the same `CapabilityError` path everything else uses; `True` is not a directory and that is knowable before the first merge.
+
+This is the same failure mode as the base-validation gap below, and I would treat them as one class: **the tool currently has no way to say "I could not run the experiment", only "the experiment failed".** Every wrong answer I got out of it today came from that.
+
+### broke: the CLI cannot pass a number
+
+```
+$ python -m mergeset prs cosmograph-org/cosmograph --repo repo --author thorwhalen \
+    --updated-within-hours 48 --base origin/main --merge-only
+TypeError: unsupported type for timedelta hours component: str
+```
+
+`cw.dispatch` hands `updated_within_hours` through as the string `"48"`; the `Optional[float]` annotation is not applied. Everything numeric on both subcommands is presumably in the same state — `--timeout`, `--retries`, `--max-evaluations`, `--max-seconds`, `--max-sets`. I fell back to driving the library directly (`work/toolrun.py` in my worktree), which is fine, but the CLI is the surface the spec asks for.
+
+### broke: `detect_runner` calls a JS monorepo "pytest", and nothing downstream notices
+
+`detect_runner` tests `names & {"pyproject.toml", "setup.cfg", "pytest.ini", "tox.ini", "tests"}` **before** it looks at `package.json`. cosmograph has a top-level `tests/` directory, so it is classified `pytest`, `check_validation_capability` is satisfied, and the default validator runs `pytest -x` in a TypeScript repo. Suggest `package.json` (and `Cargo.toml`, `go.mod`, …) win over a bare `tests/` directory, and that `tests/` alone only implies pytest when there is also some Python in it.
+
+### needed: validate the base before spending anything — this is the one I feel strongest about
+
+The consequence of the above was not an error. It was a **confident wrong answer**:
+
+```
+## Recommended merge plans
+### Plan 1 — merge 0 of 15
+Dropped: pr575, pr576, ..., pr637 (weight 250.038)
+...
+12 expensive evaluations spent · complete
+```
+
+Twelve evaluations, every one of them failing for a reason that had nothing to do with the changes, and the report presents "merge none of them" as the finished analysis. One evaluation of the **empty set on the base commit**, run first, converts this into a refusal: *"`origin/main` does not pass validation on its own — fix the base or pass a different validator"*. It costs one run, it is the cheapest possible sanity check, and it catches a whole family of environment mistakes (wrong validator, missing build step, broken toolchain, someone's `main` genuinely red). It also gives you the baseline duration for free, which is what the budget logic wants anyway.
+
+While you are there: "no set validated, *including the empty set*" deserves its own headline in the report rather than rendering as Plan 1 with zero changes.
+
+### needed: the file-overlap decomposition is unsound, and this PR set proves it
+
+The report says:
+
+> These groups touch no common file, so they were solved separately and their answers combine freely.
+> 1. `pr575`, `pr576`, `pr577`, `pr579`, `pr587`, `pr602`, `pr604`, `pr616`, `pr632`
+> 2. `pr631`, `pr633`, `pr634`, `pr636`, `pr637`
+> 3. `pr630`
+
+That is a correct statement about *files* and a false statement about *merge sets*. `{#579, #631}` is a real, reproduced conflict across components 1 and 2. #631 adds `tests/unit/params-ssot.test.ts`, which asserts that the committed `packages/cosmograph/ai/schemas/*.json` still match the TypeScript sources; #579 edits those sources (adding `pointColorHopDirection`, `pointColorHopSeeds`, `hopDistance`, `TraversalDirectionType`) and touches none of #631's files. Merged together they fail. Verified: `{575,576,579}` passes, `{575,576,631}` passes, `{575,576,579,631}` fails.
+
+The general shape is: **decomposition by changed-file overlap is sound for textual conflicts and unsound for anything a whole-repo test run can see** — a test in one component reads code, or generated artifacts, from another. It is not just generated files; a barrel export, a snapshot test, a type check, or a lint rule with a project-wide config does the same.
+
+I would not remove it — it is a good way to *order and parallelise* the search. I would change what it claims: use components to pick cheap early evaluations, but never let them replace one evaluation of the full candidate union, and drop "their answers combine freely" from the report unless the validator has been declared component-local (that could be a validator capability flag: `component_local: bool = False`).
+
+### smaller things
+
+- `Change.meta['stacked_on']` is only populated inside `analyze`, not by `pr_changes`. The `sources` docstring says stack relationships ride along with the source, so I printed them straight off the changes and got `None` for everything. Either populate it in `pr_changes` or say in the docstring that `analyze` derives it.
+- The "CI status is against X, not origin/main, so it is ignored" notes are excellent and I would keep every one of them. That was the single highest-value pre-oracle correction from the manual run and the report now explains it better than I did.
+- The per-change weights look sensible, but I could not tell from the report whether dropping a stack root is charged for its whole descendant cone. On this set it matters: dropping #587 costs 8700 lines across four PRs. Worth showing "weight (with cone)" in the candidates table.
+
+### ready-to-copy: what the manual run concluded, so you can diff against it
+
+Base `origin/main` @ `3716f38a`, 15 PRs, validation = `pnpm run build:cosmos` + `pnpm run test` + `pnpm run lint:ci`.
+
+Four minimal conflicts: `{#602}` (textual, vs base itself), `{#577, #616}` (textual, one hunk in `tests/unit/commands.test.ts`, never binds because #616's closure contains #587), `{#577, #587}` (semantic — `z.enum(CosmographTraversalDirection)` is `undefined` at import time once the stories refactor lands), `{#579, #631}` (semantic — the drift test above).
+
+Four maximal good sets, all evaluated end to end: **A** = 12 PRs `{575,576,587,604,616,630,631,632,633,634,636,637}`; **B** = 8 `{575,576,579,587,604,616,630,632}`; **C** = 10 `{575,576,577,630,631,632,633,634,636,637}`; **D** = 6 `{575,576,577,579,630,632}`. 16 evaluations, 640 s of machine time.
+
+Full write-up, HTML, evaluation log and the four integration branches are in `reports/cosmograph-2026-09-08/` in your repo.
+
+---
+
+## TEST 2026-09-08 — broke: the tool's Plan 1 does not work, and decomposition is why
+
+The third run (paths fixed, `js_validation`, own reuse worktree) completed cleanly: 11 expensive evaluations, `{#602}` excluded before any test, `{#577,#616}` found textually, and `{#577, #587}` found by validation and shrunk to exactly the right pair. That last one is genuinely good — my hand run needed a hypothesis to get there and the solver got it by shrinking.
+
+Then it recommended this:
+
+> ### Plan 1 — merge 13 of 15
+> Dropped: `pr577`, `pr602` (weight 14.56)
+
+**That set fails.** I already had it in my log from the manual run — it is byte-identical to my "hitting set {602,577}" evaluation:
+
+```
+fail  s575-576-579-587-604-616-630-631-632-633-634-636-637   99s  build=0 test=1 lint=0
+      tests/unit/params-ssot.test.ts > generated AI artifacts >
+      ai/schemas/'cosmograph-config.schema.json' matches the TypeScript sources
+      ai/schemas/'cosmograph-data-prep-config.schema.js…' matches the TypeScript sources
+```
+
+The cause is the decomposition, exactly as flagged in my previous entry, now with the recommendation to prove it. Here is every subset the tool evaluated:
+
+```
+pass  575,576,579,587,604,616,632        pass  575,576,577,579
+fail  575,576,577,579,587,604,632        fail  575,576,577,587
+pass  575,576,577                        fail  575,577,587
+fail  575,576,577,579,587                fail  577,587
+pass  575,576,577,579,632                pass  631,633,634,636,637
+pass  630
+```
+
+**Not one of the eleven contains both `pr579` and `pr631`.** They are in different components, so the solver never put them in the same tree, then combined the components' answers into a plan whose combination it had never tested. `{#579, #631}` is a real conflict: #631's drift test asserts the committed `ai/schemas/*.json` match the TypeScript sources, and #579 edits those sources while touching none of #631's files.
+
+The largest set that actually passes is **12 of 15** — `{575,576,587,604,616,630,631,632,633,634,636,637}`, dropping #577, #579 and #602. The tool's Plan 2 (11 of 15) has the same defect: it keeps #579 and the whole SSOT stack.
+
+### the fix I would make
+
+Decomposition is a *search* heuristic, not a soundness property, whenever validation can see the whole repo. Concretely:
+
+1. Keep solving components separately — it is a good way to find candidates cheaply.
+2. **Never emit a plan that has not been evaluated as a whole.** Combining component answers produces a *candidate*; run it. On this set that is one extra evaluation (~60 s) and it turns a wrong recommendation into a right one.
+3. If the combined candidate fails, the failure is by construction a cross-component conflict — feed it back into the same shrinking loop that already works, and drop the decomposition claim for the components involved.
+4. Remove "so their answers combine freely" from the report, or gate it on a validator that declares itself component-local (`component_local: bool = False` on the validator would be enough — a merge-only or per-package validator can honestly claim it; a whole-repo `vitest` + `eslint` run cannot).
+
+### smaller, from the same log: shrinking escapes the closure
+
+`{577, 587}` and `{575, 577, 587}` are not downward-closed — #577 needs #576 needs #575 — yet both were evaluated, alongside `{575,576,577,587}`. All three produce the **identical merged tree**, because merging `origin/app/graph-ops-commands` brings #575 and #576 along whether or not they are named. So: two of the eleven evaluations were duplicates under different labels, and the log now records subsets that do not describe what was merged. Shrinking should move over closed sets (drop a change together with its cone), which both saves the runs and keeps the log honest.
+
+### where my artifacts are
+
+`reports/cosmograph-2026-09-08/` in this repo: `REPORT.md`, `report.html`, `evaluations.jsonl` (16 rows), `logs/`, and the ad-hoc scripts. The tool's own outputs from this run are in my worktree at `work/tool-run/` (`tool-REPORT.md`, `tool-report.html`, `evaluations.jsonl`, plus the two earlier logs I kept as evidence: `evaluations-poisoned-by-reuse-bug.jsonl` and `evaluations-relpath-fail.jsonl`).

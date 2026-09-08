@@ -119,9 +119,20 @@ class Stage(str, Enum):
 
 @dataclass(frozen=True)
 class MergeOutcome:
-    """Result of merging a change set onto its base."""
+    """Result of merging a change set onto its base.
+
+    ``reason`` is load-bearing. "These changes conflict with each other" and "we
+    could not run the experiment" are completely different facts, and conflating
+    them is how a run reports *0 of 15 mergeable, complete* with total
+    confidence when the real problem was a bad worktree path. Only
+    ``reason == 'conflict'`` may ever enter the conflict set; an ``'error'``
+    aborts, because a set that was never tested has told us nothing.
+    """
 
     ok: bool
+    #: ``'conflict'`` (a real textual conflict) or ``'error'`` (the merge could
+    #: not be attempted: bad path, missing ref, unusable worktree).
+    reason: str = "conflict"
     conflicting_files: Sequence[str] = ()
     assisted: bool = False  # resolved by an AI assist rather than cleanly
     assist_diff: Optional[str] = None
@@ -132,6 +143,7 @@ class MergeOutcome:
         """JSON-able view."""
         return {
             "ok": self.ok,
+            "reason": self.reason,
             "conflicting_files": list(self.conflicting_files),
             "assisted": self.assisted,
             "assist_diff": self.assist_diff,

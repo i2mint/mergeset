@@ -30,8 +30,25 @@ DEFAULT_PYTEST_ARGS = ("-x", "-q", "--tb=short", "-p", "no:cacheprovider")
 _FAILED_LINE = re.compile(r"^(?:FAILED|ERROR)\s+(\S+)", re.MULTILINE)
 
 
+#: Files that *identify* an ecosystem, in decreasing order of how much they
+#: prove. A bare ``tests/`` directory proves nothing -- every language has one --
+#: so it must never outrank a manifest.
+_RUNNER_EVIDENCE = (
+    ("pytest", ("pytest.ini", "tox.ini")),
+    ("pytest", ("pyproject.toml", "setup.cfg", "setup.py")),
+    ("npm", ("package.json",)),
+    ("make", ("Makefile",)),
+)
+
+
 def detect_runner(path: str) -> Optional[str]:
     """Guess how this project is tested; ``None`` if nothing is recognizable.
+
+    Ordering matters more than it looks. An earlier version checked for a
+    ``tests/`` directory in the same breath as ``pyproject.toml``, and so
+    classified a TypeScript repository as pytest and ran pytest in it for a
+    dozen evaluations before anyone noticed. Manifests decide; a ``tests/``
+    directory is not evidence of a language.
 
     >>> detect_runner('/definitely/not/a/project') is None
     True
@@ -39,12 +56,9 @@ def detect_runner(path: str) -> Optional[str]:
     if not os.path.isdir(path):
         return None
     names = set(os.listdir(path))
-    if names & {"pyproject.toml", "setup.cfg", "pytest.ini", "tox.ini", "tests"}:
-        return "pytest"
-    if "package.json" in names:
-        return "npm"
-    if "Makefile" in names:
-        return "make"
+    for runner, markers in _RUNNER_EVIDENCE:
+        if names & set(markers):
+            return runner
     return None
 
 
@@ -57,11 +71,19 @@ def check_validation_capability(path: str, runner: str = "pytest") -> None:
                 "mergeset runs in, or pass a different validator "
                 "(e.g. `--validate-command 'make test'`)."
             )
-        if detect_runner(path) != "pytest":
+        detected = detect_runner(path)
+        if detected != "pytest":
+            found = (
+                f"it looks like a {detected} project"
+                if detected
+                else "no project manifest was found there"
+            )
             raise CapabilityError(
-                f"No pytest configuration or tests/ directory found in {path}. "
-                "Pass --validate-command with the project's real test command, "
-                "or --merge-only to check merge-ability alone."
+                f"The default validator runs pytest, but {found} ({path}). "
+                "Running the wrong test command produces confident nonsense, so "
+                "mergeset refuses to guess. Pass the project's real command "
+                "(--validate-command 'pnpm run test', or staged_validation([...]) "
+                "from the library), or --merge-only to check mergeability alone."
             )
     elif runner == "act":
         if shutil.which("act") is None:
@@ -215,6 +237,11 @@ def merge_only_validation() -> Callable[[str], ValidationOutcome]:
     def validate(worktree: str) -> ValidationOutcome:
         return ValidationOutcome(ok=True, stdout_tail="(merge-only: not validated)")
 
+    # Nothing but the merge itself is inspected, and a textual conflict cannot
+    # span changes that share no file. So file-overlap components genuinely do
+    # combine freely here -- which is exactly the claim a whole-repo test run
+    # cannot make. See `analyze(component_local=...)`.
+    validate.component_local = True
     return validate
 
 

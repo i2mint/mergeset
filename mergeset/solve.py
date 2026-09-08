@@ -36,7 +36,7 @@ from typing import (
 )
 
 from mergeset.base import ChangeId, ChangeSet, Evaluation, Verdict, set_key
-from mergeset.stacks import Dependencies, close_up, largest_closed_subset
+from mergeset.stacks import Dependencies, close_down, close_up, largest_closed_subset
 
 Evaluate = Callable[[ChangeSet], Evaluation]
 
@@ -181,6 +181,10 @@ class SearchState:
     elapsed: float = 0.0
     exhausted: bool = False  # search space fully covered (not budget-truncated)
     stopped_because: str = ""
+    #: Set when an evaluation could not be performed at all. The results below
+    #: are not wrong so much as unfinished, and must not be presented as an
+    #: answer: "we could not run the experiment" is not "the experiment failed".
+    error: str = ""
 
     def add_conflict(self, conflict: ChangeSet) -> None:
         """Add ``conflict``, keeping the list free of non-minimal members."""
@@ -201,6 +205,7 @@ def find_maximal_good_sets(
     max_seconds: Optional[float] = None,
     max_sets: Optional[int] = None,
     shrink: Callable[..., ChangeSet] = quickxplain,
+    suspects: Optional[Callable[[Evaluation, ChangeSet], ChangeSet]] = None,
     on_event: Optional[Callable[[str, dict], None]] = None,
 ) -> SearchState:
     """Enumerate maximal good subsets of ``changes``, cheapest-dropped first.
@@ -219,6 +224,10 @@ def find_maximal_good_sets(
         max_evaluations, max_seconds, max_sets: Budgets. Whichever trips first
             stops the search; partial results are always returned.
         shrink: Conflict-minimization strategy (:func:`quickxplain` by default).
+        suspects: ``(failed evaluation, the set) -> the changes it implicates``.
+            Lets the search shrink within the implicated changes instead of
+            halving the whole set. A wrong hint costs one wasted check and then
+            falls back; see :mod:`mergeset.attribution`.
         on_event: ``(event_name, payload)`` progress callback.
 
     Returns:
@@ -257,6 +266,14 @@ def find_maximal_good_sets(
         return None
 
     def counted_evaluate(subset: ChangeSet) -> Evaluation:
+        # Shrinking proposes arbitrary subsets, and an arbitrary subset of a
+        # stack is a fiction: merging a tip brings its ancestors whether or not
+        # they were named. Evaluating the closure means the log records what was
+        # actually merged, and it collapses sets that differ only in labels onto
+        # one cache entry -- two of eleven evaluations in one real run were
+        # duplicates for exactly this reason.
+        if parents:
+            subset = close_down(subset, parents)
         result = evaluate(subset)
         if not result.cached:
             state.evaluations += 1  # only real runs cost anything
@@ -288,14 +305,23 @@ def find_maximal_good_sets(
             emit("maximal_good_set", {"subset": set_key(candidate)})
         elif result.verdict is Verdict.FAIL:
             hint = _suspects(result, candidate)
+            if not hint and suspects is not None:
+                hint = suspects(result, candidate) or frozenset()
             conflict = shrink(counted_evaluate, sorted(hint or candidate))
             if hint and conflict and not _is_bad(counted_evaluate, conflict):
                 # The hint was wrong; fall back to the whole candidate.
                 conflict = shrink(counted_evaluate, sorted(candidate))
             state.add_conflict(conflict)
             emit("conflict", {"subset": set_key(conflict)})
-        else:  # ERROR / SKIPPED carry no monotone information
-            emit("inconclusive", {"subset": set_key(candidate)})
+        else:
+            # ERROR carries no information about the changes at all, and a run
+            # that keeps going past one reports confident nonsense: every
+            # untestable set looks bad, and "0 of 15 mergeable, complete" is the
+            # result. Stop, and say what went wrong.
+            state.error = result.note or "an evaluation could not be performed"
+            state.stopped_because = f"aborted: {state.error}"
+            emit("aborted", {"subset": set_key(candidate), "error": state.error})
+            break
 
     state.elapsed = time.time() - started
     state.maximal_good_sets = _keep_maximal(state.maximal_good_sets)

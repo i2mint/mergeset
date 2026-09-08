@@ -45,7 +45,7 @@ SSOT        #631 → #633 → #634 → #636 → #637        solo   #630   #632
 
 Three consequences shape everything below.
 
-**A candidate set must be downward-closed.** You cannot land #616 without #604 and #587, because #616's branch *contains* them. "Only prefixes make sense" is the usual phrasing but it is not quite right here: this is a forest, not a set of chains — #577 and #579 are siblings on #576, #602 and #604 are siblings on #587. The correct statement is that a set must be closed downward under "this PR's base is that PR's head". That reduces the 2^15 = 32768 subsets to **576 admissible sets**.
+**A candidate set must be downward-closed.** You cannot land #616 without #604 and #587, because #616's branch *contains* them. "Only prefixes make sense" is the usual phrasing but it is not quite right here: this is a forest, not a set of chains — #577 and #579 are siblings on #576, #602 and #604 are siblings on #587. The correct statement is that a set must be closed downward under "this PR's base is that PR's head". That reduces the 2^15 = 32768 subsets to **1008 admissible sets** (6 × 6 × 7 × 4, one factor per group); once #602 is excluded as a size-1 conflict the stories factor drops from 7 to 4 and only **576** remain.
 
 **Only the tips get merged.** Once a set is closed, merging its tip branches brings every ancestor along. The full 15-PR union is 6 branch merges, not 15.
 
@@ -190,7 +190,17 @@ The loop is the one in the spec (MARCO / hitting-set-tree), run by hand:
 
 **A pass/fail bit is not enough.** Both semantic conflicts here were localised by reading which tests failed and why. Halving would have worked, at several times the cost.
 
-**Monotonicity held.** No set that passed had a failing subset, and no set that failed had a passing superset, across all 16 evaluations. No flaky results were observed — every evaluation was deterministic on first run.
+**Monotonicity held.** No set that passed had a failing subset, and no set that failed had a passing superset, across all 16 evaluations. Flakiness was not directly tested — no set was evaluated twice — so that consistency is the only evidence, but it is the evidence the search relies on and nothing contradicted it.
+
+## Cross-check: the same analysis through the `mergeset` tool
+
+The parallel workstream's package was run over the identical 15 PRs, base and validation (`reports/cosmograph-2026-09-08/tool-run/`). It agreed on the cheap findings and disagreed on the answer.
+
+It got right, and got there more cleanly than the manual run: #602 excluded before any test; `{#577, #616}` found textually; `{#577, #587}` found by validation and **shrunk to exactly that pair** without needing a hypothesis, which is the part a solver should beat a human at.
+
+It got the recommendation wrong. Its Plan 1 is "merge 13 of 15, dropping only #577 and #602" — a set already in this run's log as a failure, on the `params-ssot` drift test. The reason is instructive rather than embarrassing: the tool splits candidates into components that share no changed file, solves each separately, and combines the answers. #579 and #631 land in different components, so **no subset it evaluated contained both**, their conflict was never tested, and the combined plan was emitted without ever being run as a whole.
+
+The lesson generalises past this repo: **decomposition by changed-file overlap is sound for textual conflicts and unsound for anything a whole-repo test run can see** — generated artifacts, barrel exports, snapshot tests, type checking, project-wide lint. The cheap fix is to treat a combined plan as a *candidate* and evaluate it once before recommending it. Both findings are written up for the tool in `HANDOFF.md`.
 
 ## Files
 
@@ -201,4 +211,5 @@ The loop is the one in the spec (MARCO / hitting-set-tree), run by hand:
 - `conflicts.json` — the derived conflict set and maximal good sets
 - `preoracle.py`, `seqmerge.py`, `mss_driver.py`, `evaluate.sh`, `mkhtml.py`, `mkbranches.py` — the ad-hoc scripts that produced all of it
 - `logs/` — full build/test/lint output for every evaluation
+- `tool-run/` — the same analysis re-run through the `mergeset` package, with its report, HTML and evaluation log
 - `REPORT-1-adhoc.md` — the earlier interim report, kept for the record

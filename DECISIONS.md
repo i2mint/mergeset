@@ -63,3 +63,58 @@ Order should not matter when merges are clean. When it does matter, the run must
 ## D12 — Only *new* local branches are ever created
 
 `create_integration_branch` refuses to touch a branch that already exists unless explicitly forced, and nothing in the package pushes. This is a hard safety boundary, not a default: the tool is pointed at repositories where existing branches are other people's in-flight work.
+
+
+## D13 — `git merge-tree` is always chained through base (found by TEST)
+
+`git merge-tree A B` merges at `merge-base(A, B)`. When two candidates were cut at different times — one is stale — that merge base is older than the base we actually care about, and the base branch's own commits are reported as conflicts. Measured by the TEST workstream on a real 15-PR set: the naive pairwise sweep found **13 conflicting pairs where only 2 were real**, eleven false positives from a single stale branch.
+
+Every git operation now goes through `gitops.merge_sequence`, which merges onto base one change at a time in the object database (`merge-tree --write-tree acc head` → `commit-tree`). A pleasant consequence: a conflicted set costs milliseconds and never touches the filesystem, and a clean set yields a real commit, so the worktree step becomes a checkout rather than a sequence of merges.
+
+## D14 — Validation is an ordered sequence of named stages (found by TEST)
+
+Real projects do not have "the test command". On the repository TEST measured, `pnpm run build:cosmos` is a *prerequisite* of testing — without it seven test files fail to collect — so a validator that ran only the test command would report a false failure. And the expensive step is not the tests (9 s) but the install (33 s), which only needs to run when the lockfile moves.
+
+So a validator is a list of `ValidationStage(name, command, fingerprint=, required=)`. The failing stage's name is prefixed onto every failure id, keeping "failed to build" distinguishable from "tests failed" in the log; a fingerprinted stage re-runs only when its inputs change; and `reuse_worktree=` keeps one tree for the whole run so the install is amortized. Lint is a non-required stage by default, matching how the repository's own CI gates.
+
+## D15 — Stacks are a forest, and the constraint lives in the core (found by TEST)
+
+TEST's framing, adopted verbatim: **a valid candidate set is downward-closed under the parent relation**. Not "a prefix of a chain" — stacks branch, so siblings share a parent. Four consequences, all in `mergeset/stacks.py`: close a set before evaluating it; drop a change's whole descendant cone when dropping it; merge only the *tips*, since a tip brings its ancestors (15 changes became 6 merges); and weight a change by its cone, or the hitting set will drop a stack root believing it dropped one small PR. On the observed forest this cut the search space from 32768 subsets to 576.
+
+Shrinking must respect the closure too. QuickXplain proposes arbitrary subsets, and an arbitrary subset of a stack is a fiction: `{577, 587}` and `{575, 577, 587}` and `{575, 576, 577, 587}` all produce the same merged tree, so TEST's log recorded two duplicate evaluations under different labels. The solver now closes every subset before evaluating it, which both makes the log honest and collapses those onto one cache entry.
+
+## D16 — A forge's CI verdict is only trusted when the bases agree (found by TEST)
+
+GitHub reported PR #602 as `MERGEABLE` / `CLEAN` while it would not merge onto `main` at all — because GitHub was evaluating it against its own base branch, which had moved on. `analyze` compares each change's `base_ref` against the base being merged onto and ignores the forge's signal when they differ, saying so in the report. TEST rates this the single highest-value cheap check in the run: it excluded one change and its whole cone before any test.
+
+## D17 — "Could not run the experiment" is not "the experiment failed" (found by TEST)
+
+TEST passed a bad `reuse_worktree` and got a confident report: *Plan 1 — merge 0 of 15 · 24 expensive evaluations spent · complete*. Every checkout error had been recorded as a textual merge conflict. Three changes:
+
+- `MergeOutcome.reason` is `'conflict'` or `'error'`, and only a conflict may enter the conflict set.
+- An error produces `Verdict.ERROR`, and the search **aborts** on the first one. Continuing past an untestable evaluation manufactures conflicts out of infrastructure problems.
+- `reuse_worktree` is validated (absolute path, real worktree) with an error message naming the fix — the original failure was passing `True` to an `Optional[str]`.
+
+The tell in the bad reports was that `conflicting_files` was empty; a real textual conflict always names files.
+
+## D18 — The base is evaluated before anything else
+
+One evaluation of the empty set, on base alone. If the base does not validate, every subsequent failure is meaningless and "nothing can be merged" gets reported as a finding rather than as the misconfiguration it is. It would also have caught an earlier run where `detect_runner` classified a TypeScript repository as pytest — it checked for a `tests/` directory before looking at `package.json` — and ran pytest in it for twelve evaluations. `detect_runner` now ranks manifests above directory names, and the default validator refuses to guess rather than running the wrong command.
+
+## D19 — File-overlap components are a search strategy, not a soundness claim (found by TEST)
+
+The original version combined per-component results and presented the combination as an answer. TEST produced the counterexample: `{#579, #631}` is a real conflict spanning two components — #631's drift test asserts that committed schema artifacts match TypeScript sources, and #579 edits those sources while touching none of #631's files. No evaluated subset had ever contained both, so the tool recommended a 13-change plan that fails.
+
+Decomposition is sound for *textual* conflicts and unsound for anything a whole-repo run can see: generated artifacts, barrel exports, snapshots, type checks, project-wide lint. It is kept, because finding a conflict inside a small component is finding it cheaply — but it now only *seeds*. The components are searched first, and then a global search runs with every conflict they found already known, so it starts nearly finished. A validator may opt out by declaring `validate.component_local = True` (as `merge_only_validation` does), and the "combine freely" claim was removed from the report unless that declaration is present.
+
+## D20 — The oracle's failure output attributes blame (fixtures from TEST)
+
+`mergeset/attribution.py` mines a failure for the changes it implicates, using three signals in increasing order of strength: every path in the failure block (source frames included, not just the failing test's file); the changes that touched those paths; and — decisively — the identifiers the output names, matched against each candidate's *added* diff lines.
+
+The third signal is not a refinement. In TEST's `{#579, #631}` case the failing test lives in a file #631 added, while the culprit #579 shares no file with it, so file-level attribution accuses the innocent change; only matching `pointColorHopDirection` / `pointColorHopSeeds` / `TraversalDirectionType` against the diffs finds #579. In the `{#577, #587}` case four suites fail to *collect*, so there are no test ids at all — just a stack trace whose actionable frame is a source file. Both fixtures are committed under `notes/fixtures/` and are the tests.
+
+Attribution is only ever a *hint*: it narrows the shrink, and a wrong hint costs one wasted check before falling back to unguided halving. It never decides a verdict.
+
+## D21 — An empty log is still a log
+
+`log = log or EvaluationLog(...)` silently discarded a caller-supplied log, because `__len__` makes an empty one falsy — on the first run, which is the run where it matters. `EvaluationLog.__bool__` now returns True, and the call site tests `is None`.

@@ -21,44 +21,7 @@ from mergeset.log import EvaluationLog, MemoryLines
 from mergeset.report import html_report, markdown_report
 from mergeset.sources import branch_changes
 from mergeset.validation import ValidationStage, merge_only_validation, staged_validation
-
-
-def run(repo, *args):
-    return subprocess.run(
-        ["git", "-C", repo, *args], capture_output=True, text=True, check=True
-    ).stdout.strip()
-
-
-@pytest.fixture
-def repo(tmp_path):
-    """A repo with: main, two independent branches, and one that conflicts."""
-    path = str(tmp_path / "repo")
-    os.makedirs(path)
-    run(path if False else str(tmp_path), "init", "-q", "-b", "main", path)
-    run(path, "config", "user.email", "t@example.com")
-    run(path, "config", "user.name", "T")
-
-    def write(name, text):
-        with open(os.path.join(path, name), "w") as f:
-            f.write(textwrap.dedent(text))
-
-    write("shared.txt", "line one\nline two\nline three\n")
-    write("other.txt", "untouched\n")
-    run(path, "add", "-A")
-    run(path, "commit", "-qm", "base")
-
-    for branch, filename, content in [
-        ("feat-a", "shared.txt", "line one\nAAA\nline three\n"),
-        ("feat-b", "other.txt", "changed by b\n"),
-        ("feat-c", "shared.txt", "line one\nCCC\nline three\n"),
-        ("feat-d", "new-d.txt", "d\n"),
-    ]:
-        run(path, "checkout", "-q", "-b", branch, "main")
-        write(filename, content)
-        run(path, "add", "-A")
-        run(path, "commit", "-qm", f"{branch} change")
-        run(path, "checkout", "-q", "main")
-    return path
+from conftest import run
 
 
 def test_capability_check_passes_on_a_modern_git():
@@ -162,8 +125,9 @@ def test_end_to_end_merge_only_analysis(repo, tmp_path):
     }
     # The conflicting pair was found by merge-tree, so it cost no evaluation.
     assert analysis.textual_conflicts
-    # 3 independent components; the conflicting pair itself never cost a run.
-    assert analysis.evaluations <= 4
+    # merge-only declares itself component-local, so the components combine
+    # without a global re-check: 1 baseline + one run per component branch.
+    assert analysis.evaluations <= 5
 
 
 def test_end_to_end_with_a_failing_validation(repo):

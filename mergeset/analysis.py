@@ -27,7 +27,15 @@ from typing import (
     Tuple,
 )
 
-from mergeset.base import Change, ChangeId, ChangeSet, ValidationOutcome, set_key
+from mergeset.base import (
+    Change,
+    ChangeId,
+    ChangeSet,
+    MergesetError,
+    ValidationOutcome,
+    Verdict,
+    set_key,
+)
 from mergeset.gitops import (
     changed_files,
     singleton_textual_conflicts,
@@ -36,6 +44,7 @@ from mergeset.gitops import (
     pairwise_textual_conflicts,
     resolve,
 )
+from mergeset.attribution import git_diff_reader, suspects as attribute_suspects
 from mergeset.log import EvaluationLog
 from mergeset.oracle import Resolver, git_oracle, merge_order
 from mergeset.solve import (
@@ -138,7 +147,9 @@ def analyze(
     weight: Optional[Callable[[Change], float]] = None,
     pairwise_preoracle: bool = True,
     decompose: bool = True,
+    component_local: Optional[bool] = None,
     use_ci_status: bool = True,
+    check_base: bool = True,
     max_evaluations: Optional[int] = None,
     max_seconds: Optional[float] = None,
     max_sets: Optional[int] = None,
@@ -161,7 +172,25 @@ def analyze(
         weight: ``Change -> cost of dropping it``; default is size-based.
         pairwise_preoracle: Use ``git merge-tree`` to find textual conflicts for
             free before spending any evaluation.
-        decompose: Split into independent file-overlap components.
+        decompose: Use file-overlap components to find conflicts cheaply. The
+            components are always searched first, because a conflict found
+            inside a small component is a conflict found for a fraction of the
+            price; whether their answers are then *trusted* to combine is
+            ``component_local``.
+        component_local: Assert that the validator cannot see across
+            components — i.e. that two changes touching disjoint files can never
+            fail together. True for a merge-only or per-file validator; **false
+            for any whole-repo test run**, which can fail on generated
+            artifacts, barrel exports, snapshots, type checks or project-wide
+            lint that no changed-file overlap predicts. When false (the
+            default), the combined result is verified by a global search seeded
+            with every conflict the components found. ``None`` (the default)
+            asks the validator: one may set ``validate.component_local = True``
+            to declare it, as :func:`~mergeset.validation.merge_only_validation`
+            does.
+        check_base: Evaluate the base commit on its own before anything else, so
+            a broken base or a misconfigured validator is a refusal rather than
+            15 confident failures.
         use_ci_status: Treat a change whose own CI is red as a size-1 conflict.
         max_evaluations, max_seconds, max_sets: Budgets; partial results are
             always returned.
@@ -182,7 +211,15 @@ def analyze(
 
     base = base or _common_base(repo, changes)
     base_sha = resolve(repo, base)
-    log = log or EvaluationLog(log_path or os.path.join(repo, ".mergeset", "evaluations.jsonl"))
+    if log is None:
+        log = EvaluationLog(
+            log_path or os.path.join(repo, ".mergeset", "evaluations.jsonl")
+        )
+
+    # A validator may declare that it cannot see across components (the
+    # merge-only one does); otherwise assume it can, which is the safe default.
+    if component_local is None:
+        component_local = bool(getattr(validate, "component_local", False))
 
     weight = weight or (lambda c: size_weight(repo, c))
     own_weights = {
@@ -294,6 +331,37 @@ def analyze(
         )
     )
 
+    if check_base:
+        # One evaluation of the empty set. If the base does not validate, every
+        # subsequent failure is meaningless and "nothing can be merged" would be
+        # reported as a finding rather than as the misconfiguration it is.
+        baseline = evaluate(frozenset())
+        if baseline.verdict is not Verdict.PASS:
+            detail = baseline.note or ""
+            if baseline.validation is not None:
+                detail = "; ".join(baseline.validation.failing_tests[:5]) or detail
+            raise MergesetError(
+                f"The base ({base} @ {base_sha[:8]}) does not pass validation on "
+                f"its own: {detail}\n\n"
+                "Every result would be meaningless, so nothing was evaluated. "
+                "Either the base is genuinely broken, or the validation command "
+                "is wrong for this repository. Check it by hand, then re-run "
+                "(pass check_base=False to proceed anyway)."
+            )
+
+    diff_of = git_diff_reader(repo, base_sha, heads_by_id)
+
+    def suspects_from_failure(result, subset: ChangeSet) -> ChangeSet:
+        """Which changes in ``subset`` the failure output points at."""
+        if result.validation is None:
+            return frozenset()
+        return attribute_suspects(
+            result.validation,
+            files_by_change=analysis.files_by_change,
+            within=subset,
+            diff_of=diff_of,
+        )
+
     per_component: List[List[ChangeSet]] = []
     for component in analysis.components:
         component_conflicts = [c for c in known_conflicts if c <= component]
@@ -307,13 +375,54 @@ def analyze(
             max_evaluations=max_evaluations,
             max_seconds=max_seconds,
             max_sets=max_sets,
+            suspects=suspects_from_failure,
             on_event=on_event,
         )
         analysis.searches.append(state)
         analysis.conflicts.extend(state.conflicts)
         per_component.append(state.maximal_good_sets or [frozenset()])
 
-    analysis.maximal_sets = combine_components(per_component)
+    combined = combine_components(per_component)
+    if component_local or len(analysis.components) <= 1:
+        analysis.maximal_sets = combined
+    else:
+        # Decomposition is sound for *textual* conflicts and unsound for
+        # anything a whole-repo run can see: a drift test in one component can
+        # read generated artifacts derived from sources another component edits,
+        # with no changed file in common. So the components buy cheap conflicts,
+        # and then one global search -- seeded with every one of them, so it
+        # starts almost finished -- decides the answer.
+        analysis.notes.append(
+            f"{len(analysis.components)} file-overlap components were searched "
+            "first to find conflicts cheaply, then verified globally: a whole-repo "
+            "validator can fail on changes that share no file, so component "
+            "results are not assumed to combine freely "
+            "(pass component_local=True if your validator cannot see across them)."
+        )
+        global_state = find_maximal_good_sets(
+            [c.id for c in changes],
+            evaluate,
+            known_conflicts=analysis.conflicts,
+            depends_on=analysis.stacks,
+            weight=lambda cid: weights.get(cid, 1.0),
+            max_evaluations=max_evaluations,
+            max_seconds=max_seconds,
+            max_sets=max_sets,
+            suspects=suspects_from_failure,
+            on_event=on_event,
+        )
+        analysis.searches.append(global_state)
+        analysis.conflicts = _dedupe_conflicts(
+            analysis.conflicts + global_state.conflicts
+        )
+        analysis.maximal_sets = global_state.maximal_good_sets or combined
+
+    for state in analysis.searches:
+        if state.error:
+            analysis.notes.append(
+                f"ABORTED: {state.error}. The sets below are whatever had been "
+                "established before that point; they are not an answer."
+            )
     violations = log.monotonicity_violations()
     for good, bad in violations:
         analysis.notes.append(
@@ -339,3 +448,12 @@ def _common_base(repo: str, changes: Sequence[Change]) -> str:
     for other in sorted(bases)[1:]:
         current = merge_base(repo, current, resolve(repo, other))
     return current
+
+
+def _dedupe_conflicts(conflicts: Sequence[ChangeSet]) -> List[ChangeSet]:
+    """Keep only the minimal conflicts; a superset of a conflict says nothing new."""
+    unique = {frozenset(c) for c in conflicts if c}
+    return sorted(
+        (c for c in unique if not any(other < c for other in unique)),
+        key=lambda c: (len(c), set_key(c)),
+    )

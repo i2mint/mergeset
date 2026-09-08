@@ -121,6 +121,15 @@ class EvaluationLog:
     def __len__(self) -> int:
         return len(self._evaluations)
 
+    def __bool__(self) -> bool:
+        """Always true.
+
+        Without this, ``__len__`` makes an empty log falsy, and every
+        ``log = log or EvaluationLog(...)`` silently discards the caller's log
+        on the one run where it matters most: the first.
+        """
+        return True
+
     @property
     def passing(self) -> List[ChangeSet]:
         """Sets recorded as good, largest first."""

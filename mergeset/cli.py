@@ -3,9 +3,12 @@
 The durable part is ``_dispatch_funcs`` — a plain list of plain functions. Only
 the last line binds it to an adapter, so the library stays free of any CLI
 library and a second surface (HTTP, MCP) is the same list projected differently.
-"""
 
-from __future__ import annotations
+
+Note the deliberate absence of ``from __future__ import annotations``: it turns
+every hint into a string, and the CLI adapter reads the real annotations to
+decide that ``--max-seconds`` is a float rather than the string ``"600"``.
+"""
 
 import os
 import sys
