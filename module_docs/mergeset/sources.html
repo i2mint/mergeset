@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.sources &mdash; mergeset 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="mergeset.stacks" href="stacks.html" />
+    <link rel="prev" title="mergeset.solve" href="solve.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solve.html">mergeset.solve</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">mergeset.sources</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.sources.PR_FIELDS"><code class="docutils literal notranslate"><span class="pre">PR_FIELDS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.sources.branch_changes"><code class="docutils literal notranslate"><span class="pre">branch_changes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.sources.check_gh_capability"><code class="docutils literal notranslate"><span class="pre">check_gh_capability()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.sources.commit_changes"><code class="docutils literal notranslate"><span class="pre">commit_changes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.sources.detect_stacks"><code class="docutils literal notranslate"><span class="pre">detect_stacks()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.sources.fetch_pull_requests"><code class="docutils literal notranslate"><span class="pre">fetch_pull_requests()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.sources.local_branch_names"><code class="docutils literal notranslate"><span class="pre">local_branch_names()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.sources.pr_changes"><code class="docutils literal notranslate"><span class="pre">pr_changes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.sources.size_weight"><code class="docutils literal notranslate"><span class="pre">size_weight()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">mergeset.sources</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/mergeset/sources.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mergeset.sources">
+<span id="mergeset-sources"></span><h1>mergeset.sources<a class="headerlink" href="#module-mergeset.sources" title="Link to this heading"></a></h1>
+<p>Change sources: where the candidate changes come from.</p>
+<p>A <strong>source</strong> is any callable returning an iterable of <a class="reference internal" href="base.html#mergeset.base.Change" title="mergeset.base.Change"><code class="xref py py-class docutils literal notranslate"><span class="pre">Change</span></code></a>.
+Branches, pull requests and explicit commit lists are just different sources of
+the same thing — a <code class="docutils literal notranslate"><span class="pre">base..head</span></code> range — which is why the rest of the package
+never mentions the word “PR”.</p>
+<p>PR sources carry the extra metadata that only a forge knows (author, title, CI
+status, base branch, draft flag, stack relationships); it rides along in
+<code class="docutils literal notranslate"><span class="pre">Change.meta</span></code> and is used for weighting and for the report, never by the
+solver.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="mergeset.sources.PR_FIELDS">
+<span class="sig-prename descclassname"><span class="pre">mergeset.sources.</span></span><span class="sig-name descname"><span class="pre">PR_FIELDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'number,title,author,headRefName,baseRefName,isDraft,updatedAt,createdAt,state,mergeable,statusCheckRollup,url,additions,deletions,changedFiles'</span></span><a class="headerlink" href="#mergeset.sources.PR_FIELDS" title="Link to this definition"></a></dt>
+<dd><p>Fields worth asking <cite>gh</cite> for; anything else is noise in the report.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.sources.branch_changes">
+<span class="sig-prename descclassname"><span class="pre">mergeset.sources.</span></span><span class="sig-name descname"><span class="pre">branch_changes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">branches</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'HEAD'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base.html#mergeset.base.Change" title="mergeset.base.Change"><span class="pre">Change</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/sources.html#branch_changes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.sources.branch_changes" title="Link to this definition"></a></dt>
+<dd><p>Changes from local or remote branches.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">branch_changes</span><span class="p">(</span><span class="s1">'.'</span><span class="p">,</span> <span class="p">[]))</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.sources.check_gh_capability">
+<span class="sig-prename descclassname"><span class="pre">mergeset.sources.</span></span><span class="sig-name descname"><span class="pre">check_gh_capability</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/mergeset/sources.html#check_gh_capability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.sources.check_gh_capability" title="Link to this definition"></a></dt>
+<dd><p>Raise a fixable error if the GitHub CLI is unusable.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.sources.commit_changes">
+<span class="sig-prename descclassname"><span class="pre">mergeset.sources.</span></span><span class="sig-name descname"><span class="pre">commit_changes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">commits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'HEAD'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base.html#mergeset.base.Change" title="mergeset.base.Change"><span class="pre">Change</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/sources.html#commit_changes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.sources.commit_changes" title="Link to this definition"></a></dt>
+<dd><p>Changes from an explicit list of commit-ishes, one change per commit.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.sources.detect_stacks">
+<span class="sig-prename descclassname"><span class="pre">mergeset.sources.</span></span><span class="sig-name descname"><span class="pre">detect_stacks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">changes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base.html#mergeset.base.Change" title="mergeset.base.Change"><span class="pre">Change</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/sources.html#detect_stacks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.sources.detect_stacks" title="Link to this definition"></a></dt>
+<dd><p>Map change id -&gt; the change id it is stacked on, for PR stacks.</p>
+<p>A PR whose base ref is another candidate’s head ref is <em>stacked</em>: only
+prefixes of the chain make sense as a merge set, because the child contains
+the parent. Recorded so the report can say so and the solver can be told.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Change</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">'pr1'</span><span class="p">,</span> <span class="n">head</span><span class="o">=</span><span class="s1">'origin/a'</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="s1">'origin/main'</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s1">'pr'</span><span class="p">,</span>
+<span class="gp">... </span>           <span class="n">meta</span><span class="o">=</span><span class="p">{</span><span class="s1">'head_ref'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">,</span> <span class="s1">'base_ref'</span><span class="p">:</span> <span class="s1">'main'</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">Change</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">'pr2'</span><span class="p">,</span> <span class="n">head</span><span class="o">=</span><span class="s1">'origin/b'</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="s1">'origin/a'</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s1">'pr'</span><span class="p">,</span>
+<span class="gp">... </span>           <span class="n">meta</span><span class="o">=</span><span class="p">{</span><span class="s1">'head_ref'</span><span class="p">:</span> <span class="s1">'b'</span><span class="p">,</span> <span class="s1">'base_ref'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">detect_stacks</span><span class="p">([</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">])</span>
+<span class="go">{'pr2': 'pr1'}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.sources.fetch_pull_requests">
+<span class="sig-prename descclassname"><span class="pre">mergeset.sources.</span></span><span class="sig-name descname"><span class="pre">fetch_pull_requests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo_spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">author</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'open'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/sources.html#fetch_pull_requests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.sources.fetch_pull_requests" title="Link to this definition"></a></dt>
+<dd><p>Raw <code class="docutils literal notranslate"><span class="pre">gh</span> <span class="pre">pr</span> <span class="pre">list</span></code> records for <code class="docutils literal notranslate"><span class="pre">repo_spec</span></code> (<code class="docutils literal notranslate"><span class="pre">owner/name</span></code>).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.sources.local_branch_names">
+<span class="sig-prename descclassname"><span class="pre">mergeset.sources.</span></span><span class="sig-name descname"><span class="pre">local_branch_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/sources.html#local_branch_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.sources.local_branch_names" title="Link to this definition"></a></dt>
+<dd><p>Local branch names, optionally filtered by a glob <code class="docutils literal notranslate"><span class="pre">pattern</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.sources.pr_changes">
+<span class="sig-prename descclassname"><span class="pre">mergeset.sources.</span></span><span class="sig-name descname"><span class="pre">pr_changes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pull_requests</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_of</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base.html#mergeset.base.Change" title="mergeset.base.Change"><span class="pre">Change</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/sources.html#pr_changes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.sources.pr_changes" title="Link to this definition"></a></dt>
+<dd><p>Turn <code class="docutils literal notranslate"><span class="pre">gh</span> <span class="pre">pr</span> <span class="pre">list</span></code> records into changes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>repo</strong> – Local clone the refs live in.</p></li>
+<li><p><strong>pull_requests</strong> – Records as produced by <a class="reference internal" href="#mergeset.sources.fetch_pull_requests" title="mergeset.sources.fetch_pull_requests"><code class="xref py py-func docutils literal notranslate"><span class="pre">fetch_pull_requests()</span></code></a>.</p></li>
+<li><p><strong>base</strong> – Override base for every change. Default: each PR’s own base ref,
+which is what makes stacked PRs visible rather than silently wrong.</p></li>
+<li><p><strong>ref_of</strong> – How to name a PR’s head ref locally. Default <code class="docutils literal notranslate"><span class="pre">origin/&lt;headRef&gt;</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.sources.size_weight">
+<span class="sig-prename descclassname"><span class="pre">mergeset.sources.</span></span><span class="sig-name descname"><span class="pre">size_weight</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">change</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="base.html#mergeset.base.Change" title="mergeset.base.Change"><span class="pre">Change</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../_modules/mergeset/sources.html#size_weight"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.sources.size_weight" title="Link to this definition"></a></dt>
+<dd><p>Default weight: how much it costs to drop this change.</p>
+<p>Bigger changes are worth more (dropping a 900-line PR wastes more work than
+dropping a typo fix), so the weighted hitting set prefers to drop the small
+ones. <code class="docutils literal notranslate"><span class="pre">log</span></code>-shaped so one huge branch does not dominate everything.</p>
+<p>Override with any <code class="docutils literal notranslate"><span class="pre">Change</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code>; PR metadata (priority labels,
+author, age) is right there in <code class="docutils literal notranslate"><span class="pre">change.meta</span></code> for the taking.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="solve.html" class="btn btn-neutral float-left" title="mergeset.solve" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="stacks.html" class="btn btn-neutral float-right" title="mergeset.stacks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

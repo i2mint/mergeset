@@ -1,0 +1,341 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.stacks &mdash; mergeset 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mergeset.stacks</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mergeset.stacks</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Stacked changes: when the candidates are not independent.</span>
+
+<span class="sd">A pull request opened against another pull request's branch already *contains*</span>
+<span class="sd">it. That single fact breaks the assumption that any subset of the candidates is</span>
+<span class="sd">a meaningful thing to evaluate, and it breaks it in three places at once:</span>
+
+<span class="sd">- **Validity.** Asking for ``{616}`` when 616 is stacked on 604 on 587 really</span>
+<span class="sd">  means ``{587, 604, 616}``. A valid set must be **downward-closed** under the</span>
+<span class="sd">  parent relation. Note "downward-closed in a forest", not "a prefix of a</span>
+<span class="sd">  chain": stacks branch, so two changes can be siblings on the same parent.</span>
+<span class="sd">- **Cost.** Merging a stack's tip brings every ancestor with it, so merging the</span>
+<span class="sd">  ancestors explicitly is wasted work and can perturb merge order. Reduce a set</span>
+<span class="sd">  to its **tips** before merging.</span>
+<span class="sd">- **Weight.** Dropping a change drops its whole descendant cone. Weighting</span>
+<span class="sd">  changes independently lets a hitting set cheerfully discard thousands of lines</span>
+<span class="sd">  while believing it discarded one small PR.</span>
+
+<span class="sd">Discovering the relation is :func:`mergeset.sources.detect_stacks`; acting on it</span>
+<span class="sd">is here. The dependency map is always ``child -&gt; parent``.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Set</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChangeId</span><span class="p">,</span> <span class="n">ChangeSet</span><span class="p">,</span> <span class="n">set_key</span>
+
+<span class="c1">#: ``child -&gt; parent``. A change absent from the mapping has no parent.</span>
+<span class="n">Dependencies</span> <span class="o">=</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="n">ChangeId</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="ancestors">
+<a class="viewcode-back" href="../../module_docs/mergeset/stacks.html#mergeset.ancestors">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ancestors</span><span class="p">(</span><span class="n">change</span><span class="p">:</span> <span class="n">ChangeId</span><span class="p">,</span> <span class="n">parents</span><span class="p">:</span> <span class="n">Dependencies</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Every change ``change`` is stacked on, transitively.</span>
+
+<span class="sd">    &gt;&gt;&gt; set_key(ancestors('c', {'c': 'b', 'b': 'a'}))</span>
+<span class="sd">    ('a', 'b')</span>
+<span class="sd">    """</span>
+    <span class="n">out</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">parents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">change</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">current</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="n">parents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">out</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="descendants">
+<a class="viewcode-back" href="../../module_docs/mergeset/stacks.html#mergeset.descendants">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">descendants</span><span class="p">(</span><span class="n">change</span><span class="p">:</span> <span class="n">ChangeId</span><span class="p">,</span> <span class="n">parents</span><span class="p">:</span> <span class="n">Dependencies</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Every change stacked on ``change``, transitively — its *cone*.</span>
+
+<span class="sd">    &gt;&gt;&gt; set_key(descendants('a', {'c': 'b', 'b': 'a', 'd': 'a'}))</span>
+<span class="sd">    ('b', 'c', 'd')</span>
+<span class="sd">    """</span>
+    <span class="n">children</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">child</span><span class="p">,</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">parents</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">children</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+    <span class="n">out</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">stack</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">children</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">change</span><span class="p">,</span> <span class="p">()))</span>
+    <span class="k">while</span> <span class="n">stack</span><span class="p">:</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">stack</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">children</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="p">()))</span>
+    <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">out</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="close_down">
+<a class="viewcode-back" href="../../module_docs/mergeset/stacks.html#mergeset.close_down">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">close_down</span><span class="p">(</span><span class="n">subset</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">],</span> <span class="n">parents</span><span class="p">:</span> <span class="n">Dependencies</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Add every ancestor, so the set becomes a valid thing to ask for.</span>
+
+<span class="sd">    &gt;&gt;&gt; set_key(close_down({'c'}, {'c': 'b', 'b': 'a'}))</span>
+<span class="sd">    ('a', 'b', 'c')</span>
+<span class="sd">    """</span>
+    <span class="n">subset</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">subset</span> <span class="o">|</span> <span class="nb">frozenset</span><span class="p">(</span>
+        <span class="n">a</span> <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">subset</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ancestors</span><span class="p">(</span><span class="n">member</span><span class="p">,</span> <span class="n">parents</span><span class="p">)</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="largest_closed_subset">
+<a class="viewcode-back" href="../../module_docs/mergeset/stacks.html#mergeset.largest_closed_subset">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">largest_closed_subset</span><span class="p">(</span>
+    <span class="n">subset</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">],</span> <span class="n">parents</span><span class="p">:</span> <span class="n">Dependencies</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Drop members whose ancestors are missing — the set you can actually merge.</span>
+
+<span class="sd">    This is the *other* way to make a set valid, and it is the one the solver</span>
+<span class="sd">    needs: when the search decides to drop a parent, the descendants have to go</span>
+<span class="sd">    too, and no amount of wanting them back changes that.</span>
+
+<span class="sd">    &gt;&gt;&gt; set_key(largest_closed_subset({'b', 'c'}, {'c': 'b', 'b': 'a'}))</span>
+<span class="sd">    ()</span>
+<span class="sd">    &gt;&gt;&gt; set_key(largest_closed_subset({'a', 'b', 'd'}, {'c': 'b', 'b': 'a'}))</span>
+<span class="sd">    ('a', 'b', 'd')</span>
+<span class="sd">    """</span>
+    <span class="n">subset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
+    <span class="n">changed</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">while</span> <span class="n">changed</span><span class="p">:</span>
+        <span class="n">changed</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">subset</span><span class="p">):</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="n">parents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">member</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">parent</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">subset</span><span class="p">:</span>
+                <span class="n">subset</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">member</span><span class="p">)</span>
+                <span class="n">changed</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="close_up">
+<a class="viewcode-back" href="../../module_docs/mergeset/stacks.html#mergeset.close_up">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">close_up</span><span class="p">(</span><span class="n">subset</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">],</span> <span class="n">parents</span><span class="p">:</span> <span class="n">Dependencies</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Add every descendant — what dropping these changes actually costs.</span>
+
+<span class="sd">    &gt;&gt;&gt; set_key(close_up({'a'}, {'c': 'b', 'b': 'a'}))</span>
+<span class="sd">    ('a', 'b', 'c')</span>
+<span class="sd">    """</span>
+    <span class="n">subset</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">subset</span> <span class="o">|</span> <span class="nb">frozenset</span><span class="p">(</span>
+        <span class="n">d</span> <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">subset</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">descendants</span><span class="p">(</span><span class="n">member</span><span class="p">,</span> <span class="n">parents</span><span class="p">)</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="tips">
+<a class="viewcode-back" href="../../module_docs/mergeset/stacks.html#mergeset.tips">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">tips</span><span class="p">(</span><span class="n">subset</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">],</span> <span class="n">parents</span><span class="p">:</span> <span class="n">Dependencies</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The members of ``subset`` that nothing else in ``subset`` is stacked on.</span>
+
+<span class="sd">    Merging these brings the rest along for free.</span>
+
+<span class="sd">    &gt;&gt;&gt; set_key(tips({'a', 'b', 'c'}, {'c': 'b', 'b': 'a'}))</span>
+<span class="sd">    ('c',)</span>
+<span class="sd">    &gt;&gt;&gt; set_key(tips({'a', 'b', 'd'}, {'b': 'a', 'd': 'a'}))</span>
+<span class="sd">    ('b', 'd')</span>
+<span class="sd">    """</span>
+    <span class="n">subset</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
+    <span class="n">covered</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+        <span class="n">parents</span><span class="p">[</span><span class="n">member</span><span class="p">]</span> <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">subset</span> <span class="k">if</span> <span class="n">parents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">member</span><span class="p">)</span> <span class="ow">in</span> <span class="n">subset</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">subset</span> <span class="o">-</span> <span class="n">covered</span></div>
+
+
+
+<div class="viewcode-block" id="cone_weights">
+<a class="viewcode-back" href="../../module_docs/mergeset/stacks.html#mergeset.cone_weights">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cone_weights</span><span class="p">(</span>
+    <span class="n">weights</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">parents</span><span class="p">:</span> <span class="n">Dependencies</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Re-weight each change by the cost of dropping its whole descendant cone.</span>
+
+<span class="sd">    Dropping a stack's root drops the stack. The hitting set has to know that,</span>
+<span class="sd">    or it will pick the "cheapest" change and take eight thousand lines with it.</span>
+
+<span class="sd">    &gt;&gt;&gt; cone_weights({'a': 1.0, 'b': 2.0}, {'b': 'a'})</span>
+<span class="sd">    {'a': 3.0, 'b': 2.0}</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">change</span><span class="p">:</span> <span class="n">weights</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">change</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">descendants</span><span class="p">(</span><span class="n">change</span><span class="p">,</span> <span class="n">parents</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">change</span> <span class="ow">in</span> <span class="n">weights</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="stack_roots">
+<a class="viewcode-back" href="../../module_docs/mergeset/stacks.html#mergeset.stack_roots">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">stack_roots</span><span class="p">(</span><span class="n">parents</span><span class="p">:</span> <span class="n">Dependencies</span><span class="p">,</span> <span class="n">changes</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Group changes into stacks (connected components of the parent relation).</span>
+
+<span class="sd">    &gt;&gt;&gt; [set_key(g) for g in stack_roots({'b': 'a', 'd': 'c'}, 'abcde')]</span>
+<span class="sd">    [('a', 'b'), ('c', 'd'), ('e',)]</span>
+<span class="sd">    """</span>
+    <span class="n">changes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">changes</span><span class="p">)</span>
+    <span class="n">groups</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">change</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">:</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">change</span>
+        <span class="k">while</span> <span class="n">parents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">root</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">root</span> <span class="o">=</span> <span class="n">parents</span><span class="p">[</span><span class="n">root</span><span class="p">]</span>
+        <span class="n">groups</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">change</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">groups</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">set_key</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="count_closed_subsets">
+<a class="viewcode-back" href="../../module_docs/mergeset/stacks.html#mergeset.count_closed_subsets">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">count_closed_subsets</span><span class="p">(</span><span class="n">parents</span><span class="p">:</span> <span class="n">Dependencies</span><span class="p">,</span> <span class="n">changes</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""How many downward-closed subsets exist — the size of the real search space.</span>
+
+<span class="sd">    Worth reporting: on a 15-change forest of four stacks this is 576 rather</span>
+<span class="sd">    than 32768, which is the difference between "enumerate carefully" and</span>
+<span class="sd">    "hopeless".</span>
+
+<span class="sd">    &gt;&gt;&gt; count_closed_subsets({'b': 'a'}, ['a', 'b'])</span>
+<span class="sd">    3</span>
+<span class="sd">    """</span>
+    <span class="n">changes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">changes</span><span class="p">)</span>
+    <span class="n">children</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">child</span><span class="p">,</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">parents</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">children</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">count</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">ChangeId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Closed subsets of the subtree at ``node``, given ``node`` is included."""</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="p">()):</span>
+            <span class="n">total</span> <span class="o">*=</span> <span class="n">count</span><span class="p">(</span><span class="n">child</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c1"># child excluded, or any of its closed sets</span>
+        <span class="k">return</span> <span class="n">total</span>
+
+    <span class="n">roots</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span> <span class="k">if</span> <span class="n">parents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">root</span> <span class="ow">in</span> <span class="n">roots</span><span class="p">:</span>
+        <span class="n">total</span> <span class="o">*=</span> <span class="n">count</span><span class="p">(</span><span class="n">root</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">total</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

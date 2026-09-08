@@ -1,0 +1,507 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.report &mdash; mergeset 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mergeset.report</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mergeset.report</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Rendering an :class:`~mergeset.analysis.Analysis` for humans.</span>
+
+<span class="sd">Two renderers: a Markdown report meant to be read in a terminal or a PR comment,</span>
+<span class="sd">and a single self-contained HTML file (no build step, no CDN) meant to be opened</span>
+<span class="sd">and poked at. Both are pure functions of the analysis, which is itself derived</span>
+<span class="sd">from the evaluation log — so a report can always be regenerated without</span>
+<span class="sd">re-running anything expensive.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">html</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">Analysis</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChangeSet</span><span class="p">,</span> <span class="n">set_key</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_fmt_set</span><span class="p">(</span><span class="n">subset</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">c</span><span class="si">}</span><span class="s2">`"</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">subset</span><span class="p">))</span> <span class="ow">or</span> <span class="s2">"_(none)_"</span>
+
+
+<div class="viewcode-block" id="markdown_report">
+<a class="viewcode-back" href="../../module_docs/mergeset/report.html#mergeset.markdown_report">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">markdown_report</span><span class="p">(</span><span class="n">analysis</span><span class="p">:</span> <span class="n">Analysis</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"mergeset report"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render the analysis as Markdown.</span>
+
+<span class="sd">    Sections, in the order a reader actually wants them: what to merge, what</span>
+<span class="sd">    stops the rest, and only then the evidence.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_markdown_lines</span><span class="p">(</span><span class="n">analysis</span><span class="p">,</span> <span class="n">title</span><span class="p">))</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_markdown_lines</span><span class="p">(</span><span class="n">analysis</span><span class="p">:</span> <span class="n">Analysis</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="n">by_id</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">by_id</span>
+    <span class="k">yield</span> <span class="sa">f</span><span class="s2">"# </span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">yield</span> <span class="s2">""</span>
+    <span class="k">yield</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"Base `</span><span class="si">{</span><span class="n">analysis</span><span class="o">.</span><span class="n">base</span><span class="si">}</span><span class="s2">` (`</span><span class="si">{</span><span class="n">analysis</span><span class="o">.</span><span class="n">base_sha</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2">`) · "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">changes</span><span class="p">)</span><span class="si">}</span><span class="s2"> candidate changes · "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">analysis</span><span class="o">.</span><span class="n">evaluations</span><span class="si">}</span><span class="s2"> expensive evaluations spent · "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'complete'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">analysis</span><span class="o">.</span><span class="n">exhausted</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'partial (budget reached)'</span><span class="si">}</span><span class="s2">"</span>
+    <span class="p">)</span>
+    <span class="k">yield</span> <span class="s2">""</span>
+
+    <span class="k">yield</span> <span class="s2">"## Recommended merge plans"</span>
+    <span class="k">yield</span> <span class="s2">""</span>
+    <span class="n">plans</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">merge_plan</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">plans</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="s2">"_No good set was found. Every candidate conflicts._"</span>
+    <span class="k">for</span> <span class="n">plan</span> <span class="ow">in</span> <span class="n">plans</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"### Plan </span><span class="si">{</span><span class="n">plan</span><span class="p">[</span><span class="s1">'rank'</span><span class="p">]</span><span class="si">}</span><span class="s2"> — merge </span><span class="si">{</span><span class="n">plan</span><span class="p">[</span><span class="s1">'size'</span><span class="p">]</span><span class="si">}</span><span class="s2"> of "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">changes</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+        <span class="k">yield</span> <span class="s2">""</span>
+        <span class="k">yield</span> <span class="s2">"Merge in this order:"</span>
+        <span class="k">yield</span> <span class="s2">""</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">plan</span><span class="p">[</span><span class="s2">"merge"</span><span class="p">],</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">change</span> <span class="o">=</span> <span class="n">by_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cid</span><span class="p">)</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="n">change</span><span class="o">.</span><span class="n">meta</span> <span class="k">if</span> <span class="n">change</span> <span class="k">else</span> <span class="p">{}</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"title"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">head</span> <span class="k">if</span> <span class="n">change</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"url"</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"[`</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2">`](</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">)"</span> <span class="k">if</span> <span class="n">url</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2">`"</span>
+            <span class="k">yield</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> — </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">yield</span> <span class="s2">""</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">plan</span><span class="p">[</span><span class="s2">"merge"</span><span class="p">])</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">plan</span><span class="p">[</span><span class="s2">"changes"</span><span class="p">]):</span>
+            <span class="n">brought</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">plan</span><span class="p">[</span><span class="s2">"changes"</span><span class="p">])</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">plan</span><span class="p">[</span><span class="s2">"merge"</span><span class="p">]))</span>
+            <span class="k">yield</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"That merges </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">plan</span><span class="p">[</span><span class="s1">'merge'</span><span class="p">])</span><span class="si">}</span><span class="s2"> refs and lands "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">plan</span><span class="p">[</span><span class="s1">'changes'</span><span class="p">])</span><span class="si">}</span><span class="s2"> changes: </span><span class="si">{</span><span class="n">_fmt_set</span><span class="p">(</span><span class="n">brought</span><span class="p">)</span><span class="si">}</span><span class="s2"> come along "</span>
+                <span class="s2">"as ancestors of the branches above."</span>
+            <span class="p">)</span>
+            <span class="k">yield</span> <span class="s2">""</span>
+        <span class="k">yield</span> <span class="sa">f</span><span class="s2">"Dropped: </span><span class="si">{</span><span class="n">_fmt_set</span><span class="p">(</span><span class="n">plan</span><span class="p">[</span><span class="s1">'dropped'</span><span class="p">])</span><span class="si">}</span><span class="s2"> (weight </span><span class="si">{</span><span class="n">plan</span><span class="p">[</span><span class="s1">'dropped_weight'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span>
+        <span class="k">yield</span> <span class="s2">""</span>
+
+    <span class="k">yield</span> <span class="s2">"## What stops the rest"</span>
+    <span class="k">yield</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="n">analysis</span><span class="o">.</span><span class="n">singleton_conflicts</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="s2">"**Will not merge onto the base at all** (before any test ran):"</span>
+        <span class="k">yield</span> <span class="s2">""</span>
+        <span class="k">for</span> <span class="n">cid</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">singleton_conflicts</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="n">shown</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">`"</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">[:</span><span class="mi">5</span><span class="p">])</span> <span class="ow">or</span> <span class="s2">"_(unattributed)_"</span>
+            <span class="k">yield</span> <span class="sa">f</span><span class="s2">"- `</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2">` — </span><span class="si">{</span><span class="n">shown</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">yield</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="n">analysis</span><span class="o">.</span><span class="n">textual_conflicts</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="s2">"**Textual conflicts** (found by `git merge-tree`, before any test ran):"</span>
+        <span class="k">yield</span> <span class="s2">""</span>
+        <span class="k">yield</span> <span class="s2">"| a | b | files |"</span>
+        <span class="k">yield</span> <span class="s2">"| --- | --- | --- |"</span>
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">textual_conflicts</span><span class="p">:</span>
+            <span class="n">shown</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">`"</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">[:</span><span class="mi">5</span><span class="p">])</span> <span class="ow">or</span> <span class="s2">"_(unattributed)_"</span>
+            <span class="n">more</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">" (+</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">5</span><span class="si">}</span><span class="s2"> more)"</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span> <span class="k">else</span> <span class="s2">""</span>
+            <span class="k">yield</span> <span class="sa">f</span><span class="s2">"| `</span><span class="si">{</span><span class="n">a</span><span class="si">}</span><span class="s2">` | `</span><span class="si">{</span><span class="n">b</span><span class="si">}</span><span class="s2">` | </span><span class="si">{</span><span class="n">shown</span><span class="si">}{</span><span class="n">more</span><span class="si">}</span><span class="s2"> |"</span>
+        <span class="k">yield</span> <span class="s2">""</span>
+    <span class="n">semantic</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">conflicts</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="nb">frozenset</span><span class="p">({</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">})</span> <span class="o">==</span> <span class="n">c</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">textual_conflicts</span>
+        <span class="p">)</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">semantic</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="s2">"**Conflicts found by validation** (merged cleanly, still failed):"</span>
+        <span class="k">yield</span> <span class="s2">""</span>
+        <span class="k">for</span> <span class="n">conflict</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">semantic</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="n">set_key</span><span class="p">(</span><span class="n">s</span><span class="p">))):</span>
+            <span class="n">evidence</span> <span class="o">=</span> <span class="n">_failure_evidence</span><span class="p">(</span><span class="n">analysis</span><span class="p">,</span> <span class="n">conflict</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="sa">f</span><span class="s2">"- </span><span class="si">{</span><span class="n">_fmt_set</span><span class="p">(</span><span class="n">conflict</span><span class="p">)</span><span class="si">}{</span><span class="n">evidence</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">yield</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">analysis</span><span class="o">.</span><span class="n">textual_conflicts</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">semantic</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">analysis</span><span class="o">.</span><span class="n">singleton_conflicts</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="s2">"_Nothing. Every candidate merges and validates together._"</span>
+        <span class="k">yield</span> <span class="s2">""</span>
+
+    <span class="k">yield</span> <span class="s2">"## Candidates"</span>
+    <span class="k">yield</span> <span class="s2">""</span>
+    <span class="k">yield</span> <span class="s2">"| change | source | head | weight | files | notes |"</span>
+    <span class="k">yield</span> <span class="s2">"| --- | --- | --- | --- | --- | --- |"</span>
+    <span class="k">for</span> <span class="n">change</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">changes</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">id</span><span class="p">):</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">files_by_change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">notes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">stacks</span><span class="p">:</span>
+            <span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"stacked on `</span><span class="si">{</span><span class="n">analysis</span><span class="o">.</span><span class="n">stacks</span><span class="p">[</span><span class="n">change</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="si">}</span><span class="s2">`"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"draft"</span><span class="p">):</span>
+            <span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"draft"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ci"</span><span class="p">):</span>
+            <span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"CI </span><span class="si">{</span><span class="n">change</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">'ci'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"| `</span><span class="si">{</span><span class="n">change</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">` | </span><span class="si">{</span><span class="n">change</span><span class="o">.</span><span class="n">source</span><span class="si">}</span><span class="s2"> | `</span><span class="si">{</span><span class="n">change</span><span class="o">.</span><span class="n">head</span><span class="si">}</span><span class="s2">` | "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">analysis</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span><span class="si">}</span><span class="s2"> | "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'; '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">notes</span><span class="p">)</span><span class="si">}</span><span class="s2"> |"</span>
+        <span class="p">)</span>
+    <span class="k">yield</span> <span class="s2">""</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="s2">"## Independent components"</span>
+        <span class="k">yield</span> <span class="s2">""</span>
+        <span class="k">if</span> <span class="n">analysis</span><span class="o">.</span><span class="n">components_combined</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="p">(</span>
+                <span class="s2">"These groups touch no common file, and the validator declared "</span>
+                <span class="s2">"itself component-local, so they were solved separately and "</span>
+                <span class="s2">"their answers combine freely."</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="p">(</span>
+                <span class="s2">"These groups touch no common file, so they were searched "</span>
+                <span class="s2">"separately to find conflicts cheaply. Their answers were then "</span>
+                <span class="s2">"**verified globally**: a whole-repo validator can fail on "</span>
+                <span class="s2">"changes that share no file — a test reading a generated "</span>
+                <span class="s2">"artifact, a barrel export, a snapshot, a project-wide lint — so "</span>
+                <span class="s2">"component results are not assumed to combine."</span>
+            <span class="p">)</span>
+        <span class="k">yield</span> <span class="s2">""</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">component</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="n">_fmt_set</span><span class="p">(</span><span class="n">component</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">yield</span> <span class="s2">""</span>
+
+    <span class="k">if</span> <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="s2">"## Notes"</span>
+        <span class="k">yield</span> <span class="s2">""</span>
+        <span class="k">for</span> <span class="n">note</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="sa">f</span><span class="s2">"- </span><span class="si">{</span><span class="n">note</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">yield</span> <span class="s2">""</span>
+
+    <span class="k">yield</span> <span class="s2">"## Evaluation log"</span>
+    <span class="k">yield</span> <span class="s2">""</span>
+    <span class="k">yield</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">log</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">[])</span><span class="si">}</span><span class="s2"> rows. Every row is re-usable: a re-run costs nothing for sets already decided."</span>
+    <span class="k">yield</span> <span class="s2">""</span>
+    <span class="k">yield</span> <span class="s2">"| set | verdict | stage | seconds | detail |"</span>
+    <span class="k">yield</span> <span class="s2">"| --- | --- | --- | --- | --- |"</span>
+    <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">log</span> <span class="ow">or</span> <span class="p">[]:</span>
+        <span class="n">detail</span> <span class="o">=</span> <span class="s2">""</span>
+        <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">merge</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">record</span><span class="o">.</span><span class="n">merge</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+            <span class="n">detail</span> <span class="o">=</span> <span class="s2">"conflict: "</span> <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">`"</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">record</span><span class="o">.</span><span class="n">merge</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">record</span><span class="o">.</span><span class="n">validation</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">record</span><span class="o">.</span><span class="n">validation</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+            <span class="n">detail</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">`"</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">record</span><span class="o">.</span><span class="n">validation</span><span class="o">.</span><span class="n">failing_tests</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">merge</span> <span class="ow">and</span> <span class="n">record</span><span class="o">.</span><span class="n">merge</span><span class="o">.</span><span class="n">assisted</span><span class="p">:</span>
+            <span class="n">detail</span> <span class="o">+=</span> <span class="s2">" **(assisted resolution — review the diff)**"</span>
+        <span class="k">yield</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"| </span><span class="si">{</span><span class="n">_fmt_set</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">subset</span><span class="p">)</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">record</span><span class="o">.</span><span class="n">verdict</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> | "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">record</span><span class="o">.</span><span class="n">stage</span><span class="o">.</span><span class="n">value</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">record</span><span class="o">.</span><span class="n">stage</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">''</span><span class="si">}</span><span class="s2"> | "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">record</span><span class="o">.</span><span class="n">duration</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">detail</span><span class="si">}</span><span class="s2"> |"</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_failure_evidence</span><span class="p">(</span><span class="n">analysis</span><span class="p">:</span> <span class="n">Analysis</span><span class="p">,</span> <span class="n">conflict</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Which tests, if we know — the difference between a report and an oracle."""</span>
+    <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">log</span> <span class="ow">or</span> <span class="p">[]:</span>
+        <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">subset</span> <span class="o">==</span> <span class="n">conflict</span> <span class="ow">and</span> <span class="n">record</span><span class="o">.</span><span class="n">validation</span><span class="p">:</span>
+            <span class="n">tests</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">validation</span><span class="o">.</span><span class="n">failing_tests</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">tests</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">" — failing: "</span> <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">`"</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tests</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">""</span>
+
+
+<div class="viewcode-block" id="html_report">
+<a class="viewcode-back" href="../../module_docs/mergeset/report.html#mergeset.html_report">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">html_report</span><span class="p">(</span><span class="n">analysis</span><span class="p">:</span> <span class="n">Analysis</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"mergeset"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render the analysis as one self-contained HTML file.</span>
+
+<span class="sd">    No build step, no CDN, no network: a single file that can be opened from</span>
+<span class="sd">    disk or attached to an issue. It draws the conflict graph (nodes = changes,</span>
+<span class="sd">    edges = conflicts, textual vs validation distinguished), the maximal sets,</span>
+<span class="sd">    and the evaluation timeline.</span>
+<span class="sd">    """</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">_analysis_jdict</span><span class="p">(</span><span class="n">analysis</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_HTML_TEMPLATE</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"__TITLE__"</span><span class="p">,</span> <span class="n">html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">title</span><span class="p">))</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+        <span class="s2">"__DATA__"</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_analysis_jdict</span><span class="p">(</span><span class="n">analysis</span><span class="p">:</span> <span class="n">Analysis</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The whole analysis as JSON, which is what the HTML page renders."""</span>
+    <span class="n">textual_pairs</span> <span class="o">=</span> <span class="p">{</span><span class="nb">frozenset</span><span class="p">({</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">})</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">textual_conflicts</span><span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"base"</span><span class="p">:</span> <span class="n">analysis</span><span class="o">.</span><span class="n">base</span><span class="p">,</span>
+        <span class="s2">"base_sha"</span><span class="p">:</span> <span class="n">analysis</span><span class="o">.</span><span class="n">base_sha</span><span class="p">,</span>
+        <span class="s2">"exhausted"</span><span class="p">:</span> <span class="n">analysis</span><span class="o">.</span><span class="n">exhausted</span><span class="p">,</span>
+        <span class="s2">"evaluations"</span><span class="p">:</span> <span class="n">analysis</span><span class="o">.</span><span class="n">evaluations</span><span class="p">,</span>
+        <span class="s2">"changes"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="o">**</span><span class="n">c</span><span class="o">.</span><span class="n">to_jdict</span><span class="p">(),</span>
+                <span class="s2">"weight"</span><span class="p">:</span> <span class="n">analysis</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+                <span class="s2">"files"</span><span class="p">:</span> <span class="n">analysis</span><span class="o">.</span><span class="n">files_by_change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="p">[]),</span>
+                <span class="s2">"stacked_on"</span><span class="p">:</span> <span class="n">analysis</span><span class="o">.</span><span class="n">stacks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                <span class="s2">"component"</span><span class="p">:</span> <span class="nb">next</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">comp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">comp</span><span class="p">),</span> <span class="mi">0</span>
+                <span class="p">),</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">changes</span>
+        <span class="p">],</span>
+        <span class="s2">"edges"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span> <span class="n">a</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">:</span> <span class="n">b</span><span class="p">,</span> <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"textual"</span><span class="p">,</span> <span class="s2">"files"</span><span class="p">:</span> <span class="n">files</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">textual_conflicts</span>
+        <span class="p">]</span>
+        <span class="o">+</span> <span class="p">[</span>
+            <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">c</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"b"</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">c</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"validation"</span><span class="p">,</span> <span class="s2">"files"</span><span class="p">:</span> <span class="p">[]}</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">conflicts</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">textual_pairs</span>
+        <span class="p">],</span>
+        <span class="s2">"big_conflicts"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="nb">list</span><span class="p">(</span><span class="n">set_key</span><span class="p">(</span><span class="n">c</span><span class="p">))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">conflicts</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span>
+        <span class="p">],</span>
+        <span class="s2">"plans"</span><span class="p">:</span> <span class="n">analysis</span><span class="o">.</span><span class="n">merge_plan</span><span class="p">(),</span>
+        <span class="s2">"components"</span><span class="p">:</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">set_key</span><span class="p">(</span><span class="n">c</span><span class="p">))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">components</span><span class="p">],</span>
+        <span class="s2">"singleton_conflicts"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">singleton_conflicts</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">},</span>
+        <span class="s2">"stacks"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">stacks</span><span class="p">),</span>
+        <span class="s2">"notes"</span><span class="p">:</span> <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="p">,</span>
+        <span class="s2">"log"</span><span class="p">:</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">to_jdict</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">log</span> <span class="ow">or</span> <span class="p">[])],</span>
+    <span class="p">}</span>
+
+
+<span class="n">_HTML_TEMPLATE</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">"""&lt;!doctype html&gt;</span>
+<span class="s2">&lt;meta charset="utf-8"&gt;</span>
+<span class="s2">&lt;title&gt;__TITLE__&lt;/title&gt;</span>
+<span class="s2">&lt;style&gt;</span>
+<span class="s2">  :root { color-scheme: light dark;</span>
+<span class="s2">    --bg:#fbfbfa; --fg:#1a1a19; --muted:#6b6b66; --line:#dedcd6;</span>
+<span class="s2">    --card:#ffffff; --good:#2f7d4f; --bad:#b3452e; --warn:#8a6a1f; --accent:#3b5b9e; }</span>
+<span class="s2">  @media (prefers-color-scheme: dark) { :root {</span>
+<span class="s2">    --bg:#161614; --fg:#eceae4; --muted:#9a978e; --line:#33312c;</span>
+<span class="s2">    --card:#1f1e1b; --good:#6fbf8b; --bad:#e08a72; --warn:#d8b45c; --accent:#8fa9dd; } }</span>
+<span class="s2">  * { box-sizing: border-box; }</span>
+<span class="s2">  body { margin:0; background:var(--bg); color:var(--fg);</span>
+<span class="s2">    font:15px/1.55 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }</span>
+<span class="s2">  .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px 80px; }</span>
+<span class="s2">  h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -0.01em; }</span>
+<span class="s2">  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .08em;</span>
+<span class="s2">       color: var(--muted); margin: 36px 0 12px; font-weight: 600; }</span>
+<span class="s2">  .sub { color: var(--muted); margin-bottom: 8px; }</span>
+<span class="s2">  .card { background: var(--card); border: 1px solid var(--line);</span>
+<span class="s2">          border-radius: 10px; padding: 16px 18px; margin-bottom: 12px; }</span>
+<span class="s2">  code, .mono { font-family: ui-monospace,SFMono-Regular,Menlo,monospace; font-size: 13px; }</span>
+<span class="s2">  .pill { display:inline-block; padding:1px 8px; border-radius:999px;</span>
+<span class="s2">          border:1px solid var(--line); font-size:12px; margin-right:6px; }</span>
+<span class="s2">  .good { color: var(--good); } .bad { color: var(--bad); } .warn { color: var(--warn); }</span>
+<span class="s2">  table { border-collapse: collapse; width: 100%; font-size: 13px; }</span>
+<span class="s2">  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line);</span>
+<span class="s2">           vertical-align: top; }</span>
+<span class="s2">  th { color: var(--muted); font-weight: 600; }</span>
+<span class="s2">  .scroll { overflow-x: auto; }</span>
+<span class="s2">  svg { width: 100%; height: auto; display: block; }</span>
+<span class="s2">  .node { cursor: default; }</span>
+<span class="s2">  .edge-textual { stroke: var(--bad); stroke-width: 2; }</span>
+<span class="s2">  .edge-validation { stroke: var(--warn); stroke-width: 2; stroke-dasharray: 5 4; }</span>
+<span class="s2">  .legend { color: var(--muted); font-size: 12px; margin-top: 8px; }</span>
+<span class="s2">  ol { margin: 6px 0 0 20px; padding: 0; }</span>
+<span class="s2">&lt;/style&gt;</span>
+<span class="s2">&lt;div class="wrap"&gt;</span>
+<span class="s2">  &lt;h1&gt;__TITLE__&lt;/h1&gt;</span>
+<span class="s2">  &lt;div class="sub" id="summary"&gt;&lt;/div&gt;</span>
+<span class="s2">  &lt;h2&gt;Conflict graph&lt;/h2&gt;</span>
+<span class="s2">  &lt;div class="card"&gt;&lt;div id="graph"&gt;&lt;/div&gt;</span>
+<span class="s2">    &lt;div class="legend"&gt;Solid red = textual conflict (&lt;code&gt;git merge-tree&lt;/code&gt;, no test run).</span>
+<span class="s2">      Dashed amber = found by validation. Node size = weight. Colour = component.&lt;/div&gt;</span>
+<span class="s2">  &lt;/div&gt;</span>
+<span class="s2">  &lt;h2&gt;Merge plans&lt;/h2&gt;&lt;div id="plans"&gt;&lt;/div&gt;</span>
+<span class="s2">  &lt;h2&gt;Candidates&lt;/h2&gt;&lt;div class="card scroll"&gt;&lt;table id="changes"&gt;&lt;/table&gt;&lt;/div&gt;</span>
+<span class="s2">  &lt;h2&gt;Notes&lt;/h2&gt;&lt;div class="card" id="notes"&gt;&lt;/div&gt;</span>
+<span class="s2">  &lt;h2&gt;Evaluation log&lt;/h2&gt;&lt;div class="card scroll"&gt;&lt;table id="log"&gt;&lt;/table&gt;&lt;/div&gt;</span>
+<span class="s2">&lt;/div&gt;</span>
+<span class="s2">&lt;script&gt;</span>
+<span class="s2">const DATA = __DATA__;</span>
+<span class="s2">const esc = s =&gt; String(s == null ? '' : s).replace(/[&amp;&lt;&gt;"]/g, c =&gt;</span>
+<span class="s2">  ({'&amp;':'&amp;amp;','&lt;':'&amp;lt;','&gt;':'&amp;gt;','"':'&amp;quot;'}[c]));</span>
+<span class="s2">const COLORS = ['#3b5b9e','#2f7d4f','#8a6a1f','#7a3f8f','#b3452e','#2f7d7d'];</span>
+
+<span class="s2">document.getElementById('summary').innerHTML =</span>
+<span class="s2">  `base &lt;code&gt;${esc(DATA.base)}&lt;/code&gt; (&lt;code&gt;${esc(DATA.base_sha.slice(0,8))}&lt;/code&gt;) · ` +</span>
+<span class="s2">  `$</span><span class="si">{DATA.changes.length}</span><span class="s2"> changes · $</span><span class="si">{DATA.evaluations}</span><span class="s2"> evaluations · ` +</span>
+<span class="s2">  (DATA.exhausted ? '&lt;span class="good"&gt;complete&lt;/span&gt;'</span>
+<span class="s2">                  : '&lt;span class="warn"&gt;partial (budget reached)&lt;/span&gt;');</span>
+
+<span class="s2">// --- conflict graph: changes on a circle, conflicts as chords -------------</span>
+<span class="s2">(function drawGraph(){</span>
+<span class="s2">  const n = DATA.changes.length, W = 900, H = Math.max(320, 60 + n * 26);</span>
+<span class="s2">  const cx = W/2, cy = H/2, R = Math.min(W, H)/2 - 90;</span>
+<span class="s2">  const pos = </span><span class="si">{}</span><span class="s2">;</span>
+<span class="s2">  DATA.changes.forEach((c, i) =&gt; {</span>
+<span class="s2">    const a = (i / n) * 2 * Math.PI - Math.PI/2;</span>
+<span class="s2">    pos[c.id] = { x: cx + R*Math.cos(a), y: cy + R*Math.sin(a), a };</span>
+<span class="s2">  });</span>
+<span class="s2">  const maxW = Math.max(1, ...DATA.changes.map(c =&gt; c.weight || 1));</span>
+<span class="s2">  let svg = `&lt;svg viewBox="0 0 $</span><span class="si">{W}</span><span class="s2"> $</span><span class="si">{H}</span><span class="s2">" role="img" aria-label="conflict graph"&gt;`;</span>
+<span class="s2">  DATA.edges.forEach(e =&gt; {</span>
+<span class="s2">    const p = pos[e.a], q = pos[e.b];</span>
+<span class="s2">    if (!p || !q) return;</span>
+<span class="s2">    svg += `&lt;path class="edge-$</span><span class="si">{e.kind}</span><span class="s2">" fill="none" d="M$</span><span class="si">{p.x}</span><span class="s2"> $</span><span class="si">{p.y}</span><span class="s2"> Q $</span><span class="si">{cx}</span><span class="s2"> $</span><span class="si">{cy}</span><span class="s2"> $</span><span class="si">{q.x}</span><span class="s2"> $</span><span class="si">{q.y}</span><span class="s2">"&gt;` +</span>
+<span class="s2">           `&lt;title&gt;${esc(e.a)} × ${esc(e.b)}${e.files.length ? ': ' + esc(e.files.slice(0,6).join(', ')) : ''}&lt;/title&gt;&lt;/path&gt;`;</span>
+<span class="s2">  });</span>
+<span class="s2">  DATA.changes.forEach(c =&gt; {</span>
+<span class="s2">    const p = pos[c.id], r = 6 + 8 * ((c.weight || 1) / maxW);</span>
+<span class="s2">    const color = COLORS[(c.component || 0) % COLORS.length];</span>
+<span class="s2">    const right = Math.cos(p.a) &gt; -0.01;</span>
+<span class="s2">    svg += `&lt;circle class="node" cx="$</span><span class="si">{p.x}</span><span class="s2">" cy="$</span><span class="si">{p.y}</span><span class="s2">" r="$</span><span class="si">{r}</span><span class="s2">" fill="$</span><span class="si">{color}</span><span class="s2">" opacity="0.85"&gt;` +</span>
+<span class="s2">           `&lt;title&gt;${esc(c.id)} — ${esc((c.meta &amp;&amp; c.meta.title) || c.head)}\n$</span><span class="si">{c.files.length}</span><span class="s2"> files&lt;/title&gt;&lt;/circle&gt;`;</span>
+<span class="s2">    svg += `&lt;text x="${p.x + (right ? r+6 : -r-6)}" y="${p.y+4}" font-size="12" ` +</span>
+<span class="s2">           `text-anchor="${right ? 'start' : 'end'}" fill="currentColor"&gt;${esc(c.id)}&lt;/text&gt;`;</span>
+<span class="s2">  });</span>
+<span class="s2">  document.getElementById('graph').innerHTML = svg + '&lt;/svg&gt;';</span>
+<span class="s2">})();</span>
+
+<span class="s2">document.getElementById('plans').innerHTML = DATA.plans.length ? DATA.plans.map(p =&gt;</span>
+<span class="s2">  `&lt;div class="card"&gt;&lt;b&gt;Plan $</span><span class="si">{p.rank}</span><span class="s2">&lt;/b&gt; — merge $</span><span class="si">{p.size}</span><span class="s2"> of $</span><span class="si">{DATA.changes.length}</span>
+<span class="s2">   &lt;span class="pill"&gt;dropped weight $</span><span class="si">{p.dropped_weight}</span><span class="s2">&lt;/span&gt;</span>
+<span class="s2">   &lt;ol&gt;${p.changes.map(id =&gt; {</span>
+<span class="s2">     const c = DATA.changes.find(x =&gt; x.id === id) || </span><span class="si">{}</span><span class="s2">;</span>
+<span class="s2">     const t = (c.meta &amp;&amp; c.meta.title) || c.head || '';</span>
+<span class="s2">     const u = c.meta &amp;&amp; c.meta.url;</span>
+<span class="s2">     return `&lt;li&gt;${u ? `&lt;a href="${esc(u)}"&gt;` : ''}&lt;code&gt;${esc(id)}&lt;/code&gt;${u ? '&lt;/a&gt;' : ''} — ${esc(t)}&lt;/li&gt;`;</span>
+<span class="s2">   }).join('')}&lt;/ol&gt;</span>
+<span class="s2">   &lt;div class="sub"&gt;drops: ${p.dropped.length ? p.dropped.map(d =&gt; `&lt;code&gt;${esc(d)}&lt;/code&gt;`).join(' ') : '&lt;i&gt;nothing&lt;/i&gt;'}&lt;/div&gt;</span>
+<span class="s2">   &lt;/div&gt;`).join('') : '&lt;div class="card"&gt;No good set found.&lt;/div&gt;';</span>
+
+<span class="s2">document.getElementById('changes').innerHTML =</span>
+<span class="s2">  '&lt;tr&gt;&lt;th&gt;change&lt;/th&gt;&lt;th&gt;source&lt;/th&gt;&lt;th&gt;head&lt;/th&gt;&lt;th&gt;weight&lt;/th&gt;&lt;th&gt;files&lt;/th&gt;&lt;th&gt;notes&lt;/th&gt;&lt;/tr&gt;' +</span>
+<span class="s2">  DATA.changes.map(c =&gt; {</span>
+<span class="s2">    const notes = [];</span>
+<span class="s2">    if (c.stacked_on) notes.push(`stacked on &lt;code&gt;${esc(c.stacked_on)}&lt;/code&gt;`);</span>
+<span class="s2">    if (c.meta &amp;&amp; c.meta.draft) notes.push('draft');</span>
+<span class="s2">    if (c.meta &amp;&amp; c.meta.ci) notes.push('CI ' + esc(c.meta.ci));</span>
+<span class="s2">    return `&lt;tr&gt;&lt;td&gt;&lt;code&gt;${esc(c.id)}&lt;/code&gt;&lt;/td&gt;&lt;td&gt;${esc(c.source)}&lt;/td&gt;` +</span>
+<span class="s2">      `&lt;td&gt;&lt;code&gt;${esc(c.head)}&lt;/code&gt;&lt;/td&gt;&lt;td&gt;${(c.weight||1).toFixed(2)}&lt;/td&gt;` +</span>
+<span class="s2">      `&lt;td&gt;$</span><span class="si">{c.files.length}</span><span class="s2">&lt;/td&gt;&lt;td&gt;${notes.join('; ')}&lt;/td&gt;&lt;/tr&gt;`;</span>
+<span class="s2">  }).join('');</span>
+
+<span class="s2">document.getElementById('notes').innerHTML = DATA.notes.length</span>
+<span class="s2">  ? '&lt;ul&gt;' + DATA.notes.map(n =&gt; `&lt;li&gt;${esc(n)}&lt;/li&gt;`).join('') + '&lt;/ul&gt;'</span>
+<span class="s2">  : '&lt;i&gt;none&lt;/i&gt;';</span>
+
+<span class="s2">document.getElementById('log').innerHTML =</span>
+<span class="s2">  '&lt;tr&gt;&lt;th&gt;set&lt;/th&gt;&lt;th&gt;verdict&lt;/th&gt;&lt;th&gt;stage&lt;/th&gt;&lt;th&gt;s&lt;/th&gt;&lt;th&gt;detail&lt;/th&gt;&lt;/tr&gt;' +</span>
+<span class="s2">  DATA.log.map(e =&gt; {</span>
+<span class="s2">    let detail = '';</span>
+<span class="s2">    if (e.merge &amp;&amp; !e.merge.ok) detail = 'conflict: ' + esc(e.merge.conflicting_files.slice(0,3).join(', '));</span>
+<span class="s2">    else if (e.validation &amp;&amp; !e.validation.ok) detail = esc(e.validation.failing_tests.slice(0,3).join(', '));</span>
+<span class="s2">    if (e.merge &amp;&amp; e.merge.assisted) detail += ' &lt;b class="warn"&gt;(assisted)&lt;/b&gt;';</span>
+<span class="s2">    const cls = e.verdict === 'pass' ? 'good' : e.verdict === 'fail' ? 'bad' : 'warn';</span>
+<span class="s2">    return `&lt;tr&gt;&lt;td&gt;&lt;code&gt;${esc(e.subset.join(', '))}&lt;/code&gt;&lt;/td&gt;` +</span>
+<span class="s2">      `&lt;td class="$</span><span class="si">{cls}</span><span class="s2">"&gt;${esc(e.verdict)}&lt;/td&gt;&lt;td&gt;${esc(e.stage || '')}&lt;/td&gt;` +</span>
+<span class="s2">      `&lt;td&gt;${(e.duration||0).toFixed(1)}&lt;/td&gt;&lt;td&gt;$</span><span class="si">{detail}</span><span class="s2">&lt;/td&gt;&lt;/tr&gt;`;</span>
+<span class="s2">  }).join('');</span>
+<span class="s2">&lt;/script&gt;</span>
+<span class="s2">"""</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,4 @@
+mergeset.log
+============
+.. automodule:: mergeset.log
+   :members:

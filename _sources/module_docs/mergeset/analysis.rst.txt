@@ -1,0 +1,4 @@
+mergeset.analysis
+=================
+.. automodule:: mergeset.analysis
+   :members:

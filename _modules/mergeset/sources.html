@@ -1,0 +1,365 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.sources &mdash; mergeset 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mergeset.sources</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mergeset.sources</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Change sources: where the candidate changes come from.</span>
+
+<span class="sd">A **source** is any callable returning an iterable of :class:`~mergeset.base.Change`.</span>
+<span class="sd">Branches, pull requests and explicit commit lists are just different sources of</span>
+<span class="sd">the same thing — a ``base..head`` range — which is why the rest of the package</span>
+<span class="sd">never mentions the word "PR".</span>
+
+<span class="sd">PR sources carry the extra metadata that only a forge knows (author, title, CI</span>
+<span class="sd">status, base branch, draft flag, stack relationships); it rides along in</span>
+<span class="sd">``Change.meta`` and is used for weighting and for the report, never by the</span>
+<span class="sd">solver.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">CapabilityError</span><span class="p">,</span> <span class="n">Change</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.gitops</span><span class="w"> </span><span class="kn">import</span> <span class="n">changed_files</span><span class="p">,</span> <span class="n">git</span><span class="p">,</span> <span class="n">resolve</span>
+
+<span class="c1">#: Fields worth asking `gh` for; anything else is noise in the report.</span>
+<span class="n">PR_FIELDS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"number,title,author,headRefName,baseRefName,isDraft,updatedAt,createdAt,"</span>
+    <span class="s2">"state,mergeable,statusCheckRollup,url,additions,deletions,changedFiles"</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="branch_changes">
+<a class="viewcode-back" href="../../module_docs/mergeset/sources.html#mergeset.branch_changes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">branch_changes</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">branches</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">base</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"HEAD"</span><span class="p">,</span>
+    <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Change</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Changes from local or remote branches.</span>
+
+<span class="sd">    &gt;&gt;&gt; list(branch_changes('.', []))</span>
+<span class="sd">    []</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">branch</span> <span class="ow">in</span> <span class="n">branches</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">Change</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="p">(</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">branch</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="n">head</span><span class="o">=</span><span class="n">branch</span><span class="p">,</span>
+            <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span>
+            <span class="n">source</span><span class="o">=</span><span class="s2">"branch"</span><span class="p">,</span>
+            <span class="n">meta</span><span class="o">=</span><span class="p">{</span><span class="s2">"ref"</span><span class="p">:</span> <span class="n">branch</span><span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="local_branch_names">
+<a class="viewcode-back" href="../../module_docs/mergeset/sources.html#mergeset.local_branch_names">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">local_branch_names</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">exclude</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Local branch names, optionally filtered by a glob ``pattern``."""</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"for-each-ref"</span><span class="p">,</span> <span class="s2">"--format=%(refname:short)"</span><span class="p">,</span> <span class="s2">"refs/heads/"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">pattern</span><span class="p">:</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"refs/heads/</span><span class="si">{</span><span class="n">pattern</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">exclude</span><span class="p">)]</span></div>
+
+
+
+<div class="viewcode-block" id="commit_changes">
+<a class="viewcode-back" href="../../module_docs/mergeset/sources.html#mergeset.commit_changes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">commit_changes</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">commits</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"HEAD"</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Change</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Changes from an explicit list of commit-ishes, one change per commit."""</span>
+    <span class="k">for</span> <span class="n">commit</span> <span class="ow">in</span> <span class="n">commits</span><span class="p">:</span>
+        <span class="n">sha</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">commit</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">Change</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">sha</span><span class="p">[:</span><span class="mi">8</span><span class="p">],</span>
+            <span class="n">head</span><span class="o">=</span><span class="n">sha</span><span class="p">,</span>
+            <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span>
+            <span class="n">source</span><span class="o">=</span><span class="s2">"commit"</span><span class="p">,</span>
+            <span class="n">meta</span><span class="o">=</span><span class="p">{</span><span class="s2">"subject"</span><span class="p">:</span> <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"log"</span><span class="p">,</span> <span class="s2">"-1"</span><span class="p">,</span> <span class="s2">"--format=</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">sha</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()},</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="check_gh_capability">
+<a class="viewcode-back" href="../../module_docs/mergeset/sources.html#mergeset.check_gh_capability">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_gh_capability</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Raise a fixable error if the GitHub CLI is unusable."""</span>
+    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"gh"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CapabilityError</span><span class="p">(</span>
+            <span class="s2">"The GitHub CLI (`gh`) is not installed; it is how mergeset reads "</span>
+            <span class="s2">"pull requests. Install it (https://cli.github.com/) and run "</span>
+            <span class="s2">"`gh auth login`, or use branch/commit sources instead."</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">"gh"</span><span class="p">,</span> <span class="s2">"auth"</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CapabilityError</span><span class="p">(</span><span class="s2">"`gh` is installed but not authenticated. Run `gh auth login`."</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="fetch_pull_requests">
+<a class="viewcode-back" href="../../module_docs/mergeset/sources.html#mergeset.fetch_pull_requests">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fetch_pull_requests</span><span class="p">(</span>
+    <span class="n">repo_spec</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">author</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">state</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"open"</span><span class="p">,</span>
+    <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="n">extra_args</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Raw ``gh pr list`` records for ``repo_spec`` (``owner/name``)."""</span>
+    <span class="n">check_gh_capability</span><span class="p">()</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"gh"</span><span class="p">,</span> <span class="s2">"pr"</span><span class="p">,</span> <span class="s2">"list"</span><span class="p">,</span> <span class="s2">"--repo"</span><span class="p">,</span> <span class="n">repo_spec</span><span class="p">,</span> <span class="s2">"--state"</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span>
+        <span class="s2">"--limit"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">limit</span><span class="p">),</span> <span class="s2">"--json"</span><span class="p">,</span> <span class="n">PR_FIELDS</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">author</span><span class="p">:</span>
+        <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--author"</span><span class="p">,</span> <span class="n">author</span><span class="p">]</span>
+    <span class="n">cmd</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">extra_args</span><span class="p">)</span>
+    <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CapabilityError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"`gh pr list` failed: </span><span class="si">{</span><span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stdout</span> <span class="ow">or</span> <span class="s2">"[]"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="pr_changes">
+<a class="viewcode-back" href="../../module_docs/mergeset/sources.html#mergeset.pr_changes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pr_changes</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">pull_requests</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">base</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ref_of</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Change</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Turn ``gh pr list`` records into changes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        repo: Local clone the refs live in.</span>
+<span class="sd">        pull_requests: Records as produced by :func:`fetch_pull_requests`.</span>
+<span class="sd">        base: Override base for every change. Default: each PR's own base ref,</span>
+<span class="sd">            which is what makes stacked PRs visible rather than silently wrong.</span>
+<span class="sd">        ref_of: How to name a PR's head ref locally. Default ``origin/&lt;headRef&gt;``.</span>
+<span class="sd">    """</span>
+    <span class="n">ref_of</span> <span class="o">=</span> <span class="n">ref_of</span> <span class="ow">or</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">pr</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"origin/</span><span class="si">{</span><span class="n">pr</span><span class="p">[</span><span class="s1">'headRefName'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">pull_requests</span><span class="p">:</span>
+        <span class="n">checks</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"statusCheckRollup"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="k">yield</span> <span class="n">Change</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="sa">f</span><span class="s2">"pr</span><span class="si">{</span><span class="n">pr</span><span class="p">[</span><span class="s1">'number'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">head</span><span class="o">=</span><span class="n">ref_of</span><span class="p">(</span><span class="n">pr</span><span class="p">),</span>
+            <span class="n">base</span><span class="o">=</span><span class="n">base</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">"origin/</span><span class="si">{</span><span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'baseRefName'</span><span class="p">,</span><span class="w"> </span><span class="s1">'main'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">source</span><span class="o">=</span><span class="s2">"pr"</span><span class="p">,</span>
+            <span class="n">meta</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"number"</span><span class="p">:</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"number"</span><span class="p">),</span>
+                <span class="s2">"title"</span><span class="p">:</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"title"</span><span class="p">),</span>
+                <span class="s2">"author"</span><span class="p">:</span> <span class="p">(</span><span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"author"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"login"</span><span class="p">),</span>
+                <span class="s2">"url"</span><span class="p">:</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"url"</span><span class="p">),</span>
+                <span class="s2">"head_ref"</span><span class="p">:</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"headRefName"</span><span class="p">),</span>
+                <span class="s2">"base_ref"</span><span class="p">:</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"baseRefName"</span><span class="p">),</span>
+                <span class="s2">"draft"</span><span class="p">:</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"isDraft"</span><span class="p">),</span>
+                <span class="s2">"updated_at"</span><span class="p">:</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"updatedAt"</span><span class="p">),</span>
+                <span class="s2">"state"</span><span class="p">:</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"state"</span><span class="p">),</span>
+                <span class="s2">"mergeable"</span><span class="p">:</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mergeable"</span><span class="p">),</span>
+                <span class="s2">"ci"</span><span class="p">:</span> <span class="n">_rollup_state</span><span class="p">(</span><span class="n">checks</span><span class="p">),</span>
+                <span class="s2">"additions"</span><span class="p">:</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"additions"</span><span class="p">),</span>
+                <span class="s2">"deletions"</span><span class="p">:</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"deletions"</span><span class="p">),</span>
+                <span class="s2">"changed_files"</span><span class="p">:</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"changedFiles"</span><span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rollup_state</span><span class="p">(</span><span class="n">checks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Reduce a ``statusCheckRollup`` to one word.</span>
+
+<span class="sd">    &gt;&gt;&gt; _rollup_state([{'conclusion': 'SUCCESS'}, {'conclusion': 'FAILURE'}])</span>
+<span class="sd">    'failure'</span>
+<span class="sd">    &gt;&gt;&gt; _rollup_state([]) is None</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">checks</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">states</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"conclusion"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"state"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">checks</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">{</span><span class="s2">"FAILURE"</span><span class="p">,</span> <span class="s2">"ERROR"</span><span class="p">,</span> <span class="s2">"TIMED_OUT"</span><span class="p">,</span> <span class="s2">"CANCELLED"</span><span class="p">}</span> <span class="o">&amp;</span> <span class="n">states</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"failure"</span>
+    <span class="k">if</span> <span class="p">{</span><span class="s2">"PENDING"</span><span class="p">,</span> <span class="s2">"IN_PROGRESS"</span><span class="p">,</span> <span class="s2">"QUEUED"</span><span class="p">,</span> <span class="s2">""</span><span class="p">}</span> <span class="o">&amp;</span> <span class="n">states</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"pending"</span>
+    <span class="k">return</span> <span class="s2">"success"</span>
+
+
+<div class="viewcode-block" id="detect_stacks">
+<a class="viewcode-back" href="../../module_docs/mergeset/sources.html#mergeset.detect_stacks">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">detect_stacks</span><span class="p">(</span><span class="n">changes</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Change</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Map change id -&gt; the change id it is stacked on, for PR stacks.</span>
+
+<span class="sd">    A PR whose base ref is another candidate's head ref is *stacked*: only</span>
+<span class="sd">    prefixes of the chain make sense as a merge set, because the child contains</span>
+<span class="sd">    the parent. Recorded so the report can say so and the solver can be told.</span>
+
+<span class="sd">    &gt;&gt;&gt; a = Change(id='pr1', head='origin/a', base='origin/main', source='pr',</span>
+<span class="sd">    ...            meta={'head_ref': 'a', 'base_ref': 'main'})</span>
+<span class="sd">    &gt;&gt;&gt; b = Change(id='pr2', head='origin/b', base='origin/a', source='pr',</span>
+<span class="sd">    ...            meta={'head_ref': 'b', 'base_ref': 'a'})</span>
+<span class="sd">    &gt;&gt;&gt; detect_stacks([a, b])</span>
+<span class="sd">    {'pr2': 'pr1'}</span>
+<span class="sd">    """</span>
+    <span class="n">by_head_ref</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">c</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"head_ref"</span><span class="p">):</span> <span class="n">c</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"head_ref"</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">c</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">by_head_ref</span><span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">"base_ref"</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span>
+        <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"base_ref"</span><span class="p">)</span> <span class="ow">in</span> <span class="n">by_head_ref</span>
+        <span class="ow">and</span> <span class="n">by_head_ref</span><span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">"base_ref"</span><span class="p">]]</span> <span class="o">!=</span> <span class="n">c</span><span class="o">.</span><span class="n">id</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="size_weight">
+<a class="viewcode-back" href="../../module_docs/mergeset/sources.html#mergeset.size_weight">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">size_weight</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Change</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Default weight: how much it costs to drop this change.</span>
+
+<span class="sd">    Bigger changes are worth more (dropping a 900-line PR wastes more work than</span>
+<span class="sd">    dropping a typo fix), so the weighted hitting set prefers to drop the small</span>
+<span class="sd">    ones. ``log``-shaped so one huge branch does not dominate everything.</span>
+
+<span class="sd">    Override with any ``Change -&gt; float``; PR metadata (priority labels,</span>
+<span class="sd">    author, age) is right there in ``change.meta`` for the taking.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">log1p</span>
+
+    <span class="n">added</span> <span class="o">=</span> <span class="n">change</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"additions"</span><span class="p">)</span>
+    <span class="n">deleted</span> <span class="o">=</span> <span class="n">change</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"deletions"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">added</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">stat</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"diff"</span><span class="p">,</span> <span class="s2">"--shortstat"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">change</span><span class="o">.</span><span class="n">base</span><span class="si">}</span><span class="s2">...</span><span class="si">{</span><span class="n">change</span><span class="o">.</span><span class="n">head</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span>
+        <span class="n">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">stat</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">","</span><span class="p">,</span> <span class="s2">" "</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()]</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">numbers</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="p">(</span><span class="n">added</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">deleted</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">log1p</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

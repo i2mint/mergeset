@@ -1,0 +1,556 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.validation &mdash; mergeset 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mergeset.validation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mergeset.validation</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Validation functions: does this merged tree actually work?</span>
+
+<span class="sd">A validator is any callable ``(worktree_path) -&gt; ValidationOutcome``. Four are</span>
+<span class="sd">shipped — a pytest runner (the default), an arbitrary shell command, a local CI</span>
+<span class="sd">run via ``act``, and "merge-only" — and a user-supplied Python callable is a</span>
+<span class="sd">first-class fifth option, because the interesting projects always have one more</span>
+<span class="sd">step than a test command.</span>
+
+<span class="sd">Every validator returns a *structured* result, not a bit: which tests failed,</span>
+<span class="sd">which files they live in, how long it took. The solver uses that to aim its</span>
+<span class="sd">conflict shrinking at the changes actually implicated, rather than halving</span>
+<span class="sd">blindly.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">CapabilityError</span><span class="p">,</span> <span class="n">ValidationOutcome</span>
+
+<span class="c1">#: Fail-fast by default: the answer we need is a bit, and the first failure has it.</span>
+<span class="n">DEFAULT_PYTEST_ARGS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"-x"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">"--tb=short"</span><span class="p">,</span> <span class="s2">"-p"</span><span class="p">,</span> <span class="s2">"no:cacheprovider"</span><span class="p">)</span>
+
+<span class="n">_FAILED_LINE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^(?:FAILED|ERROR)\s+(\S+)"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
+
+
+<span class="c1">#: Files that *identify* an ecosystem, in decreasing order of how much they</span>
+<span class="c1">#: prove. A bare ``tests/`` directory proves nothing -- every language has one --</span>
+<span class="c1">#: so it must never outrank a manifest.</span>
+<span class="n">_RUNNER_EVIDENCE</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="s2">"pytest"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"pytest.ini"</span><span class="p">,</span> <span class="s2">"tox.ini"</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s2">"pytest"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"pyproject.toml"</span><span class="p">,</span> <span class="s2">"setup.cfg"</span><span class="p">,</span> <span class="s2">"setup.py"</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s2">"npm"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"package.json"</span><span class="p">,)),</span>
+    <span class="p">(</span><span class="s2">"make"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"Makefile"</span><span class="p">,)),</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="detect_runner">
+<a class="viewcode-back" href="../../module_docs/mergeset/validation.html#mergeset.detect_runner">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">detect_runner</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Guess how this project is tested; ``None`` if nothing is recognizable.</span>
+
+<span class="sd">    Ordering matters more than it looks. An earlier version checked for a</span>
+<span class="sd">    ``tests/`` directory in the same breath as ``pyproject.toml``, and so</span>
+<span class="sd">    classified a TypeScript repository as pytest and ran pytest in it for a</span>
+<span class="sd">    dozen evaluations before anyone noticed. Manifests decide; a ``tests/``</span>
+<span class="sd">    directory is not evidence of a language.</span>
+
+<span class="sd">    &gt;&gt;&gt; detect_runner('/definitely/not/a/project') is None</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">runner</span><span class="p">,</span> <span class="n">markers</span> <span class="ow">in</span> <span class="n">_RUNNER_EVIDENCE</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">names</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">markers</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">runner</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="check_validation_capability">
+<a class="viewcode-back" href="../../module_docs/mergeset/validation.html#mergeset.check_validation_capability">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_validation_capability</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">runner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"pytest"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Raise a *fixable* error if ``runner`` cannot work on ``path``."""</span>
+    <span class="k">if</span> <span class="n">runner</span> <span class="o">==</span> <span class="s2">"pytest"</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"pytest"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CapabilityError</span><span class="p">(</span>
+                <span class="s2">"pytest is not on PATH. `pip install pytest` in the environment "</span>
+                <span class="s2">"mergeset runs in, or pass a different validator "</span>
+                <span class="s2">"(e.g. `--validate-command 'make test'`)."</span>
+            <span class="p">)</span>
+        <span class="n">detected</span> <span class="o">=</span> <span class="n">detect_runner</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">detected</span> <span class="o">!=</span> <span class="s2">"pytest"</span><span class="p">:</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"it looks like a </span><span class="si">{</span><span class="n">detected</span><span class="si">}</span><span class="s2"> project"</span>
+                <span class="k">if</span> <span class="n">detected</span>
+                <span class="k">else</span> <span class="s2">"no project manifest was found there"</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="n">CapabilityError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The default validator runs pytest, but </span><span class="si">{</span><span class="n">found</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">). "</span>
+                <span class="s2">"Running the wrong test command produces confident nonsense, so "</span>
+                <span class="s2">"mergeset refuses to guess. Pass the project's real command "</span>
+                <span class="s2">"(--validate-command 'pnpm run test', or staged_validation([...]) "</span>
+                <span class="s2">"from the library), or --merge-only to check mergeability alone."</span>
+            <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">runner</span> <span class="o">==</span> <span class="s2">"act"</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"act"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CapabilityError</span><span class="p">(</span>
+                <span class="s2">"`act` is not installed; it is what runs GitHub Actions locally. "</span>
+                <span class="s2">"Install it (https://github.com/nektos/act) or use "</span>
+                <span class="s2">"--validate-command / the default pytest validator."</span>
+            <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_failing_test_ids</span><span class="p">(</span><span class="n">output</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Test ids pytest reported as failed or errored.</span>
+
+<span class="sd">    &gt;&gt;&gt; _failing_test_ids('FAILED tests/test_a.py::test_x - AssertionError\\n')</span>
+<span class="sd">    ['tests/test_a.py::test_x']</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">_FAILED_LINE</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">output</span><span class="p">)))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_files_of</span><span class="p">(</span><span class="n">test_ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The files the failing tests live in.</span>
+
+<span class="sd">    &gt;&gt;&gt; _files_of(['tests/test_a.py::test_x', 'tests/test_a.py::test_y'])</span>
+<span class="sd">    ['tests/test_a.py']</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"::"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">test_ids</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_run</span><span class="p">(</span>
+    <span class="n">cmd</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="n">env</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
+    <span class="n">shell</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">tail_chars</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4000</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValidationOutcome</span><span class="p">:</span>
+    <span class="n">started</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">full_env</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">env</span> <span class="ow">or</span> <span class="p">{})}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="n">cmd</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">shell</span> <span class="k">else</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">),</span>
+            <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+            <span class="n">env</span><span class="o">=</span><span class="n">full_env</span><span class="p">,</span>
+            <span class="n">shell</span><span class="o">=</span><span class="n">shell</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stdout</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stderr</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="n">returncode</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span>
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">stdout</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="n">returncode</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">output</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">[mergeset] timed out after </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2">s"</span>
+    <span class="n">failing</span> <span class="o">=</span> <span class="n">_failing_test_ids</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ValidationOutcome</span><span class="p">(</span>
+        <span class="n">ok</span><span class="o">=</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">failing_tests</span><span class="o">=</span><span class="n">failing</span><span class="p">,</span>
+        <span class="n">failing_files</span><span class="o">=</span><span class="n">_files_of</span><span class="p">(</span><span class="n">failing</span><span class="p">),</span>
+        <span class="n">duration</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">,</span>
+        <span class="n">stdout_tail</span><span class="o">=</span><span class="n">output</span><span class="p">[</span><span class="o">-</span><span class="n">tail_chars</span><span class="p">:],</span>
+        <span class="n">returncode</span><span class="o">=</span><span class="n">returncode</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="pytest_validation">
+<a class="viewcode-back" href="../../module_docs/mergeset/validation.html#mergeset.pytest_validation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pytest_validation</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">args</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_PYTEST_ARGS</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">env</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">select_paths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ValidationOutcome</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""A validator that runs the project's pytest suite, fail-fast by default.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        args: Passed to pytest. Fail-fast (``-x``) is the default because the</span>
+<span class="sd">            oracle only needs to know *whether* the set is good.</span>
+<span class="sd">        timeout: Seconds before the run is declared failed.</span>
+<span class="sd">        env: Extra environment variables.</span>
+<span class="sd">        select_paths: ``worktree -&gt; test paths`` — the seam for test-impact</span>
+<span class="sd">            selection. Return only the tests the merged changes can affect and</span>
+<span class="sd">            each evaluation gets dramatically cheaper. Default: run everything.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="n">worktree</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValidationOutcome</span><span class="p">:</span>
+        <span class="n">paths</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">select_paths</span><span class="p">(</span><span class="n">worktree</span><span class="p">))</span> <span class="k">if</span> <span class="n">select_paths</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="n">_run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">"pytest"</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">*</span><span class="n">paths</span><span class="p">],</span> <span class="n">worktree</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">validate</span></div>
+
+
+
+<div class="viewcode-block" id="command_validation">
+<a class="viewcode-back" href="../../module_docs/mergeset/validation.html#mergeset.command_validation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">command_validation</span><span class="p">(</span>
+    <span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">env</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ValidationOutcome</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""A validator that runs an arbitrary shell command in the merged worktree."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="n">worktree</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValidationOutcome</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_run</span><span class="p">([</span><span class="n">command</span><span class="p">],</span> <span class="n">worktree</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">validate</span></div>
+
+
+
+<div class="viewcode-block" id="act_validation">
+<a class="viewcode-back" href="../../module_docs/mergeset/validation.html#mergeset.act_validation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">act_validation</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">job</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">env</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ValidationOutcome</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""A validator that runs the repository's GitHub Actions locally with ``act``."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="n">worktree</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValidationOutcome</span><span class="p">:</span>
+        <span class="n">check_validation_capability</span><span class="p">(</span><span class="n">worktree</span><span class="p">,</span> <span class="s2">"act"</span><span class="p">)</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"act"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">]</span> <span class="o">+</span> <span class="p">([</span><span class="s2">"-j"</span><span class="p">,</span> <span class="n">job</span><span class="p">]</span> <span class="k">if</span> <span class="n">job</span> <span class="k">else</span> <span class="p">[])</span>
+        <span class="k">return</span> <span class="n">_run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">worktree</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">validate</span></div>
+
+
+
+<div class="viewcode-block" id="callable_validation">
+<a class="viewcode-back" href="../../module_docs/mergeset/validation.html#mergeset.callable_validation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">callable_validation</span><span class="p">(</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">object</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ValidationOutcome</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Adapt a plain user callable into a validator.</span>
+
+<span class="sd">    The callable may return a :class:`ValidationOutcome` (used as-is) or</span>
+<span class="sd">    anything truthy/falsy (interpreted as pass/fail).</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="n">worktree</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValidationOutcome</span><span class="p">:</span>
+        <span class="n">started</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">worktree</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">ValidationOutcome</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">return</span> <span class="n">ValidationOutcome</span><span class="p">(</span><span class="n">ok</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">result</span><span class="p">),</span> <span class="n">duration</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">validate</span></div>
+
+
+
+<div class="viewcode-block" id="merge_only_validation">
+<a class="viewcode-back" href="../../module_docs/mergeset/validation.html#mergeset.merge_only_validation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">merge_only_validation</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ValidationOutcome</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""A validator that accepts anything that merged cleanly.</span>
+
+<span class="sd">    Useful as a first pass: it costs nothing and still finds every textual</span>
+<span class="sd">    conflict, which on real branch sets is most of them.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="n">worktree</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValidationOutcome</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ValidationOutcome</span><span class="p">(</span><span class="n">ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stdout_tail</span><span class="o">=</span><span class="s2">"(merge-only: not validated)"</span><span class="p">)</span>
+
+    <span class="c1"># Nothing but the merge itself is inspected, and a textual conflict cannot</span>
+    <span class="c1"># span changes that share no file. So file-overlap components genuinely do</span>
+    <span class="c1"># combine freely here -- which is exactly the claim a whole-repo test run</span>
+    <span class="c1"># cannot make. See `analyze(component_local=...)`.</span>
+    <span class="n">validate</span><span class="o">.</span><span class="n">component_local</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="n">validate</span></div>
+
+
+
+<div class="viewcode-block" id="flake_tolerant">
+<a class="viewcode-back" href="../../module_docs/mergeset/validation.html#mergeset.flake_tolerant">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">flake_tolerant</span><span class="p">(</span>
+    <span class="n">validate</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ValidationOutcome</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ValidationOutcome</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Re-run a failing validation ``retries`` times before believing it.</span>
+
+<span class="sd">    Monotonicity is a prior, not a law, and flaky tests are the usual way it</span>
+<span class="sd">    breaks. This is the cheap defense; the honest one is</span>
+<span class="sd">    ``EvaluationLog.monotonicity_violations``.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_with_retries</span><span class="p">(</span><span class="n">worktree</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValidationOutcome</span><span class="p">:</span>
+        <span class="n">outcome</span> <span class="o">=</span> <span class="n">validate</span><span class="p">(</span><span class="n">worktree</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">retries</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">outcome</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">outcome</span>
+            <span class="n">outcome</span> <span class="o">=</span> <span class="n">validate</span><span class="p">(</span><span class="n">worktree</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">outcome</span>
+
+    <span class="k">return</span> <span class="n">validate_with_retries</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------</span>
+<span class="c1"># Staged validation</span>
+<span class="c1"># --------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="ValidationStage">
+<a class="viewcode-back" href="../../module_docs/mergeset/validation.html#mergeset.ValidationStage">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ValidationStage</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One step of a staged validation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        name: What this step is (``setup``, ``build``, ``test``, ``lint``...).</span>
+<span class="sd">            It ends up in the log and in the report, which is the whole point:</span>
+<span class="sd">            "failed to build" and "tests failed" are different facts and a</span>
+<span class="sd">            single pass/fail bit throws away the one you need.</span>
+<span class="sd">        command: Shell command, run in the merged worktree.</span>
+<span class="sd">        fingerprint: Optional ``worktree -&gt; str``. When given, the stage is</span>
+<span class="sd">            skipped if it already ran in this worktree with the same value —</span>
+<span class="sd">            this is how an expensive dependency install is amortized across</span>
+<span class="sd">            evaluations instead of being paid every time (keyed on, say, the</span>
+<span class="sd">            hash of the lockfile).</span>
+<span class="sd">        timeout: Seconds before the stage is declared failed.</span>
+<span class="sd">        required: A failing required stage stops the sequence (the default);</span>
+<span class="sd">            a non-required stage is recorded and the sequence continues.</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">command</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">fingerprint</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">required</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="file_fingerprint">
+<a class="viewcode-back" href="../../module_docs/mergeset/validation.html#mergeset.file_fingerprint">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">file_fingerprint</span><span class="p">(</span><span class="o">*</span><span class="n">paths</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""A fingerprint function over the contents of the given repo-relative files.</span>
+
+<span class="sd">    The canonical use is a lockfile: install dependencies again only when</span>
+<span class="sd">    ``pnpm-lock.yaml`` actually changed between two candidate merges.</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fingerprint</span><span class="p">(</span><span class="n">worktree</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">digest</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+            <span class="n">full</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">worktree</span><span class="p">,</span> <span class="n">rel</span><span class="p">)</span>
+            <span class="n">digest</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">rel</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">full</span><span class="p">):</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">full</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">digest</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">digest</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">16</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">fingerprint</span></div>
+
+
+
+<div class="viewcode-block" id="staged_validation">
+<a class="viewcode-back" href="../../module_docs/mergeset/validation.html#mergeset.staged_validation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">staged_validation</span><span class="p">(</span>
+    <span class="n">stages</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ValidationStage</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ValidationOutcome</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Run an ordered list of :class:`ValidationStage` steps, reporting which one failed.</span>
+
+<span class="sd">    Real projects do not have "the test command"; they have a sequence, and the</span>
+<span class="sd">    steps are not equally interesting. A JS repo may need</span>
+<span class="sd">    ``pnpm install`` (slow, only when the lockfile moved), then a build (a</span>
+<span class="sd">    *prerequisite* of testing — without it the tests do not even collect, and a</span>
+<span class="sd">    validator that skipped it would report a false failure), then the tests,</span>
+<span class="sd">    then a lint pass.</span>
+
+<span class="sd">    The failing stage's name is prefixed onto every reported failure id, so the</span>
+<span class="sd">    log distinguishes ``build: ...`` from ``test: tests/x.ts::y``.</span>
+<span class="sd">    """</span>
+    <span class="n">done</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="n">worktree</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValidationOutcome</span><span class="p">:</span>
+        <span class="n">started</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">failures</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">files</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tail</span> <span class="o">=</span> <span class="s2">""</span>
+        <span class="n">ok</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">stage</span> <span class="ow">in</span> <span class="n">stages</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">stage</span><span class="o">.</span><span class="n">fingerprint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">stage</span><span class="o">.</span><span class="n">fingerprint</span><span class="p">(</span><span class="n">worktree</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">done</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">worktree</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">==</span> <span class="n">value</span><span class="p">:</span>
+                    <span class="k">continue</span>
+            <span class="n">outcome</span> <span class="o">=</span> <span class="n">_run</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">stage</span><span class="o">.</span><span class="n">command</span><span class="p">],</span> <span class="n">worktree</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">stage</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="n">tail</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">]</span><span class="se">\n</span><span class="si">{</span><span class="n">outcome</span><span class="o">.</span><span class="n">stdout_tail</span><span class="si">}</span><span class="s2">"</span>
+            <span class="k">if</span> <span class="n">outcome</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">stage</span><span class="o">.</span><span class="n">fingerprint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">done</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">worktree</span><span class="p">,</span> <span class="p">{})[</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">stage</span><span class="o">.</span><span class="n">fingerprint</span><span class="p">(</span>
+                        <span class="n">worktree</span>
+                    <span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">ok</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="n">outcome</span><span class="o">.</span><span class="n">failing_tests</span> <span class="ow">or</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"&lt;</span><span class="si">{</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> failed&gt;"</span><span class="p">]</span>
+            <span class="n">failures</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">found</span><span class="p">]</span>
+            <span class="n">files</span> <span class="o">+=</span> <span class="n">outcome</span><span class="o">.</span><span class="n">failing_files</span>
+            <span class="k">if</span> <span class="n">stage</span><span class="o">.</span><span class="n">required</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="n">ValidationOutcome</span><span class="p">(</span>
+            <span class="n">ok</span><span class="o">=</span><span class="n">ok</span><span class="p">,</span>
+            <span class="n">failing_tests</span><span class="o">=</span><span class="n">failures</span><span class="p">,</span>
+            <span class="n">failing_files</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">files</span><span class="p">)),</span>
+            <span class="n">duration</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">,</span>
+            <span class="n">stdout_tail</span><span class="o">=</span><span class="n">tail</span><span class="p">,</span>
+            <span class="n">returncode</span><span class="o">=</span><span class="mi">0</span> <span class="k">if</span> <span class="n">ok</span> <span class="k">else</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">validate</span></div>
+
+
+
+<div class="viewcode-block" id="js_validation">
+<a class="viewcode-back" href="../../module_docs/mergeset/validation.html#mergeset.js_validation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">js_validation</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">install</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"pnpm install --frozen-lockfile"</span><span class="p">,</span>
+    <span class="n">build</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">test</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"pnpm run test"</span><span class="p">,</span>
+    <span class="n">lint</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">lockfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"pnpm-lock.yaml"</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ValidationOutcome</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""A staged validator shaped like a JavaScript project.</span>
+
+<span class="sd">    Install is fingerprinted on the lockfile so it runs only when dependencies</span>
+<span class="sd">    actually changed; the build, when given, is a required prerequisite of the</span>
+<span class="sd">    tests rather than part of them.</span>
+<span class="sd">    """</span>
+    <span class="n">stages</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">ValidationStage</span><span class="p">(</span><span class="s2">"setup"</span><span class="p">,</span> <span class="n">install</span><span class="p">,</span> <span class="n">fingerprint</span><span class="o">=</span><span class="n">file_fingerprint</span><span class="p">(</span><span class="n">lockfile</span><span class="p">),</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">build</span><span class="p">:</span>
+        <span class="n">stages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ValidationStage</span><span class="p">(</span><span class="s2">"build"</span><span class="p">,</span> <span class="n">build</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">))</span>
+    <span class="n">stages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ValidationStage</span><span class="p">(</span><span class="s2">"test"</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">lint</span><span class="p">:</span>
+        <span class="n">stages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ValidationStage</span><span class="p">(</span><span class="s2">"lint"</span><span class="p">,</span> <span class="n">lint</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">staged_validation</span><span class="p">(</span><span class="n">stages</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

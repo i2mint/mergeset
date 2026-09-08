@@ -1,0 +1,321 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.attribution &mdash; mergeset 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mergeset.attribution</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mergeset.attribution</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""From a failure to the changes that probably caused it.</span>
+
+<span class="sd">When a set fails, the expensive information has already been paid for: the</span>
+<span class="sd">runner said *what* failed. Turning that into "which of these changes did it"</span>
+<span class="sd">saves the conflict-shrinking step several oracle calls, and on real failures it</span>
+<span class="sd">lands directly on the culprit.</span>
+
+<span class="sd">Three signals, in increasing order of how much they prove:</span>
+
+<span class="sd">1. **Paths in the failure block.** Every path a failure mentions, not only the</span>
+<span class="sd">   failing test's own file — a stack trace's actionable frame is usually a</span>
+<span class="sd">   *source* file, and when a suite fails to load there are no test ids at all.</span>
+<span class="sd">2. **The changes that touched those paths.** File-level attribution, the obvious</span>
+<span class="sd">   move, and by itself frequently wrong: a drift test added by one change fails</span>
+<span class="sd">   because of what a *different* change did to the sources it derives from.</span>
+<span class="sd">3. **Identifiers named in the failure.** When the output quotes symbols — an</span>
+<span class="sd">   assertion diff, an undefined name, a missing export — matching those against</span>
+<span class="sd">   each candidate's diff finds the change that introduced them even when it</span>
+<span class="sd">   shares no file with the failing test. This is the only signal that gets that</span>
+<span class="sd">   drift case right.</span>
+
+<span class="sd">Everything here is a *hint*. A wrong hint costs the search one wasted check and</span>
+<span class="sd">then it falls back to unguided shrinking; it never decides a verdict.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Set</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChangeId</span><span class="p">,</span> <span class="n">ChangeSet</span><span class="p">,</span> <span class="n">ValidationOutcome</span>
+
+<span class="c1">#: A path-looking token: at least one directory separator and a known extension.</span>
+<span class="n">_PATH</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"[\w./@-]*[\w@-]+/[\w./@-]+\.(?:ts|tsx|js|jsx|mjs|cjs|py|go|rs|java|rb|json|yaml|yml)"</span>
+<span class="p">)</span>
+
+<span class="c1">#: An identifier worth matching against a diff: camelCase or PascalCase, long</span>
+<span class="c1">#: enough not to collide with ordinary English.</span>
+<span class="n">_IDENTIFIER</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\b(?:[a-z]+[A-Z]|[A-Z][a-z]+[A-Z])[A-Za-z0-9]{4,}\b"</span><span class="p">)</span>
+
+<span class="c1">#: Paths inside a dependency directory say nothing about our changes.</span>
+<span class="n">_VENDOR</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"node_modules/"</span><span class="p">,</span> <span class="s2">"site-packages/"</span><span class="p">,</span> <span class="s2">"vendor/"</span><span class="p">,</span> <span class="s2">".venv/"</span><span class="p">,</span> <span class="s2">"dist/"</span><span class="p">,</span> <span class="s2">"build/"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="paths_in">
+<a class="viewcode-back" href="../../module_docs/mergeset/attribution.html#mergeset.attribution.paths_in">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">paths_in</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Every source-looking path mentioned, vendor directories excluded.</span>
+
+<span class="sd">    &gt;&gt;&gt; paths_in('FAIL tests/unit/a.test.ts [ tests/unit/a.test.ts ]')</span>
+<span class="sd">    ['tests/unit/a.test.ts']</span>
+<span class="sd">    &gt;&gt;&gt; paths_in(' at Module.x node_modules/zod/util.js:15 then src/schemas.ts:89:4')</span>
+<span class="sd">    ['src/schemas.ts']</span>
+<span class="sd">    """</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">_PATH</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span> <span class="ow">in</span> <span class="n">match</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">_VENDOR</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">match</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">found</span><span class="p">:</span>
+            <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">found</span></div>
+
+
+
+<div class="viewcode-block" id="identifiers_in">
+<a class="viewcode-back" href="../../module_docs/mergeset/attribution.html#mergeset.attribution.identifiers_in">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">identifiers_in</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Camel/Pascal-case identifiers named in the failure output.</span>
+
+<span class="sd">    &gt;&gt;&gt; identifiers_in('+ "pointColorRedacted": { "$ref": "AxisDirectionType" }')</span>
+<span class="sd">    ['pointColorRedacted', 'AxisDirectionType']</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">_IDENTIFIER</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">text</span><span class="p">)))</span></div>
+
+
+
+<div class="viewcode-block" id="failure_text">
+<a class="viewcode-back" href="../../module_docs/mergeset/attribution.html#mergeset.attribution.failure_text">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">failure_text</span><span class="p">(</span><span class="n">outcome</span><span class="p">:</span> <span class="n">ValidationOutcome</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Everything a validation outcome said, as one blob to mine."""</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="p">[</span><span class="o">*</span><span class="n">outcome</span><span class="o">.</span><span class="n">failing_tests</span><span class="p">,</span> <span class="o">*</span><span class="n">outcome</span><span class="o">.</span><span class="n">failing_files</span><span class="p">,</span> <span class="n">outcome</span><span class="o">.</span><span class="n">stdout_tail</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">]</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="suspects">
+<a class="viewcode-back" href="../../module_docs/mergeset/attribution.html#mergeset.attribution.suspects">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">suspects</span><span class="p">(</span>
+    <span class="n">outcome</span><span class="p">:</span> <span class="n">ValidationOutcome</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">files_by_change</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+    <span class="n">within</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">],</span>
+    <span class="n">diff_of</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">ChangeId</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Changes the failure points at, or an empty set when it points nowhere.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        outcome: The failed validation, with whatever the runner printed.</span>
+<span class="sd">        files_by_change: Which files each change touched.</span>
+<span class="sd">        within: Only these changes are candidates (the set being evaluated).</span>
+<span class="sd">        diff_of: ``change id -&gt; its diff text``. Optional but valuable: it is</span>
+<span class="sd">            what enables identifier matching, the only signal that attributes a</span>
+<span class="sd">            failure to a change sharing no file with the failing test.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A strict, non-empty subset of ``within``, or ``frozenset()`` when the</span>
+<span class="sd">        evidence is absent, useless, or implicates everything (in which case it</span>
+<span class="sd">        has told us nothing and blind shrinking is the honest fallback).</span>
+
+<span class="sd">    &gt;&gt;&gt; out = ValidationOutcome(ok=False, failing_tests=['tests/a.test.ts::x'])</span>
+<span class="sd">    &gt;&gt;&gt; set(suspects(out, files_by_change={'p1': ['tests/a.test.ts'], 'p2': ['b.ts']},</span>
+<span class="sd">    ...              within=['p1', 'p2']))</span>
+<span class="sd">    {'p1'}</span>
+<span class="sd">    """</span>
+    <span class="n">within</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">within</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">within</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">()</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">failure_text</span><span class="p">(</span><span class="n">outcome</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">()</span>
+
+    <span class="n">by_path</span> <span class="o">=</span> <span class="n">_touching</span><span class="p">(</span><span class="n">paths_in</span><span class="p">(</span><span class="n">text</span><span class="p">),</span> <span class="n">files_by_change</span><span class="p">,</span> <span class="n">within</span><span class="p">)</span>
+    <span class="n">by_symbol</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_naming</span><span class="p">(</span><span class="n">identifiers_in</span><span class="p">(</span><span class="n">text</span><span class="p">),</span> <span class="n">diff_of</span><span class="p">,</span> <span class="n">within</span><span class="p">)</span> <span class="k">if</span> <span class="n">diff_of</span> <span class="k">else</span> <span class="nb">frozenset</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="c1"># A symbol match is the stronger evidence -- it survives the case where the</span>
+    <span class="c1"># failing test belongs to an innocent change -- so when both fire, take the</span>
+    <span class="c1"># union rather than the intersection: dropping either risks losing the real</span>
+    <span class="c1"># culprit, and the cost of one extra suspect is one extra check.</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">by_path</span> <span class="o">|</span> <span class="n">by_symbol</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span> <span class="ow">or</span> <span class="n">found</span> <span class="o">==</span> <span class="n">within</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">found</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_touching</span><span class="p">(</span>
+    <span class="n">paths</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">files_by_change</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+    <span class="n">within</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Changes that touched any of ``paths`` (suffix match, so prefixes vary freely)."""</span>
+    <span class="n">hits</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">change_id</span> <span class="ow">in</span> <span class="n">within</span><span class="p">:</span>
+        <span class="n">touched</span> <span class="o">=</span> <span class="n">files_by_change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">change_id</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">f</span> <span class="o">==</span> <span class="n">path</span> <span class="ow">or</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"/"</span> <span class="o">+</span> <span class="n">path</span><span class="p">)</span> <span class="ow">or</span> <span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"/"</span> <span class="o">+</span> <span class="n">f</span><span class="p">)</span>
+                   <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">touched</span><span class="p">):</span>
+                <span class="n">hits</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">change_id</span><span class="p">)</span>
+                <span class="k">break</span>
+    <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">hits</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_naming</span><span class="p">(</span>
+    <span class="n">identifiers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">diff_of</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">ChangeId</span><span class="p">],</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="n">within</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Changes whose diff introduces an identifier the failure named.</span>
+
+<span class="sd">    Only *added* lines count. A change that merely mentions a symbol it did not</span>
+<span class="sd">    introduce is not the reason the symbol is suddenly a problem.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">identifiers</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">()</span>
+    <span class="n">wanted</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">identifiers</span><span class="p">)</span>
+    <span class="n">hits</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">change_id</span> <span class="ow">in</span> <span class="n">within</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">diff_of</span><span class="p">(</span><span class="n">change_id</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># a diff we cannot read is not evidence either way</span>
+            <span class="k">continue</span>
+        <span class="n">added</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">diff</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"+"</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"+++"</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">symbol</span> <span class="ow">in</span> <span class="n">added</span> <span class="k">for</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="n">wanted</span><span class="p">):</span>
+            <span class="n">hits</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">change_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">hits</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="git_diff_reader">
+<a class="viewcode-back" href="../../module_docs/mergeset/attribution.html#mergeset.attribution.git_diff_reader">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">git_diff_reader</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">heads</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">"""A ``diff_of`` for :func:`suspects`, reading (and caching) real git diffs."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.gitops</span><span class="w"> </span><span class="kn">import</span> <span class="n">git</span>
+
+    <span class="n">cache</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">diff_of</span><span class="p">(</span><span class="n">change_id</span><span class="p">:</span> <span class="n">ChangeId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">change_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cache</span><span class="p">:</span>
+            <span class="n">head</span> <span class="o">=</span> <span class="n">heads</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">change_id</span><span class="p">)</span>
+            <span class="n">cache</span><span class="p">[</span><span class="n">change_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"diff"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2">...</span><span class="si">{</span><span class="n">head</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span> <span class="k">if</span> <span class="n">head</span> <span class="k">else</span> <span class="s2">""</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">cache</span><span class="p">[</span><span class="n">change_id</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">diff_of</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

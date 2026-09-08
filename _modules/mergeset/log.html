@@ -1,0 +1,414 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.log &mdash; mergeset 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mergeset.log</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mergeset.log</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The evaluation log: append-only JSONL, and the single source of truth.</span>
+
+<span class="sd">Every expensive evaluation is written here once and never re-run. The log also</span>
+<span class="sd">carries the *monotone closure*: because good sets are (approximately) downward</span>
+<span class="sd">closed, a passing set marks all of its subsets known-good, and a failing set</span>
+<span class="sd">marks all of its supersets known-bad. That closure is computed lazily from the</span>
+<span class="sd">stored rows rather than materialized, so the file stays small and honest.</span>
+
+<span class="sd">Monotonicity is a strong prior, not a law: a change may contain the fix that</span>
+<span class="sd">makes another change work, and flaky tests break it outright. Violations are</span>
+<span class="sd">detected and reported (:meth:`EvaluationLog.monotonicity_violations`) instead of</span>
+<span class="sd">being silently trusted.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">replace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChangeSet</span><span class="p">,</span> <span class="n">Evaluation</span><span class="p">,</span> <span class="n">Verdict</span><span class="p">,</span> <span class="n">set_key</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_now</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">"seconds"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="JsonlLines">
+<a class="viewcode-back" href="../../module_docs/mergeset/log.html#mergeset.JsonlLines">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">JsonlLines</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Append-only sequence of JSON objects backed by one file.</span>
+
+<span class="sd">    The default persistence seam of :class:`EvaluationLog`. Any object with</span>
+<span class="sd">    ``append(jdict)`` and ``__iter__() -&gt; Iterable[jdict]`` can replace it (an</span>
+<span class="sd">    in-memory list, a ``dol`` store, a database table).</span>
+
+<span class="sd">    &gt;&gt;&gt; import tempfile, os</span>
+<span class="sd">    &gt;&gt;&gt; path = os.path.join(tempfile.mkdtemp(), 'x.jsonl')</span>
+<span class="sd">    &gt;&gt;&gt; lines = JsonlLines(path)</span>
+<span class="sd">    &gt;&gt;&gt; lines.append({'a': 1}); lines.append({'a': 2})</span>
+<span class="sd">    &gt;&gt;&gt; [d['a'] for d in lines]</span>
+<span class="sd">    [1, 2]</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">parent</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="JsonlLines.append">
+<a class="viewcode-back" href="../../module_docs/mergeset/log.html#mergeset.JsonlLines.append">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jdict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Append one record, flushing immediately (crash-safe enough)."""</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">jdict</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">iter</span><span class="p">(())</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">iter</span><span class="p">([</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="MemoryLines">
+<a class="viewcode-back" href="../../module_docs/mergeset/log.html#mergeset.MemoryLines">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MemoryLines</span><span class="p">(</span><span class="nb">list</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""In-memory stand-in for :class:`JsonlLines` (tests, dry runs)."""</span>
+
+<div class="viewcode-block" id="MemoryLines.append">
+<a class="viewcode-back" href="../../module_docs/mergeset/log.html#mergeset.MemoryLines.append">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jdict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># noqa: D102 - list.append with a name</span>
+        <span class="nb">list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jdict</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Known">
+<a class="viewcode-back" href="../../module_docs/mergeset/log.html#mergeset.Known">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Known</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What the log already knows about a set, without re-evaluating it."""</span>
+
+    <span class="n">verdict</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Verdict</span><span class="p">]</span>  <span class="c1"># None == unknown</span>
+    <span class="c1">#: The recorded evaluation, when the set itself was evaluated.</span>
+    <span class="n">exact</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1">#: The witness set that implied the verdict, when it was inferred.</span>
+    <span class="n">witness</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="EvaluationLog">
+<a class="viewcode-back" href="../../module_docs/mergeset/log.html#mergeset.EvaluationLog">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">EvaluationLog</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Append-only record of evaluations, plus the monotone closure over it.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        store: Persistence seam; a path (str/PathLike) is wrapped in</span>
+<span class="sd">            :class:`JsonlLines`. Pass :class:`MemoryLines` for an ephemeral log.</span>
+
+<span class="sd">    &gt;&gt;&gt; log = EvaluationLog(MemoryLines())</span>
+<span class="sd">    &gt;&gt;&gt; from mergeset.base import Evaluation, Verdict</span>
+<span class="sd">    &gt;&gt;&gt; _ = log.record(Evaluation(frozenset({'a', 'b'}), Verdict.PASS))</span>
+<span class="sd">    &gt;&gt;&gt; bool(log.known(frozenset({'a'})))          # subset of a passing set</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; log.known(frozenset({'a'})).verdict.value</span>
+<span class="sd">    'pass'</span>
+<span class="sd">    &gt;&gt;&gt; _ = log.record(Evaluation(frozenset({'c', 'd'}), Verdict.FAIL))</span>
+<span class="sd">    &gt;&gt;&gt; log.known(frozenset({'a', 'c', 'd'})).verdict.value   # superset of a failing set</span>
+<span class="sd">    'fail'</span>
+<span class="sd">    &gt;&gt;&gt; log.known(frozenset({'a', 'c'})).verdict is None</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">)):</span>
+            <span class="n">store</span> <span class="o">=</span> <span class="n">JsonlLines</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">store</span> <span class="ow">or</span> <span class="s2">"evaluations.jsonl"</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">store</span> <span class="o">=</span> <span class="n">store</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_evaluations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">Evaluation</span><span class="o">.</span><span class="n">from_jdict</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span>
+        <span class="p">]</span>
+
+    <span class="c1"># -- reading -----------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_evaluations</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_evaluations</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Always true.</span>
+
+<span class="sd">        Without this, ``__len__`` makes an empty log falsy, and every</span>
+<span class="sd">        ``log = log or EvaluationLog(...)`` silently discards the caller's log</span>
+<span class="sd">        on the one run where it matters most: the first.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">passing</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Sets recorded as good, largest first."""</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">subset</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluations</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">),</span>
+            <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">,</span>
+            <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">failing</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Sets recorded as bad, smallest first (smallest are the most useful)."""</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">subset</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluations</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">),</span>
+            <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="EvaluationLog.exact">
+<a class="viewcode-back" href="../../module_docs/mergeset/log.html#mergeset.EvaluationLog.exact">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""The most recent evaluation of exactly this set, if any."""</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_evaluations</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">subset</span> <span class="o">==</span> <span class="n">subset</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">in</span> <span class="p">(</span><span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">,</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">e</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="EvaluationLog.known">
+<a class="viewcode-back" href="../../module_docs/mergeset/log.html#mergeset.EvaluationLog.known">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">known</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Known</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""What we know about ``subset`` without evaluating it.</span>
+
+<span class="sd">        Exact hits win; otherwise the monotone closure decides, preferring the</span>
+<span class="sd">        cheapest witness (the largest passing superset, the smallest failing</span>
+<span class="sd">        subset).</span>
+<span class="sd">        """</span>
+        <span class="n">exact</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exact</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">exact</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Known</span><span class="p">(</span><span class="n">exact</span><span class="o">.</span><span class="n">verdict</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="n">exact</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">good</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">passing</span><span class="p">:</span>  <span class="c1"># largest first</span>
+            <span class="k">if</span> <span class="n">subset</span> <span class="o">&lt;=</span> <span class="n">good</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Known</span><span class="p">(</span><span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">,</span> <span class="n">witness</span><span class="o">=</span><span class="n">good</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">bad</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">failing</span><span class="p">:</span>  <span class="c1"># smallest first</span>
+            <span class="k">if</span> <span class="n">bad</span> <span class="o">&lt;=</span> <span class="n">subset</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Known</span><span class="p">(</span><span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">,</span> <span class="n">witness</span><span class="o">=</span><span class="n">bad</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Known</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EvaluationLog.minimal_failing_sets">
+<a class="viewcode-back" href="../../module_docs/mergeset/log.html#mergeset.EvaluationLog.minimal_failing_sets">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">minimal_failing_sets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Recorded failing sets with no recorded failing proper subset.</span>
+
+<span class="sd">        These are the *conflicts* the solver hits. They are minimal with respect</span>
+<span class="sd">        to what has been observed, which is not necessarily globally minimal —</span>
+<span class="sd">        the solver shrinks them further with QuickXplain as it goes.</span>
+<span class="sd">        """</span>
+        <span class="n">failing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">failing</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">s</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">failing</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">other</span> <span class="o">&lt;</span> <span class="n">s</span> <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">failing</span><span class="p">)</span>
+        <span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="EvaluationLog.maximal_passing_sets">
+<a class="viewcode-back" href="../../module_docs/mergeset/log.html#mergeset.EvaluationLog.maximal_passing_sets">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">maximal_passing_sets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Recorded passing sets with no recorded passing proper superset."""</span>
+        <span class="n">passing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">passing</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">passing</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="o">&lt;</span> <span class="n">other</span> <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">passing</span><span class="p">)]</span></div>
+
+
+<div class="viewcode-block" id="EvaluationLog.monotonicity_violations">
+<a class="viewcode-back" href="../../module_docs/mergeset/log.html#mergeset.EvaluationLog.monotonicity_violations">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">monotonicity_violations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">,</span> <span class="n">ChangeSet</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""``(good, bad)`` pairs where a *subset* of a good set was seen failing.</span>
+
+<span class="sd">        A non-empty result means the downward-closure assumption broke here:</span>
+<span class="sd">        a flaky test, a non-deterministic build, or a change that *fixes*</span>
+<span class="sd">        another. Reported, never silently smoothed over.</span>
+<span class="sd">        """</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">good</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">passing</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">bad</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">failing</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">bad</span> <span class="o">&lt;</span> <span class="n">good</span> <span class="ow">or</span> <span class="n">bad</span> <span class="o">==</span> <span class="n">good</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">good</span><span class="p">,</span> <span class="n">bad</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+
+    <span class="c1"># -- writing -----------------------------------------------------------</span>
+
+<div class="viewcode-block" id="EvaluationLog.record">
+<a class="viewcode-back" href="../../module_docs/mergeset/log.html#mergeset.EvaluationLog.record">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Evaluation</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Append ``evaluation`` (stamping ``at`` if absent) and return it."""</span>
+        <span class="k">if</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">at</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">evaluation</span> <span class="o">=</span> <span class="n">Evaluation</span><span class="p">(</span>
+                <span class="n">subset</span><span class="o">=</span><span class="n">evaluation</span><span class="o">.</span><span class="n">subset</span><span class="p">,</span>
+                <span class="n">verdict</span><span class="o">=</span><span class="n">evaluation</span><span class="o">.</span><span class="n">verdict</span><span class="p">,</span>
+                <span class="n">stage</span><span class="o">=</span><span class="n">evaluation</span><span class="o">.</span><span class="n">stage</span><span class="p">,</span>
+                <span class="n">merge</span><span class="o">=</span><span class="n">evaluation</span><span class="o">.</span><span class="n">merge</span><span class="p">,</span>
+                <span class="n">validation</span><span class="o">=</span><span class="n">evaluation</span><span class="o">.</span><span class="n">validation</span><span class="p">,</span>
+                <span class="n">duration</span><span class="o">=</span><span class="n">evaluation</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+                <span class="n">at</span><span class="o">=</span><span class="n">_now</span><span class="p">(),</span>
+                <span class="n">note</span><span class="o">=</span><span class="n">evaluation</span><span class="o">.</span><span class="n">note</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluation</span><span class="o">.</span><span class="n">to_jdict</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_evaluations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluation</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">evaluation</span></div>
+
+
+<div class="viewcode-block" id="EvaluationLog.caching">
+<a class="viewcode-back" href="../../module_docs/mergeset/log.html#mergeset.EvaluationLog.caching">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">caching</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluate</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">ChangeSet</span><span class="p">],</span> <span class="n">Evaluation</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">"""Wrap ``evaluate`` so known sets are answered from the log.</span>
+
+<span class="sd">        The returned callable is what the solver should be handed: it never</span>
+<span class="sd">        spends a real evaluation on a set the log can already decide.</span>
+<span class="sd">        """</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">cached</span><span class="p">(</span><span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Evaluation</span><span class="p">:</span>
+            <span class="n">known</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">known</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">known</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">known</span><span class="o">.</span><span class="n">exact</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">replace</span><span class="p">(</span><span class="n">known</span><span class="o">.</span><span class="n">exact</span><span class="p">,</span> <span class="n">cached</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">Evaluation</span><span class="p">(</span>
+                    <span class="n">subset</span><span class="o">=</span><span class="n">subset</span><span class="p">,</span>
+                    <span class="n">verdict</span><span class="o">=</span><span class="n">known</span><span class="o">.</span><span class="n">verdict</span><span class="p">,</span>
+                    <span class="n">note</span><span class="o">=</span><span class="sa">f</span><span class="s2">"inferred from </span><span class="si">{</span><span class="n">set_key</span><span class="p">(</span><span class="n">known</span><span class="o">.</span><span class="n">witness</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="n">cached</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">evaluate</span><span class="p">(</span><span class="n">subset</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">cached</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="sets_evaluated">
+<a class="viewcode-back" href="../../module_docs/mergeset/log.html#mergeset.sets_evaluated">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sets_evaluated</span><span class="p">(</span><span class="n">log</span><span class="p">:</span> <span class="n">EvaluationLog</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Yield ``(sorted ids, verdict)`` for every row — handy for reports."""</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">log</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">set_key</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">subset</span><span class="p">),</span> <span class="n">e</span><span class="o">.</span><span class="n">verdict</span><span class="o">.</span><span class="n">value</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

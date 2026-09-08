@@ -1,0 +1,415 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.cli &mdash; mergeset 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mergeset.cli</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mergeset.cli</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Command line surface.</span>
+
+<span class="sd">The durable part is ``_dispatch_funcs`` — a plain list of plain functions. Only</span>
+<span class="sd">the last line binds it to an adapter, so the library stays free of any CLI</span>
+<span class="sd">library and a second surface (HTTP, MCP) is the same list projected differently.</span>
+
+
+<span class="sd">Note the deliberate absence of ``from __future__ import annotations``: it turns</span>
+<span class="sd">every hint into a string, and the CLI adapter reads the real annotations to</span>
+<span class="sd">decide that ``--max-seconds`` is a float rather than the string ``"600"``.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">analyze</span> <span class="k">as</span> <span class="n">_analyze</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">CapabilityError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.gitops</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_integration_branch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.oracle</span><span class="w"> </span><span class="kn">import</span> <span class="n">claude_code_resolver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">EvaluationLog</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.report</span><span class="w"> </span><span class="kn">import</span> <span class="n">html_report</span><span class="p">,</span> <span class="n">markdown_report</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.sources</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">branch_changes</span><span class="p">,</span>
+    <span class="n">fetch_pull_requests</span><span class="p">,</span>
+    <span class="n">local_branch_names</span><span class="p">,</span>
+    <span class="n">pr_changes</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.validation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">command_validation</span><span class="p">,</span>
+    <span class="n">flake_tolerant</span><span class="p">,</span>
+    <span class="n">merge_only_validation</span><span class="p">,</span>
+    <span class="n">pytest_validation</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validator</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span> <span class="n">merge_only</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">validate_command</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="n">retries</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="k">if</span> <span class="n">merge_only</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">merge_only_validation</span><span class="p">()</span>
+    <span class="n">validate</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">command_validation</span><span class="p">(</span><span class="n">validate_command</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">validate_command</span>
+        <span class="k">else</span> <span class="n">pytest_validation</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">flake_tolerant</span><span class="p">(</span><span class="n">validate</span><span class="p">,</span> <span class="n">retries</span><span class="o">=</span><span class="n">retries</span><span class="p">)</span> <span class="k">if</span> <span class="n">retries</span> <span class="k">else</span> <span class="n">validate</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_progress</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">interesting</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"merging"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"  merging </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">'subset'</span><span class="p">])</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">"validating"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"  validating </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">'subset'</span><span class="p">])</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">"evaluated"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"  -&gt; </span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">'verdict'</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">'subset'</span><span class="p">])</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'(empty)'</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">"conflict"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"  conflict: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">'subset'</span><span class="p">])</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">"maximal_good_set"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"  MAXIMAL GOOD SET: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">'subset'</span><span class="p">])</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">"textual_conflict"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"  textual conflict: </span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">'pair'</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> x </span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">'pair'</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">"component"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"component: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">'changes'</span><span class="p">])</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">"assisted_merge"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"  attempting assisted resolution of </span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">'files'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">render</span> <span class="o">=</span> <span class="n">interesting</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">render</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">render</span><span class="p">(</span><span class="n">payload</span><span class="p">),</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_emit_reports</span><span class="p">(</span><span class="n">analysis</span><span class="p">,</span> <span class="n">report_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="n">written</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">report_dir</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">written</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">report_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">md_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">report_dir</span><span class="p">,</span> <span class="s2">"REPORT.md"</span><span class="p">)</span>
+    <span class="n">html_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">report_dir</span><span class="p">,</span> <span class="s2">"report.html"</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">md_path</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">markdown_report</span><span class="p">(</span><span class="n">analysis</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">))</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">html_path</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">html_report</span><span class="p">(</span><span class="n">analysis</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">))</span>
+    <span class="n">written</span> <span class="o">+=</span> <span class="p">[</span><span class="n">md_path</span><span class="p">,</span> <span class="n">html_path</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">written</span>
+
+
+<div class="viewcode-block" id="branches">
+<a class="viewcode-back" href="../../module_docs/mergeset/cli.html#mergeset.cli.branches">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">branches</span><span class="p">(</span>
+    <span class="n">branch</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">,</span>
+    <span class="n">base</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"HEAD"</span><span class="p">,</span>
+    <span class="n">validate_command</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">merge_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">max_evaluations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_seconds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_sets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">log_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">report_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">integration_branches</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">resolver</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"none"</span><span class="p">,</span>
+    <span class="n">no_pairwise</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">no_decompose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">quiet</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Find maximal mergeable sets among the given branches.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        branch: Branch names, as positional arguments.</span>
+<span class="sd">        repo: Path to the git repository.</span>
+<span class="sd">        base: What to merge onto.</span>
+<span class="sd">        validate_command: Shell command that validates a merged tree.</span>
+<span class="sd">            Default: a fail-fast pytest run.</span>
+<span class="sd">        merge_only: Skip validation entirely; only textual mergeability counts.</span>
+<span class="sd">        timeout: Seconds allowed per validation run.</span>
+<span class="sd">        retries: Re-run a failing validation this many times before believing it.</span>
+<span class="sd">        max_evaluations: Stop after this many expensive evaluations.</span>
+<span class="sd">        max_seconds: Stop after this much wall time.</span>
+<span class="sd">        max_sets: Stop after finding this many maximal sets.</span>
+<span class="sd">        log_path: Evaluation log (JSONL). Default ``&lt;repo&gt;/.mergeset/evaluations.jsonl``.</span>
+<span class="sd">        report_dir: Write ``REPORT.md`` and ``report.html`` here.</span>
+<span class="sd">        integration_branches: Create a local ``integration/*`` branch per maximal set.</span>
+<span class="sd">        resolver: ``none`` (default) or ``claude`` to let a Claude Code</span>
+<span class="sd">            subagent attempt *mechanical* conflict resolutions. Anything it</span>
+<span class="sd">            resolves is flagged as assisted and its diff kept — never</span>
+<span class="sd">            reported as a clean merge.</span>
+<span class="sd">        no_pairwise: Skip the `git merge-tree` pre-oracle.</span>
+<span class="sd">        no_decompose: Do not split into independent file-overlap components.</span>
+<span class="sd">        quiet: Suppress progress output.</span>
+<span class="sd">    """</span>
+    <span class="n">changes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">branch_changes</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">branch</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">_run</span><span class="p">(</span>
+        <span class="n">repo</span><span class="p">,</span> <span class="n">changes</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span> <span class="n">validate_command</span><span class="o">=</span><span class="n">validate_command</span><span class="p">,</span>
+        <span class="n">merge_only</span><span class="o">=</span><span class="n">merge_only</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">retries</span><span class="o">=</span><span class="n">retries</span><span class="p">,</span>
+        <span class="n">max_evaluations</span><span class="o">=</span><span class="n">max_evaluations</span><span class="p">,</span> <span class="n">max_seconds</span><span class="o">=</span><span class="n">max_seconds</span><span class="p">,</span> <span class="n">max_sets</span><span class="o">=</span><span class="n">max_sets</span><span class="p">,</span>
+        <span class="n">log_path</span><span class="o">=</span><span class="n">log_path</span><span class="p">,</span> <span class="n">report_dir</span><span class="o">=</span><span class="n">report_dir</span><span class="p">,</span>
+        <span class="n">integration_branches</span><span class="o">=</span><span class="n">integration_branches</span><span class="p">,</span> <span class="n">resolver</span><span class="o">=</span><span class="n">resolver</span><span class="p">,</span>
+        <span class="n">no_pairwise</span><span class="o">=</span><span class="n">no_pairwise</span><span class="p">,</span>
+        <span class="n">no_decompose</span><span class="o">=</span><span class="n">no_decompose</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="n">quiet</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">"mergeset — branches on </span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="prs">
+<a class="viewcode-back" href="../../module_docs/mergeset/cli.html#mergeset.cli.prs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">prs</span><span class="p">(</span>
+    <span class="n">repo_spec</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">,</span>
+    <span class="n">author</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">updated_within_hours</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">base</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">include_drafts</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">validate_command</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">merge_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">max_evaluations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_seconds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_sets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">log_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">report_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">integration_branches</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">resolver</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"none"</span><span class="p">,</span>
+    <span class="n">no_pairwise</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">no_decompose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">quiet</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Find maximal mergeable sets among a repository's open pull requests.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        repo_spec: GitHub ``owner/name``.</span>
+<span class="sd">        repo: Local clone the PR head refs are fetched into.</span>
+<span class="sd">        author: Only PRs by this GitHub login.</span>
+<span class="sd">        updated_within_hours: Only PRs updated this recently.</span>
+<span class="sd">        base: Override the base commit; default is each PR's own base.</span>
+<span class="sd">        include_drafts: Include draft PRs (excluded by default).</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">timezone</span>
+
+    <span class="n">pull_requests</span> <span class="o">=</span> <span class="n">fetch_pull_requests</span><span class="p">(</span><span class="n">repo_spec</span><span class="p">,</span> <span class="n">author</span><span class="o">=</span><span class="n">author</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">include_drafts</span><span class="p">:</span>
+        <span class="n">pull_requests</span> <span class="o">=</span> <span class="p">[</span><span class="n">pr</span> <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">pull_requests</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"isDraft"</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">updated_within_hours</span><span class="p">:</span>
+        <span class="n">cutoff</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">updated_within_hours</span><span class="p">)</span>
+        <span class="n">pull_requests</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">pr</span> <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">pull_requests</span>
+            <span class="k">if</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"updatedAt"</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">pr</span><span class="p">[</span><span class="s2">"updatedAt"</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"Z"</span><span class="p">,</span> <span class="s2">"+00:00"</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="n">cutoff</span>
+        <span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pull_requests</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"No pull requests matched the filters."</span>
+    <span class="n">changes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">pr_changes</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">pull_requests</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">_run</span><span class="p">(</span>
+        <span class="n">repo</span><span class="p">,</span> <span class="n">changes</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span> <span class="n">validate_command</span><span class="o">=</span><span class="n">validate_command</span><span class="p">,</span>
+        <span class="n">merge_only</span><span class="o">=</span><span class="n">merge_only</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">retries</span><span class="o">=</span><span class="n">retries</span><span class="p">,</span>
+        <span class="n">max_evaluations</span><span class="o">=</span><span class="n">max_evaluations</span><span class="p">,</span> <span class="n">max_seconds</span><span class="o">=</span><span class="n">max_seconds</span><span class="p">,</span> <span class="n">max_sets</span><span class="o">=</span><span class="n">max_sets</span><span class="p">,</span>
+        <span class="n">log_path</span><span class="o">=</span><span class="n">log_path</span><span class="p">,</span> <span class="n">report_dir</span><span class="o">=</span><span class="n">report_dir</span><span class="p">,</span>
+        <span class="n">integration_branches</span><span class="o">=</span><span class="n">integration_branches</span><span class="p">,</span> <span class="n">resolver</span><span class="o">=</span><span class="n">resolver</span><span class="p">,</span>
+        <span class="n">no_pairwise</span><span class="o">=</span><span class="n">no_pairwise</span><span class="p">,</span>
+        <span class="n">no_decompose</span><span class="o">=</span><span class="n">no_decompose</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="n">quiet</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">"mergeset — </span><span class="si">{</span><span class="n">repo_spec</span><span class="si">}</span><span class="s2"> PRs"</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_run</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">,</span> <span class="n">changes</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">validate_command</span><span class="p">,</span> <span class="n">merge_only</span><span class="p">,</span> <span class="n">timeout</span><span class="p">,</span> <span class="n">retries</span><span class="p">,</span>
+    <span class="n">max_evaluations</span><span class="p">,</span> <span class="n">max_seconds</span><span class="p">,</span> <span class="n">max_sets</span><span class="p">,</span> <span class="n">log_path</span><span class="p">,</span> <span class="n">report_dir</span><span class="p">,</span>
+    <span class="n">integration_branches</span><span class="p">,</span> <span class="n">resolver</span><span class="p">,</span> <span class="n">no_pairwise</span><span class="p">,</span> <span class="n">no_decompose</span><span class="p">,</span> <span class="n">quiet</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">resolver</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"none"</span><span class="p">,</span> <span class="s2">"claude"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"Unknown resolver </span><span class="si">{</span><span class="n">resolver</span><span class="si">!r}</span><span class="s2">; expected 'none' or 'claude'."</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">analysis</span> <span class="o">=</span> <span class="n">_analyze</span><span class="p">(</span>
+            <span class="n">repo</span><span class="p">,</span> <span class="n">changes</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span>
+            <span class="n">validate</span><span class="o">=</span><span class="n">_validator</span><span class="p">(</span>
+                <span class="n">merge_only</span><span class="o">=</span><span class="n">merge_only</span><span class="p">,</span> <span class="n">validate_command</span><span class="o">=</span><span class="n">validate_command</span><span class="p">,</span>
+                <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">retries</span><span class="o">=</span><span class="n">retries</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">resolver</span><span class="o">=</span><span class="n">claude_code_resolver</span><span class="p">()</span> <span class="k">if</span> <span class="n">resolver</span> <span class="o">==</span> <span class="s2">"claude"</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">log_path</span><span class="o">=</span><span class="n">log_path</span><span class="p">,</span>
+            <span class="n">pairwise_preoracle</span><span class="o">=</span><span class="ow">not</span> <span class="n">no_pairwise</span><span class="p">,</span>
+            <span class="n">decompose</span><span class="o">=</span><span class="ow">not</span> <span class="n">no_decompose</span><span class="p">,</span>
+            <span class="n">max_evaluations</span><span class="o">=</span><span class="n">max_evaluations</span><span class="p">,</span>
+            <span class="n">max_seconds</span><span class="o">=</span><span class="n">max_seconds</span><span class="p">,</span>
+            <span class="n">max_sets</span><span class="o">=</span><span class="n">max_sets</span><span class="p">,</span>
+            <span class="n">on_event</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">quiet</span> <span class="k">else</span> <span class="n">_progress</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">CapabilityError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"mergeset cannot run yet:</span><span class="se">\n\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">markdown_report</span><span class="p">(</span><span class="n">analysis</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">_emit_reports</span><span class="p">(</span><span class="n">analysis</span><span class="p">,</span> <span class="n">report_dir</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Wrote </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">integration_branches</span><span class="p">:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">## Integration branches</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">_integration_branches</span><span class="p">(</span><span class="n">analysis</span><span class="p">):</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"- </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_integration_branches</span><span class="p">(</span><span class="n">analysis</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span>
+
+    <span class="n">by_id</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">by_id</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">plan</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">merge_plan</span><span class="p">():</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"integration/</span><span class="si">{</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">plan</span><span class="p">[</span><span class="s1">'rank'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">created</span><span class="p">,</span> <span class="n">detail</span> <span class="o">=</span> <span class="n">create_integration_branch</span><span class="p">(</span>
+            <span class="n">analysis</span><span class="o">.</span><span class="n">repo</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">analysis</span><span class="o">.</span><span class="n">base_sha</span><span class="p">,</span>
+            <span class="p">[(</span><span class="n">cid</span><span class="p">,</span> <span class="n">by_id</span><span class="p">[</span><span class="n">cid</span><span class="p">]</span><span class="o">.</span><span class="n">head</span><span class="p">)</span> <span class="k">for</span> <span class="n">cid</span> <span class="ow">in</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"changes"</span><span class="p">]],</span>
+        <span class="p">)</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">`: </span><span class="si">{</span><span class="s1">'created '</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">detail</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">created</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="n">detail</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<div class="viewcode-block" id="show_log">
+<a class="viewcode-back" href="../../module_docs/mergeset/cli.html#mergeset.cli.show_log">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">show_log</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">log_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">".mergeset/evaluations.jsonl"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Print what the evaluation log already knows, without evaluating anything.</span>
+
+<span class="sd">    Use this to answer questions about a finished run: the log is the single</span>
+<span class="sd">    source of truth, so re-deriving what it already says costs a reader's trust.</span>
+<span class="sd">    (Re-rendering the full Markdown/HTML reports needs the candidate metadata as</span>
+<span class="sd">    well as the log, so it is a library call — ``markdown_report(analysis)`` —</span>
+<span class="sd">    not a command that could pretend the log alone is enough.)</span>
+<span class="sd">    """</span>
+    <span class="n">log</span> <span class="o">=</span> <span class="n">EvaluationLog</span><span class="p">(</span><span class="n">log_path</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">log</span><span class="p">)</span><span class="si">}</span><span class="s2"> evaluations in </span><span class="si">{</span><span class="n">log_path</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">""</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">log</span><span class="p">:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">verdict</span><span class="o">.</span><span class="n">value</span><span class="si">:</span><span class="s2">6</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">duration</span><span class="si">:</span><span class="s2">7.1f</span><span class="si">}</span><span class="s2">s  </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">subset</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"Maximal passing sets:"</span><span class="p">]</span>
+    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">s</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">log</span><span class="o">.</span><span class="n">maximal_passing_sets</span><span class="p">()]</span>
+    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"Minimal failing sets (conflicts):"</span><span class="p">]</span>
+    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">s</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">log</span><span class="o">.</span><span class="n">minimal_failing_sets</span><span class="p">()]</span>
+    <span class="k">for</span> <span class="n">good</span><span class="p">,</span> <span class="n">bad</span> <span class="ow">in</span> <span class="n">log</span><span class="o">.</span><span class="n">monotonicity_violations</span><span class="p">():</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  ! monotonicity violation: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">bad</span><span class="p">)</span><span class="si">}</span><span class="s2"> bad but </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">good</span><span class="p">)</span><span class="si">}</span><span class="s2"> good"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+
+
+
+<span class="c1">#: SSOT of the CLI surface. Any adapter (cw, HTTP, MCP) consumes this list.</span>
+<span class="n">_dispatch_funcs</span> <span class="o">=</span> <span class="p">[</span><span class="n">branches</span><span class="p">,</span> <span class="n">prs</span><span class="p">,</span> <span class="n">show_log</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../module_docs/mergeset/cli.html#mergeset.cli.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Entry point: project ``_dispatch_funcs`` onto a command line parser."""</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">cw</span>
+
+    <span class="k">return</span> <span class="n">cw</span><span class="o">.</span><span class="n">dispatch</span><span class="p">(</span><span class="n">_dispatch_funcs</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

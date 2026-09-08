@@ -1,0 +1,302 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.solve &mdash; mergeset 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="mergeset.sources" href="sources.html" />
+    <link rel="prev" title="mergeset.report" href="report.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="report.html">mergeset.report</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">mergeset.solve</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.solve.SearchState"><code class="docutils literal notranslate"><span class="pre">SearchState</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.solve.SearchState.add_conflict"><code class="docutils literal notranslate"><span class="pre">SearchState.add_conflict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.solve.SearchState.error"><code class="docutils literal notranslate"><span class="pre">SearchState.error</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.solve.combine_components"><code class="docutils literal notranslate"><span class="pre">combine_components()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.solve.find_maximal_good_sets"><code class="docutils literal notranslate"><span class="pre">find_maximal_good_sets()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.solve.independent_components"><code class="docutils literal notranslate"><span class="pre">independent_components()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.solve.minimal_hitting_sets"><code class="docutils literal notranslate"><span class="pre">minimal_hitting_sets()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.solve.quickxplain"><code class="docutils literal notranslate"><span class="pre">quickxplain()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.solve.shrink_linear"><code class="docutils literal notranslate"><span class="pre">shrink_linear()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">mergeset.solve</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/mergeset/solve.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mergeset.solve">
+<span id="mergeset-solve"></span><h1>mergeset.solve<a class="headerlink" href="#module-mergeset.solve" title="Link to this heading"></a></h1>
+<p>The search: from expensive yes/no evaluations to maximal good sets.</p>
+<p>Vocabulary (standard in the MUS/MSS literature):</p>
+<ul class="simple">
+<li><p>a <strong>conflict</strong> is a minimal <em>bad</em> set (an MUS): remove any member and it stops
+being bad;</p></li>
+<li><p>a <strong>maximal good set</strong> is a good set that cannot be grown (an MSS);</p></li>
+<li><p>by Reiter’s hitting-set duality, the complement of a maximal good set is
+exactly a minimal hitting set of the conflicts.</p></li>
+</ul>
+<p>So the loop is: propose the complement of the cheapest minimal hitting set of
+the conflicts known so far; evaluate it; if it fails, shrink the failure to a
+new conflict (QuickXplain) and propose again; if it passes, it is a maximal good
+set — record it and ask for the next-cheapest hitting set.</p>
+<p>Nothing here knows about git. The only thing it needs is <code class="docutils literal notranslate"><span class="pre">evaluate(subset)</span> <span class="pre">-&gt;</span>
+<span class="pre">Evaluation</span></code>, which is why the whole package is testable without a repository.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.solve.SearchState">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.solve.</span></span><span class="sig-name descname"><span class="pre">SearchState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conflicts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">frozenset</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maximal_good_sets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">frozenset</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elapsed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exhausted</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stopped_because</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mergeset/solve.html#SearchState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.solve.SearchState" title="Link to this definition"></a></dt>
+<dd><p>Everything the search accumulated. Derived entirely from the log.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.solve.SearchState.add_conflict">
+<span class="sig-name descname"><span class="pre">add_conflict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conflict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">frozenset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/mergeset/solve.html#SearchState.add_conflict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.solve.SearchState.add_conflict" title="Link to this definition"></a></dt>
+<dd><p>Add <code class="docutils literal notranslate"><span class="pre">conflict</span></code>, keeping the list free of non-minimal members.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.solve.SearchState.error">
+<span class="sig-name descname"><span class="pre">error</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#mergeset.solve.SearchState.error" title="Link to this definition"></a></dt>
+<dd><p>Set when an evaluation could not be performed at all. The results below
+are not wrong so much as unfinished, and must not be presented as an
+answer: “we could not run the experiment” is not “the experiment failed”.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.solve.combine_components">
+<span class="sig-prename descclassname"><span class="pre">mergeset.solve.</span></span><span class="sig-name descname"><span class="pre">combine_components</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">per_component</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">frozenset</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">frozenset</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/solve.html#combine_components"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.solve.combine_components" title="Link to this definition"></a></dt>
+<dd><p>Cartesian-combine per-component maximal sets into global ones.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">set_key</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">combine_components</span><span class="p">([[</span><span class="nb">frozenset</span><span class="p">(</span><span class="s1">'a'</span><span class="p">)],</span> <span class="p">[</span><span class="nb">frozenset</span><span class="p">(</span><span class="s1">'c'</span><span class="p">)]])]</span>
+<span class="go">[('a', 'c')]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.solve.find_maximal_good_sets">
+<span class="sig-prename descclassname"><span class="pre">mergeset.solve.</span></span><span class="sig-name descname"><span class="pre">find_maximal_good_sets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">changes:</span> <span class="pre">~typing.Iterable[str],</span> <span class="pre">evaluate:</span> <span class="pre">~typing.Callable[[frozenset],</span> <span class="pre">~mergeset.base.Evaluation],</span> <span class="pre">*,</span> <span class="pre">known_conflicts:</span> <span class="pre">~typing.Iterable[frozenset]</span> <span class="pre">=</span> <span class="pre">(),</span> <span class="pre">depends_on:</span> <span class="pre">~typing.Mapping[str,</span> <span class="pre">str]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">weight:</span> <span class="pre">~typing.Callable[[str],</span> <span class="pre">float]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">max_evaluations:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">max_seconds:</span> <span class="pre">float</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">max_sets:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">shrink:</span> <span class="pre">~typing.Callable[[...],</span> <span class="pre">frozenset]</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">quickxplain&gt;,</span> <span class="pre">suspects:</span> <span class="pre">~typing.Callable[[~mergeset.base.Evaluation,</span> <span class="pre">frozenset],</span> <span class="pre">frozenset]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">on_event:</span> <span class="pre">~typing.Callable[[str,</span> <span class="pre">dict],</span> <span class="pre">None]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mergeset.solve.SearchState" title="mergeset.solve.SearchState"><span class="pre">SearchState</span></a></span></span><a class="reference internal" href="../../_modules/mergeset/solve.html#find_maximal_good_sets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.solve.find_maximal_good_sets" title="Link to this definition"></a></dt>
+<dd><p>Enumerate maximal good subsets of <code class="docutils literal notranslate"><span class="pre">changes</span></code>, cheapest-dropped first.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>changes</strong> – The change ids in play.</p></li>
+<li><p><strong>evaluate</strong> – The (cached, log-backed) oracle.</p></li>
+<li><p><strong>known_conflicts</strong> – Conflicts already known for free — e.g. textual
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge-tree</span></code> conflicts and singletons whose own CI is red.
+These cost zero evaluations and prune enormously.</p></li>
+<li><p><strong>depends_on</strong> – <code class="docutils literal notranslate"><span class="pre">child</span> <span class="pre">-&gt;</span> <span class="pre">parent</span></code> for stacked changes. When given, only
+downward-closed sets are ever proposed (a change is never evaluated
+without the changes it is built on) and dropping a change implicitly
+drops everything stacked on it. See <a class="reference internal" href="stacks.html#module-mergeset.stacks" title="mergeset.stacks"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mergeset.stacks</span></code></a>.</p></li>
+<li><p><strong>weight</strong> – <code class="docutils literal notranslate"><span class="pre">id</span> <span class="pre">-&gt;</span> <span class="pre">cost</span> <span class="pre">of</span> <span class="pre">dropping</span> <span class="pre">it</span></code>. Higher means “keep me”.</p></li>
+<li><p><strong>max_evaluations</strong> – Budgets. Whichever trips first
+stops the search; partial results are always returned.</p></li>
+<li><p><strong>max_seconds</strong> – Budgets. Whichever trips first
+stops the search; partial results are always returned.</p></li>
+<li><p><strong>max_sets</strong> – Budgets. Whichever trips first
+stops the search; partial results are always returned.</p></li>
+<li><p><strong>shrink</strong> – Conflict-minimization strategy (<a class="reference internal" href="#mergeset.solve.quickxplain" title="mergeset.solve.quickxplain"><code class="xref py py-func docutils literal notranslate"><span class="pre">quickxplain()</span></code></a> by default).</p></li>
+<li><p><strong>suspects</strong> – <code class="docutils literal notranslate"><span class="pre">(failed</span> <span class="pre">evaluation,</span> <span class="pre">the</span> <span class="pre">set)</span> <span class="pre">-&gt;</span> <span class="pre">the</span> <span class="pre">changes</span> <span class="pre">it</span> <span class="pre">implicates</span></code>.
+Lets the search shrink within the implicated changes instead of
+halving the whole set. A wrong hint costs one wasted check and then
+falls back; see <a class="reference internal" href="attribution.html#module-mergeset.attribution" title="mergeset.attribution"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mergeset.attribution</span></code></a>.</p></li>
+<li><p><strong>on_event</strong> – <code class="docutils literal notranslate"><span class="pre">(event_name,</span> <span class="pre">payload)</span></code> progress callback.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A <a class="reference internal" href="#mergeset.solve.SearchState" title="mergeset.solve.SearchState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SearchState</span></code></a>. <code class="docutils literal notranslate"><span class="pre">exhausted</span></code> says whether the answer is
+complete or merely the best found within budget.</p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bad</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">ev</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">ok</span> <span class="o">=</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">p</span> <span class="o">&lt;=</span> <span class="nb">set</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">bad</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">Evaluation</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span> <span class="k">if</span> <span class="n">ok</span> <span class="k">else</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">state</span> <span class="o">=</span> <span class="n">find_maximal_good_sets</span><span class="p">([</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">],</span> <span class="n">ev</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">set_key</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">maximal_good_sets</span><span class="p">]</span>
+<span class="go">[('a', 'b'), ('b', 'c')]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">set_key</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">conflicts</span><span class="p">]</span>
+<span class="go">[('a', 'c')]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.solve.independent_components">
+<span class="sig-prename descclassname"><span class="pre">mergeset.solve.</span></span><span class="sig-name descname"><span class="pre">independent_components</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">changes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files_of</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">frozenset</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/solve.html#independent_components"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.solve.independent_components" title="Link to this definition"></a></dt>
+<dd><p>Split changes into groups that cannot possibly interact via files.</p>
+<p>Two changes touching disjoint file sets cannot conflict textually, and (as a
+working assumption worth stating out loud) rarely conflict semantically.
+Connected components of the file-overlap graph are therefore independent
+subproblems: solve each separately and combine the answers freely, which
+turns one <code class="docutils literal notranslate"><span class="pre">2**n</span></code> search into several much smaller ones.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">files</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'a'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'x.py'</span><span class="p">],</span> <span class="s1">'b'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'x.py'</span><span class="p">],</span> <span class="s1">'c'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'y.py'</span><span class="p">]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">set_key</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">independent_components</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">files</span><span class="o">.</span><span class="n">get</span><span class="p">)]</span>
+<span class="go">[('a', 'b'), ('c',)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.solve.minimal_hitting_sets">
+<span class="sig-prename descclassname"><span class="pre">mergeset.solve.</span></span><span class="sig-name descname"><span class="pre">minimal_hitting_sets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conflicts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">frozenset</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">frozenset</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/solve.html#minimal_hitting_sets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.solve.minimal_hitting_sets" title="Link to this definition"></a></dt>
+<dd><p>Yield minimal hitting sets of <code class="docutils literal notranslate"><span class="pre">conflicts</span></code>, cheapest total weight first.</p>
+<p>A hitting set touches every conflict; its complement is therefore a set with
+no known conflict inside it. Enumerating hitting sets cheapest-first means
+the solver proposes dropping the <em>least valuable</em> changes first.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">hs</span> <span class="o">=</span> <span class="n">minimal_hitting_sets</span><span class="p">([</span><span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">}),</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s1">'b'</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">})])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">sorted</span><span class="p">(</span><span class="n">h</span><span class="p">)</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">hs</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
+<span class="go">[['b'], ['a', 'c']]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.solve.quickxplain">
+<span class="sig-prename descclassname"><span class="pre">mergeset.solve.</span></span><span class="sig-name descname"><span class="pre">quickxplain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">frozenset</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base.html#mergeset.base.Evaluation" title="mergeset.base.Evaluation"><span class="pre">Evaluation</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">candidates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">background</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">frozenset</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">frozenset({})</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">frozenset</span></span></span><a class="reference internal" href="../../_modules/mergeset/solve.html#quickxplain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.solve.quickxplain" title="Link to this definition"></a></dt>
+<dd><p>Shrink a known-bad set to one minimal conflict, in O(k log n) evaluations.</p>
+<p>Junker’s QuickXplain: recursive halving that costs <code class="docutils literal notranslate"><span class="pre">O(k</span> <span class="pre">log(n/k))</span></code>
+evaluations for a conflict of size <code class="docutils literal notranslate"><span class="pre">k</span></code> among <code class="docutils literal notranslate"><span class="pre">n</span></code> candidates, rather than
+the <code class="docutils literal notranslate"><span class="pre">O(n)</span></code> of naive one-at-a-time removal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>evaluate</strong> – The (cached) oracle.</p></li>
+<li><p><strong>candidates</strong> – Members that may be part of the conflict.</p></li>
+<li><p><strong>background</strong> – Members always present and assumed not, on their own, bad.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A minimal subset <code class="docutils literal notranslate"><span class="pre">C</span></code> of <code class="docutils literal notranslate"><span class="pre">candidates</span></code> with <code class="docutils literal notranslate"><span class="pre">background</span> <span class="pre">|</span> <span class="pre">C</span></code> bad.</p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bad_pairs</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">ev</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">ok</span> <span class="o">=</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">p</span> <span class="o">&lt;=</span> <span class="nb">set</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">bad_pairs</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">Evaluation</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span> <span class="k">if</span> <span class="n">ok</span> <span class="k">else</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">quickxplain</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="p">[</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">,</span> <span class="s1">'d'</span><span class="p">]))</span>
+<span class="go">['a', 'c']</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.solve.shrink_linear">
+<span class="sig-prename descclassname"><span class="pre">mergeset.solve.</span></span><span class="sig-name descname"><span class="pre">shrink_linear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">frozenset</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base.html#mergeset.base.Evaluation" title="mergeset.base.Evaluation"><span class="pre">Evaluation</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">candidates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">background</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">frozenset</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">frozenset({})</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">frozenset</span></span></span><a class="reference internal" href="../../_modules/mergeset/solve.html#shrink_linear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.solve.shrink_linear" title="Link to this definition"></a></dt>
+<dd><p>One-at-a-time conflict shrinking: <code class="docutils literal notranslate"><span class="pre">n</span></code> evaluations, dead simple.</p>
+<p>Kept because it is the obviously-correct reference that
+<a class="reference internal" href="#mergeset.solve.quickxplain" title="mergeset.solve.quickxplain"><code class="xref py py-func docutils literal notranslate"><span class="pre">quickxplain()</span></code></a> is checked against, and because for very small <code class="docutils literal notranslate"><span class="pre">n</span></code> it
+is not actually slower.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="report.html" class="btn btn-neutral float-left" title="mergeset.report" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="sources.html" class="btn btn-neutral float-right" title="mergeset.sources" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

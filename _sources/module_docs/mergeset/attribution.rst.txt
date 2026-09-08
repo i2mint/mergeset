@@ -1,0 +1,4 @@
+mergeset.attribution
+====================
+.. automodule:: mergeset.attribution
+   :members:

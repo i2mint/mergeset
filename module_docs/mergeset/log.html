@@ -1,0 +1,315 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.log &mdash; mergeset 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="mergeset.oracle" href="oracle.html" />
+    <link rel="prev" title="mergeset.gitops" href="gitops.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">mergeset.log</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.log.EvaluationLog"><code class="docutils literal notranslate"><span class="pre">EvaluationLog</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.log.EvaluationLog.caching"><code class="docutils literal notranslate"><span class="pre">EvaluationLog.caching()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.log.EvaluationLog.exact"><code class="docutils literal notranslate"><span class="pre">EvaluationLog.exact()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.log.EvaluationLog.failing"><code class="docutils literal notranslate"><span class="pre">EvaluationLog.failing</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.log.EvaluationLog.known"><code class="docutils literal notranslate"><span class="pre">EvaluationLog.known()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.log.EvaluationLog.maximal_passing_sets"><code class="docutils literal notranslate"><span class="pre">EvaluationLog.maximal_passing_sets()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.log.EvaluationLog.minimal_failing_sets"><code class="docutils literal notranslate"><span class="pre">EvaluationLog.minimal_failing_sets()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.log.EvaluationLog.monotonicity_violations"><code class="docutils literal notranslate"><span class="pre">EvaluationLog.monotonicity_violations()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.log.EvaluationLog.passing"><code class="docutils literal notranslate"><span class="pre">EvaluationLog.passing</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.log.EvaluationLog.record"><code class="docutils literal notranslate"><span class="pre">EvaluationLog.record()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.log.JsonlLines"><code class="docutils literal notranslate"><span class="pre">JsonlLines</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.log.JsonlLines.append"><code class="docutils literal notranslate"><span class="pre">JsonlLines.append()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.log.Known"><code class="docutils literal notranslate"><span class="pre">Known</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.log.Known.exact"><code class="docutils literal notranslate"><span class="pre">Known.exact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.log.Known.witness"><code class="docutils literal notranslate"><span class="pre">Known.witness</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.log.MemoryLines"><code class="docutils literal notranslate"><span class="pre">MemoryLines</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.log.MemoryLines.append"><code class="docutils literal notranslate"><span class="pre">MemoryLines.append()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.log.sets_evaluated"><code class="docutils literal notranslate"><span class="pre">sets_evaluated()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">mergeset.log</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/mergeset/log.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mergeset.log">
+<span id="mergeset-log"></span><h1>mergeset.log<a class="headerlink" href="#module-mergeset.log" title="Link to this heading"></a></h1>
+<p>The evaluation log: append-only JSONL, and the single source of truth.</p>
+<p>Every expensive evaluation is written here once and never re-run. The log also
+carries the <em>monotone closure</em>: because good sets are (approximately) downward
+closed, a passing set marks all of its subsets known-good, and a failing set
+marks all of its supersets known-bad. That closure is computed lazily from the
+stored rows rather than materialized, so the file stays small and honest.</p>
+<p>Monotonicity is a strong prior, not a law: a change may contain the fix that
+makes another change work, and flaky tests break it outright. Violations are
+detected and reported (<a class="reference internal" href="#mergeset.log.EvaluationLog.monotonicity_violations" title="mergeset.log.EvaluationLog.monotonicity_violations"><code class="xref py py-meth docutils literal notranslate"><span class="pre">EvaluationLog.monotonicity_violations()</span></code></a>) instead of
+being silently trusted.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.log.EvaluationLog">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.log.</span></span><span class="sig-name descname"><span class="pre">EvaluationLog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mergeset/log.html#EvaluationLog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.log.EvaluationLog" title="Link to this definition"></a></dt>
+<dd><p>Append-only record of evaluations, plus the monotone closure over it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>store</strong> – Persistence seam; a path (str/PathLike) is wrapped in
+<a class="reference internal" href="#mergeset.log.JsonlLines" title="mergeset.log.JsonlLines"><code class="xref py py-class docutils literal notranslate"><span class="pre">JsonlLines</span></code></a>. Pass <a class="reference internal" href="#mergeset.log.MemoryLines" title="mergeset.log.MemoryLines"><code class="xref py py-class docutils literal notranslate"><span class="pre">MemoryLines</span></code></a> for an ephemeral log.</p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="n">EvaluationLog</span><span class="p">(</span><span class="n">MemoryLines</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Evaluation</span><span class="p">,</span> <span class="n">Verdict</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">Evaluation</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">}),</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">bool</span><span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">known</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">})))</span>          <span class="c1"># subset of a passing set</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="o">.</span><span class="n">known</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">}))</span><span class="o">.</span><span class="n">verdict</span><span class="o">.</span><span class="n">value</span>
+<span class="go">'pass'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">Evaluation</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="s1">'c'</span><span class="p">,</span> <span class="s1">'d'</span><span class="p">}),</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="o">.</span><span class="n">known</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">,</span> <span class="s1">'d'</span><span class="p">}))</span><span class="o">.</span><span class="n">verdict</span><span class="o">.</span><span class="n">value</span>   <span class="c1"># superset of a failing set</span>
+<span class="go">'fail'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="o">.</span><span class="n">known</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">}))</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.log.EvaluationLog.caching">
+<span class="sig-name descname"><span class="pre">caching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">frozenset</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base.html#mergeset.base.Evaluation" title="mergeset.base.Evaluation"><span class="pre">Evaluation</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mergeset/log.html#EvaluationLog.caching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.log.EvaluationLog.caching" title="Link to this definition"></a></dt>
+<dd><p>Wrap <code class="docutils literal notranslate"><span class="pre">evaluate</span></code> so known sets are answered from the log.</p>
+<p>The returned callable is what the solver should be handed: it never
+spends a real evaluation on a set the log can already decide.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.log.EvaluationLog.exact">
+<span class="sig-name descname"><span class="pre">exact</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">frozenset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="base.html#mergeset.base.Evaluation" title="mergeset.base.Evaluation"><span class="pre">Evaluation</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/mergeset/log.html#EvaluationLog.exact"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.log.EvaluationLog.exact" title="Link to this definition"></a></dt>
+<dd><p>The most recent evaluation of exactly this set, if any.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mergeset.log.EvaluationLog.failing">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">failing</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">frozenset</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#mergeset.log.EvaluationLog.failing" title="Link to this definition"></a></dt>
+<dd><p>Sets recorded as bad, smallest first (smallest are the most useful).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.log.EvaluationLog.known">
+<span class="sig-name descname"><span class="pre">known</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">frozenset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mergeset.log.Known" title="mergeset.log.Known"><span class="pre">Known</span></a></span></span><a class="reference internal" href="../../_modules/mergeset/log.html#EvaluationLog.known"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.log.EvaluationLog.known" title="Link to this definition"></a></dt>
+<dd><p>What we know about <code class="docutils literal notranslate"><span class="pre">subset</span></code> without evaluating it.</p>
+<p>Exact hits win; otherwise the monotone closure decides, preferring the
+cheapest witness (the largest passing superset, the smallest failing
+subset).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.log.EvaluationLog.maximal_passing_sets">
+<span class="sig-name descname"><span class="pre">maximal_passing_sets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">frozenset</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/log.html#EvaluationLog.maximal_passing_sets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.log.EvaluationLog.maximal_passing_sets" title="Link to this definition"></a></dt>
+<dd><p>Recorded passing sets with no recorded passing proper superset.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.log.EvaluationLog.minimal_failing_sets">
+<span class="sig-name descname"><span class="pre">minimal_failing_sets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">frozenset</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/log.html#EvaluationLog.minimal_failing_sets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.log.EvaluationLog.minimal_failing_sets" title="Link to this definition"></a></dt>
+<dd><p>Recorded failing sets with no recorded failing proper subset.</p>
+<p>These are the <em>conflicts</em> the solver hits. They are minimal with respect
+to what has been observed, which is not necessarily globally minimal —
+the solver shrinks them further with QuickXplain as it goes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.log.EvaluationLog.monotonicity_violations">
+<span class="sig-name descname"><span class="pre">monotonicity_violations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">frozenset</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">frozenset</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/log.html#EvaluationLog.monotonicity_violations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.log.EvaluationLog.monotonicity_violations" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(good,</span> <span class="pre">bad)</span></code> pairs where a <em>subset</em> of a good set was seen failing.</p>
+<p>A non-empty result means the downward-closure assumption broke here:
+a flaky test, a non-deterministic build, or a change that <em>fixes</em>
+another. Reported, never silently smoothed over.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mergeset.log.EvaluationLog.passing">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">passing</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">frozenset</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#mergeset.log.EvaluationLog.passing" title="Link to this definition"></a></dt>
+<dd><p>Sets recorded as good, largest first.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.log.EvaluationLog.record">
+<span class="sig-name descname"><span class="pre">record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="base.html#mergeset.base.Evaluation" title="mergeset.base.Evaluation"><span class="pre">Evaluation</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="base.html#mergeset.base.Evaluation" title="mergeset.base.Evaluation"><span class="pre">Evaluation</span></a></span></span><a class="reference internal" href="../../_modules/mergeset/log.html#EvaluationLog.record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.log.EvaluationLog.record" title="Link to this definition"></a></dt>
+<dd><p>Append <code class="docutils literal notranslate"><span class="pre">evaluation</span></code> (stamping <code class="docutils literal notranslate"><span class="pre">at</span></code> if absent) and return it.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.log.JsonlLines">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.log.</span></span><span class="sig-name descname"><span class="pre">JsonlLines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mergeset/log.html#JsonlLines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.log.JsonlLines" title="Link to this definition"></a></dt>
+<dd><p>Append-only sequence of JSON objects backed by one file.</p>
+<p>The default persistence seam of <a class="reference internal" href="#mergeset.log.EvaluationLog" title="mergeset.log.EvaluationLog"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvaluationLog</span></code></a>. Any object with
+<code class="docutils literal notranslate"><span class="pre">append(jdict)</span></code> and <code class="docutils literal notranslate"><span class="pre">__iter__()</span> <span class="pre">-&gt;</span> <span class="pre">Iterable[jdict]</span></code> can replace it (an
+in-memory list, a <code class="docutils literal notranslate"><span class="pre">dol</span></code> store, a database table).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(),</span> <span class="s1">'x.jsonl'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lines</span> <span class="o">=</span> <span class="n">JsonlLines</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">'a'</span><span class="p">:</span> <span class="mi">1</span><span class="p">});</span> <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">'a'</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s1">'a'</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]</span>
+<span class="go">[1, 2]</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.log.JsonlLines.append">
+<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jdict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/mergeset/log.html#JsonlLines.append"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.log.JsonlLines.append" title="Link to this definition"></a></dt>
+<dd><p>Append one record, flushing immediately (crash-safe enough).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.log.Known">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.log.</span></span><span class="sig-name descname"><span class="pre">Known</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verdict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="base.html#mergeset.base.Verdict" title="mergeset.base.Verdict"><span class="pre">Verdict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exact</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="base.html#mergeset.base.Evaluation" title="mergeset.base.Evaluation"><span class="pre">Evaluation</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">witness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">frozenset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mergeset/log.html#Known"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.log.Known" title="Link to this definition"></a></dt>
+<dd><p>What the log already knows about a set, without re-evaluating it.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.log.Known.exact">
+<span class="sig-name descname"><span class="pre">exact</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="base.html#mergeset.base.Evaluation" title="mergeset.base.Evaluation"><span class="pre">Evaluation</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.log.Known.exact" title="Link to this definition"></a></dt>
+<dd><p>The recorded evaluation, when the set itself was evaluated.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.log.Known.witness">
+<span class="sig-name descname"><span class="pre">witness</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">frozenset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.log.Known.witness" title="Link to this definition"></a></dt>
+<dd><p>The witness set that implied the verdict, when it was inferred.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.log.MemoryLines">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.log.</span></span><span class="sig-name descname"><span class="pre">MemoryLines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mergeset/log.html#MemoryLines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.log.MemoryLines" title="Link to this definition"></a></dt>
+<dd><p>In-memory stand-in for <a class="reference internal" href="#mergeset.log.JsonlLines" title="mergeset.log.JsonlLines"><code class="xref py py-class docutils literal notranslate"><span class="pre">JsonlLines</span></code></a> (tests, dry runs).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.log.MemoryLines.append">
+<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jdict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/mergeset/log.html#MemoryLines.append"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.log.MemoryLines.append" title="Link to this definition"></a></dt>
+<dd><p>Append object to the end of the list.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.log.sets_evaluated">
+<span class="sig-prename descclassname"><span class="pre">mergeset.log.</span></span><span class="sig-name descname"><span class="pre">sets_evaluated</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#mergeset.log.EvaluationLog" title="mergeset.log.EvaluationLog"><span class="pre">EvaluationLog</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/log.html#sets_evaluated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.log.sets_evaluated" title="Link to this definition"></a></dt>
+<dd><p>Yield <code class="docutils literal notranslate"><span class="pre">(sorted</span> <span class="pre">ids,</span> <span class="pre">verdict)</span></code> for every row — handy for reports.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gitops.html" class="btn btn-neutral float-left" title="mergeset.gitops" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="oracle.html" class="btn btn-neutral float-right" title="mergeset.oracle" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

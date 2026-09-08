@@ -1,0 +1,374 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.oracle &mdash; mergeset 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mergeset.oracle</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mergeset.oracle</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The oracle: turn a change set into a verdict by merging, then validating.</span>
+
+<span class="sd">This is the expensive seam of the whole package, and it is assembled from two</span>
+<span class="sd">injected pieces — a *merge function* and a *validation function* — so that every</span>
+<span class="sd">part of it can be replaced without touching the search.</span>
+
+<span class="sd">The default merge is a plain sequential ``git merge`` in a throwaway worktree:</span>
+<span class="sd">any textual conflict is a failure, and the conflicting files are recorded. An</span>
+<span class="sd">**AI-assisted** mode is available (and is intended as the default when running</span>
+<span class="sd">inside a Claude Code subagent): on a textual conflict a resolver may attempt a</span>
+<span class="sd">fix under a strict policy — mechanical conflicts only, never a semantic guess —</span>
+<span class="sd">and the result is *flagged* as "mergeable with assisted resolution" with the</span>
+<span class="sd">resolution diff saved. It is never silently reported as a clean merge.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Change</span><span class="p">,</span>
+    <span class="n">ChangeId</span><span class="p">,</span>
+    <span class="n">ChangeSet</span><span class="p">,</span>
+    <span class="n">Evaluation</span><span class="p">,</span>
+    <span class="n">MergeOutcome</span><span class="p">,</span>
+    <span class="n">Stage</span><span class="p">,</span>
+    <span class="n">ValidationOutcome</span><span class="p">,</span>
+    <span class="n">Verdict</span><span class="p">,</span>
+    <span class="n">set_key</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.gitops</span><span class="w"> </span><span class="kn">import</span> <span class="n">git</span><span class="p">,</span> <span class="n">merged_worktree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.stacks</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dependencies</span><span class="p">,</span> <span class="n">tips</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">pytest_validation</span>
+
+<span class="c1">#: A resolver: ``(worktree, conflicting_files) -&gt; (resolved?, diff)``.</span>
+<span class="n">Resolver</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span>
+
+
+<div class="viewcode-block" id="merge_order">
+<a class="viewcode-back" href="../../module_docs/mergeset/oracle.html#mergeset.merge_order">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">merge_order</span><span class="p">(</span><span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">,</span> <span class="n">changes</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="n">Change</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""A deterministic merge order for a change set.</span>
+
+<span class="sd">    Order should not matter when merges are clean; when it does, the run is</span>
+<span class="sd">    recorded with the order that was used so the result stays reproducible.</span>
+<span class="sd">    Stacked changes are merged parent-first; otherwise smallest-first, which</span>
+<span class="sd">    surfaces the cheap conflicts early.</span>
+
+<span class="sd">    &gt;&gt;&gt; merge_order(frozenset({'b', 'a'}), {})</span>
+<span class="sd">    ['a', 'b']</span>
+<span class="sd">    """</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sort_key</span><span class="p">(</span><span class="n">cid</span><span class="p">:</span> <span class="n">ChangeId</span><span class="p">):</span>
+        <span class="n">change</span> <span class="o">=</span> <span class="n">changes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cid</span><span class="p">)</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">change</span><span class="o">.</span><span class="n">meta</span> <span class="k">if</span> <span class="n">change</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="n">stacked_on</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"stacked_on"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="k">if</span> <span class="n">stacked_on</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span> <span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"additions"</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">,</span> <span class="n">cid</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">sort_key</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="git_oracle">
+<a class="viewcode-back" href="../../module_docs/mergeset/oracle.html#mergeset.git_oracle">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">git_oracle</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">base</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">changes</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Change</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">validate</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ValidationOutcome</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">resolver</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Resolver</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">depends_on</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dependencies</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">reuse_worktree</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">worktree_root</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">keep_worktrees</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">on_event</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">ChangeSet</span><span class="p">],</span> <span class="n">Evaluation</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Build the evaluator: merge the set onto ``base``, then validate the tree.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        repo: Path to the git repository (worktrees are created off it).</span>
+<span class="sd">        base: The commit everything is merged onto.</span>
+<span class="sd">        changes: The changes in play; only their ids are passed around later.</span>
+<span class="sd">        validate: ``worktree -&gt; ValidationOutcome``. Defaults to a fail-fast</span>
+<span class="sd">            pytest run; see :mod:`mergeset.validation` for the alternatives.</span>
+<span class="sd">        resolver: Optional AI-assisted conflict resolver. When given, a textual</span>
+<span class="sd">            conflict is offered to it once; a success is recorded with</span>
+<span class="sd">            ``merge.assisted = True`` and the diff kept.</span>
+<span class="sd">        depends_on: ``child -&gt; parent`` for stacked changes. Only the *tips* of</span>
+<span class="sd">            a set are merged, because merging a tip already brings its</span>
+<span class="sd">            ancestors; merging them explicitly is wasted work and perturbs the</span>
+<span class="sd">            merge order for no reason.</span>
+<span class="sd">        reuse_worktree: An existing worktree to check every candidate merge out</span>
+<span class="sd">            into, instead of a fresh one per evaluation. This is what makes an</span>
+<span class="sd">            expensive per-tree setup (dependency install, build cache)</span>
+<span class="sd">            amortizable across the whole run.</span>
+<span class="sd">        worktree_root: Where throwaway worktrees go. Default: a temp dir.</span>
+<span class="sd">        keep_worktrees: Keep them for inspection (they add up fast).</span>
+<span class="sd">        on_event: ``(event, payload)`` progress callback.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ``evaluate(subset) -&gt; Evaluation``. Wrap it in</span>
+<span class="sd">        ``EvaluationLog.caching`` before handing it to the solver.</span>
+<span class="sd">    """</span>
+    <span class="n">by_id</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">}</span>
+    <span class="n">parents</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">depends_on</span> <span class="ow">or</span> <span class="p">{})</span>
+    <span class="n">validate</span> <span class="o">=</span> <span class="n">validate</span> <span class="ow">or</span> <span class="n">pytest_validation</span><span class="p">()</span>
+    <span class="n">emit</span> <span class="o">=</span> <span class="n">on_event</span> <span class="ow">or</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">name</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Evaluation</span><span class="p">:</span>
+        <span class="n">started</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">subset</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
+        <span class="c1"># The empty set is not "trivially good": it is the base, and running</span>
+        <span class="c1"># the validator on it is how a broken base or a wrong test command</span>
+        <span class="c1"># becomes a refusal instead of n confident failures.</span>
+        <span class="n">order</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+        <span class="k">if</span> <span class="n">subset</span><span class="p">:</span>
+            <span class="n">to_merge</span> <span class="o">=</span> <span class="n">tips</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">parents</span><span class="p">)</span> <span class="k">if</span> <span class="n">parents</span> <span class="k">else</span> <span class="n">subset</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="n">merge_order</span><span class="p">(</span><span class="n">to_merge</span><span class="p">,</span> <span class="n">by_id</span><span class="p">)</span>
+        <span class="n">heads</span> <span class="o">=</span> <span class="p">[(</span><span class="n">cid</span><span class="p">,</span> <span class="n">by_id</span><span class="p">[</span><span class="n">cid</span><span class="p">]</span><span class="o">.</span><span class="n">head</span><span class="p">)</span> <span class="k">for</span> <span class="n">cid</span> <span class="ow">in</span> <span class="n">order</span><span class="p">]</span>
+        <span class="n">emit</span><span class="p">(</span><span class="s2">"merging"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"subset"</span><span class="p">:</span> <span class="n">set_key</span><span class="p">(</span><span class="n">subset</span><span class="p">),</span> <span class="s2">"order"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">order</span><span class="p">)})</span>
+        <span class="k">with</span> <span class="n">merged_worktree</span><span class="p">(</span>
+            <span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">heads</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">worktree_root</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="n">keep_worktrees</span><span class="p">,</span>
+            <span class="n">reuse</span><span class="o">=</span><span class="n">reuse_worktree</span><span class="p">,</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="p">(</span><span class="n">worktree</span><span class="p">,</span> <span class="n">outcome</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">worktree</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">resolver</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">outcome</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">:</span>
+                <span class="n">worktree</span><span class="p">,</span> <span class="n">outcome</span> <span class="o">=</span> <span class="n">_try_assisted</span><span class="p">(</span>
+                    <span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">heads</span><span class="p">,</span> <span class="n">outcome</span><span class="p">,</span> <span class="n">resolver</span><span class="p">,</span> <span class="n">worktree_root</span><span class="p">,</span> <span class="n">emit</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">worktree</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">failed</span> <span class="o">=</span> <span class="n">outcome</span><span class="o">.</span><span class="n">reason</span> <span class="o">==</span> <span class="s2">"conflict"</span>
+                <span class="k">return</span> <span class="n">Evaluation</span><span class="p">(</span>
+                    <span class="n">subset</span><span class="o">=</span><span class="n">subset</span><span class="p">,</span>
+                    <span class="n">verdict</span><span class="o">=</span><span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span> <span class="k">if</span> <span class="n">failed</span> <span class="k">else</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span>
+                    <span class="n">stage</span><span class="o">=</span><span class="n">Stage</span><span class="o">.</span><span class="n">MERGE</span><span class="p">,</span>
+                    <span class="n">merge</span><span class="o">=</span><span class="n">outcome</span><span class="p">,</span>
+                    <span class="n">duration</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">,</span>
+                    <span class="n">note</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"textual merge conflict"</span>
+                        <span class="k">if</span> <span class="n">failed</span>
+                        <span class="k">else</span> <span class="sa">f</span><span class="s2">"could not evaluate: </span><span class="si">{</span><span class="n">outcome</span><span class="o">.</span><span class="n">detail</span><span class="si">}</span><span class="s2">"</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+            <span class="n">emit</span><span class="p">(</span><span class="s2">"validating"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"subset"</span><span class="p">:</span> <span class="n">set_key</span><span class="p">(</span><span class="n">subset</span><span class="p">)})</span>
+            <span class="n">validation</span> <span class="o">=</span> <span class="n">validate</span><span class="p">(</span><span class="n">worktree</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Evaluation</span><span class="p">(</span>
+            <span class="n">subset</span><span class="o">=</span><span class="n">subset</span><span class="p">,</span>
+            <span class="n">verdict</span><span class="o">=</span><span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span> <span class="k">if</span> <span class="n">validation</span><span class="o">.</span><span class="n">ok</span> <span class="k">else</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">,</span>
+            <span class="n">stage</span><span class="o">=</span><span class="n">Stage</span><span class="o">.</span><span class="n">VALIDATE</span><span class="p">,</span>
+            <span class="n">merge</span><span class="o">=</span><span class="n">outcome</span><span class="p">,</span>
+            <span class="n">validation</span><span class="o">=</span><span class="n">validation</span><span class="p">,</span>
+            <span class="n">duration</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">,</span>
+            <span class="n">note</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"assisted resolution"</span> <span class="k">if</span> <span class="n">outcome</span><span class="o">.</span><span class="n">assisted</span>
+                <span class="k">else</span> <span class="s2">"base alone"</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">subset</span> <span class="k">else</span> <span class="s2">""</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">evaluate</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_try_assisted</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">heads</span><span class="p">,</span> <span class="n">outcome</span><span class="p">,</span> <span class="n">resolver</span><span class="p">,</span> <span class="n">worktree_root</span><span class="p">,</span> <span class="n">emit</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Second attempt at a conflicted merge, this time offering it to ``resolver``."""</span>
+    <span class="n">emit</span><span class="p">(</span><span class="s2">"assisted_merge"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"files"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">outcome</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">)})</span>
+    <span class="n">keeper</span> <span class="o">=</span> <span class="n">merged_worktree</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">heads</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">worktree_root</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">worktree</span><span class="p">,</span> <span class="n">retry</span> <span class="o">=</span> <span class="n">keeper</span><span class="o">.</span><span class="fm">__enter__</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">worktree</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># merged cleanly this time; nothing to resolve</span>
+            <span class="k">return</span> <span class="n">worktree</span><span class="p">,</span> <span class="n">retry</span>
+        <span class="c1"># Re-run the merge without aborting so the resolver sees the conflict.</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">_worktree_with_conflict</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">heads</span><span class="p">,</span> <span class="n">worktree_root</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">outcome</span>
+        <span class="n">resolved</span><span class="p">,</span> <span class="n">diff</span> <span class="o">=</span> <span class="n">resolver</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">outcome</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">resolved</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">outcome</span>
+        <span class="k">return</span> <span class="n">path</span><span class="p">,</span> <span class="n">MergeOutcome</span><span class="p">(</span>
+            <span class="n">ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">conflicting_files</span><span class="o">=</span><span class="n">outcome</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">,</span>
+            <span class="n">assisted</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">assist_diff</span><span class="o">=</span><span class="n">diff</span><span class="p">,</span>
+            <span class="n">order</span><span class="o">=</span><span class="n">outcome</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"conflict resolved by assisted merge; review the diff"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">keeper</span><span class="o">.</span><span class="fm">__exit__</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_worktree_with_conflict</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">heads</span><span class="p">,</span> <span class="n">worktree_root</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Materialize the merge and *leave it conflicted* for a resolver to fix."""</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+
+    <span class="n">root</span> <span class="o">=</span> <span class="n">worktree_root</span> <span class="ow">or</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"mergeset-"</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"assist-"</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">rmdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"worktree"</span><span class="p">,</span> <span class="s2">"add"</span><span class="p">,</span> <span class="s2">"--detach"</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">head</span> <span class="ow">in</span> <span class="n">heads</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span>
+            <span class="n">path</span><span class="p">,</span> <span class="s2">"-c"</span><span class="p">,</span> <span class="s2">"user.email=mergeset@localhost"</span><span class="p">,</span> <span class="s2">"-c"</span><span class="p">,</span> <span class="s2">"user.name=mergeset"</span><span class="p">,</span>
+            <span class="s2">"merge"</span><span class="p">,</span> <span class="s2">"--no-edit"</span><span class="p">,</span> <span class="s2">"--no-ff"</span><span class="p">,</span> <span class="n">head</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">path</span>  <span class="c1"># left conflicted on purpose</span>
+    <span class="k">return</span> <span class="n">path</span>
+
+
+<div class="viewcode-block" id="claude_code_resolver">
+<a class="viewcode-back" href="../../module_docs/mergeset/oracle.html#mergeset.claude_code_resolver">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">claude_code_resolver</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">300.0</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"claude"</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Resolver</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Resolve conflicts with a Claude Code subagent, under a strict policy.</span>
+
+<span class="sd">    The policy is in the prompt and is deliberately narrow: mechanical conflicts</span>
+<span class="sd">    only (import blocks, changelog entries, adjacent independent edits, lockfile</span>
+<span class="sd">    regeneration), and an explicit refusal whenever the resolution requires</span>
+<span class="sd">    guessing intent. Anything it does resolve is flagged and its diff kept.</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+
+    <span class="n">policy</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">"You are resolving a git merge conflict inside a throwaway worktree.</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"POLICY — follow exactly:</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"1. Resolve ONLY mechanical conflicts: both sides added imports, both "</span>
+        <span class="s2">"appended to a list/changelog, edits to adjacent but independent lines, "</span>
+        <span class="s2">"regenerable lockfiles.</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"2. NEVER guess intent. If resolving requires deciding which behaviour is "</span>
+        <span class="s2">"correct, STOP and print exactly: UNRESOLVED</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"3. Do not modify anything that is not conflicted.</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"4. When done, `git add` the resolved files and `git commit --no-edit`, "</span>
+        <span class="s2">"then print exactly: RESOLVED</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"Conflicted files: </span><span class="si">{files}</span><span class="se">\n</span><span class="s2">"</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolve</span><span class="p">(</span><span class="n">worktree</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">files</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">command</span><span class="p">,</span> <span class="s2">"-p"</span><span class="p">,</span> <span class="n">policy</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">files</span><span class="o">=</span><span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">files</span><span class="p">))],</span>
+            <span class="n">cwd</span><span class="o">=</span><span class="n">worktree</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stdout</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stderr</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">"UNRESOLVED"</span> <span class="ow">in</span> <span class="n">output</span> <span class="ow">or</span> <span class="s2">"RESOLVED"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">output</span><span class="p">[</span><span class="o">-</span><span class="mi">2000</span><span class="p">:]</span>
+        <span class="n">unmerged</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">worktree</span><span class="p">,</span> <span class="s2">"diff"</span><span class="p">,</span> <span class="s2">"--name-only"</span><span class="p">,</span> <span class="s2">"--diff-filter=U"</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">unmerged</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"resolver claimed success but left conflicts: </span><span class="si">{</span><span class="n">unmerged</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">worktree</span><span class="p">,</span> <span class="s2">"show"</span><span class="p">,</span> <span class="s2">"--stat"</span><span class="p">,</span> <span class="s2">"--patch"</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span>
+        <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="n">diff</span><span class="p">[:</span><span class="mi">20000</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">resolve</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

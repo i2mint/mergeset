@@ -1,0 +1,4 @@
+mergeset.oracle
+===============
+.. automodule:: mergeset.oracle
+   :members:

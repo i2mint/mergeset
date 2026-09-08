@@ -1,0 +1,215 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.oracle &mdash; mergeset 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="mergeset.report" href="report.html" />
+    <link rel="prev" title="mergeset.log" href="log.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="log.html">mergeset.log</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">mergeset.oracle</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.oracle.Resolver"><code class="docutils literal notranslate"><span class="pre">Resolver</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.oracle.claude_code_resolver"><code class="docutils literal notranslate"><span class="pre">claude_code_resolver()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.oracle.git_oracle"><code class="docutils literal notranslate"><span class="pre">git_oracle()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.oracle.merge_order"><code class="docutils literal notranslate"><span class="pre">merge_order()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">mergeset.oracle</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/mergeset/oracle.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mergeset.oracle">
+<span id="mergeset-oracle"></span><h1>mergeset.oracle<a class="headerlink" href="#module-mergeset.oracle" title="Link to this heading"></a></h1>
+<p>The oracle: turn a change set into a verdict by merging, then validating.</p>
+<p>This is the expensive seam of the whole package, and it is assembled from two
+injected pieces — a <em>merge function</em> and a <em>validation function</em> — so that every
+part of it can be replaced without touching the search.</p>
+<p>The default merge is a plain sequential <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge</span></code> in a throwaway worktree:
+any textual conflict is a failure, and the conflicting files are recorded. An
+<strong>AI-assisted</strong> mode is available (and is intended as the default when running
+inside a Claude Code subagent): on a textual conflict a resolver may attempt a
+fix under a strict policy — mechanical conflicts only, never a semantic guess —
+and the result is <em>flagged</em> as “mergeable with assisted resolution” with the
+resolution diff saved. It is never silently reported as a clean merge.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="mergeset.oracle.Resolver">
+<span class="sig-prename descclassname"><span class="pre">mergeset.oracle.</span></span><span class="sig-name descname"><span class="pre">Resolver</span></span><a class="headerlink" href="#mergeset.oracle.Resolver" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(worktree,</span> <span class="pre">conflicting_files)</span> <span class="pre">-&gt;</span> <span class="pre">(resolved?,</span> <span class="pre">diff)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A resolver</p>
+</dd>
+</dl>
+<p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]], <code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.oracle.claude_code_resolver">
+<span class="sig-prename descclassname"><span class="pre">mergeset.oracle.</span></span><span class="sig-name descname"><span class="pre">claude_code_resolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">300.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">command</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'claude'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/oracle.html#claude_code_resolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.oracle.claude_code_resolver" title="Link to this definition"></a></dt>
+<dd><p>Resolve conflicts with a Claude Code subagent, under a strict policy.</p>
+<p>The policy is in the prompt and is deliberately narrow: mechanical conflicts
+only (import blocks, changelog entries, adjacent independent edits, lockfile
+regeneration), and an explicit refusal whenever the resolution requires
+guessing intent. Anything it does resolve is flagged and its diff kept.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.oracle.git_oracle">
+<span class="sig-prename descclassname"><span class="pre">mergeset.oracle.</span></span><span class="sig-name descname"><span class="pre">git_oracle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">changes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base.html#mergeset.base.Change" title="mergeset.base.Change"><span class="pre">Change</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base.html#mergeset.base.ValidationOutcome" title="mergeset.base.ValidationOutcome"><span class="pre">ValidationOutcome</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolver</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depends_on</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reuse_worktree</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worktree_root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_worktrees</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_event</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">frozenset</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base.html#mergeset.base.Evaluation" title="mergeset.base.Evaluation"><span class="pre">Evaluation</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/oracle.html#git_oracle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.oracle.git_oracle" title="Link to this definition"></a></dt>
+<dd><p>Build the evaluator: merge the set onto <code class="docutils literal notranslate"><span class="pre">base</span></code>, then validate the tree.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>repo</strong> – Path to the git repository (worktrees are created off it).</p></li>
+<li><p><strong>base</strong> – The commit everything is merged onto.</p></li>
+<li><p><strong>changes</strong> – The changes in play; only their ids are passed around later.</p></li>
+<li><p><strong>validate</strong> – <code class="docutils literal notranslate"><span class="pre">worktree</span> <span class="pre">-&gt;</span> <span class="pre">ValidationOutcome</span></code>. Defaults to a fail-fast
+pytest run; see <a class="reference internal" href="validation.html#module-mergeset.validation" title="mergeset.validation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mergeset.validation</span></code></a> for the alternatives.</p></li>
+<li><p><strong>resolver</strong> – Optional AI-assisted conflict resolver. When given, a textual
+conflict is offered to it once; a success is recorded with
+<code class="docutils literal notranslate"><span class="pre">merge.assisted</span> <span class="pre">=</span> <span class="pre">True</span></code> and the diff kept.</p></li>
+<li><p><strong>depends_on</strong> – <code class="docutils literal notranslate"><span class="pre">child</span> <span class="pre">-&gt;</span> <span class="pre">parent</span></code> for stacked changes. Only the <em>tips</em> of
+a set are merged, because merging a tip already brings its
+ancestors; merging them explicitly is wasted work and perturbs the
+merge order for no reason.</p></li>
+<li><p><strong>reuse_worktree</strong> – An existing worktree to check every candidate merge out
+into, instead of a fresh one per evaluation. This is what makes an
+expensive per-tree setup (dependency install, build cache)
+amortizable across the whole run.</p></li>
+<li><p><strong>worktree_root</strong> – Where throwaway worktrees go. Default: a temp dir.</p></li>
+<li><p><strong>keep_worktrees</strong> – Keep them for inspection (they add up fast).</p></li>
+<li><p><strong>on_event</strong> – <code class="docutils literal notranslate"><span class="pre">(event,</span> <span class="pre">payload)</span></code> progress callback.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">evaluate(subset)</span> <span class="pre">-&gt;</span> <span class="pre">Evaluation</span></code>. Wrap it in
+<code class="docutils literal notranslate"><span class="pre">EvaluationLog.caching</span></code> before handing it to the solver.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.oracle.merge_order">
+<span class="sig-prename descclassname"><span class="pre">mergeset.oracle.</span></span><span class="sig-name descname"><span class="pre">merge_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">frozenset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">changes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base.html#mergeset.base.Change" title="mergeset.base.Change"><span class="pre">Change</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/oracle.html#merge_order"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.oracle.merge_order" title="Link to this definition"></a></dt>
+<dd><p>A deterministic merge order for a change set.</p>
+<p>Order should not matter when merges are clean; when it does, the run is
+recorded with the order that was used so the result stays reproducible.
+Stacked changes are merged parent-first; otherwise smallest-first, which
+surfaces the cheap conflicts early.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">merge_order</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="s1">'b'</span><span class="p">,</span> <span class="s1">'a'</span><span class="p">}),</span> <span class="p">{})</span>
+<span class="go">['a', 'b']</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="log.html" class="btn btn-neutral float-left" title="mergeset.log" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="report.html" class="btn btn-neutral float-right" title="mergeset.report" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

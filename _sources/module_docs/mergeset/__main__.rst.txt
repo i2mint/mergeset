@@ -1,0 +1,4 @@
+mergeset.__main__
+=================
+.. automodule:: mergeset.__main__
+   :members:

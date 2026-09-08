@@ -1,0 +1,18 @@
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   module_docs/mergeset
+   module_docs/mergeset/__main__
+   module_docs/mergeset/analysis
+   module_docs/mergeset/attribution
+   module_docs/mergeset/base
+   module_docs/mergeset/cli
+   module_docs/mergeset/gitops
+   module_docs/mergeset/log
+   module_docs/mergeset/oracle
+   module_docs/mergeset/report
+   module_docs/mergeset/solve
+   module_docs/mergeset/sources
+   module_docs/mergeset/stacks
+   module_docs/mergeset/validation

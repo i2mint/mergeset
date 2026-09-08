@@ -1,0 +1,4 @@
+mergeset.cli
+============
+.. automodule:: mergeset.cli
+   :members:

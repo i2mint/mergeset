@@ -1,0 +1,616 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.solve &mdash; mergeset 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mergeset.solve</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mergeset.solve</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The search: from expensive yes/no evaluations to maximal good sets.</span>
+
+<span class="sd">Vocabulary (standard in the MUS/MSS literature):</span>
+
+<span class="sd">- a **conflict** is a minimal *bad* set (an MUS): remove any member and it stops</span>
+<span class="sd">  being bad;</span>
+<span class="sd">- a **maximal good set** is a good set that cannot be grown (an MSS);</span>
+<span class="sd">- by Reiter's hitting-set duality, the complement of a maximal good set is</span>
+<span class="sd">  exactly a minimal hitting set of the conflicts.</span>
+
+<span class="sd">So the loop is: propose the complement of the cheapest minimal hitting set of</span>
+<span class="sd">the conflicts known so far; evaluate it; if it fails, shrink the failure to a</span>
+<span class="sd">new conflict (QuickXplain) and propose again; if it passes, it is a maximal good</span>
+<span class="sd">set — record it and ask for the next-cheapest hitting set.</span>
+
+<span class="sd">Nothing here knows about git. The only thing it needs is ``evaluate(subset) -&gt;</span>
+<span class="sd">Evaluation``, which is why the whole package is testable without a repository.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">heapq</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">Iterable</span><span class="p">,</span>
+    <span class="n">Iterator</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Sequence</span><span class="p">,</span>
+    <span class="n">Set</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChangeId</span><span class="p">,</span> <span class="n">ChangeSet</span><span class="p">,</span> <span class="n">Evaluation</span><span class="p">,</span> <span class="n">Verdict</span><span class="p">,</span> <span class="n">set_key</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.stacks</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dependencies</span><span class="p">,</span> <span class="n">close_down</span><span class="p">,</span> <span class="n">close_up</span><span class="p">,</span> <span class="n">largest_closed_subset</span>
+
+<span class="n">Evaluate</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">ChangeSet</span><span class="p">],</span> <span class="n">Evaluation</span><span class="p">]</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------</span>
+<span class="c1"># Conflict extraction</span>
+<span class="c1"># --------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="quickxplain">
+<a class="viewcode-back" href="../../module_docs/mergeset/solve.html#mergeset.quickxplain">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">quickxplain</span><span class="p">(</span>
+    <span class="n">evaluate</span><span class="p">:</span> <span class="n">Evaluate</span><span class="p">,</span>
+    <span class="n">candidates</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">background</span><span class="p">:</span> <span class="n">ChangeSet</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Shrink a known-bad set to one minimal conflict, in O(k log n) evaluations.</span>
+
+<span class="sd">    Junker's QuickXplain: recursive halving that costs ``O(k log(n/k))``</span>
+<span class="sd">    evaluations for a conflict of size ``k`` among ``n`` candidates, rather than</span>
+<span class="sd">    the ``O(n)`` of naive one-at-a-time removal.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        evaluate: The (cached) oracle.</span>
+<span class="sd">        candidates: Members that may be part of the conflict.</span>
+<span class="sd">        background: Members always present and assumed not, on their own, bad.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A minimal subset ``C`` of ``candidates`` with ``background | C`` bad.</span>
+
+<span class="sd">    &gt;&gt;&gt; bad_pairs = [{'a', 'c'}]</span>
+<span class="sd">    &gt;&gt;&gt; def ev(s):</span>
+<span class="sd">    ...     ok = not any(p &lt;= set(s) for p in bad_pairs)</span>
+<span class="sd">    ...     return Evaluation(s, Verdict.PASS if ok else Verdict.FAIL)</span>
+<span class="sd">    &gt;&gt;&gt; sorted(quickxplain(ev, ['a', 'b', 'c', 'd']))</span>
+<span class="sd">    ['a', 'c']</span>
+<span class="sd">    """</span>
+    <span class="n">candidates</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">candidates</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">bad</span><span class="p">(</span><span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">evaluate</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">subset</span><span class="p">))</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_qx</span><span class="p">(</span><span class="n">bg</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">,</span> <span class="n">delta</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">cands</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">delta</span> <span class="ow">and</span> <span class="n">bad</span><span class="p">(</span><span class="n">bg</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">frozenset</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cands</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">cands</span><span class="p">)</span>
+        <span class="n">mid</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cands</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="n">cands</span><span class="p">[:</span><span class="n">mid</span><span class="p">],</span> <span class="n">cands</span><span class="p">[</span><span class="n">mid</span><span class="p">:]</span>
+        <span class="n">d1</span> <span class="o">=</span> <span class="n">_qx</span><span class="p">(</span><span class="n">bg</span> <span class="o">|</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">left</span><span class="p">),</span> <span class="nb">bool</span><span class="p">(</span><span class="n">left</span><span class="p">),</span> <span class="n">right</span><span class="p">)</span>
+        <span class="n">d2</span> <span class="o">=</span> <span class="n">_qx</span><span class="p">(</span><span class="n">bg</span> <span class="o">|</span> <span class="n">d1</span><span class="p">,</span> <span class="nb">bool</span><span class="p">(</span><span class="n">d1</span><span class="p">),</span> <span class="n">left</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d1</span> <span class="o">|</span> <span class="n">d2</span>
+
+    <span class="k">return</span> <span class="n">_qx</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">background</span><span class="p">),</span> <span class="kc">False</span><span class="p">,</span> <span class="n">candidates</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="shrink_linear">
+<a class="viewcode-back" href="../../module_docs/mergeset/solve.html#mergeset.shrink_linear">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">shrink_linear</span><span class="p">(</span>
+    <span class="n">evaluate</span><span class="p">:</span> <span class="n">Evaluate</span><span class="p">,</span>
+    <span class="n">candidates</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">background</span><span class="p">:</span> <span class="n">ChangeSet</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One-at-a-time conflict shrinking: ``n`` evaluations, dead simple.</span>
+
+<span class="sd">    Kept because it is the obviously-correct reference that</span>
+<span class="sd">    :func:`quickxplain` is checked against, and because for very small ``n`` it</span>
+<span class="sd">    is not actually slower.</span>
+<span class="sd">    """</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">candidates</span><span class="p">):</span>
+        <span class="n">trial</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">background</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">current</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="n">member</span><span class="p">})</span>
+        <span class="k">if</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">trial</span><span class="p">)</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">:</span>
+            <span class="n">current</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">member</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">current</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------</span>
+<span class="c1"># Hitting sets (Reiter's HS-tree, best-first by weight)</span>
+<span class="c1"># --------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="minimal_hitting_sets">
+<a class="viewcode-back" href="../../module_docs/mergeset/solve.html#mergeset.minimal_hitting_sets">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">minimal_hitting_sets</span><span class="p">(</span>
+    <span class="n">conflicts</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">weight</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">ChangeId</span><span class="p">],</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Yield minimal hitting sets of ``conflicts``, cheapest total weight first.</span>
+
+<span class="sd">    A hitting set touches every conflict; its complement is therefore a set with</span>
+<span class="sd">    no known conflict inside it. Enumerating hitting sets cheapest-first means</span>
+<span class="sd">    the solver proposes dropping the *least valuable* changes first.</span>
+
+<span class="sd">    &gt;&gt;&gt; hs = minimal_hitting_sets([frozenset({'a', 'b'}), frozenset({'b', 'c'})])</span>
+<span class="sd">    &gt;&gt;&gt; [sorted(h) for h in itertools.islice(hs, 3)]</span>
+<span class="sd">    [['b'], ['a', 'c']]</span>
+<span class="sd">    """</span>
+    <span class="n">conflicts</span> <span class="o">=</span> <span class="p">[</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">conflicts</span> <span class="k">if</span> <span class="n">c</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">conflicts</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="nb">frozenset</span><span class="p">()</span>
+        <span class="k">return</span>
+    <span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span> <span class="ow">or</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">_</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">seen</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">found</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">heap</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ChangeSet</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">counter</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+    <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">heap</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">next</span><span class="p">(</span><span class="n">counter</span><span class="p">),</span> <span class="nb">frozenset</span><span class="p">()))</span>
+    <span class="n">n_yielded</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">heap</span><span class="p">:</span>
+        <span class="n">cost</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">node</span> <span class="o">=</span> <span class="n">heapq</span><span class="o">.</span><span class="n">heappop</span><span class="p">(</span><span class="n">heap</span><span class="p">)</span>
+        <span class="n">unhit</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">conflicts</span> <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">c</span> <span class="o">&amp;</span> <span class="n">node</span><span class="p">)),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">unhit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">prior</span> <span class="o">&lt;=</span> <span class="n">node</span> <span class="k">for</span> <span class="n">prior</span> <span class="ow">in</span> <span class="n">found</span><span class="p">):</span>
+                <span class="k">continue</span>  <span class="c1"># not minimal</span>
+            <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="n">n_yielded</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">yield</span> <span class="n">node</span>
+            <span class="k">if</span> <span class="n">limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">n_yielded</span> <span class="o">&gt;=</span> <span class="n">limit</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">unhit</span><span class="p">):</span>
+            <span class="n">child</span> <span class="o">=</span> <span class="n">node</span> <span class="o">|</span> <span class="p">{</span><span class="n">member</span><span class="p">}</span>
+            <span class="k">if</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+            <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">heap</span><span class="p">,</span> <span class="p">(</span><span class="n">cost</span> <span class="o">+</span> <span class="n">weight</span><span class="p">(</span><span class="n">member</span><span class="p">),</span> <span class="nb">next</span><span class="p">(</span><span class="n">counter</span><span class="p">),</span> <span class="n">child</span><span class="p">))</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------</span>
+<span class="c1"># The main loop</span>
+<span class="c1"># --------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="SearchState">
+<a class="viewcode-back" href="../../module_docs/mergeset/solve.html#mergeset.SearchState">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SearchState</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Everything the search accumulated. Derived entirely from the log."""</span>
+
+    <span class="n">conflicts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">maximal_good_sets</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">evaluations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">elapsed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">exhausted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># search space fully covered (not budget-truncated)</span>
+    <span class="n">stopped_because</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="c1">#: Set when an evaluation could not be performed at all. The results below</span>
+    <span class="c1">#: are not wrong so much as unfinished, and must not be presented as an</span>
+    <span class="c1">#: answer: "we could not run the experiment" is not "the experiment failed".</span>
+    <span class="n">error</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+
+<div class="viewcode-block" id="SearchState.add_conflict">
+<a class="viewcode-back" href="../../module_docs/mergeset/solve.html#mergeset.SearchState.add_conflict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_conflict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conflict</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Add ``conflict``, keeping the list free of non-minimal members."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">conflict</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">c</span> <span class="o">&lt;=</span> <span class="n">conflict</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">conflicts</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conflicts</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">conflicts</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">conflict</span> <span class="o">&lt;</span> <span class="n">c</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conflicts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">conflict</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="find_maximal_good_sets">
+<a class="viewcode-back" href="../../module_docs/mergeset/solve.html#mergeset.find_maximal_good_sets">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_maximal_good_sets</span><span class="p">(</span>
+    <span class="n">changes</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">],</span>
+    <span class="n">evaluate</span><span class="p">:</span> <span class="n">Evaluate</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">known_conflicts</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+    <span class="n">depends_on</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dependencies</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">weight</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">ChangeId</span><span class="p">],</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_evaluations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_seconds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_sets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">shrink</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">ChangeSet</span><span class="p">]</span> <span class="o">=</span> <span class="n">quickxplain</span><span class="p">,</span>
+    <span class="n">suspects</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Evaluation</span><span class="p">,</span> <span class="n">ChangeSet</span><span class="p">],</span> <span class="n">ChangeSet</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">on_event</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchState</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Enumerate maximal good subsets of ``changes``, cheapest-dropped first.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        changes: The change ids in play.</span>
+<span class="sd">        evaluate: The (cached, log-backed) oracle.</span>
+<span class="sd">        known_conflicts: Conflicts already known for free — e.g. textual</span>
+<span class="sd">            ``git merge-tree`` conflicts and singletons whose own CI is red.</span>
+<span class="sd">            These cost zero evaluations and prune enormously.</span>
+<span class="sd">        depends_on: ``child -&gt; parent`` for stacked changes. When given, only</span>
+<span class="sd">            downward-closed sets are ever proposed (a change is never evaluated</span>
+<span class="sd">            without the changes it is built on) and dropping a change implicitly</span>
+<span class="sd">            drops everything stacked on it. See :mod:`mergeset.stacks`.</span>
+<span class="sd">        weight: ``id -&gt; cost of dropping it``. Higher means "keep me".</span>
+<span class="sd">        max_evaluations, max_seconds, max_sets: Budgets. Whichever trips first</span>
+<span class="sd">            stops the search; partial results are always returned.</span>
+<span class="sd">        shrink: Conflict-minimization strategy (:func:`quickxplain` by default).</span>
+<span class="sd">        suspects: ``(failed evaluation, the set) -&gt; the changes it implicates``.</span>
+<span class="sd">            Lets the search shrink within the implicated changes instead of</span>
+<span class="sd">            halving the whole set. A wrong hint costs one wasted check and then</span>
+<span class="sd">            falls back; see :mod:`mergeset.attribution`.</span>
+<span class="sd">        on_event: ``(event_name, payload)`` progress callback.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A :class:`SearchState`. ``exhausted`` says whether the answer is</span>
+<span class="sd">        complete or merely the best found within budget.</span>
+
+<span class="sd">    &gt;&gt;&gt; bad = [{'a', 'c'}]</span>
+<span class="sd">    &gt;&gt;&gt; def ev(s):</span>
+<span class="sd">    ...     ok = not any(p &lt;= set(s) for p in bad)</span>
+<span class="sd">    ...     return Evaluation(s, Verdict.PASS if ok else Verdict.FAIL)</span>
+<span class="sd">    &gt;&gt;&gt; state = find_maximal_good_sets(['a', 'b', 'c'], ev)</span>
+<span class="sd">    &gt;&gt;&gt; [set_key(s) for s in state.maximal_good_sets]</span>
+<span class="sd">    [('a', 'b'), ('b', 'c')]</span>
+<span class="sd">    &gt;&gt;&gt; [set_key(c) for c in state.conflicts]</span>
+<span class="sd">    [('a', 'c')]</span>
+<span class="sd">    """</span>
+    <span class="n">all_changes</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">changes</span><span class="p">)</span>
+    <span class="n">parents</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">child</span><span class="p">:</span> <span class="n">parent</span>
+        <span class="k">for</span> <span class="n">child</span><span class="p">,</span> <span class="n">parent</span> <span class="ow">in</span> <span class="p">(</span><span class="n">depends_on</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">all_changes</span> <span class="ow">and</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">all_changes</span>
+    <span class="p">}</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">SearchState</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">known_conflicts</span><span class="p">:</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">add_conflict</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+    <span class="n">started</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">emit</span> <span class="o">=</span> <span class="n">on_event</span> <span class="ow">or</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">name</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">budget_exceeded</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">max_evaluations</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">state</span><span class="o">.</span><span class="n">evaluations</span> <span class="o">&gt;=</span> <span class="n">max_evaluations</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"max_evaluations (</span><span class="si">{</span><span class="n">max_evaluations</span><span class="si">}</span><span class="s2">) reached"</span>
+        <span class="k">if</span> <span class="n">max_seconds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span> <span class="o">&gt;=</span> <span class="n">max_seconds</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"max_seconds (</span><span class="si">{</span><span class="n">max_seconds</span><span class="si">}</span><span class="s2">) reached"</span>
+        <span class="k">if</span> <span class="n">max_sets</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">maximal_good_sets</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_sets</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"max_sets (</span><span class="si">{</span><span class="n">max_sets</span><span class="si">}</span><span class="s2">) reached"</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">counted_evaluate</span><span class="p">(</span><span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Evaluation</span><span class="p">:</span>
+        <span class="c1"># Shrinking proposes arbitrary subsets, and an arbitrary subset of a</span>
+        <span class="c1"># stack is a fiction: merging a tip brings its ancestors whether or not</span>
+        <span class="c1"># they were named. Evaluating the closure means the log records what was</span>
+        <span class="c1"># actually merged, and it collapses sets that differ only in labels onto</span>
+        <span class="c1"># one cache entry -- two of eleven evaluations in one real run were</span>
+        <span class="c1"># duplicates for exactly this reason.</span>
+        <span class="k">if</span> <span class="n">parents</span><span class="p">:</span>
+            <span class="n">subset</span> <span class="o">=</span> <span class="n">close_down</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">parents</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">cached</span><span class="p">:</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">evaluations</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># only real runs cost anything</span>
+        <span class="n">emit</span><span class="p">(</span><span class="s2">"evaluated"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"subset"</span><span class="p">:</span> <span class="n">set_key</span><span class="p">(</span><span class="n">subset</span><span class="p">),</span> <span class="s2">"verdict"</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">verdict</span><span class="o">.</span><span class="n">value</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="c1"># Complements of minimal hitting sets are the only candidates worth trying.</span>
+    <span class="c1"># The conflict list grows as we go, so the enumeration is restarted each</span>
+    <span class="c1"># time it changes; `tried` keeps the restarts from re-proposing old ideas.</span>
+    <span class="n">tried</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">reason</span> <span class="o">=</span> <span class="n">budget_exceeded</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">reason</span><span class="p">:</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">stopped_because</span> <span class="o">=</span> <span class="n">reason</span>
+            <span class="k">break</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="n">_next_candidate</span><span class="p">(</span><span class="n">all_changes</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">tried</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">parents</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">candidate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">exhausted</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">stopped_because</span> <span class="o">=</span> <span class="s2">"search space exhausted"</span>
+            <span class="k">break</span>
+        <span class="n">tried</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">counted_evaluate</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">:</span>
+            <span class="n">grown</span> <span class="o">=</span> <span class="n">_grow_within_known</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="n">all_changes</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">parents</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">grown</span> <span class="o">!=</span> <span class="n">candidate</span> <span class="ow">and</span> <span class="n">counted_evaluate</span><span class="p">(</span><span class="n">grown</span><span class="p">)</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">:</span>
+                <span class="n">candidate</span> <span class="o">=</span> <span class="n">grown</span>
+                <span class="n">tried</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">grown</span><span class="p">)</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">maximal_good_sets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+            <span class="n">emit</span><span class="p">(</span><span class="s2">"maximal_good_set"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"subset"</span><span class="p">:</span> <span class="n">set_key</span><span class="p">(</span><span class="n">candidate</span><span class="p">)})</span>
+        <span class="k">elif</span> <span class="n">result</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">:</span>
+            <span class="n">hint</span> <span class="o">=</span> <span class="n">_suspects</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">candidate</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">hint</span> <span class="ow">and</span> <span class="n">suspects</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">hint</span> <span class="o">=</span> <span class="n">suspects</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">candidate</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">frozenset</span><span class="p">()</span>
+            <span class="n">conflict</span> <span class="o">=</span> <span class="n">shrink</span><span class="p">(</span><span class="n">counted_evaluate</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">hint</span> <span class="ow">or</span> <span class="n">candidate</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">hint</span> <span class="ow">and</span> <span class="n">conflict</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_is_bad</span><span class="p">(</span><span class="n">counted_evaluate</span><span class="p">,</span> <span class="n">conflict</span><span class="p">):</span>
+                <span class="c1"># The hint was wrong; fall back to the whole candidate.</span>
+                <span class="n">conflict</span> <span class="o">=</span> <span class="n">shrink</span><span class="p">(</span><span class="n">counted_evaluate</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">candidate</span><span class="p">))</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">add_conflict</span><span class="p">(</span><span class="n">conflict</span><span class="p">)</span>
+            <span class="n">emit</span><span class="p">(</span><span class="s2">"conflict"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"subset"</span><span class="p">:</span> <span class="n">set_key</span><span class="p">(</span><span class="n">conflict</span><span class="p">)})</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># ERROR carries no information about the changes at all, and a run</span>
+            <span class="c1"># that keeps going past one reports confident nonsense: every</span>
+            <span class="c1"># untestable set looks bad, and "0 of 15 mergeable, complete" is the</span>
+            <span class="c1"># result. Stop, and say what went wrong.</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">note</span> <span class="ow">or</span> <span class="s2">"an evaluation could not be performed"</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">stopped_because</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"aborted: </span><span class="si">{</span><span class="n">state</span><span class="o">.</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span>
+            <span class="n">emit</span><span class="p">(</span><span class="s2">"aborted"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"subset"</span><span class="p">:</span> <span class="n">set_key</span><span class="p">(</span><span class="n">candidate</span><span class="p">),</span> <span class="s2">"error"</span><span class="p">:</span> <span class="n">state</span><span class="o">.</span><span class="n">error</span><span class="p">})</span>
+            <span class="k">break</span>
+
+    <span class="n">state</span><span class="o">.</span><span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">maximal_good_sets</span> <span class="o">=</span> <span class="n">_keep_maximal</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">maximal_good_sets</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">state</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_bad</span><span class="p">(</span><span class="n">evaluate</span><span class="p">:</span> <span class="n">Evaluate</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_suspects</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">,</span> <span class="n">candidate</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Narrow the shrink to the changes the failure actually implicates.</span>
+
+<span class="sd">    The oracle returns more than a bit: a textual merge failure names the</span>
+<span class="sd">    conflicting files, and a test failure names failing tests and files. When a</span>
+<span class="sd">    merge outcome already names the changes it choked on, start there.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">merge</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">merge</span><span class="o">.</span><span class="n">ok</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">merge</span><span class="o">.</span><span class="n">order</span><span class="p">:</span>
+        <span class="n">implicated</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">merge</span><span class="o">.</span><span class="n">order</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">candidate</span>
+        <span class="k">if</span> <span class="n">implicated</span> <span class="ow">and</span> <span class="n">implicated</span> <span class="o">!=</span> <span class="n">candidate</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">implicated</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_next_candidate</span><span class="p">(</span>
+    <span class="n">all_changes</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">,</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">SearchState</span><span class="p">,</span>
+    <span class="n">tried</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">],</span>
+    <span class="n">weight</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">ChangeId</span><span class="p">],</span> <span class="nb">float</span><span class="p">]],</span>
+    <span class="n">parents</span><span class="p">:</span> <span class="n">Dependencies</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The cheapest not-yet-tried complement of a minimal hitting set.</span>
+
+<span class="sd">    With stacked changes the complement is additionally narrowed to its largest</span>
+<span class="sd">    downward-closed subset: dropping a change means dropping everything built on</span>
+<span class="sd">    it, whether the hitting set said so or not.</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">hitting_set</span> <span class="ow">in</span> <span class="n">minimal_hitting_sets</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">conflicts</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">):</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="n">all_changes</span> <span class="o">-</span> <span class="n">hitting_set</span>
+        <span class="k">if</span> <span class="n">parents</span><span class="p">:</span>
+            <span class="n">candidate</span> <span class="o">=</span> <span class="n">largest_closed_subset</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="n">parents</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">tried</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">candidate</span> <span class="o">&lt;=</span> <span class="n">good</span> <span class="k">for</span> <span class="n">good</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">maximal_good_sets</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">return</span> <span class="n">candidate</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_grow_within_known</span><span class="p">(</span>
+    <span class="n">candidate</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">,</span>
+    <span class="n">all_changes</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">,</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">SearchState</span><span class="p">,</span>
+    <span class="n">parents</span><span class="p">:</span> <span class="n">Dependencies</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Add back anything no *known* conflict forbids, before calling it maximal.</span>
+
+<span class="sd">    Costs no evaluations of its own: it only consults conflicts already found.</span>
+<span class="sd">    Without it, upward-closing a hitting set over a stack can drop a change that</span>
+<span class="sd">    nothing actually objected to, and the "maximal" set would be a set short.</span>
+<span class="sd">    """</span>
+    <span class="n">grown</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">extra</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">all_changes</span> <span class="o">-</span> <span class="n">candidate</span><span class="p">):</span>
+        <span class="n">trial</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">grown</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="n">extra</span><span class="p">}</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span>
+            <span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">_ancestors_within</span><span class="p">(</span><span class="n">extra</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">all_changes</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">conflict</span> <span class="o">&lt;=</span> <span class="n">trial</span> <span class="k">for</span> <span class="n">conflict</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">conflicts</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">grown</span> <span class="o">=</span> <span class="n">trial</span>
+    <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">grown</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ancestors_within</span><span class="p">(</span>
+    <span class="n">change</span><span class="p">:</span> <span class="n">ChangeId</span><span class="p">,</span> <span class="n">parents</span><span class="p">:</span> <span class="n">Dependencies</span><span class="p">,</span> <span class="n">universe</span><span class="p">:</span> <span class="n">ChangeSet</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
+    <span class="n">seen</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">parents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">change</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">current</span> <span class="ow">in</span> <span class="n">universe</span> <span class="ow">and</span> <span class="n">current</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="n">parents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">seen</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_keep_maximal</span><span class="p">(</span><span class="n">sets</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Drop any set contained in another; keep a stable, readable order."""</span>
+    <span class="n">unique</span> <span class="o">=</span> <span class="p">{</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sets</span><span class="p">}</span>
+    <span class="n">maximal</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">unique</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="o">&lt;</span> <span class="n">other</span> <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">unique</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">maximal</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="n">set_key</span><span class="p">(</span><span class="n">s</span><span class="p">)))</span>
+
+
+<div class="viewcode-block" id="independent_components">
+<a class="viewcode-back" href="../../module_docs/mergeset/solve.html#mergeset.independent_components">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">independent_components</span><span class="p">(</span>
+    <span class="n">changes</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">],</span>
+    <span class="n">files_of</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">ChangeId</span><span class="p">],</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Split changes into groups that cannot possibly interact via files.</span>
+
+<span class="sd">    Two changes touching disjoint file sets cannot conflict textually, and (as a</span>
+<span class="sd">    working assumption worth stating out loud) rarely conflict semantically.</span>
+<span class="sd">    Connected components of the file-overlap graph are therefore independent</span>
+<span class="sd">    subproblems: solve each separately and combine the answers freely, which</span>
+<span class="sd">    turns one ``2**n`` search into several much smaller ones.</span>
+
+<span class="sd">    &gt;&gt;&gt; files = {'a': ['x.py'], 'b': ['x.py'], 'c': ['y.py']}</span>
+<span class="sd">    &gt;&gt;&gt; [set_key(g) for g in independent_components(files, files.get)]</span>
+<span class="sd">    [('a', 'b'), ('c',)]</span>
+<span class="sd">    """</span>
+    <span class="n">changes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">changes</span><span class="p">)</span>
+    <span class="n">file_sets</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="p">:</span> <span class="nb">set</span><span class="p">(</span><span class="n">files_of</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="ow">or</span> <span class="p">())</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">}</span>
+    <span class="n">parent</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="n">ChangeId</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="p">:</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">find</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ChangeId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChangeId</span><span class="p">:</span>
+        <span class="k">while</span> <span class="n">parent</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">!=</span> <span class="n">x</span><span class="p">:</span>
+            <span class="n">parent</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">parent</span><span class="p">[</span><span class="n">parent</span><span class="p">[</span><span class="n">x</span><span class="p">]]</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">parent</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">union</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ChangeId</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">ChangeId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rx</span><span class="p">,</span> <span class="n">ry</span> <span class="o">=</span> <span class="n">find</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">find</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rx</span> <span class="o">!=</span> <span class="n">ry</span><span class="p">:</span>
+            <span class="n">parent</span><span class="p">[</span><span class="n">ry</span><span class="p">]</span> <span class="o">=</span> <span class="n">rx</span>
+
+    <span class="n">by_file</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">change</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">file_sets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+            <span class="n">by_file</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">change</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">sharers</span> <span class="ow">in</span> <span class="n">by_file</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">sharers</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">union</span><span class="p">(</span><span class="n">sharers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="n">groups</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">change</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">:</span>
+        <span class="n">groups</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">find</span><span class="p">(</span><span class="n">change</span><span class="p">),</span> <span class="nb">set</span><span class="p">())</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">change</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">groups</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="n">set_key</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="combine_components">
+<a class="viewcode-back" href="../../module_docs/mergeset/solve.html#mergeset.combine_components">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">combine_components</span><span class="p">(</span>
+    <span class="n">per_component</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Cartesian-combine per-component maximal sets into global ones.</span>
+
+<span class="sd">    &gt;&gt;&gt; [set_key(s) for s in combine_components([[frozenset('a')], [frozenset('c')]])]</span>
+<span class="sd">    [('a', 'c')]</span>
+<span class="sd">    """</span>
+    <span class="n">combined</span> <span class="o">=</span> <span class="p">[</span><span class="nb">frozenset</span><span class="p">()]</span>
+    <span class="k">for</span> <span class="n">sets</span> <span class="ow">in</span> <span class="n">per_component</span><span class="p">:</span>
+        <span class="n">combined</span> <span class="o">=</span> <span class="p">[</span><span class="n">acc</span> <span class="o">|</span> <span class="n">s</span> <span class="k">for</span> <span class="n">acc</span> <span class="ow">in</span> <span class="n">combined</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sets</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">_keep_maximal</span><span class="p">(</span><span class="n">combined</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,4 @@
+mergeset.report
+===============
+.. automodule:: mergeset.report
+   :members:

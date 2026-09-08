@@ -1,0 +1,543 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.gitops &mdash; mergeset 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mergeset.gitops</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mergeset.gitops</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Git primitives: the cheap pre-oracles and the isolated merge.</span>
+
+<span class="sd">Two very different costs live here, and keeping them apart is the point:</span>
+
+<span class="sd">- **Cheap** (milliseconds, no working tree): ``git merge-tree --write-tree``</span>
+<span class="sd">  answers "do these two changes conflict textually?" and ``git diff --name-only``</span>
+<span class="sd">  answers "which files does this change touch?". Everything these two can decide</span>
+<span class="sd">  must never reach the expensive oracle.</span>
+<span class="sd">- **Expensive** (seconds to minutes): actually materializing a merged tree in a</span>
+<span class="sd">  throwaway worktree so a test suite can run on it.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">CapabilityError</span><span class="p">,</span> <span class="n">ChangeId</span><span class="p">,</span> <span class="n">MergeOutcome</span>
+
+<span class="c1">#: ``git merge-tree --write-tree`` needs this; it is also when ``--merge-base`` landed.</span>
+<span class="n">MIN_GIT_VERSION</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">38</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="GitResult">
+<a class="viewcode-back" href="../../module_docs/mergeset/gitops.html#mergeset.GitResult">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GitResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Raw result of one git invocation."""</span>
+
+    <span class="n">returncode</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">stdout</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">stderr</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ok</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""True iff git exited 0."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span></div>
+
+
+
+<div class="viewcode-block" id="git">
+<a class="viewcode-back" href="../../module_docs/mergeset/gitops.html#mergeset.git">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">git</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">check</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GitResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Run ``git -C repo *args`` and capture its output.</span>
+
+<span class="sd">    &gt;&gt;&gt; git('.', 'rev-parse', '--git-dir').ok in (True, False)</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"-C"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">repo</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">],</span>
+        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">GitResult</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">check</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CapabilityError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"git </span><span class="si">{</span><span class="s1">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">)</span><span class="si">}</span><span class="s2"> failed in </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<div class="viewcode-block" id="git_version">
+<a class="viewcode-back" href="../../module_docs/mergeset/gitops.html#mergeset.git_version">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">git_version</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The installed git version as a tuple, e.g. ``(2, 50, 1)``."""</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"--version"</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">digits</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
+    <span class="n">version</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">digits</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+            <span class="n">version</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">part</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">version</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="check_git_capability">
+<a class="viewcode-back" href="../../module_docs/mergeset/gitops.html#mergeset.check_git_capability">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_git_capability</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Raise a fixable error if git is missing or too old for ``merge-tree``."""</span>
+    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"git"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CapabilityError</span><span class="p">(</span>
+            <span class="s2">"git is not on PATH. Install it (https://git-scm.com/downloads) "</span>
+            <span class="s2">"or add it to PATH, then re-run."</span>
+        <span class="p">)</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">git_version</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">version</span> <span class="o">&lt;</span> <span class="n">MIN_GIT_VERSION</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CapabilityError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"git </span><span class="si">{</span><span class="s1">'.'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="w"> </span><span class="n">version</span><span class="p">))</span><span class="si">}</span><span class="s2"> is too old: "</span>
+            <span class="sa">f</span><span class="s2">"mergeset needs &gt;= </span><span class="si">{</span><span class="s1">'.'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="w"> </span><span class="n">MIN_GIT_VERSION</span><span class="p">))</span><span class="si">}</span><span class="s2"> for "</span>
+            <span class="s2">"`git merge-tree --write-tree` (the pre-oracle that finds textual "</span>
+            <span class="s2">"conflicts without touching a worktree). Upgrade git, or pass "</span>
+            <span class="s2">"pairwise_preoracle=False to skip it."</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="resolve">
+<a class="viewcode-back" href="../../module_docs/mergeset/gitops.html#mergeset.resolve">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rev</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Full sha of ``rev``.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        CapabilityError: if the revision cannot be resolved in ``repo``.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"--verify"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">rev</span><span class="si">}</span><span class="s2">^</span><span class="se">{{</span><span class="s2">commit</span><span class="se">}}</span><span class="s2">"</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="merge_base">
+<a class="viewcode-back" href="../../module_docs/mergeset/gitops.html#mergeset.merge_base">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">merge_base</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Best common ancestor of ``a`` and ``b``."""</span>
+    <span class="k">return</span> <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"merge-base"</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="changed_files">
+<a class="viewcode-back" href="../../module_docs/mergeset/gitops.html#mergeset.changed_files">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">changed_files</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">head</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Files a change touches, as ``git diff --name-only base...head``.</span>
+
+<span class="sd">    The three-dot form is deliberate: it compares against the merge base, so a</span>
+<span class="sd">    change is measured by what *it* did, not by what happened on base meanwhile.</span>
+<span class="sd">    """</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"diff"</span><span class="p">,</span> <span class="s2">"--name-only"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2">...</span><span class="si">{</span><span class="n">head</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span></div>
+
+
+
+<div class="viewcode-block" id="textual_conflict">
+<a class="viewcode-back" href="../../module_docs/mergeset/gitops.html#mergeset.textual_conflict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">textual_conflict</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">head_a</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">head_b</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Conflicting files if merging both heads onto ``base`` clashes textually.</span>
+
+<span class="sd">    **This chains through ``base`` on purpose.** Plain ``git merge-tree A B``</span>
+<span class="sd">    merges using ``merge-base(A, B)``, which is *not* ``base`` whenever the two</span>
+<span class="sd">    branches were cut at different times — and then it reports base's own</span>
+<span class="sd">    commits as conflicts. On a real 15-PR set that mistake produced 13</span>
+<span class="sd">    "conflicting" pairs where only 2 were real (measured by TEST on</span>
+<span class="sd">    trial-repo). So we merge A onto base first, in the object database, and ask</span>
+<span class="sd">    whether B then conflicts with *that*.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ``None`` when the merge is clean, otherwise the list of conflicted paths</span>
+<span class="sd">        (possibly empty if git reported a conflict it could not attribute).</span>
+<span class="sd">    """</span>
+    <span class="n">conflict</span> <span class="o">=</span> <span class="n">merge_sequence</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="p">[(</span><span class="s2">"a"</span><span class="p">,</span> <span class="n">head_a</span><span class="p">),</span> <span class="p">(</span><span class="s2">"b"</span><span class="p">,</span> <span class="n">head_b</span><span class="p">)])</span>
+    <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">conflict</span><span class="o">.</span><span class="n">ok</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">conflict</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SequenceMerge">
+<a class="viewcode-back" href="../../module_docs/mergeset/gitops.html#mergeset.SequenceMerge">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SequenceMerge</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Result of merging changes onto a base entirely in the object database."""</span>
+
+    <span class="n">ok</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="c1">#: Commit holding base + every merged head, when the whole sequence was clean.</span>
+    <span class="n">commit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">conflicting_files</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="c1">#: The changes merged so far; the last one is the one that conflicted.</span>
+    <span class="n">order</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">detail</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span></div>
+
+
+
+<div class="viewcode-block" id="merge_sequence">
+<a class="viewcode-back" href="../../module_docs/mergeset/gitops.html#mergeset.merge_sequence">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">merge_sequence</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">heads</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SequenceMerge</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Merge every head onto ``base``, one at a time, without any worktree.</span>
+
+<span class="sd">    The mechanic, which is the cheap heart of the whole tool::</span>
+
+<span class="sd">        acc = base</span>
+<span class="sd">        for each head:</span>
+<span class="sd">            tree = git merge-tree --write-tree acc head   # conflict -&gt; non-zero</span>
+<span class="sd">            acc  = git commit-tree tree -p acc -p head</span>
+
+<span class="sd">    ``n`` ``merge-tree`` calls of a few milliseconds each, no checkout, no</span>
+<span class="sd">    working tree, and — when it comes out clean — a real commit that a worktree</span>
+<span class="sd">    can be checked out from only if we actually intend to run tests on it.</span>
+
+<span class="sd">    Every merge is measured against the accumulated result rather than pairwise,</span>
+<span class="sd">    which is what keeps a stale branch from manufacturing false conflicts.</span>
+<span class="sd">    """</span>
+    <span class="n">acc</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+    <span class="n">merged</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">change_id</span><span class="p">,</span> <span class="n">head</span> <span class="ow">in</span> <span class="n">heads</span><span class="p">:</span>
+        <span class="n">merged</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">change_id</span><span class="p">)</span>
+        <span class="n">head_sha</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">head</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"merge-tree"</span><span class="p">,</span> <span class="s2">"--write-tree"</span><span class="p">,</span> <span class="n">acc</span><span class="p">,</span> <span class="n">head_sha</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">SequenceMerge</span><span class="p">(</span>
+                <span class="n">ok</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">conflicting_files</span><span class="o">=</span><span class="n">_parse_merge_tree_conflicts</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">),</span>
+                <span class="n">order</span><span class="o">=</span><span class="n">merged</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stderr</span> <span class="ow">or</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()[</span><span class="o">-</span><span class="mi">2000</span><span class="p">:],</span>
+            <span class="p">)</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">commit</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span>
+            <span class="n">repo</span><span class="p">,</span> <span class="s2">"commit-tree"</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="s2">"-p"</span><span class="p">,</span> <span class="n">acc</span><span class="p">,</span> <span class="s2">"-p"</span><span class="p">,</span> <span class="n">head_sha</span><span class="p">,</span>
+            <span class="s2">"-m"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"mergeset: merge </span><span class="si">{</span><span class="n">change_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">acc</span> <span class="o">=</span> <span class="n">commit</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">SequenceMerge</span><span class="p">(</span><span class="n">ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">commit</span><span class="o">=</span><span class="n">acc</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">merged</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_merge_tree_conflicts</span><span class="p">(</span><span class="n">stdout</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Pull the conflicted paths out of ``merge-tree --write-tree`` output.</span>
+
+<span class="sd">    The format is: tree oid, blank line, ``&lt;mode&gt; &lt;object&gt; &lt;stage&gt;\\t&lt;path&gt;``</span>
+<span class="sd">    lines, blank line, informational messages.</span>
+
+<span class="sd">    &gt;&gt;&gt; _parse_merge_tree_conflicts(</span>
+<span class="sd">    ...     'abc123\\n\\n100644 aaa 1\\tfoo.py\\n100644 bbb 2\\tfoo.py\\n\\nAuto-merging foo.py\\n'</span>
+<span class="sd">    ... )</span>
+<span class="sd">    ['foo.py']</span>
+<span class="sd">    """</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+    <span class="n">paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">paths</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="s2">"</span><span class="se">\t</span><span class="s2">"</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"</span><span class="se">\t</span><span class="s2">"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">paths</span> <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">p</span> <span class="ow">in</span> <span class="n">seen</span> <span class="ow">or</span> <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">p</span><span class="p">))]</span>
+
+
+<div class="viewcode-block" id="pairwise_textual_conflicts">
+<a class="viewcode-back" href="../../module_docs/mergeset/gitops.html#mergeset.pairwise_textual_conflicts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pairwise_textual_conflicts</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">heads</span><span class="p">:</span> <span class="nb">dict</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="n">ChangeId</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]:</span>
+<span class="w">    </span><span class="sd">"""Yield ``(id_a, id_b, files)`` for every pair that conflicts textually.</span>
+
+<span class="sd">    ``heads`` maps change id -&gt; commit-ish. This is the pre-oracle that buys the</span>
+<span class="sd">    most: every pair it finds is a size-2 conflict known before any test runs.</span>
+<span class="sd">    Each pair is merged *onto base*, never against each other — see</span>
+<span class="sd">    :func:`textual_conflict` for why that distinction is not cosmetic.</span>
+<span class="sd">    """</span>
+    <span class="n">ids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">heads</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ids</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]:</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="n">textual_conflict</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">heads</span><span class="p">[</span><span class="n">a</span><span class="p">],</span> <span class="n">heads</span><span class="p">[</span><span class="n">b</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">files</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">files</span></div>
+
+
+
+<div class="viewcode-block" id="singleton_textual_conflicts">
+<a class="viewcode-back" href="../../module_docs/mergeset/gitops.html#mergeset.singleton_textual_conflicts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">singleton_textual_conflicts</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">heads</span><span class="p">:</span> <span class="nb">dict</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]:</span>
+<span class="w">    </span><span class="sd">"""Yield ``(id, files)`` for every change that will not even merge onto base.</span>
+
+<span class="sd">    The cheapest check there is, and on real PR sets it fires more than you would</span>
+<span class="sd">    expect: a PR opened against a base branch that has since moved on is green on</span>
+<span class="sd">    GitHub and still unmergeable onto the base you actually care about.</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">change_id</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">heads</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">merge_sequence</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="p">[(</span><span class="n">change_id</span><span class="p">,</span> <span class="n">heads</span><span class="p">[</span><span class="n">change_id</span><span class="p">])])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">change_id</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="merged_worktree">
+<a class="viewcode-back" href="../../module_docs/mergeset/gitops.html#mergeset.merged_worktree">[docs]</a>
+<span class="nd">@contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">merged_worktree</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">base</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">heads</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">root</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">keep</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">reuse</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">MergeOutcome</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Materialize ``base`` plus every head in a worktree, ready for validation.</span>
+
+<span class="sd">    The merge itself happens in the object database (:func:`merge_sequence`), so</span>
+<span class="sd">    a conflicted set costs milliseconds and never touches the filesystem at all.</span>
+<span class="sd">    Only a *clean* set gets checked out — which is the only case where anything</span>
+<span class="sd">    wanted to run tests anyway.</span>
+
+<span class="sd">    Yields ``(worktree_path, outcome)``. On a conflict the path is ``None`` and</span>
+<span class="sd">    the outcome names the change that failed (``outcome.order[-1]``) and the</span>
+<span class="sd">    conflicting files — that attribution is what lets the solver shrink straight</span>
+<span class="sd">    to the suspects instead of halving blindly.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        reuse: An existing worktree to check the merge commit out into, instead</span>
+<span class="sd">            of creating a fresh one. This is the seam that makes expensive</span>
+<span class="sd">            per-tree setup (``npm install``, a virtualenv, a build cache)</span>
+<span class="sd">            survive across evaluations; see</span>
+<span class="sd">            :func:`mergeset.validation.staged_validation`.</span>
+<span class="sd">    """</span>
+    <span class="n">merged</span> <span class="o">=</span> <span class="n">merge_sequence</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">heads</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">merged</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="kc">None</span><span class="p">,</span> <span class="n">MergeOutcome</span><span class="p">(</span>
+            <span class="n">ok</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">conflicting_files</span><span class="o">=</span><span class="n">merged</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">,</span>
+            <span class="n">order</span><span class="o">=</span><span class="n">merged</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="n">merged</span><span class="o">.</span><span class="n">detail</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span>
+    <span class="n">outcome</span> <span class="o">=</span> <span class="n">MergeOutcome</span><span class="p">(</span><span class="n">ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">merged</span><span class="o">.</span><span class="n">order</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="n">merged</span><span class="o">.</span><span class="n">commit</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">reuse</span><span class="p">:</span>
+        <span class="n">reuse</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">reuse</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">reuse</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">git</span><span class="p">(</span><span class="n">reuse</span><span class="p">,</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"--git-dir"</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="kc">None</span><span class="p">,</span> <span class="n">MergeOutcome</span><span class="p">(</span>
+                <span class="n">ok</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"error"</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">merged</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"reuse_worktree=</span><span class="si">{</span><span class="n">reuse</span><span class="si">!r}</span><span class="s2"> is not a git worktree. Create one "</span>
+                    <span class="s2">"with mergeset.gitops.persistent_worktree(repo, base, path), "</span>
+                    <span class="s2">"and pass an absolute path (it must be a str, not True)."</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">checkout</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">reuse</span><span class="p">,</span> <span class="s2">"checkout"</span><span class="p">,</span> <span class="s2">"--force"</span><span class="p">,</span> <span class="s2">"--detach"</span><span class="p">,</span> <span class="n">merged</span><span class="o">.</span><span class="n">commit</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">checkout</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="kc">None</span><span class="p">,</span> <span class="n">MergeOutcome</span><span class="p">(</span>
+                <span class="n">ok</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"error"</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">merged</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"could not check out into </span><span class="si">{</span><span class="n">reuse</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">checkout</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">git</span><span class="p">(</span><span class="n">reuse</span><span class="p">,</span> <span class="s2">"clean"</span><span class="p">,</span> <span class="s2">"-fd"</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">reuse</span><span class="p">,</span> <span class="n">outcome</span>
+        <span class="k">return</span>
+
+    <span class="n">root</span> <span class="o">=</span> <span class="n">root</span> <span class="ow">or</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"mergeset-"</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"wt-"</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">rmdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>  <span class="c1"># `git worktree add` wants to create it</span>
+    <span class="n">added</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">add</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"worktree"</span><span class="p">,</span> <span class="s2">"add"</span><span class="p">,</span> <span class="s2">"--detach"</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">merged</span><span class="o">.</span><span class="n">commit</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">add</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="kc">None</span><span class="p">,</span> <span class="n">MergeOutcome</span><span class="p">(</span>
+                <span class="n">ok</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"error"</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">merged</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"could not create worktree: </span><span class="si">{</span><span class="n">add</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">added</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">yield</span> <span class="n">path</span><span class="p">,</span> <span class="n">outcome</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">added</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">keep</span><span class="p">:</span>
+            <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"worktree"</span><span class="p">,</span> <span class="s2">"remove"</span><span class="p">,</span> <span class="s2">"--force"</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+            <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"worktree"</span><span class="p">,</span> <span class="s2">"prune"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="persistent_worktree">
+<a class="viewcode-back" href="../../module_docs/mergeset/gitops.html#mergeset.persistent_worktree">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">persistent_worktree</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Create (once) a worktree meant to be reused across many evaluations.</span>
+
+<span class="sd">    Reusing one tree is what makes an expensive setup step amortizable: install</span>
+<span class="sd">    dependencies once, then check out each candidate merge into the same</span>
+<span class="sd">    directory. Returns ``path``.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">".git"</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"worktree"</span><span class="p">,</span> <span class="s2">"add"</span><span class="p">,</span> <span class="s2">"--detach"</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span></div>
+
+
+
+<div class="viewcode-block" id="create_integration_branch">
+<a class="viewcode-back" href="../../module_docs/mergeset/gitops.html#mergeset.create_integration_branch">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_integration_branch</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">base</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">heads</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Create a local branch holding ``base`` + all heads, for manual testing.</span>
+
+<span class="sd">    Only ever creates *new* local branches. Never touches an existing branch</span>
+<span class="sd">    unless ``force`` is passed explicitly, and never pushes anything.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ``(created, message)``.</span>
+<span class="sd">    """</span>
+    <span class="n">exists</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"--verify"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"refs/heads/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span>
+    <span class="k">if</span> <span class="n">exists</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"branch </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> already exists; refusing to touch it"</span>
+    <span class="k">with</span> <span class="n">merged_worktree</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">heads</span><span class="p">)</span> <span class="k">as</span> <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">outcome</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"merge failed: </span><span class="si">{</span><span class="n">outcome</span><span class="o">.</span><span class="n">detail</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'conflict'</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">sha</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"branch"</span><span class="p">,</span> <span class="s2">"--force"</span> <span class="k">if</span> <span class="n">force</span> <span class="k">else</span> <span class="s2">"--no-track"</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">sha</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="n">sha</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

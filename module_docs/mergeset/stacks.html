@@ -1,0 +1,267 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.stacks &mdash; mergeset 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="mergeset.validation" href="validation.html" />
+    <link rel="prev" title="mergeset.sources" href="sources.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sources.html">mergeset.sources</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">mergeset.stacks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.stacks.Dependencies"><code class="docutils literal notranslate"><span class="pre">Dependencies</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.stacks.ancestors"><code class="docutils literal notranslate"><span class="pre">ancestors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.stacks.close_down"><code class="docutils literal notranslate"><span class="pre">close_down()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.stacks.close_up"><code class="docutils literal notranslate"><span class="pre">close_up()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.stacks.cone_weights"><code class="docutils literal notranslate"><span class="pre">cone_weights()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.stacks.count_closed_subsets"><code class="docutils literal notranslate"><span class="pre">count_closed_subsets()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.stacks.descendants"><code class="docutils literal notranslate"><span class="pre">descendants()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.stacks.largest_closed_subset"><code class="docutils literal notranslate"><span class="pre">largest_closed_subset()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.stacks.stack_roots"><code class="docutils literal notranslate"><span class="pre">stack_roots()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.stacks.tips"><code class="docutils literal notranslate"><span class="pre">tips()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">mergeset.stacks</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/mergeset/stacks.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mergeset.stacks">
+<span id="mergeset-stacks"></span><h1>mergeset.stacks<a class="headerlink" href="#module-mergeset.stacks" title="Link to this heading"></a></h1>
+<p>Stacked changes: when the candidates are not independent.</p>
+<p>A pull request opened against another pull request’s branch already <em>contains</em>
+it. That single fact breaks the assumption that any subset of the candidates is
+a meaningful thing to evaluate, and it breaks it in three places at once:</p>
+<ul class="simple">
+<li><p><strong>Validity.</strong> Asking for <code class="docutils literal notranslate"><span class="pre">{616}</span></code> when 616 is stacked on 604 on 587 really
+means <code class="docutils literal notranslate"><span class="pre">{587,</span> <span class="pre">604,</span> <span class="pre">616}</span></code>. A valid set must be <strong>downward-closed</strong> under the
+parent relation. Note “downward-closed in a forest”, not “a prefix of a
+chain”: stacks branch, so two changes can be siblings on the same parent.</p></li>
+<li><p><strong>Cost.</strong> Merging a stack’s tip brings every ancestor with it, so merging the
+ancestors explicitly is wasted work and can perturb merge order. Reduce a set
+to its <strong>tips</strong> before merging.</p></li>
+<li><p><strong>Weight.</strong> Dropping a change drops its whole descendant cone. Weighting
+changes independently lets a hitting set cheerfully discard thousands of lines
+while believing it discarded one small PR.</p></li>
+</ul>
+<p>Discovering the relation is <a class="reference internal" href="sources.html#mergeset.sources.detect_stacks" title="mergeset.sources.detect_stacks"><code class="xref py py-func docutils literal notranslate"><span class="pre">mergeset.sources.detect_stacks()</span></code></a>; acting on it
+is here. The dependency map is always <code class="docutils literal notranslate"><span class="pre">child</span> <span class="pre">-&gt;</span> <span class="pre">parent</span></code>.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="mergeset.stacks.Dependencies">
+<span class="sig-prename descclassname"><span class="pre">mergeset.stacks.</span></span><span class="sig-name descname"><span class="pre">Dependencies</span></span><a class="headerlink" href="#mergeset.stacks.Dependencies" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">child</span> <span class="pre">-&gt;</span> <span class="pre">parent</span></code>. A change absent from the mapping has no parent.</p>
+<p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.stacks.ancestors">
+<span class="sig-prename descclassname"><span class="pre">mergeset.stacks.</span></span><span class="sig-name descname"><span class="pre">ancestors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">change</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">frozenset</span></span></span><a class="reference internal" href="../../_modules/mergeset/stacks.html#ancestors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.stacks.ancestors" title="Link to this definition"></a></dt>
+<dd><p>Every change <code class="docutils literal notranslate"><span class="pre">change</span></code> is stacked on, transitively.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">set_key</span><span class="p">(</span><span class="n">ancestors</span><span class="p">(</span><span class="s1">'c'</span><span class="p">,</span> <span class="p">{</span><span class="s1">'c'</span><span class="p">:</span> <span class="s1">'b'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">}))</span>
+<span class="go">('a', 'b')</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.stacks.close_down">
+<span class="sig-prename descclassname"><span class="pre">mergeset.stacks.</span></span><span class="sig-name descname"><span class="pre">close_down</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">frozenset</span></span></span><a class="reference internal" href="../../_modules/mergeset/stacks.html#close_down"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.stacks.close_down" title="Link to this definition"></a></dt>
+<dd><p>Add every ancestor, so the set becomes a valid thing to ask for.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">set_key</span><span class="p">(</span><span class="n">close_down</span><span class="p">({</span><span class="s1">'c'</span><span class="p">},</span> <span class="p">{</span><span class="s1">'c'</span><span class="p">:</span> <span class="s1">'b'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">}))</span>
+<span class="go">('a', 'b', 'c')</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.stacks.close_up">
+<span class="sig-prename descclassname"><span class="pre">mergeset.stacks.</span></span><span class="sig-name descname"><span class="pre">close_up</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">frozenset</span></span></span><a class="reference internal" href="../../_modules/mergeset/stacks.html#close_up"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.stacks.close_up" title="Link to this definition"></a></dt>
+<dd><p>Add every descendant — what dropping these changes actually costs.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">set_key</span><span class="p">(</span><span class="n">close_up</span><span class="p">({</span><span class="s1">'a'</span><span class="p">},</span> <span class="p">{</span><span class="s1">'c'</span><span class="p">:</span> <span class="s1">'b'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">}))</span>
+<span class="go">('a', 'b', 'c')</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.stacks.cone_weights">
+<span class="sig-prename descclassname"><span class="pre">mergeset.stacks.</span></span><span class="sig-name descname"><span class="pre">cone_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/stacks.html#cone_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.stacks.cone_weights" title="Link to this definition"></a></dt>
+<dd><p>Re-weight each change by the cost of dropping its whole descendant cone.</p>
+<p>Dropping a stack’s root drops the stack. The hitting set has to know that,
+or it will pick the “cheapest” change and take eight thousand lines with it.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cone_weights</span><span class="p">({</span><span class="s1">'a'</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">},</span> <span class="p">{</span><span class="s1">'b'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">})</span>
+<span class="go">{'a': 3.0, 'b': 2.0}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.stacks.count_closed_subsets">
+<span class="sig-prename descclassname"><span class="pre">mergeset.stacks.</span></span><span class="sig-name descname"><span class="pre">count_closed_subsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">changes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../../_modules/mergeset/stacks.html#count_closed_subsets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.stacks.count_closed_subsets" title="Link to this definition"></a></dt>
+<dd><p>How many downward-closed subsets exist — the size of the real search space.</p>
+<p>Worth reporting: on a 15-change forest of four stacks this is 576 rather
+than 32768, which is the difference between “enumerate carefully” and
+“hopeless”.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">count_closed_subsets</span><span class="p">({</span><span class="s1">'b'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">},</span> <span class="p">[</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">])</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.stacks.descendants">
+<span class="sig-prename descclassname"><span class="pre">mergeset.stacks.</span></span><span class="sig-name descname"><span class="pre">descendants</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">change</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">frozenset</span></span></span><a class="reference internal" href="../../_modules/mergeset/stacks.html#descendants"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.stacks.descendants" title="Link to this definition"></a></dt>
+<dd><p>Every change stacked on <code class="docutils literal notranslate"><span class="pre">change</span></code>, transitively — its <em>cone</em>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">set_key</span><span class="p">(</span><span class="n">descendants</span><span class="p">(</span><span class="s1">'a'</span><span class="p">,</span> <span class="p">{</span><span class="s1">'c'</span><span class="p">:</span> <span class="s1">'b'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">,</span> <span class="s1">'d'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">}))</span>
+<span class="go">('b', 'c', 'd')</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.stacks.largest_closed_subset">
+<span class="sig-prename descclassname"><span class="pre">mergeset.stacks.</span></span><span class="sig-name descname"><span class="pre">largest_closed_subset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">frozenset</span></span></span><a class="reference internal" href="../../_modules/mergeset/stacks.html#largest_closed_subset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.stacks.largest_closed_subset" title="Link to this definition"></a></dt>
+<dd><p>Drop members whose ancestors are missing — the set you can actually merge.</p>
+<p>This is the <em>other</em> way to make a set valid, and it is the one the solver
+needs: when the search decides to drop a parent, the descendants have to go
+too, and no amount of wanting them back changes that.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">set_key</span><span class="p">(</span><span class="n">largest_closed_subset</span><span class="p">({</span><span class="s1">'b'</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">},</span> <span class="p">{</span><span class="s1">'c'</span><span class="p">:</span> <span class="s1">'b'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">}))</span>
+<span class="go">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">set_key</span><span class="p">(</span><span class="n">largest_closed_subset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">,</span> <span class="s1">'d'</span><span class="p">},</span> <span class="p">{</span><span class="s1">'c'</span><span class="p">:</span> <span class="s1">'b'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">}))</span>
+<span class="go">('a', 'b', 'd')</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.stacks.stack_roots">
+<span class="sig-prename descclassname"><span class="pre">mergeset.stacks.</span></span><span class="sig-name descname"><span class="pre">stack_roots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">changes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">frozenset</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/stacks.html#stack_roots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.stacks.stack_roots" title="Link to this definition"></a></dt>
+<dd><p>Group changes into stacks (connected components of the parent relation).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">set_key</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">stack_roots</span><span class="p">({</span><span class="s1">'b'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">,</span> <span class="s1">'d'</span><span class="p">:</span> <span class="s1">'c'</span><span class="p">},</span> <span class="s1">'abcde'</span><span class="p">)]</span>
+<span class="go">[('a', 'b'), ('c', 'd'), ('e',)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.stacks.tips">
+<span class="sig-prename descclassname"><span class="pre">mergeset.stacks.</span></span><span class="sig-name descname"><span class="pre">tips</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">frozenset</span></span></span><a class="reference internal" href="../../_modules/mergeset/stacks.html#tips"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.stacks.tips" title="Link to this definition"></a></dt>
+<dd><p>The members of <code class="docutils literal notranslate"><span class="pre">subset</span></code> that nothing else in <code class="docutils literal notranslate"><span class="pre">subset</span></code> is stacked on.</p>
+<p>Merging these brings the rest along for free.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">set_key</span><span class="p">(</span><span class="n">tips</span><span class="p">({</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">},</span> <span class="p">{</span><span class="s1">'c'</span><span class="p">:</span> <span class="s1">'b'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">}))</span>
+<span class="go">('c',)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">set_key</span><span class="p">(</span><span class="n">tips</span><span class="p">({</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">,</span> <span class="s1">'d'</span><span class="p">},</span> <span class="p">{</span><span class="s1">'b'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">,</span> <span class="s1">'d'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">}))</span>
+<span class="go">('b', 'd')</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="sources.html" class="btn btn-neutral float-left" title="mergeset.sources" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="validation.html" class="btn btn-neutral float-right" title="mergeset.validation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,294 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.validation &mdash; mergeset 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="mergeset.stacks" href="stacks.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">mergeset.validation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.validation.DEFAULT_PYTEST_ARGS"><code class="docutils literal notranslate"><span class="pre">DEFAULT_PYTEST_ARGS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.validation.ValidationStage"><code class="docutils literal notranslate"><span class="pre">ValidationStage</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.validation.act_validation"><code class="docutils literal notranslate"><span class="pre">act_validation()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.validation.callable_validation"><code class="docutils literal notranslate"><span class="pre">callable_validation()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.validation.check_validation_capability"><code class="docutils literal notranslate"><span class="pre">check_validation_capability()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.validation.command_validation"><code class="docutils literal notranslate"><span class="pre">command_validation()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.validation.detect_runner"><code class="docutils literal notranslate"><span class="pre">detect_runner()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.validation.file_fingerprint"><code class="docutils literal notranslate"><span class="pre">file_fingerprint()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.validation.flake_tolerant"><code class="docutils literal notranslate"><span class="pre">flake_tolerant()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.validation.js_validation"><code class="docutils literal notranslate"><span class="pre">js_validation()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.validation.merge_only_validation"><code class="docutils literal notranslate"><span class="pre">merge_only_validation()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.validation.pytest_validation"><code class="docutils literal notranslate"><span class="pre">pytest_validation()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.validation.staged_validation"><code class="docutils literal notranslate"><span class="pre">staged_validation()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">mergeset.validation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/mergeset/validation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mergeset.validation">
+<span id="mergeset-validation"></span><h1>mergeset.validation<a class="headerlink" href="#module-mergeset.validation" title="Link to this heading"></a></h1>
+<p>Validation functions: does this merged tree actually work?</p>
+<p>A validator is any callable <code class="docutils literal notranslate"><span class="pre">(worktree_path)</span> <span class="pre">-&gt;</span> <span class="pre">ValidationOutcome</span></code>. Four are
+shipped — a pytest runner (the default), an arbitrary shell command, a local CI
+run via <code class="docutils literal notranslate"><span class="pre">act</span></code>, and “merge-only” — and a user-supplied Python callable is a
+first-class fifth option, because the interesting projects always have one more
+step than a test command.</p>
+<p>Every validator returns a <em>structured</em> result, not a bit: which tests failed,
+which files they live in, how long it took. The solver uses that to aim its
+conflict shrinking at the changes actually implicated, rather than halving
+blindly.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="mergeset.validation.DEFAULT_PYTEST_ARGS">
+<span class="sig-prename descclassname"><span class="pre">mergeset.validation.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_PYTEST_ARGS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('-x',</span> <span class="pre">'-q',</span> <span class="pre">'--tb=short',</span> <span class="pre">'-p',</span> <span class="pre">'no:cacheprovider')</span></span><a class="headerlink" href="#mergeset.validation.DEFAULT_PYTEST_ARGS" title="Link to this definition"></a></dt>
+<dd><p>the answer we need is a bit, and the first failure has it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Fail-fast by default</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.validation.ValidationStage">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.validation.</span></span><span class="sig-name descname"><span class="pre">ValidationStage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">command</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fingerprint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mergeset/validation.html#ValidationStage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.validation.ValidationStage" title="Link to this definition"></a></dt>
+<dd><p>One step of a staged validation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – What this step is (<code class="docutils literal notranslate"><span class="pre">setup</span></code>, <code class="docutils literal notranslate"><span class="pre">build</span></code>, <code class="docutils literal notranslate"><span class="pre">test</span></code>, <code class="docutils literal notranslate"><span class="pre">lint</span></code>…).
+It ends up in the log and in the report, which is the whole point:
+“failed to build” and “tests failed” are different facts and a
+single pass/fail bit throws away the one you need.</p></li>
+<li><p><strong>command</strong> – Shell command, run in the merged worktree.</p></li>
+<li><p><strong>fingerprint</strong> – Optional <code class="docutils literal notranslate"><span class="pre">worktree</span> <span class="pre">-&gt;</span> <span class="pre">str</span></code>. When given, the stage is
+skipped if it already ran in this worktree with the same value —
+this is how an expensive dependency install is amortized across
+evaluations instead of being paid every time (keyed on, say, the
+hash of the lockfile).</p></li>
+<li><p><strong>timeout</strong> – Seconds before the stage is declared failed.</p></li>
+<li><p><strong>required</strong> – A failing required stage stops the sequence (the default);
+a non-required stage is recorded and the sequence continues.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.validation.act_validation">
+<span class="sig-prename descclassname"><span class="pre">mergeset.validation.</span></span><span class="sig-name descname"><span class="pre">act_validation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">job</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base.html#mergeset.base.ValidationOutcome" title="mergeset.base.ValidationOutcome"><span class="pre">ValidationOutcome</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/validation.html#act_validation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.validation.act_validation" title="Link to this definition"></a></dt>
+<dd><p>A validator that runs the repository’s GitHub Actions locally with <code class="docutils literal notranslate"><span class="pre">act</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.validation.callable_validation">
+<span class="sig-prename descclassname"><span class="pre">mergeset.validation.</span></span><span class="sig-name descname"><span class="pre">callable_validation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base.html#mergeset.base.ValidationOutcome" title="mergeset.base.ValidationOutcome"><span class="pre">ValidationOutcome</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/validation.html#callable_validation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.validation.callable_validation" title="Link to this definition"></a></dt>
+<dd><p>Adapt a plain user callable into a validator.</p>
+<p>The callable may return a <code class="xref py py-class docutils literal notranslate"><span class="pre">ValidationOutcome</span></code> (used as-is) or
+anything truthy/falsy (interpreted as pass/fail).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.validation.check_validation_capability">
+<span class="sig-prename descclassname"><span class="pre">mergeset.validation.</span></span><span class="sig-name descname"><span class="pre">check_validation_capability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runner</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'pytest'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/mergeset/validation.html#check_validation_capability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.validation.check_validation_capability" title="Link to this definition"></a></dt>
+<dd><p>Raise a <em>fixable</em> error if <code class="docutils literal notranslate"><span class="pre">runner</span></code> cannot work on <code class="docutils literal notranslate"><span class="pre">path</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.validation.command_validation">
+<span class="sig-prename descclassname"><span class="pre">mergeset.validation.</span></span><span class="sig-name descname"><span class="pre">command_validation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">command</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base.html#mergeset.base.ValidationOutcome" title="mergeset.base.ValidationOutcome"><span class="pre">ValidationOutcome</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/validation.html#command_validation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.validation.command_validation" title="Link to this definition"></a></dt>
+<dd><p>A validator that runs an arbitrary shell command in the merged worktree.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.validation.detect_runner">
+<span class="sig-prename descclassname"><span class="pre">mergeset.validation.</span></span><span class="sig-name descname"><span class="pre">detect_runner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/mergeset/validation.html#detect_runner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.validation.detect_runner" title="Link to this definition"></a></dt>
+<dd><p>Guess how this project is tested; <code class="docutils literal notranslate"><span class="pre">None</span></code> if nothing is recognizable.</p>
+<p>Ordering matters more than it looks. An earlier version checked for a
+<code class="docutils literal notranslate"><span class="pre">tests/</span></code> directory in the same breath as <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>, and so
+classified a TypeScript repository as pytest and ran pytest in it for a
+dozen evaluations before anyone noticed. Manifests decide; a <code class="docutils literal notranslate"><span class="pre">tests/</span></code>
+directory is not evidence of a language.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">detect_runner</span><span class="p">(</span><span class="s1">'/definitely/not/a/project'</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.validation.file_fingerprint">
+<span class="sig-prename descclassname"><span class="pre">mergeset.validation.</span></span><span class="sig-name descname"><span class="pre">file_fingerprint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">paths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/validation.html#file_fingerprint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.validation.file_fingerprint" title="Link to this definition"></a></dt>
+<dd><p>A fingerprint function over the contents of the given repo-relative files.</p>
+<p>The canonical use is a lockfile: install dependencies again only when
+<code class="docutils literal notranslate"><span class="pre">pnpm-lock.yaml</span></code> actually changed between two candidate merges.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.validation.flake_tolerant">
+<span class="sig-prename descclassname"><span class="pre">mergeset.validation.</span></span><span class="sig-name descname"><span class="pre">flake_tolerant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base.html#mergeset.base.ValidationOutcome" title="mergeset.base.ValidationOutcome"><span class="pre">ValidationOutcome</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">retries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base.html#mergeset.base.ValidationOutcome" title="mergeset.base.ValidationOutcome"><span class="pre">ValidationOutcome</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/validation.html#flake_tolerant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.validation.flake_tolerant" title="Link to this definition"></a></dt>
+<dd><p>Re-run a failing validation <code class="docutils literal notranslate"><span class="pre">retries</span></code> times before believing it.</p>
+<p>Monotonicity is a prior, not a law, and flaky tests are the usual way it
+breaks. This is the cheap defense; the honest one is
+<code class="docutils literal notranslate"><span class="pre">EvaluationLog.monotonicity_violations</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.validation.js_validation">
+<span class="sig-prename descclassname"><span class="pre">mergeset.validation.</span></span><span class="sig-name descname"><span class="pre">js_validation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">install</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'pnpm</span> <span class="pre">install</span> <span class="pre">--frozen-lockfile'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">build</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'pnpm</span> <span class="pre">run</span> <span class="pre">test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lockfile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'pnpm-lock.yaml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base.html#mergeset.base.ValidationOutcome" title="mergeset.base.ValidationOutcome"><span class="pre">ValidationOutcome</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/validation.html#js_validation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.validation.js_validation" title="Link to this definition"></a></dt>
+<dd><p>A staged validator shaped like a JavaScript project.</p>
+<p>Install is fingerprinted on the lockfile so it runs only when dependencies
+actually changed; the build, when given, is a required prerequisite of the
+tests rather than part of them.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.validation.merge_only_validation">
+<span class="sig-prename descclassname"><span class="pre">mergeset.validation.</span></span><span class="sig-name descname"><span class="pre">merge_only_validation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base.html#mergeset.base.ValidationOutcome" title="mergeset.base.ValidationOutcome"><span class="pre">ValidationOutcome</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/validation.html#merge_only_validation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.validation.merge_only_validation" title="Link to this definition"></a></dt>
+<dd><p>A validator that accepts anything that merged cleanly.</p>
+<p>Useful as a first pass: it costs nothing and still finds every textual
+conflict, which on real branch sets is most of them.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.validation.pytest_validation">
+<span class="sig-prename descclassname"><span class="pre">mergeset.validation.</span></span><span class="sig-name descname"><span class="pre">pytest_validation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('-x',</span> <span class="pre">'-q',</span> <span class="pre">'--tb=short',</span> <span class="pre">'-p',</span> <span class="pre">'no:cacheprovider')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">select_paths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base.html#mergeset.base.ValidationOutcome" title="mergeset.base.ValidationOutcome"><span class="pre">ValidationOutcome</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/validation.html#pytest_validation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.validation.pytest_validation" title="Link to this definition"></a></dt>
+<dd><p>A validator that runs the project’s pytest suite, fail-fast by default.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> – Passed to pytest. Fail-fast (<code class="docutils literal notranslate"><span class="pre">-x</span></code>) is the default because the
+oracle only needs to know <em>whether</em> the set is good.</p></li>
+<li><p><strong>timeout</strong> – Seconds before the run is declared failed.</p></li>
+<li><p><strong>env</strong> – Extra environment variables.</p></li>
+<li><p><strong>select_paths</strong> – <code class="docutils literal notranslate"><span class="pre">worktree</span> <span class="pre">-&gt;</span> <span class="pre">test</span> <span class="pre">paths</span></code> — the seam for test-impact
+selection. Return only the tests the merged changes can affect and
+each evaluation gets dramatically cheaper. Default: run everything.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.validation.staged_validation">
+<span class="sig-prename descclassname"><span class="pre">mergeset.validation.</span></span><span class="sig-name descname"><span class="pre">staged_validation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stages</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#mergeset.validation.ValidationStage" title="mergeset.validation.ValidationStage"><span class="pre">ValidationStage</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base.html#mergeset.base.ValidationOutcome" title="mergeset.base.ValidationOutcome"><span class="pre">ValidationOutcome</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/validation.html#staged_validation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.validation.staged_validation" title="Link to this definition"></a></dt>
+<dd><p>Run an ordered list of <a class="reference internal" href="#mergeset.validation.ValidationStage" title="mergeset.validation.ValidationStage"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValidationStage</span></code></a> steps, reporting which one failed.</p>
+<p>Real projects do not have “the test command”; they have a sequence, and the
+steps are not equally interesting. A JS repo may need
+<code class="docutils literal notranslate"><span class="pre">pnpm</span> <span class="pre">install</span></code> (slow, only when the lockfile moved), then a build (a
+<em>prerequisite</em> of testing — without it the tests do not even collect, and a
+validator that skipped it would report a false failure), then the tests,
+then a lint pass.</p>
+<p>The failing stage’s name is prefixed onto every reported failure id, so the
+log distinguishes <code class="docutils literal notranslate"><span class="pre">build:</span> <span class="pre">...</span></code> from <code class="docutils literal notranslate"><span class="pre">test:</span> <span class="pre">tests/x.ts::y</span></code>.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="stacks.html" class="btn btn-neutral float-left" title="mergeset.stacks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
