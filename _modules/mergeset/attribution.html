@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>mergeset.attribution &mdash; mergeset 0.0.1 documentation</title>
+  <title>mergeset.attribution &mdash; mergeset 0.0.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -236,8 +236,10 @@
     <span class="k">for</span> <span class="n">change_id</span> <span class="ow">in</span> <span class="n">within</span><span class="p">:</span>
         <span class="n">touched</span> <span class="o">=</span> <span class="n">files_by_change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">change_id</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()</span>
         <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">f</span> <span class="o">==</span> <span class="n">path</span> <span class="ow">or</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"/"</span> <span class="o">+</span> <span class="n">path</span><span class="p">)</span> <span class="ow">or</span> <span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"/"</span> <span class="o">+</span> <span class="n">f</span><span class="p">)</span>
-                   <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">touched</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+                <span class="n">f</span> <span class="o">==</span> <span class="n">path</span> <span class="ow">or</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"/"</span> <span class="o">+</span> <span class="n">path</span><span class="p">)</span> <span class="ow">or</span> <span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"/"</span> <span class="o">+</span> <span class="n">f</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">touched</span>
+            <span class="p">):</span>
                 <span class="n">hits</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">change_id</span><span class="p">)</span>
                 <span class="k">break</span>
     <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">hits</span><span class="p">)</span>
@@ -263,7 +265,8 @@
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># a diff we cannot read is not evidence either way</span>
             <span class="k">continue</span>
         <span class="n">added</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">diff</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+            <span class="n">line</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">diff</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"+"</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"+++"</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">symbol</span> <span class="ow">in</span> <span class="n">added</span> <span class="k">for</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="n">wanted</span><span class="p">):</span>
