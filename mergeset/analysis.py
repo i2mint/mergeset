@@ -104,7 +104,38 @@ class Analysis:
 
     @property
     def evaluations(self) -> int:
-        """How many expensive evaluations this run actually spent."""
+        """How many expensive evaluations this analysis rests on.
+
+        Counted from the **log**, which is the source of truth, not from the
+        search state, which only knows what *this process* ran. Regenerating a
+        report from a complete log spends nothing, and the search-state number
+        then reads 0 — so the better the cache worked, the more the archived
+        report understated the work. A real 18-candidate run that cost 9
+        evaluations and 344 s reported "0 expensive evaluations spent".
+
+        Rows are counted when they decided something about this candidate set:
+        a recorded PASS or FAIL (an ERROR established nothing) over a subset of
+        the changes in play (so an older run's rows for a different candidate
+        set in the same log are not claimed as this analysis's work). The base
+        check counts — it is an evaluation, and on a real project it is one of
+        the slowest.
+        """
+        if self.log is None:
+            return self.evaluations_this_run
+        ids = frozenset(c.id for c in self.changes)
+        return sum(
+            1
+            for e in self.log
+            if e.verdict in (Verdict.PASS, Verdict.FAIL) and e.subset <= ids
+        )
+
+    @property
+    def evaluations_this_run(self) -> int:
+        """How many expensive evaluations *this process* spent.
+
+        The number a progress display wants — 0 on a re-run is correct here and
+        misleading in a report. See :attr:`evaluations`.
+        """
         return sum(s.evaluations for s in self.searches)
 
     @property
