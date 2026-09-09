@@ -412,6 +412,25 @@ def test_analyze_tiered_refuses_arguments_the_tiers_own(repo):
         )
 
 
+def test_analyze_tiered_refuses_log_path_rather_than_ignoring_it(repo, tmp_path):
+    """One path cannot hold several tiers, and a silent discard is worse.
+
+    Found by asking what a CLI adapter would have to pass — the surface audit
+    the seams exist to survive. `analyze` is handed the screen tier's log
+    explicitly, so `log_path` would have been dropped without a word.
+    """
+    from mergeset.base import MergesetError
+
+    with pytest.raises(MergesetError, match="owns `log_path`"):
+        analyze_tiered(
+            repo,
+            _changes(repo, ["feat-b"]),
+            base="main",
+            tiers=[Tier("screen", merge_only_validation())],
+            log_path=str(tmp_path / "one.jsonl"),
+        )
+
+
 def test_tier_logs_are_namespaced_per_tier():
     backing = {}
     tier_lines("/x/proj/widget", "unit", store=backing).append({"a": 1})

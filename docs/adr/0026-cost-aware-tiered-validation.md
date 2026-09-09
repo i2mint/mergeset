@@ -1,12 +1,15 @@
 ---
-status: proposed
+adr: 0026
+title: "Validation is not uniform cost: tiered oracles, a measured cost model, and an anytime search"
+status: accepted
 date: 2026-09-09
 issue: i2mint/mergeset#13
-supersedes: none
-extends: D25 (nothing is recommended that was never evaluated as a whole)
+builds_on: 0025   # nothing is recommended that was never evaluated as a whole
+# No `decision:` field: this record was written after the DECISIONS.md split, so
+# it has no pre-split `D<n>` identifier for older references to resolve against.
 ---
 
-# ADR-0026 — Validation is not uniform cost: tiered oracles, a measured cost model, and an anytime search
+# 0026 — Validation is not uniform cost: tiered oracles, a measured cost model, and an anytime search
 
 ## Context
 
@@ -18,9 +21,9 @@ The situation will recur and it is not one-dimensional. Some changes are heavy. 
 
 Three facts about the problem shape everything below. All three are established, not assumed.
 
-- **The predicate is monotone.** If a set fails, every superset fails. Sixteen evaluations of a real eighteen-change run held this throughout, and `EvaluationLog.monotonicity_violations()` polices it rather than trusting it (D5).
+- **The predicate is monotone.** If a set fails, every superset fails. Sixteen evaluations of a real eighteen-change run held this throughout, and `EvaluationLog.monotonicity_violations()` polices it rather than trusting it (ADR-0005).
 - **The tiers are monotone in each other.** A cheap-tier failure implies overall failure. So a cheap tier is a **sound filter**, and an expensive tier only ever needs to run on cheap-tier survivors. This is the single largest lever available and it is currently unused.
-- **Textual pre-oracles are not enough, and neither is decomposition.** File-overlap decomposition is sound for textual conflicts and unsound for anything a whole-repo test run can see; that was the defect fixed in #9. Semantic conflicts — a drift test guarding artifacts generated from sources another change edits; a barrel export whose evaluation order changes — are invisible to any merge-level check, and pairwise-green does not imply set-green.
+- **Textual pre-oracles are not enough, and neither is decomposition.** File-overlap decomposition is sound for textual conflicts and unsound for anything a whole-repo test run can see; that was the defect fixed in #9 (ADR-0019, ADR-0025). Semantic conflicts — a drift test guarding artifacts generated from sources another change edits; a barrel export whose evaluation order changes — are invisible to any merge-level check, and pairwise-green does not imply set-green.
 
 Measured on the run in progress, with the staged validator and a reused worktree: an evaluation costs 27.2 s at best, 32.2 s median, 51.2 s at worst; the merge itself costs 0.21–0.69 s. **Merging is free and validating is everything — three orders of magnitude apart.** A cost model that prices merges is pricing noise. Nearly all of the 27→51 s spread is one fingerprinted dependency-install stage that is skipped when the lockfile has not moved, and nothing in the candidate set predicts which will happen.
 
@@ -48,7 +51,7 @@ Three things, and they are the contribution of this ADR:
 
 1. **MSS/MCS enumeration with a non-uniform oracle.** Every algorithm above counts queries. Nothing in the MUS/MSS literature I can find treats query cost as an input, and the surveys of MCS enumeration improvements are about caching and solver reuse [10], not about price. "Tunable online MUS/MSS enumeration" [9] is the nearest neighbour — it lets you trade completeness for throughput — but the knob is a strategy, not a cost model.
 2. **A *tiered* oracle, exploited as a sound filter for the search interior.** Abstraction–refinement is old in SAT, and staged CI pipelines are old in industry, but the specific composition — *use the cheap tier's MSS frontier as the only place the expensive tier is ever allowed to run* — is not written down for this problem, and it is the whole game. The lemma that licenses it is one line (below).
-3. **The honest accounting for what "verified" means when tiers differ.** Nothing in the literature needs this, because a SAT oracle does not have tiers. This repository does, and it has already been burned once by reporting a set assembled from parts nobody ran (#9, D25).
+3. **The honest accounting for what "verified" means when tiers differ.** Nothing in the literature needs this, because a SAT oracle does not have tiers. This repository does, and it has already been burned once by reporting a set assembled from parts nobody ran (#9, ADR-0025).
 
 Everything else here is assembly of existing parts, and is documented as such.
 
@@ -86,7 +89,7 @@ Three properties are deliberate.
 
 A `Tier` is a name, a validator (the existing `worktree -> ValidationOutcome` contract, so `staged_validation` and friends drop in unchanged), an optional declared cost, and an optional `available()` probe. Tiers are ordered cheapest-first.
 
-**Each tier keeps its own evaluation log.** This is not tidiness. A cheap-tier PASS is not evidence about the expensive tier, so the two verdicts must not share a cache entry — and `verified` must mean *verified at the tier you are claiming*. `TieredAnalysis.verified_tier(subset)` returns the deepest tier with an **exact recorded PASS**; inference across the monotone closure deliberately does not count, exactly as in D25.
+**Each tier keeps its own evaluation log.** This is not tidiness. A cheap-tier PASS is not evidence about the expensive tier, so the two verdicts must not share a cache entry — and `verified` must mean *verified at the tier you are claiming*. `TieredAnalysis.verified_tier(subset)` returns the deepest tier with an **exact recorded PASS**; inference across the monotone closure deliberately does not count, exactly as in ADR-0025.
 
 ### 3. The algorithm: screen the interior, confirm the frontier
 
@@ -133,7 +136,7 @@ The two answers are reported side by side. A smaller answer to "what is the best
 
 > *"Find the maximal set without the heavy one, then try to add it."*
 
-**It is a lower bound, never an over-claim** — everything it returns was evaluated, which is D25 satisfied. And it is **better than it looks**, with a bound:
+**It is a lower bound, never an over-claim** — everything it returns was evaluated, which is ADR-0025 satisfied. And it is **better than it looks**, with a bound:
 
 > **Proposition (deferred-change regret).** Let `U` be the candidates, `H ⊆ U` the deferred changes, `w ≥ 0` a weight, and `P` the monotone predicate. Let `M₁` be the heaviest `H`-free set with `P(M₁)`. Then for every `S ⊆ U` with `P(S)`: `w(S) ≤ w(M₁) + w(H)`.
 >
@@ -171,13 +174,15 @@ NOT seams: the Tier record's shape, the JSONL row, the report wording, the log k
 Surface for v1: library only. CLI/MCP/HTTP/frontend/skills: questions answered, not built.
 ```
 
-**Surfaces, asked not built.** *CLI:* a `--tier 'name:command[:cost]'` flag (repeatable) is the natural spelling and needs no core change — `cli.py` is currently owned by another session, so it is deliberately not in this branch. *MCP:* `analyze_tiered` returns a JSON-able result and takes flat arguments; no core change. *HTTP:* the deep tier's wall-clock exceeds any sane request timeout, so it would need the run to become a job — a real change, and a reason not to build it now. *Skills / frontend:* nothing owed yet.
+**Surfaces, asked not built.** *CLI:* a repeatable `--tier 'name:command[:cost]'` alongside the existing `--validate-stage` is the natural spelling, and asking the question found a real defect rather than confirming a guess — see below. It is tracked as its own change (#20) rather than smuggled into this one, because the tiered path also wants `--confirm-budget-seconds` and `--must-include`, and that is a CLI design rather than a flag. *MCP:* `analyze_tiered` takes flat arguments and returns a JSON-able result; no core change. *HTTP:* the deep tier's wall-clock exceeds any sane request timeout, so the run would have to become a job — a real change, and a reason not to build it now. *Skills / frontend:* nothing owed yet.
+
+**What the CLI question actually found.** Writing out what an adapter would pass surfaced that `analyze_tiered` accepted `log_path` and then *silently discarded* it: the screen tier's log is handed to `analyze` explicitly, so the argument had no effect and said nothing. One path cannot hold several tiers without collapsing them into the shared cache entry this whole design exists to prevent, so `log_path` now refuses alongside `validate` and `log`, and points at `artifacts=` — the storage seam, which routes every tier's log through one store. That is the audit paying for itself before the surface was built, which is the point of asking.
 
 **One-command test (the v1 definition of done):** `tests/test_tiers.py::test_tiers_keep_separate_logs_so_a_cheap_pass_answers_no_deep_question` runs the whole path against a real git repository with two real tiers, and asserts the screen and the deep tier disagree about the same set and that the disagreement survives to the answer. It must keep passing after any later seam swap.
 
 ## Rejected alternatives
 
-**A `relevant_to` field declaring which changes a tier is about.** It would make a heavy tier cheap by never running it on sets that contain none of "its" changes. It is unsound in exactly the shape of the #9 decomposition bug: an end-to-end tier is a whole-application test and can fail on an interaction between two changes that have nothing to do with it. Zero seams is a fine answer, and this is one of them. It could return as an explicitly-declared assumption, labelled the way `component_local` is, if and only if someone has a validator for which it is genuinely true.
+**A `relevant_to` field declaring which changes a tier is about.** It would make a heavy tier cheap by never running it on sets that contain none of "its" changes. It is unsound in exactly the shape of the #9 decomposition bug (ADR-0019): an end-to-end tier is a whole-application test and can fail on an interaction between two changes that have nothing to do with it. Zero seams is a fine answer, and this is one of them. It could return as an explicitly-declared assumption, labelled the way `component_local` is (ADR-0019), if and only if someone has a validator for which it is genuinely true.
 
 **Per-tier verdicts stored as a `tier` field on `Evaluation`.** One log with a tier column reads more elegantly and would let the closure reason across tiers. It changes the on-disk format, the closure semantics and `base.py` — a wide blast radius for a design that has not been used in anger yet. One log per tier gets the same soundness with an additive change. Revisit after the design has survived a real run.
 

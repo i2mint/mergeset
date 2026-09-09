@@ -643,14 +643,20 @@ def analyze_tiered(
             "tiers=[Tier('validate', my_validator)] -- or call analyze(), which "
             "is the same thing."
         )
-    for reserved in ("validate", "log"):
+    # `log_path` belongs in this list even though it names a path rather than a
+    # log. One path cannot hold several tiers without collapsing them into the
+    # one shared cache entry this design exists to prevent -- and since the
+    # screen's log is passed explicitly below, `analyze` would ignore it in
+    # silence. An argument that is quietly discarded is worse than one refused.
+    for reserved in ("validate", "log", "log_path"):
         if reserved in analyze_kwargs:
             raise MergesetError(
                 f"analyze_tiered owns `{reserved}`: each tier has its own "
                 "validator and its own evaluation log, because a cheap-tier PASS "
                 "is not evidence about an expensive tier and the two must not "
-                f"share a cache entry. Put it in a Tier rather than passing "
-                f"{reserved}=."
+                "share a cache entry. Put a validator in a Tier; for the logs' "
+                "location, pass `artifacts=` (the storage seam), which routes "
+                f"every tier's log through one store. Do not pass {reserved}=."
             )
     names = [t.name for t in tiers]
     if len(set(names)) != len(names):
