@@ -124,3 +124,7 @@ venv.bak/
 # a *private* repository must never be committed here: this repository is PUBLIC.
 /reports/
 /notes/fixtures/
+
+# Agent scratch: handoffs and prepared one-off scripts. Never committed —
+# they rot, and they accumulate private detail (see the provenance rule above).
+/.claude/handoffs/

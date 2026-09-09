@@ -20,6 +20,12 @@ from mergeset.gitops import create_integration_branch
 from mergeset.oracle import claude_code_resolver
 from mergeset.log import EvaluationLog
 from mergeset.report import html_report, markdown_report
+from mergeset.storage import (
+    artifact_store,
+    evaluation_log_path,
+    run_key,
+    slash_separated_keys,
+)
 from mergeset.sources import (
     branch_changes,
     fetch_pull_requests,
@@ -151,19 +157,58 @@ def _persistent_worktree(repo: str, base: Optional[str], path: str) -> str:
     )
 
 
-def _emit_reports(analysis, report_dir: Optional[str], title: str) -> list:
-    written = []
-    if not report_dir:
-        return written
-    os.makedirs(report_dir, exist_ok=True)
-    md_path = os.path.join(report_dir, "REPORT.md")
-    html_path = os.path.join(report_dir, "report.html")
-    with open(md_path, "w", encoding="utf-8") as f:
-        f.write(markdown_report(analysis, title=title))
-    with open(html_path, "w", encoding="utf-8") as f:
-        f.write(html_report(analysis, title=title))
-    written += [md_path, html_path]
-    return written
+def _emit_reports(
+    analysis,
+    report_dir: Optional[str],
+    title: str,
+    *,
+    reports=None,
+    run: Optional[str] = None,
+) -> list:
+    """Write the two reports and return where they went.
+
+    With no ``report_dir``, they go to the artifact store's ``reports``
+    sub-store under ``<repo-slug>/<timestamp>/`` — outside any repository by
+    construction, and *per run*, so re-analysing the same repository does not
+    overwrite the previous answer. Comparing a re-run against the run before it
+    is most of what these reports are for.
+
+    ``report_dir`` is the explicit override for "put it right here", and it does
+    overwrite, because that is what naming a directory asks for.
+    """
+    rendered = {
+        "REPORT.md": markdown_report(analysis, title=title),
+        "report.html": html_report(analysis, title=title),
+    }
+    if report_dir:
+        store, prefix = _dir_store(report_dir), ""
+    else:
+        store = reports if reports is not None else artifact_store("reports")
+        prefix = f"{run or run_key(analysis.repo)}/"
+    for name, text in rendered.items():
+        store[prefix + name] = text
+    return [_where(store, prefix + name) for name in rendered]
+
+
+def _dir_store(directory: str):
+    """A ``str``-valued store rooted at an explicit directory."""
+    from dol import TextFiles, mk_dirs_if_missing
+
+    os.makedirs(directory, exist_ok=True)
+    # Same slash rule as the artifact store: one key namespace, every platform.
+    return slash_separated_keys(mk_dirs_if_missing(TextFiles(directory)))
+
+
+def _where(store, key: str) -> str:
+    """A human-facing location for ``key`` — a real path when there is one.
+
+    Keys are always ``/``-separated; a path on this platform may not be, so the
+    key is translated rather than concatenated.
+    """
+    rootdir = getattr(store, "rootdir", None)
+    if not isinstance(rootdir, str):
+        return key
+    return os.path.join(rootdir, *key.split("/"))
 
 
 def branches(
@@ -216,8 +261,13 @@ def branches(
         max_evaluations: Stop after this many expensive evaluations.
         max_seconds: Stop after this much wall time.
         max_sets: Stop after finding this many maximal sets.
-        log_path: Evaluation log (JSONL). Default ``<repo>/.mergeset/evaluations.jsonl``.
-        report_dir: Write ``REPORT.md`` and ``report.html`` here.
+        log_path: Evaluation log (JSONL). Default:
+            ``~/.local/share/mergeset/evaluations/<repo-slug>.jsonl`` —
+            outside the analysed repository, always.
+        report_dir: Write ``REPORT.md`` and ``report.html`` into this
+            directory. By default they go to the artifact store
+            (``<artifact root>/reports/<repo-slug>/``), never into the
+            analysed repository — see :mod:`mergeset.storage`.
         integration_branches: Create a local ``integration/*`` branch per maximal set.
         reuse_worktree: Absolute path to one git worktree to check every
             candidate merge out into, instead of a fresh one per evaluation.
@@ -299,6 +349,13 @@ def prs(
         validate_fingerprint: ``'stage:path'``, repeatable — skip a stage unless
             that file changed (a lockfile, typically).
         validate_optional: Stage name, repeatable — recorded, but not a veto.
+        log_path: Evaluation log (JSONL). Default:
+            ``~/.local/share/mergeset/evaluations/<repo-slug>.jsonl`` — outside
+            the analysed repository, always.
+        report_dir: Write ``REPORT.md`` and ``report.html`` into this directory.
+            By default they go to the artifact store, under
+            ``reports/<repo-slug>/<timestamp>/``, so a re-run never overwrites
+            the run before it.
     """
     from datetime import datetime, timedelta, timezone
 
@@ -432,7 +489,7 @@ def _integration_branches(analysis) -> list:
     return out
 
 
-def show_log(*, log_path: str = ".mergeset/evaluations.jsonl") -> str:
+def show_log(*, log_path: Optional[str] = None, repo: str = ".") -> str:
     """Print what the evaluation log already knows, without evaluating anything.
 
     Use this to answer questions about a finished run: the log is the single
@@ -441,6 +498,7 @@ def show_log(*, log_path: str = ".mergeset/evaluations.jsonl") -> str:
     well as the log, so it is a library call — ``markdown_report(analysis)`` —
     not a command that could pretend the log alone is enough.)
     """
+    log_path = log_path or evaluation_log_path(repo)
     log = EvaluationLog(log_path)
     lines = [f"{len(log)} evaluations in {log_path}", ""]
     for e in log:

@@ -79,7 +79,10 @@ def test_closed_subset_count_is_far_below_the_powerset():
 def test_detect_stacks_reads_pr_base_refs():
     def pr(cid, head_ref, base_ref):
         return Change(
-            id=cid, head=f"origin/{head_ref}", base=f"origin/{base_ref}", source="pr",
+            id=cid,
+            head=f"origin/{head_ref}",
+            base=f"origin/{base_ref}",
+            source="pr",
             meta={"head_ref": head_ref, "base_ref": base_ref},
         )
 
@@ -123,6 +126,6 @@ def test_stacked_search_still_finds_the_biggest_valid_set():
     for subset in state.maximal_good_sets:
         assert not ({"d", "f"} <= set(subset))
         assert all(ancestors(m, FOREST) <= subset for m in subset)
-    assert frozenset("abce") in {s | frozenset() for s in state.maximal_good_sets} or any(
-        len(s) >= 4 for s in state.maximal_good_sets
-    )
+    assert frozenset("abce") in {
+        s | frozenset() for s in state.maximal_good_sets
+    } or any(len(s) >= 4 for s in state.maximal_good_sets)

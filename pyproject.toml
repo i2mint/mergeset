@@ -1,3 +1,25 @@
+# The sdist is an ALLOWLIST, never a denylist.
+#
+# A source distribution is a copy of the working tree, so a build run in a dirty
+# checkout will happily ship whatever is sitting there — including derived data
+# captured from a private repository. That has happened to this project: four
+# published sdists carried a private repo's build logs and crash traces while the
+# wheels were clean, because nobody thinks of a release artifact as a tree copy.
+# Naming what ships is the only version of this rule that cannot rot.
+[tool.hatch.build.targets.sdist]
+include = [
+    "mergeset/**",
+    "tests/**",
+    "docs",
+    "skills",
+    "README.md",
+    "LICENSE",
+    "pyproject.toml",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["mergeset"]
+
 [build-system]
 requires = [
     "hatchling",
@@ -16,6 +38,7 @@ authors = [
 ]
 dependencies = [
     "cw",
+    "dol",
 ]
 
 [project.license]
@@ -123,6 +146,11 @@ python_versions = [
 pytest_args = [
     "-v",
     "--tb=short",
+    # The doctests ARE the documentation of this package's seams, and one of
+    # them shipped wrong because nothing ran them. --doctest-modules makes CI
+    # check the examples it publishes.
+    "--doctest-modules",
+    "mergeset",
 ]
 coverage_enabled = true
 coverage_threshold = 0

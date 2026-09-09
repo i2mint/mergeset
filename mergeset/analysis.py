@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
+from collections.abc import Mapping, MutableMapping
 from typing import (
     Callable,
     Dict,
@@ -54,6 +55,7 @@ from mergeset.solve import (
     independent_components,
 )
 from mergeset.sources import detect_stacks, size_weight
+from mergeset.storage import evaluation_lines
 from mergeset.stacks import (
     close_up,
     cone_weights,
@@ -147,6 +149,7 @@ def analyze(
     resolver: Optional[Resolver] = None,
     log: Optional[EvaluationLog] = None,
     log_path: Optional[str] = None,
+    artifacts: Optional[Mapping[str, MutableMapping]] = None,
     weight: Optional[Callable[[Change], float]] = None,
     pairwise_preoracle: bool = True,
     decompose: bool = True,
@@ -170,7 +173,13 @@ def analyze(
         validate: ``worktree -> ValidationOutcome``; default is a fail-fast
             pytest run. Pass ``merge_only_validation()`` for a free first pass.
         resolver: Optional AI-assisted conflict resolver (results are flagged).
-        log / log_path: The evaluation log — the single source of truth. Reusing
+        artifacts: The artifact stores, as a ``{kind: MutableMapping}`` mall (see
+            :func:`mergeset.storage.artifact_mall`). This is the storage seam:
+            pass a mall over S3 and the evaluation log goes to S3 with no other
+            change. Default: local files under ``~/.local/share/mergeset/``.
+        log / log_path: The evaluation log — the single source of truth. Defaults
+            to ``<artifact root>/evaluations/<repo-slug>.jsonl`` (see
+            :mod:`mergeset.storage`), *outside* the analysed repository. Reusing
             an existing one makes a re-run nearly free.
         weight: ``Change -> cost of dropping it``; default is size-based.
         pairwise_preoracle: Use ``git merge-tree`` to find textual conflicts for
@@ -215,8 +224,14 @@ def analyze(
     base = base or _common_base(repo, changes)
     base_sha = resolve(repo, base)
     if log is None:
+        # Default to the artifact store, never inside the repository being
+        # analysed: the log captures that repository's internals, and a repo is
+        # the one place derived data must not accumulate (mergeset.storage).
         log = EvaluationLog(
-            log_path or os.path.join(repo, ".mergeset", "evaluations.jsonl")
+            log_path
+            or evaluation_lines(
+                repo, store=artifacts["evaluations"] if artifacts else None
+            )
         )
 
     # A validator may declare that it cannot see across components (the

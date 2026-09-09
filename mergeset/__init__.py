@@ -20,7 +20,14 @@ first so that most answers never cost a test run at all.
 Every piece is one keyword argument away from being replaced: where changes come
 from (``mergeset.sources``), how a set is merged and validated
 (``mergeset.oracle``, ``mergeset.validation``), how the search spends its budget
-(``mergeset.solve``), and how results are rendered (``mergeset.report``).
+(``mergeset.solve``), how results are rendered (``mergeset.report``), and where
+artifacts are kept (``mergeset.storage``).
+
+Everything mergeset produces — reports, evaluation logs, captured validation
+output, fixtures — is derived from whatever repository was analysed, so it goes
+to an artifact store rooted at ``~/.local/share/mergeset/<kind>/`` and **never**
+into a repository. Point that store at S3 with one keyword argument; no caller
+changes.
 """
 
 from mergeset.base import (
@@ -35,7 +42,7 @@ from mergeset.base import (
     change_set,
     set_key,
 )
-from mergeset.log import EvaluationLog, JsonlLines, MemoryLines
+from mergeset.log import EvaluationLog, JsonlLines, MemoryLines, StoreLines
 from mergeset.solve import (
     combine_components,
     find_maximal_good_sets,
@@ -82,6 +89,17 @@ from mergeset.validation import (
     merge_only_validation,
     pytest_validation,
     staged_validation,
+)
+from mergeset.storage import (
+    ARTIFACT_KINDS,
+    app_data_rootdir,
+    artifact_mall,
+    artifact_path,
+    artifact_store,
+    evaluation_lines,
+    evaluation_log_path,
+    run_key,
+    slash_separated_keys,
 )
 from mergeset.oracle import claude_code_resolver, git_oracle, merge_order
 from mergeset.analysis import Analysis, analyze
@@ -143,6 +161,16 @@ __all__ = [
     "create_integration_branch",
     "markdown_report",
     "html_report",
+    "artifact_store",
+    "artifact_mall",
+    "artifact_path",
+    "app_data_rootdir",
+    "evaluation_log_path",
+    "evaluation_lines",
+    "run_key",
+    "slash_separated_keys",
+    "StoreLines",
+    "ARTIFACT_KINDS",
     "MergesetError",
     "CapabilityError",
 ]

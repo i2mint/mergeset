@@ -43,7 +43,7 @@ def test_identifiers_picks_up_camel_and_pascal_case():
     assert "pointColorHopSeeds" in found and "TraversalDirectionType" in found
 
 
-def test_collection_failure_attributes_via_the_source_file(): 
+def test_collection_failure_attributes_via_the_source_file():
     """#577/#587: four suites fail to load, so there are no test ids at all.
 
     The only actionable path is a *source* file, added by #577.
@@ -68,10 +68,10 @@ def test_drift_failure_needs_symbols_because_files_point_at_the_wrong_change():
     """
     text = fixture("vitest-579-631-drift.txt")
     files = {
-        "pr579": ["packages/config/point-color.ts"],   # touches no test file
+        "pr579": ["packages/config/point-color.ts"],  # touches no test file
         "pr631": ["tests/unit/params-ssot.test.ts", "ai/schemas/config.schema.json"],
-        "pr630": ["docs/readme.md"],                   # uninvolved bystander
-        "pr632": ["packages/ui/toolbar.tsx"],          # uninvolved bystander
+        "pr630": ["docs/readme.md"],  # uninvolved bystander
+        "pr632": ["packages/ui/toolbar.tsx"],  # uninvolved bystander
     }
     diffs = {
         "pr579": (
@@ -89,13 +89,18 @@ def test_drift_failure_needs_symbols_because_files_point_at_the_wrong_change():
 
     by_file_only = suspects(
         outcome(text, failing_tests=["tests/unit/params-ssot.test.ts > x"]),
-        files_by_change=files, within=files,
+        files_by_change=files,
+        within=files,
     )
-    assert by_file_only == frozenset({"pr631"}), "file-level alone accuses the wrong one"
+    assert by_file_only == frozenset({"pr631"}), (
+        "file-level alone accuses the wrong one"
+    )
 
     with_symbols = suspects(
         outcome(text, failing_tests=["tests/unit/params-ssot.test.ts > x"]),
-        files_by_change=files, within=files, diff_of=diffs.get,
+        files_by_change=files,
+        within=files,
+        diff_of=diffs.get,
     )
     assert "pr579" in with_symbols, "symbol matching must find the real culprit"
     # The union of both signals is exactly the real conflict, and it excludes
@@ -112,20 +117,23 @@ def test_a_symbol_merely_mentioned_is_not_evidence():
     }
     found = suspects(
         outcome("TypeError: newThingHere is not defined"),
-        files_by_change=files, within=files, diff_of=diffs.get,
+        files_by_change=files,
+        within=files,
+        diff_of=diffs.get,
     )
     assert found == frozenset({"a"})
 
 
 def test_no_evidence_yields_no_hint_rather_than_a_guess():
     files = {"a": ["a.ts"], "b": ["b.ts"]}
-    assert suspects(outcome("something went wrong"), files_by_change=files, within=files) == frozenset()
+    assert (
+        suspects(outcome("something went wrong"), files_by_change=files, within=files)
+        == frozenset()
+    )
 
 
 def test_implicating_everything_is_the_same_as_implicating_nothing():
     """A hint that names every candidate has saved no evaluations, so say so."""
     files = {"a": ["shared.ts"], "b": ["shared.ts"]}
-    found = suspects(
-        outcome("FAIL src/shared.ts"), files_by_change=files, within=files
-    )
+    found = suspects(outcome("FAIL src/shared.ts"), files_by_change=files, within=files)
     assert found == frozenset(), "a hint naming the whole set saves nothing"
