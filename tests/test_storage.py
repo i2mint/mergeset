@@ -168,3 +168,45 @@ def _one_commit_repo(path) -> str:
     run("commit", "-qm", "feature")
     run("checkout", "-q", "main")
     return path
+
+
+# -- the key namespace must not change shape with the operating system -----
+
+
+def test_keys_are_slash_separated_on_every_platform():
+    """A backslash platform must not rename every nested key.
+
+    Windows CI caught this: ``dol`` handed back ``'run-a\\REPORT.md'`` for a key
+    written as ``'run-a/REPORT.md'``, so the same key was two different keys on
+    two machines — and an S3 backend uses ``/`` regardless.
+    """
+    from mergeset.storage import slash_separated_keys
+
+    backing = {}
+    store = slash_separated_keys(backing, sep="\\")
+    store["run-a/REPORT.md"] = "# a"
+    assert list(backing) == ["run-a\\REPORT.md"], "the backend keeps native keys"
+    assert list(store) == ["run-a/REPORT.md"], "callers always see slashes"
+    assert store["run-a/REPORT.md"] == "# a"
+    del store["run-a/REPORT.md"]
+    assert backing == {}
+
+
+def test_slash_platform_is_left_alone():
+    backing = {}
+    assert slash_separated_keys_is_identity(backing)
+
+
+def slash_separated_keys_is_identity(store):
+    from mergeset.storage import slash_separated_keys
+
+    return slash_separated_keys(store, sep="/") is store
+
+
+def test_real_store_round_trips_a_nested_key_under_the_native_separator(tmp_path):
+    """Whatever ``os.sep`` is, the key the caller used is the key they get back."""
+    store = artifact_store("reports", rootdir=str(tmp_path))
+    store["a/b/c.md"] = "x"
+    assert list(store) == ["a/b/c.md"]
+    assert store["a/b/c.md"] == "x"
+    assert os.path.isfile(os.path.join(str(tmp_path), "reports", "a", "b", "c.md"))

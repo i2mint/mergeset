@@ -95,6 +95,43 @@ def app_data_rootdir(
     return os.path.join(_platform_data_home(), app_name)
 
 
+def slash_separated_keys(store: MutableMapping, *, sep: str = os.sep) -> MutableMapping:
+    r"""Make ``/`` the key separator whatever the platform's is.
+
+    Keys are a store's public namespace, so they must not change shape with the
+    operating system: a report written under ``'run-a/REPORT.md'`` has to read
+    back under that key on Windows too, and an S3 backend uses ``/`` regardless.
+    Without this the same key is two different keys on two machines — the
+    filesystem leaking through the abstraction the store exists to provide.
+
+    A no-op where the separator is already ``/``.
+
+    >>> store = slash_separated_keys({}, sep='/')
+    >>> store['a/b'] = 1; dict(store)
+    {'a/b': 1}
+
+    On a backslash platform the *backing* store sees native separators while
+    callers keep using ``/``:
+
+    >>> backing = {}
+    >>> store = slash_separated_keys(backing, sep='\\')
+    >>> store['a/b'] = 1
+    >>> list(backing)
+    ['a\\b']
+    >>> list(store), store['a/b']
+    (['a/b'], 1)
+    """
+    if sep == "/":
+        return store
+    from dol import wrap_kvs
+
+    return wrap_kvs(
+        store,
+        id_of_key=lambda k: k.replace("/", sep),
+        key_of_id=lambda k: k.replace(sep, "/"),
+    )
+
+
 def _text_files_factory(directory: str) -> MutableMapping:
     """The default backend: ``dol.TextFiles`` over a directory, created on demand.
 
@@ -108,7 +145,7 @@ def _text_files_factory(directory: str) -> MutableMapping:
     # ``mk_dirs_if_missing`` is what makes a nested key such as
     # ``'<run>/REPORT.md'`` just work — without it the write fails on the
     # missing intermediate directory.
-    return mk_dirs_if_missing(TextFiles(directory))
+    return slash_separated_keys(mk_dirs_if_missing(TextFiles(directory)))
 
 
 def artifact_store(
