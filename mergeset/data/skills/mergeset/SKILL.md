@@ -1,6 +1,9 @@
 ---
 name: mergeset
 description: Work out which branches or pull requests can be merged together, and in what order. Use when several changes are in flight on one repository and someone asks which of them can land together, what conflicts with what and why, whether a set of branches can be merged, why two changes cannot go together, or for a landing plan and integration branches. Also use to read or explain an existing mergeset report or evaluation log.
+license: mit
+metadata:
+  audience: users
 ---
 
 # mergeset

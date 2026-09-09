@@ -1,3 +1,23 @@
+# Why the bridge symlink is pruned, and why omitting this ships NOTHING.
+#
+# Hatchling walks the tree with `followlinks=True` and skips any directory whose
+# (st_dev, st_ino) it has already seen. `.claude/skills/mergeset` is a committed
+# symlink to the real skill directory — the bridge Claude Code needs, since it
+# reads no other location — and `.claude` sorts before `mergeset`. So the walker
+# meets the skill through the symlink first, files it under `.claude/skills/...`
+# where no include pattern matches, and then prunes the real path as already
+# visited. Every include pattern below can be correct and the skill still absent.
+# Pruning the symlink before it is followed is the fix; `skip-excluded-dirs`
+# is what makes an exclusion prune rather than merely filter.
+#
+# This is what shipped four skill-less releases, and it is why reading this file
+# proves nothing: `tests/test_skills.py` builds both artifacts and looks inside.
+[tool.hatch.build]
+skip-excluded-dirs = true
+exclude = [
+    ".claude/skills",
+]
+
 # The sdist is an ALLOWLIST, never a denylist.
 #
 # A source distribution is a copy of the working tree, so a build run in a dirty
@@ -11,7 +31,6 @@ include = [
     "mergeset/**",
     "tests/**",
     "docs/**",
-    "skills/**",
     ".claude/agents/**",
     "README.md",
     "LICENSE",
@@ -48,6 +67,10 @@ text = "mit"
 [project.scripts]
 mergeset = "mergeset.cli:main"
 
+# So skill-pack indexers find the bundled skill without it being linked first.
+[project.entry-points."skill.skill_packs"]
+mergeset = "mergeset:skills_dir"
+
 [project.urls]
 Homepage = "https://github.com/i2mint/mergeset"
 Repository = "https://github.com/i2mint/mergeset"
@@ -61,6 +84,10 @@ dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
     "ruff>=0.1.0",
+    # tests/test_skills.py builds the wheel and the sdist and looks inside them.
+    # Without these it skips, and the skill can silently stop shipping again.
+    "build>=1.0",
+    "hatchling",
 ]
 docs = [
     "sphinx>=6.0",

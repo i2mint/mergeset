@@ -26,6 +26,7 @@ from mergeset.storage import (
     run_key,
     slash_separated_keys,
 )
+from mergeset.skills import install_skills as _install_skills
 from mergeset.sources import (
     branch_changes,
     fetch_pull_requests,
@@ -530,8 +531,22 @@ def show_log(*, log_path: Optional[str] = None, repo: str = ".") -> str:
     return "\n".join(lines)
 
 
+def install_skills(target: str = "~/.claude/skills", *, copy: bool = False) -> str:
+    """Install the agent skill bundled in this package into an agent host.
+
+    ``pip install mergeset`` already ships the skill inside the package; agent
+    hosts read their own directory, so this links one to the other. A symlink by
+    default, so upgrading the package upgrades the skill; ``--copy`` for hosts
+    or filesystems that cannot follow one.
+    """
+    installed = _install_skills(target, link=not copy)
+    if not installed:
+        return f"Already installed in {target} (nothing to do)."
+    return "Installed:\n" + "\n".join(f"  {p}" for p in installed)
+
+
 #: SSOT of the CLI surface. Any adapter (cw, HTTP, MCP) consumes this list.
-_dispatch_funcs = [branches, prs, show_log]
+_dispatch_funcs = [branches, prs, show_log, install_skills]
 
 
 def main() -> int:

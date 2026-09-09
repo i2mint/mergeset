@@ -9,6 +9,14 @@ pip install mergeset
 python -m mergeset branches feat-a feat-b feat-c --base main
 ```
 
+**Driving it from an agent?** `mergeset` ships the skill an agent needs to drive it well — ask the free oracles before spending a test run, what a green report does *not* mean, and why a run's output never goes into a repository.
+
+```bash
+gh skill install i2mint/mergeset mergeset --agent claude-code   # or copilot, cursor, codex, gemini
+```
+
+The same skill is inside the wheel, so `pip install mergeset` already has it — `mergeset install-skills` links it into an agent's directory, offline.
+
 ```python
 from mergeset import analyze, branch_changes, markdown_report
 
