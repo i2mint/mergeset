@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; mergeset 0.0.13 documentation</title>
+  <title>Index &mdash; mergeset 0.0.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=9fc46840"></script>
+      <script src="_static/documentation_options.js?v=544df88d"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -52,6 +52,7 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/attribution.html">mergeset.attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/base.html">mergeset.base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/cost.html">mergeset.cost</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/gitops.html">mergeset.gitops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/log.html">mergeset.log</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/oracle.html">mergeset.oracle</a></li>
@@ -61,6 +62,7 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/sources.html">mergeset.sources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/stacks.html">mergeset.stacks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/storage.html">mergeset.storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/tiers.html">mergeset.tiers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/validation.html">mergeset.validation</a></li>
 </ul>
 
@@ -138,12 +140,32 @@
         <li><a href="module_docs/mergeset/analysis.html#mergeset.analysis.analyze">(in module mergeset.analysis)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.analyze_tiered">analyze_tiered() (in module mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.analyze_tiered">(in module mergeset.tiers)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/mergeset.html#mergeset.ancestors">ancestors() (in module mergeset)</a>
 
       <ul>
         <li><a href="module_docs/mergeset/stacks.html#mergeset.stacks.ancestors">(in module mergeset.stacks)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.anytime_answer">anytime_answer() (in module mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.anytime_answer">(in module mergeset.tiers)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.AnytimeAnswer">AnytimeAnswer (class in mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.AnytimeAnswer">(class in mergeset.tiers)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset.html#mergeset.app_data_rootdir">app_data_rootdir() (in module mergeset)</a>
 
       <ul>
@@ -164,8 +186,6 @@
         <li><a href="module_docs/mergeset.html#mergeset.StoreLines.append">(mergeset.StoreLines method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset/storage.html#mergeset.storage.ARTIFACT_KINDS">ARTIFACT_KINDS (in module mergeset.storage)</a>
 </li>
       <li><a href="module_docs/mergeset.html#mergeset.artifact_mall">artifact_mall() (in module mergeset)</a>
@@ -192,6 +212,38 @@
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/mergeset.html#mergeset.AnytimeAnswer.best">best (mergeset.AnytimeAnswer attribute)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.AnytimeAnswer.best">(mergeset.tiers.AnytimeAnswer attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.TieredAnalysis.best_including">best_including (mergeset.TieredAnalysis attribute)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.TieredAnalysis.best_including">(mergeset.tiers.TieredAnalysis attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.best_set_including">best_set_including() (in module mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.best_set_including">(in module mergeset.tiers)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.AnytimeAnswer.best_tier">best_tier (mergeset.AnytimeAnswer attribute)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.AnytimeAnswer.best_tier">(mergeset.tiers.AnytimeAnswer attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/mergeset.html#mergeset.AnytimeAnswer.best_weight">best_weight (mergeset.AnytimeAnswer attribute)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.AnytimeAnswer.best_weight">(mergeset.tiers.AnytimeAnswer attribute)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/mergeset.html#mergeset.branch_changes">branch_changes() (in module mergeset)</a>
 
       <ul>
@@ -200,8 +252,6 @@
       </ul></li>
       <li><a href="module_docs/mergeset/cli.html#mergeset.cli.branches">branches() (in module mergeset.cli)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset.html#mergeset.bundled_skills">bundled_skills() (in module mergeset)</a>
 
       <ul>
@@ -240,6 +290,18 @@
       </ul></li>
       <li><a href="module_docs/mergeset.html#mergeset.CapabilityError">CapabilityError</a>, <a href="module_docs/mergeset/base.html#mergeset.base.CapabilityError">[1]</a>
 </li>
+      <li><a href="module_docs/mergeset/cost.html#mergeset.cost.MeasuredCost.central">central() (mergeset.cost.MeasuredCost method)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset.html#mergeset.MeasuredCost.central">(mergeset.MeasuredCost method)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.chained_evaluate">chained_evaluate() (in module mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.chained_evaluate">(in module mergeset.tiers)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/mergeset.html#mergeset.Change">Change (class in mergeset)</a>
 
       <ul>
@@ -318,6 +380,18 @@
         <li><a href="module_docs/mergeset/stacks.html#mergeset.stacks.cone_weights">(in module mergeset.stacks)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.cost_from_log">cost_from_log() (in module mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/cost.html#mergeset.cost.cost_from_log">(in module mergeset.cost)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.CostModel">CostModel (class in mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/cost.html#mergeset.cost.CostModel">(class in mergeset.cost)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/mergeset.html#mergeset.count_closed_subsets">count_closed_subsets() (in module mergeset)</a>
 
       <ul>
@@ -342,14 +416,20 @@
 </li>
       <li><a href="module_docs/mergeset/stacks.html#mergeset.stacks.Dependencies">Dependencies (in module mergeset.stacks)</a>
 </li>
+      <li><a href="module_docs/mergeset.html#mergeset.TieredAnalysis.depth_reached">depth_reached (mergeset.TieredAnalysis attribute)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.TieredAnalysis.depth_reached">(mergeset.tiers.TieredAnalysis attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset.html#mergeset.descendants">descendants() (in module mergeset)</a>
 
       <ul>
         <li><a href="module_docs/mergeset/stacks.html#mergeset.stacks.descendants">(in module mergeset.stacks)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset/validation.html#mergeset.validation.detect_runner">detect_runner() (in module mergeset.validation)</a>
 </li>
       <li><a href="module_docs/mergeset.html#mergeset.detect_stacks">detect_stacks() (in module mergeset)</a>
@@ -366,6 +446,16 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset/solve.html#mergeset.solve.SearchState.error">error (mergeset.solve.SearchState attribute)</a>
 </li>
+      <li><a href="module_docs/mergeset/cost.html#mergeset.cost.CostModel.estimate">estimate() (mergeset.cost.CostModel method)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/cost.html#mergeset.cost.MeasuredCost.estimate">(mergeset.cost.MeasuredCost method)</a>
+</li>
+        <li><a href="module_docs/mergeset.html#mergeset.CostModel.estimate">(mergeset.CostModel method)</a>
+</li>
+        <li><a href="module_docs/mergeset.html#mergeset.MeasuredCost.estimate">(mergeset.MeasuredCost method)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/mergeset.html#mergeset.Evaluation">Evaluation (class in mergeset)</a>
 
       <ul>
@@ -384,14 +474,14 @@
         <li><a href="module_docs/mergeset/storage.html#mergeset.storage.evaluation_log_path">(in module mergeset.storage)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset.html#mergeset.EvaluationLog">EvaluationLog (class in mergeset)</a>
 
       <ul>
         <li><a href="module_docs/mergeset/log.html#mergeset.log.EvaluationLog">(class in mergeset.log)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset.html#mergeset.Analysis.evaluations">evaluations (mergeset.Analysis property)</a>
 
       <ul>
@@ -446,18 +536,24 @@
         <li><a href="module_docs/mergeset/validation.html#mergeset.validation.file_fingerprint">(in module mergeset.validation)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset.html#mergeset.find_maximal_good_sets">find_maximal_good_sets() (in module mergeset)</a>
 
       <ul>
         <li><a href="module_docs/mergeset/solve.html#mergeset.solve.find_maximal_good_sets">(in module mergeset.solve)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset.html#mergeset.flake_tolerant">flake_tolerant() (in module mergeset)</a>
 
       <ul>
         <li><a href="module_docs/mergeset/validation.html#mergeset.validation.flake_tolerant">(in module mergeset.validation)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset/cost.html#mergeset.cost.MeasuredCost.forget">forget() (mergeset.cost.MeasuredCost method)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset.html#mergeset.MeasuredCost.forget">(mergeset.MeasuredCost method)</a>
 </li>
       </ul></li>
       <li><a href="module_docs/mergeset/base.html#mergeset.base.Change.from_jdict">from_jdict() (mergeset.base.Change class method)</a>
@@ -470,24 +566,36 @@
         <li><a href="module_docs/mergeset.html#mergeset.Evaluation.from_jdict">(mergeset.Evaluation class method)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.AnytimeAnswer.full_depth">full_depth (mergeset.AnytimeAnswer attribute)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.AnytimeAnswer.full_depth">(mergeset.tiers.AnytimeAnswer attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/mergeset.html#mergeset.AnytimeAnswer.gap">gap (mergeset.AnytimeAnswer attribute)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.AnytimeAnswer.gap">(mergeset.tiers.AnytimeAnswer attribute)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/mergeset/gitops.html#mergeset.gitops.git">git() (in module mergeset.gitops)</a>
 </li>
       <li><a href="module_docs/mergeset/attribution.html#mergeset.attribution.git_diff_reader">git_diff_reader() (in module mergeset.attribution)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset.html#mergeset.git_oracle">git_oracle() (in module mergeset)</a>
 
       <ul>
         <li><a href="module_docs/mergeset/oracle.html#mergeset.oracle.git_oracle">(in module mergeset.oracle)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset/gitops.html#mergeset.gitops.git_version">git_version() (in module mergeset.gitops)</a>
 </li>
       <li><a href="module_docs/mergeset/gitops.html#mergeset.gitops.GitResult">GitResult (class in mergeset.gitops)</a>
@@ -518,14 +626,30 @@
         <li><a href="module_docs/mergeset/solve.html#mergeset.solve.independent_components">(in module mergeset.solve)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset.html#mergeset.install_skills">install_skills() (in module mergeset)</a>
 
       <ul>
         <li><a href="module_docs/mergeset/cli.html#mergeset.cli.install_skills">(in module mergeset.cli)</a>
 </li>
         <li><a href="module_docs/mergeset/skills.html#mergeset.skills.install_skills">(in module mergeset.skills)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/mergeset.html#mergeset.Tier.is_available">is_available() (mergeset.Tier method)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.Tier.is_available">(mergeset.tiers.Tier method)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset/cost.html#mergeset.cost.CostModel.is_measured">is_measured() (mergeset.cost.CostModel method)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/cost.html#mergeset.cost.MeasuredCost.is_measured">(mergeset.cost.MeasuredCost method)</a>
+</li>
+        <li><a href="module_docs/mergeset.html#mergeset.CostModel.is_measured">(mergeset.CostModel method)</a>
+</li>
+        <li><a href="module_docs/mergeset.html#mergeset.MeasuredCost.is_measured">(mergeset.MeasuredCost method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -602,6 +726,18 @@
 
       <ul>
         <li><a href="module_docs/mergeset/log.html#mergeset.log.EvaluationLog.maximal_passing_sets">(mergeset.log.EvaluationLog method)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.TieredAnalysis.maximal_sets">maximal_sets (mergeset.TieredAnalysis property)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.TieredAnalysis.maximal_sets">(mergeset.tiers.TieredAnalysis property)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.MeasuredCost">MeasuredCost (class in mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/cost.html#mergeset.cost.MeasuredCost">(class in mergeset.cost)</a>
 </li>
       </ul></li>
       <li><a href="module_docs/mergeset.html#mergeset.MemoryLines">MemoryLines (class in mergeset)</a>
@@ -686,6 +822,13 @@
 </li>
       </ul></li>
       <li>
+    mergeset.cost
+
+      <ul>
+        <li><a href="module_docs/mergeset/cost.html#module-mergeset.cost">module</a>
+</li>
+      </ul></li>
+      <li>
     mergeset.gitops
 
       <ul>
@@ -751,6 +894,13 @@
 </li>
       </ul></li>
       <li>
+    mergeset.tiers
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#module-mergeset.tiers">module</a>
+</li>
+      </ul></li>
+      <li>
     mergeset.validation
 
       <ul>
@@ -787,6 +937,8 @@
 </li>
         <li><a href="module_docs/mergeset/cli.html#module-mergeset.cli">mergeset.cli</a>
 </li>
+        <li><a href="module_docs/mergeset/cost.html#module-mergeset.cost">mergeset.cost</a>
+</li>
         <li><a href="module_docs/mergeset/gitops.html#module-mergeset.gitops">mergeset.gitops</a>
 </li>
         <li><a href="module_docs/mergeset/log.html#module-mergeset.log">mergeset.log</a>
@@ -805,6 +957,8 @@
 </li>
         <li><a href="module_docs/mergeset/storage.html#module-mergeset.storage">mergeset.storage</a>
 </li>
+        <li><a href="module_docs/mergeset/tiers.html#module-mergeset.tiers">mergeset.tiers</a>
+</li>
         <li><a href="module_docs/mergeset/validation.html#module-mergeset.validation">mergeset.validation</a>
 </li>
       </ul></li>
@@ -814,12 +968,28 @@
         <li><a href="module_docs/mergeset/log.html#mergeset.log.EvaluationLog.monotonicity_violations">(mergeset.log.EvaluationLog method)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.TieredAnalysis.must_include">must_include (mergeset.TieredAnalysis attribute)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.TieredAnalysis.must_include">(mergeset.tiers.TieredAnalysis attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/mergeset/cost.html#mergeset.cost.CostModel.observe">observe() (mergeset.cost.CostModel method)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/cost.html#mergeset.cost.MeasuredCost.observe">(mergeset.cost.MeasuredCost method)</a>
+</li>
+        <li><a href="module_docs/mergeset.html#mergeset.CostModel.observe">(mergeset.CostModel method)</a>
+</li>
+        <li><a href="module_docs/mergeset.html#mergeset.MeasuredCost.observe">(mergeset.MeasuredCost method)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/mergeset/base.html#mergeset.base.Evaluation.ok">ok (mergeset.base.Evaluation property)</a>
 
       <ul>
@@ -830,6 +1000,12 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/mergeset.html#mergeset.AnytimeAnswer.optimal">optimal (mergeset.AnytimeAnswer attribute)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.AnytimeAnswer.optimal">(mergeset.tiers.AnytimeAnswer attribute)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/mergeset/gitops.html#mergeset.gitops.SequenceMerge.order">order (mergeset.gitops.SequenceMerge attribute)</a>
 </li>
       <li><a href="module_docs/mergeset.html#mergeset.Analysis.own_weights">own_weights (mergeset.Analysis attribute)</a>
@@ -860,6 +1036,12 @@
 </li>
       <li><a href="module_docs/mergeset/report.html#mergeset.report.pdf_report">pdf_report() (in module mergeset.report)</a>
 </li>
+      <li><a href="module_docs/mergeset.html#mergeset.AnytimeAnswer.pending">pending (mergeset.AnytimeAnswer attribute)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.AnytimeAnswer.pending">(mergeset.tiers.AnytimeAnswer attribute)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/mergeset.html#mergeset.persistent_worktree">persistent_worktree() (in module mergeset)</a>
 
       <ul>
@@ -868,6 +1050,16 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/mergeset/cost.html#mergeset.cost.CostModel.pessimistic">pessimistic() (mergeset.cost.CostModel method)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/cost.html#mergeset.cost.MeasuredCost.pessimistic">(mergeset.cost.MeasuredCost method)</a>
+</li>
+        <li><a href="module_docs/mergeset.html#mergeset.CostModel.pessimistic">(mergeset.CostModel method)</a>
+</li>
+        <li><a href="module_docs/mergeset.html#mergeset.MeasuredCost.pessimistic">(mergeset.MeasuredCost method)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/mergeset.html#mergeset.pr_changes">pr_changes() (in module mergeset)</a>
 
       <ul>
@@ -914,18 +1106,30 @@
         <li><a href="module_docs/mergeset/log.html#mergeset.log.EvaluationLog.record">(mergeset.log.EvaluationLog method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset/report.html#mergeset.report.REPORT_FORMATS">REPORT_FORMATS (in module mergeset.report)</a>
 </li>
       <li><a href="module_docs/mergeset/gitops.html#mergeset.gitops.resolve">resolve() (in module mergeset.gitops)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset/oracle.html#mergeset.oracle.Resolver">Resolver (in module mergeset.oracle)</a>
 </li>
       <li><a href="module_docs/mergeset.html#mergeset.run_key">run_key() (in module mergeset)</a>
 
       <ul>
         <li><a href="module_docs/mergeset/storage.html#mergeset.storage.run_key">(in module mergeset.storage)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.TieredAnalysis.runs">runs (mergeset.TieredAnalysis attribute)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.TieredAnalysis.runs">(mergeset.tiers.TieredAnalysis attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset/cost.html#mergeset.cost.MeasuredCost.runs">runs() (mergeset.cost.MeasuredCost method)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset.html#mergeset.MeasuredCost.runs">(mergeset.MeasuredCost method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -936,8 +1140,16 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset/solve.html#mergeset.solve.SearchState">SearchState (class in mergeset.solve)</a>
 </li>
+      <li><a href="module_docs/mergeset/cost.html#mergeset.cost.Seconds">Seconds (in module mergeset.cost)</a>
+</li>
       <li><a href="module_docs/mergeset/gitops.html#mergeset.gitops.SequenceMerge">SequenceMerge (class in mergeset.gitops)</a>
 </li>
+      <li><a href="module_docs/mergeset.html#mergeset.set_cost">set_cost() (in module mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/cost.html#mergeset.cost.set_cost">(in module mergeset.cost)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/mergeset.html#mergeset.set_key">set_key() (in module mergeset)</a>
 
       <ul>
@@ -964,14 +1176,20 @@
       </ul></li>
       <li><a href="module_docs/mergeset/sources.html#mergeset.sources.size_weight">size_weight() (in module mergeset.sources)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset.html#mergeset.skills_dir">skills_dir() (in module mergeset)</a>
 
       <ul>
         <li><a href="module_docs/mergeset/skills.html#mergeset.skills.skills_dir">(in module mergeset.skills)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.TieredAnalysis.skipped">skipped (mergeset.TieredAnalysis attribute)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.TieredAnalysis.skipped">(mergeset.tiers.TieredAnalysis attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset.html#mergeset.slash_separated_keys">slash_separated_keys() (in module mergeset)</a>
 
       <ul>
@@ -980,6 +1198,16 @@
       </ul></li>
       <li><a href="module_docs/mergeset/storage.html#mergeset.storage.slugify">slugify() (in module mergeset.storage)</a>
 </li>
+      <li><a href="module_docs/mergeset.html#mergeset.AnytimeAnswer.spent">spent (mergeset.AnytimeAnswer attribute)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset.html#mergeset.TieredAnalysis.spent">(mergeset.TieredAnalysis attribute)</a>
+</li>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.AnytimeAnswer.spent">(mergeset.tiers.AnytimeAnswer attribute)</a>
+</li>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.TieredAnalysis.spent">(mergeset.tiers.TieredAnalysis attribute)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/mergeset/stacks.html#mergeset.stacks.stack_roots">stack_roots() (in module mergeset.stacks)</a>
 </li>
       <li><a href="module_docs/mergeset/base.html#mergeset.base.Stage">Stage (class in mergeset.base)</a>
@@ -998,6 +1226,16 @@
         <li><a href="module_docs/mergeset/log.html#mergeset.log.StoreLines">(class in mergeset.log)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.AnytimeAnswer.summary">summary() (mergeset.AnytimeAnswer method)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/cost.html#mergeset.cost.MeasuredCost.summary">(mergeset.cost.MeasuredCost method)</a>
+</li>
+        <li><a href="module_docs/mergeset.html#mergeset.MeasuredCost.summary">(mergeset.MeasuredCost method)</a>
+</li>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.AnytimeAnswer.summary">(mergeset.tiers.AnytimeAnswer method)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/mergeset/attribution.html#mergeset.attribution.suspects">suspects() (in module mergeset.attribution)</a>
 </li>
   </ul></td>
@@ -1012,6 +1250,28 @@
         <li><a href="module_docs/mergeset/gitops.html#mergeset.gitops.textual_conflict">(in module mergeset.gitops)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.Tier">Tier (class in mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.Tier">(class in mergeset.tiers)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.tier_key">tier_key() (in module mergeset.tiers)</a>
+</li>
+      <li><a href="module_docs/mergeset.html#mergeset.tier_lines">tier_lines() (in module mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.tier_lines">(in module mergeset.tiers)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.TieredAnalysis">TieredAnalysis (class in mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.TieredAnalysis">(class in mergeset.tiers)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset.html#mergeset.tips">tips() (in module mergeset)</a>
 
       <ul>
@@ -1042,6 +1302,10 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/mergeset/cost.html#mergeset.cost.UNMEASURED_TIER_SECONDS">UNMEASURED_TIER_SECONDS (in module mergeset.cost)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset.html#mergeset.Analysis.unverified_sets">unverified_sets (mergeset.Analysis attribute)</a>
 
       <ul>
@@ -1062,18 +1326,24 @@
         <li><a href="module_docs/mergeset/base.html#mergeset.base.ValidationOutcome">(class in mergeset.base)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset.html#mergeset.ValidationStage">ValidationStage (class in mergeset)</a>
 
       <ul>
         <li><a href="module_docs/mergeset/validation.html#mergeset.validation.ValidationStage">(class in mergeset.validation)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset.html#mergeset.Verdict">Verdict (class in mergeset)</a>
 
       <ul>
         <li><a href="module_docs/mergeset/base.html#mergeset.base.Verdict">(class in mergeset.base)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.TieredAnalysis.verified_tier">verified_tier() (mergeset.TieredAnalysis method)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/tiers.html#mergeset.tiers.TieredAnalysis.verified_tier">(mergeset.tiers.TieredAnalysis method)</a>
 </li>
       </ul></li>
   </ul></td>

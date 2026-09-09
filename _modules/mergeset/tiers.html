@@ -1,0 +1,1349 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.tiers &mdash; mergeset 0.0.14 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=544df88d"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/cost.html">mergeset.cost</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/skills.html">mergeset.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/storage.html">mergeset.storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/tiers.html">mergeset.tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mergeset.tiers</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mergeset.tiers</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Tiered validation: a cheap oracle screens, an expensive one confirms.</span>
+
+<span class="sd">``mergeset`` searches a **monotone** predicate — if a set fails, every superset</span>
+<span class="sd">fails — which is what makes the search tractable at all. This module uses the</span>
+<span class="sd">second half of that structure, which the package has so far left on the table:</span>
+
+<span class="sd">    **The tiers are monotone in each other.** A set that fails a cheap tier</span>
+<span class="sd">    fails overall, whatever the expensive tier would have said. So a cheap tier</span>
+<span class="sd">    is a *sound filter*, and an expensive tier only ever needs to run on</span>
+<span class="sd">    cheap-tier survivors.</span>
+
+<span class="sd">That has a consequence worth stating as a lemma, because it is what makes an</span>
+<span class="sd">unaffordable tier affordable:</span>
+
+<span class="sd">    **Every maximal good set of the full oracle is contained in some maximal</span>
+<span class="sd">    good set of the screen.** (If ``S`` passes everything then it passes the</span>
+<span class="sd">    screen, so it sits inside some maximal screen-passing set.)</span>
+
+<span class="sd">The maximal screen-passing sets are the **frontier**, and there are usually a</span>
+<span class="sd">handful of them — four, on a real run of eighteen changes. Everything else the</span>
+<span class="sd">search touches is *interior*: hitting-set probes and conflict shrinking, dozens</span>
+<span class="sd">of evaluations, none of which can be the answer. So the question stops being</span>
+<span class="sd">"which of 2**18 subsets do I dare run browser tests on" and becomes "how few runs</span>
+<span class="sd">confirm these four".</span>
+
+<span class="sd">The claim is **not** that the expensive tier never touches the interior — that</span>
+<span class="sd">would be false, and measuring it says so. A conflict visible *only* to the deep</span>
+<span class="sd">tier has to be shrunk at deep prices, and QuickXplain's ``O(k log(n/k))`` queries</span>
+<span class="sd">for a conflict of size ``k`` are interior by construction. What holds is the</span>
+<span class="sd">useful half: a set the screen refutes is never paid for at depth, so the interior</span>
+<span class="sd">the *screen* explores is free, and deep spending is bounded by the frontier plus</span>
+<span class="sd">the shrinking that genuine deep-only conflicts force. On eight branches with one</span>
+<span class="sd">deep-only conflict that is 7 deep runs against 10 screen runs; with no deep-only</span>
+<span class="sd">conflict it is the frontier and nothing else.</span>
+
+<span class="sd">Mechanically that is one composed evaluator with two properties:</span>
+
+<span class="sd">- **it short-circuits** — a cheap-tier failure answers the query without paying</span>
+<span class="sd">  for the deep tier;</span>
+<span class="sd">- **each tier keeps its own log.** A cheap-tier PASS is not evidence about the</span>
+<span class="sd">  deep tier, so the two verdicts must not share a cache entry. This is D25 one</span>
+<span class="sd">  level up: *verified* has to mean **verified at the tier you are claiming**,</span>
+<span class="sd">  and a set confirmed only to the unit tier says so.</span>
+
+<span class="sd">Two stages, and what each costs:</span>
+
+<span class="sd">1. **Screen** — the ordinary search (:func:`mergeset.analyze`), with the cheap</span>
+<span class="sd">   tier as its validator. Pays the whole interior at cheap-tier prices and</span>
+<span class="sd">   returns the frontier plus every conflict it found.</span>
+<span class="sd">2. **Confirm** — the same search again, one tier deeper, *seeded with those</span>
+<span class="sd">   conflicts* so it starts almost finished. Its candidates are frontier sets;</span>
+<span class="sd">   its interior is answered from the screen's log for free.</span>
+
+<span class="sd">If a deep tier is unavailable (no container daemon today) or unaffordable,</span>
+<span class="sd">stage 2 is skipped rather than degraded, and the answer is labelled with the</span>
+<span class="sd">depth it actually reached. **A tier that did not run is not a tier that</span>
+<span class="sd">passed.**</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Mapping</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Sequence</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">Analysis</span><span class="p">,</span> <span class="n">analyze</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Change</span><span class="p">,</span>
+    <span class="n">ChangeId</span><span class="p">,</span>
+    <span class="n">ChangeSet</span><span class="p">,</span>
+    <span class="n">Evaluation</span><span class="p">,</span>
+    <span class="n">MergesetError</span><span class="p">,</span>
+    <span class="n">ValidationOutcome</span><span class="p">,</span>
+    <span class="n">Verdict</span><span class="p">,</span>
+    <span class="n">set_key</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.cost</span><span class="w"> </span><span class="kn">import</span> <span class="n">CostModel</span><span class="p">,</span> <span class="n">MeasuredCost</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">EvaluationLog</span><span class="p">,</span> <span class="n">JsonlLines</span><span class="p">,</span> <span class="n">StoreLines</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.oracle</span><span class="w"> </span><span class="kn">import</span> <span class="n">git_oracle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.solve</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_maximal_good_sets</span><span class="p">,</span> <span class="n">minimal_hitting_sets</span><span class="p">,</span> <span class="n">quickxplain</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.stacks</span><span class="w"> </span><span class="kn">import</span> <span class="n">close_down</span><span class="p">,</span> <span class="n">largest_closed_subset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">evaluation_log_path</span><span class="p">,</span> <span class="n">slugify</span>
+
+
+<div class="viewcode-block" id="Tier">
+<a class="viewcode-back" href="../../module_docs/mergeset/tiers.html#mergeset.Tier">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Tier</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One rung of validation, from cheapest to dearest.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        name: What this tier is (``unit``, ``integration``, ``e2e``). It names</span>
+<span class="sd">            the tier's own evaluation log and appears in every claim the report</span>
+<span class="sd">            makes, because "passed the unit tier" and "passed everything" are</span>
+<span class="sd">            different facts.</span>
+<span class="sd">        validate: ``worktree -&gt; ValidationOutcome`` — the same contract as every</span>
+<span class="sd">            validator in :mod:`mergeset.validation`, so</span>
+<span class="sd">            :func:`~mergeset.validation.staged_validation` and friends drop</span>
+<span class="sd">            straight in. A tier is *one* validator; the stages *within* it are</span>
+<span class="sd">            that validator's own business.</span>
+<span class="sd">        cost: Declared seconds per run, used until the tier has been timed.</span>
+<span class="sd">            Worth setting for a tier nobody has run yet: it is what stops a</span>
+<span class="sd">            cost-ordered scheduler treating an unmeasured tier as cheap.</span>
+<span class="sd">        available: ``() -&gt; bool`` — is the infrastructure this tier needs up?</span>
+<span class="sd">            The honest reason a tier gets skipped is usually not budget but</span>
+<span class="sd">            absence: no daemon, no display, no credentials. ``None`` means</span>
+<span class="sd">            always available, which is the truth for a unit-test tier.</span>
+
+<span class="sd">    &gt;&gt;&gt; from mergeset.validation import merge_only_validation</span>
+<span class="sd">    &gt;&gt;&gt; tier = Tier('merge', merge_only_validation(), cost=0.5)</span>
+<span class="sd">    &gt;&gt;&gt; tier.name, tier.is_available()</span>
+<span class="sd">    ('merge', True)</span>
+<span class="sd">    &gt;&gt;&gt; Tier('e2e', merge_only_validation(), available=lambda: False).is_available()</span>
+<span class="sd">    False</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">validate</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ValidationOutcome</span><span class="p">]</span>
+    <span class="n">cost</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">available</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[],</span> <span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Tier.is_available">
+<a class="viewcode-back" href="../../module_docs/mergeset/tiers.html#mergeset.Tier.is_available">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_available</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether this tier can run right now."""</span>
+        <span class="k">return</span> <span class="kc">True</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">available</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">available</span><span class="p">())</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="AnytimeAnswer">
+<a class="viewcode-back" href="../../module_docs/mergeset/tiers.html#mergeset.AnytimeAnswer">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AnytimeAnswer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The best answer so far, and how much better an answer could still be.</span>
+
+<span class="sd">    ``bound`` is a genuine upper bound, not a hope. Every conflict — found at</span>
+<span class="sd">    any tier, by any pre-oracle — refutes a real set, so the heaviest set that</span>
+<span class="sd">    no known conflict forbids is the heaviest set that *could* still pass. Its</span>
+<span class="sd">    weight is therefore an upper bound on the optimum, and ``gap`` is what is</span>
+<span class="sd">    still unknown.</span>
+
+<span class="sd">    ``gap &lt;= 0`` together with full tier depth is a **certificate**: the</span>
+<span class="sd">    heaviest set nothing refutes has itself been validated, so nothing better</span>
+<span class="sd">    exists. That is a stopping rule rather than a budget running out.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        best: Heaviest set validated so far, at ``best_tier``.</span>
+<span class="sd">        best_weight: Its weight (the sum of its changes' weights).</span>
+<span class="sd">        best_tier: Deepest tier that actually ran on ``best``; ``None`` when</span>
+<span class="sd">            nothing has been validated yet.</span>
+<span class="sd">        full_depth: True iff every tier ran on ``best``. When False, ``best`` is</span>
+<span class="sd">            a partial claim however good ``gap`` looks.</span>
+<span class="sd">        bound, bound_set: The upper bound and the set that realizes it.</span>
+<span class="sd">        gap: ``bound - best_weight`` — what might still be being missed.</span>
+<span class="sd">        optimal: ``gap &lt;= 0 and full_depth``; nothing better exists.</span>
+<span class="sd">        pending: ``(set, estimated seconds to confirm)`` for candidates not yet</span>
+<span class="sd">            taken to full depth. The answer to "what would closing the gap</span>
+<span class="sd">            cost".</span>
+<span class="sd">        spent: Seconds spent, per tier.</span>
+<span class="sd">    """</span>
+
+    <span class="n">best</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]</span>
+    <span class="n">best_weight</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">best_tier</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">full_depth</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">bound</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">bound_set</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]</span>
+    <span class="n">gap</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">optimal</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">pending</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">spent</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AnytimeAnswer.summary">
+<a class="viewcode-back" href="../../module_docs/mergeset/tiers.html#mergeset.AnytimeAnswer.summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""One line a progress display or a report can print.</span>
+
+<span class="sd">        &gt;&gt;&gt; AnytimeAnswer(frozenset({'a'}), 1.0, 'unit', False, 2.0,</span>
+<span class="sd">        ...               frozenset({'a', 'b'}), 1.0, False).summary()</span>
+<span class="sd">        'best 1 change (weight 1.0, confirmed to tier `unit`); bound 2.0; gap 1.0'</span>
+<span class="sd">        &gt;&gt;&gt; AnytimeAnswer(frozenset({'a', 'b'}), 2.0, 'e2e', True, 2.0,</span>
+<span class="sd">        ...               frozenset({'a', 'b'}), 0.0, True).summary()</span>
+<span class="sd">        'best 2 changes (weight 2.0, all tiers); provably maximal'</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">best</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"nothing validated yet; bound </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bound</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">"all tiers"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_depth</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"confirmed to tier `</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">best_tier</span><span class="si">}</span><span class="s2">`"</span>
+        <span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">best</span><span class="p">)</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"best </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> change</span><span class="si">{</span><span class="s1">'s'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">''</span><span class="si">}</span><span class="s2"> "</span>
+            <span class="sa">f</span><span class="s2">"(weight </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">best_weight</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">depth</span><span class="si">}</span><span class="s2">)"</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimal</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">head</span> <span class="o">+</span> <span class="s2">"; provably maximal"</span>
+        <span class="k">return</span> <span class="n">head</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">"; bound </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bound</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">; gap </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gap</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TieredAnalysis">
+<a class="viewcode-back" href="../../module_docs/mergeset/tiers.html#mergeset.TieredAnalysis">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TieredAnalysis</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Result of a tiered run.</span>
+
+<span class="sd">    ``analysis`` is an ordinary :class:`~mergeset.analysis.Analysis` whose</span>
+<span class="sd">    ``maximal_sets``, ``unverified_sets`` and ``notes`` have been updated to the</span>
+<span class="sd">    depth validation actually reached — so every existing report renders it</span>
+<span class="sd">    unchanged and says the right thing about tiers.</span>
+<span class="sd">    """</span>
+
+    <span class="n">tiers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tier</span><span class="p">]</span>
+    <span class="n">analysis</span><span class="p">:</span> <span class="n">Analysis</span>
+    <span class="n">logs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EvaluationLog</span><span class="p">]</span>
+    <span class="n">cost_model</span><span class="p">:</span> <span class="n">CostModel</span>
+    <span class="c1">#: How deep validation actually got, as a tier name.</span>
+    <span class="n">depth_reached</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1">#: ``tier -&gt; why it did not run``. Empty is the normal case.</span>
+    <span class="n">skipped</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1">#: Seconds spent per tier, measured from that tier's log.</span>
+    <span class="n">spent</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1">#: Evaluations actually performed, per tier.</span>
+    <span class="n">runs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">answer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AnytimeAnswer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1">#: Changes the caller required in the answer, if any.</span>
+    <span class="n">must_include</span><span class="p">:</span> <span class="n">ChangeSet</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>
+    <span class="c1">#: Heaviest validated set containing every change in ``must_include``.</span>
+    <span class="c1">#: ``None`` when they cannot all be kept together. A second, differently</span>
+    <span class="c1">#: constrained answer -- never a replacement for the first.</span>
+    <span class="n">best_including</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">maximal_sets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""The answer: maximal sets at the depth reached."""</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">maximal_sets</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TieredAnalysis.verified_tier">
+<a class="viewcode-back" href="../../module_docs/mergeset/tiers.html#mergeset.TieredAnalysis.verified_tier">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">verified_tier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""The deepest tier that recorded an exact PASS for ``subset``.</span>
+
+<span class="sd">        Inference across the monotone closure deliberately does not count. A</span>
+<span class="sd">        passing *superset* is what makes a subset good by inference, and if such</span>
+<span class="sd">        a superset existed it would be the answer instead — so for the purpose</span>
+<span class="sd">        of "was this claim actually run", only an exact recorded PASS counts.</span>
+<span class="sd">        D25's rule, applied per tier.</span>
+<span class="sd">        """</span>
+        <span class="n">deepest</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">tier</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tiers</span><span class="p">:</span>
+            <span class="n">log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">logs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">exact</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">exact</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">subset</span><span class="p">))</span> <span class="k">if</span> <span class="n">log</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">exact</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">exact</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">deepest</span>
+            <span class="n">deepest</span> <span class="o">=</span> <span class="n">tier</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">return</span> <span class="n">deepest</span></div>
+</div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------</span>
+<span class="c1"># The lever: one evaluator per tier, chained and short-circuiting</span>
+<span class="c1"># --------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="chained_evaluate">
+<a class="viewcode-back" href="../../module_docs/mergeset/tiers.html#mergeset.chained_evaluate">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">chained_evaluate</span><span class="p">(</span><span class="n">evaluators</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">ChangeSet</span><span class="p">],</span> <span class="n">Evaluation</span><span class="p">]]):</span>
+<span class="w">    </span><span class="sd">"""Compose per-tier evaluators into one, short-circuiting on the first failure.</span>
+
+<span class="sd">    This is the lever. A set the cheap tier refutes never reaches the expensive</span>
+<span class="sd">    one, so the search's interior — every hitting-set probe, every QuickXplain</span>
+<span class="sd">    step — is paid at cheap-tier prices, and the expensive tier is spent only on</span>
+<span class="sd">    sets that survived.</span>
+
+<span class="sd">    &gt;&gt;&gt; def cheap(s):</span>
+<span class="sd">    ...     return Evaluation(s, Verdict.FAIL if 'bad' in s else Verdict.PASS)</span>
+<span class="sd">    &gt;&gt;&gt; deep_calls = []</span>
+<span class="sd">    &gt;&gt;&gt; def deep(s):</span>
+<span class="sd">    ...     deep_calls.append(set_key(s))</span>
+<span class="sd">    ...     return Evaluation(s, Verdict.PASS)</span>
+<span class="sd">    &gt;&gt;&gt; evaluate = chained_evaluate([cheap, deep])</span>
+<span class="sd">    &gt;&gt;&gt; evaluate(frozenset({'bad', 'x'})).verdict.value</span>
+<span class="sd">    'fail'</span>
+<span class="sd">    &gt;&gt;&gt; deep_calls</span>
+<span class="sd">    []</span>
+<span class="sd">    &gt;&gt;&gt; evaluate(frozenset({'x'})).verdict.value</span>
+<span class="sd">    'pass'</span>
+<span class="sd">    &gt;&gt;&gt; deep_calls</span>
+<span class="sd">    [('x',)]</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">evaluators</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"chained_evaluate needs at least one evaluator"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Evaluation</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">evaluate_at_tier</span> <span class="ow">in</span> <span class="n">evaluators</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">evaluate_at_tier</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">result</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">return</span> <span class="n">evaluate</span></div>
+
+
+
+<span class="n">_TIER_UNSAFE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[^a-z0-9_-]+"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="tier_key">
+<a class="viewcode-back" href="../../module_docs/mergeset/tiers.html#mergeset.tier_key">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">tier_key</span><span class="p">(</span><span class="n">tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The key-safe form of a tier name.</span>
+
+<span class="sd">    The repository half of a log key has always been slugified; the tier half</span>
+<span class="sd">    was interpolated raw, and that is not merely untidy. ``e2e`` and ``E2E`` are</span>
+<span class="sd">    two tier names and one file on macOS and Windows — a cheap-tier PASS</span>
+<span class="sd">    answering an expensive-tier question, on the default filesystem of two of</span>
+<span class="sd">    three platforms. ``a/b`` and ``x/../y`` reach outside the store entirely.</span>
+
+<span class="sd">    Case is folded rather than preserved because the collision is the point: two</span>
+<span class="sd">    names differing only in case must be *rejected* as duplicates, never</span>
+<span class="sd">    silently merged into one log. A name that had to be changed at all carries a</span>
+<span class="sd">    short digest of the original, so two different unsafe names cannot be</span>
+<span class="sd">    flattened onto one key either.</span>
+
+<span class="sd">    ``mergeset.storage.slugify`` is not reused here: it always appends a digest,</span>
+<span class="sd">    which is right for a long filesystem path and wrong for a name a person</span>
+<span class="sd">    typed and will read back in a report.</span>
+
+<span class="sd">    &gt;&gt;&gt; tier_key('e2e'), tier_key('E2E')</span>
+<span class="sd">    ('e2e', 'e2e')</span>
+<span class="sd">    &gt;&gt;&gt; tier_key('a/b') == tier_key('x/../y')</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; '/' in tier_key('a/b')</span>
+<span class="sd">    False</span>
+<span class="sd">    """</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">tier</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"A tier name cannot be blank; it names this tier's evaluation log, "</span>
+            <span class="s2">"and two blank names would be one log."</span>
+        <span class="p">)</span>
+    <span class="n">folded</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">_TIER_UNSAFE</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">"-"</span><span class="p">,</span> <span class="n">folded</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"-"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="n">folded</span><span class="p">:</span>
+        <span class="n">digest</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">folded</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">6</span><span class="p">]</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'tier'</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">digest</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">return</span> <span class="n">key</span></div>
+
+
+
+<div class="viewcode-block" id="tier_lines">
+<a class="viewcode-back" href="../../module_docs/mergeset/tiers.html#mergeset.tier_lines">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">tier_lines</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The append-only lines object backing one tier's evaluation log.</span>
+
+<span class="sd">    One log per tier, in the same artifact store as everything else, keyed by</span>
+<span class="sd">    repository *and* tier. Sharing one log between tiers would make a cheap</span>
+<span class="sd">    PASS answer an expensive question, which is the one thing this module</span>
+<span class="sd">    exists to prevent — so both halves of the key are slugified.</span>
+
+<span class="sd">    &gt;&gt;&gt; backing = {}</span>
+<span class="sd">    &gt;&gt;&gt; lines = tier_lines('/x/proj/widget', 'e2e', store=backing)</span>
+<span class="sd">    &gt;&gt;&gt; lines.append({'a': 1}); list(backing)[0].endswith('.e2e.jsonl')</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">tier_key</span><span class="p">(</span><span class="n">tier</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">evaluation_log_path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+        <span class="n">stem</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">JsonlLines</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stem</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">name</span><span class="si">}{</span><span class="n">ext</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">slugify</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">repo</span><span class="p">))))</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.jsonl"</span>
+    <span class="k">return</span> <span class="n">StoreLines</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sync_costs</span><span class="p">(</span>
+    <span class="n">cost_model</span><span class="p">:</span> <span class="n">CostModel</span><span class="p">,</span>
+    <span class="n">log</span><span class="p">:</span> <span class="n">EvaluationLog</span><span class="p">,</span>
+    <span class="n">tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">ingested</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Feed a tier's new log rows to the cost model; return the seconds it records.</span>
+
+<span class="sd">    The log has recorded the wall-clock of every evaluation since the package</span>
+<span class="sd">    was written, so the price of a tier is measured rather than declared — this</span>
+<span class="sd">    is what reads it back.</span>
+
+<span class="sd">    ``ingested`` tracks how many rows each tier has already contributed, so</span>
+<span class="sd">    calling this after every stage adds only what is new. An earlier version</span>
+<span class="sd">    cleared the model's observation list instead, which worked for</span>
+<span class="sd">    :class:`~mergeset.cost.MeasuredCost` and silently double-counted into every</span>
+<span class="sd">    other :class:`~mergeset.cost.CostModel`: the seam publishes a protocol with</span>
+<span class="sd">    no ``reset``, so the facade must not require one.</span>
+<span class="sd">    """</span>
+    <span class="n">durations</span> <span class="o">=</span> <span class="p">[(</span><span class="n">e</span><span class="o">.</span><span class="n">subset</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">log</span> <span class="k">if</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">duration</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">already</span> <span class="o">=</span> <span class="n">ingested</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tier</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">subset</span><span class="p">,</span> <span class="n">seconds</span> <span class="ow">in</span> <span class="n">durations</span><span class="p">[</span><span class="n">already</span><span class="p">:]:</span>
+        <span class="n">cost_model</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">tier</span><span class="p">,</span> <span class="n">subset</span><span class="p">,</span> <span class="n">seconds</span><span class="p">)</span>
+    <span class="n">ingested</span><span class="p">[</span><span class="n">tier</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">durations</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">seconds</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">seconds</span> <span class="ow">in</span> <span class="n">durations</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_seed_conflicts</span><span class="p">(</span><span class="n">analysis</span><span class="p">:</span> <span class="n">Analysis</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Every conflict the cheap phases established, in one list.</span>
+
+<span class="sd">    The deep search is seeded with these so it starts at the frontier instead of</span>
+<span class="sd">    rediscovering, at deep-tier prices, what a ``merge-tree`` call already knew.</span>
+<span class="sd">    """</span>
+    <span class="n">seeds</span> <span class="o">=</span> <span class="p">[</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">conflicts</span><span class="p">]</span>
+    <span class="n">seeds</span> <span class="o">+=</span> <span class="p">[</span><span class="nb">frozenset</span><span class="p">({</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">})</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">textual_conflicts</span><span class="p">]</span>
+    <span class="n">seeds</span> <span class="o">+=</span> <span class="p">[</span><span class="nb">frozenset</span><span class="p">({</span><span class="n">cid</span><span class="p">})</span> <span class="k">for</span> <span class="n">cid</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">singleton_conflicts</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">seeds</span> <span class="k">if</span> <span class="n">s</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_runs_allowed</span><span class="p">(</span>
+    <span class="n">cost_model</span><span class="p">:</span> <span class="n">CostModel</span><span class="p">,</span>
+    <span class="n">tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">biggest</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">budget_seconds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="n">max_runs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">reserve</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""How many runs of ``tier`` the budget admits; ``None`` means unlimited.</span>
+
+<span class="sd">    Priced on the *largest* candidate with the *pessimistic* estimate, so the</span>
+<span class="sd">    number is one the run can actually honour. An explicit ``max_runs`` wins,</span>
+<span class="sd">    because a stated cap is a decision and a budget is an inference.</span>
+
+<span class="sd">    ``reserve`` comes off the budget before dividing — the tier's own base check</span>
+<span class="sd">    is a real evaluation, and the most expensive one it will run, being the only</span>
+<span class="sd">    one guaranteed to pay the cold setup path.</span>
+
+<span class="sd">    &gt;&gt;&gt; from mergeset.cost import MeasuredCost</span>
+<span class="sd">    &gt;&gt;&gt; cost = MeasuredCost(declared={'e2e': 300.0})</span>
+<span class="sd">    &gt;&gt;&gt; _runs_allowed(cost, 'e2e', frozenset({'a'}), budget_seconds=700, max_runs=None)</span>
+<span class="sd">    2</span>
+<span class="sd">    &gt;&gt;&gt; _runs_allowed(cost, 'e2e', frozenset({'a'}), budget_seconds=100, max_runs=None)</span>
+<span class="sd">    0</span>
+<span class="sd">    &gt;&gt;&gt; _runs_allowed(cost, 'e2e', frozenset({'a'}), budget_seconds=None, max_runs=None)</span>
+
+<span class="sd">    The same budget admits one fewer run once the base check is reserved:</span>
+
+<span class="sd">    &gt;&gt;&gt; _runs_allowed(cost, 'e2e', frozenset({'a'}), budget_seconds=700,</span>
+<span class="sd">    ...               max_runs=None, reserve=300.0)</span>
+<span class="sd">    1</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">max_runs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">max_runs</span>
+    <span class="k">if</span> <span class="n">budget_seconds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">remaining</span> <span class="o">=</span> <span class="n">budget_seconds</span> <span class="o">-</span> <span class="n">reserve</span>
+    <span class="k">if</span> <span class="n">remaining</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">each</span> <span class="o">=</span> <span class="n">cost_model</span><span class="o">.</span><span class="n">pessimistic</span><span class="p">(</span><span class="n">tier</span><span class="p">,</span> <span class="n">biggest</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">each</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># A model pricing this tier at nothing has told us nothing, and</span>
+        <span class="c1"># "unlimited" is the one answer a *budget* must never produce. Admit a</span>
+        <span class="c1"># single run — which is also what re-prices the tier for the next one.</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">remaining</span> <span class="o">//</span> <span class="n">each</span><span class="p">)</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------</span>
+<span class="c1"># The anytime answer</span>
+<span class="c1"># --------------------------------------------------------------------------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_upper_bound</span><span class="p">(</span><span class="n">universe</span><span class="p">,</span> <span class="n">conflicts</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">weight_of</span><span class="p">,</span> <span class="n">feasible</span><span class="p">,</span> <span class="n">stacked</span><span class="p">,</span> <span class="n">limit</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The heaviest set no known conflict forbids, and that could actually land.</span>
+
+<span class="sd">    Every conflict refutes a real set, so the complement of a hitting set is an</span>
+<span class="sd">    upper bound on what can still pass. Without stacks the *cheapest* minimal</span>
+<span class="sd">    hitting set gives the heaviest complement, so the first one enumerated is</span>
+<span class="sd">    the answer.</span>
+
+<span class="sd">    With stacks it is not: closure can only shrink a complement, so the shrunken</span>
+<span class="sd">    weights no longer arrive in order and the first is not the largest. Scanning</span>
+<span class="sd">    is therefore required, and a partial scan would not be a bound at all — so</span>
+<span class="sd">    if the enumeration runs past ``limit`` the unclosed complement is used</span>
+<span class="sd">    instead. That is looser (it may name a set that could never land) but it is</span>
+<span class="sd">    still sound, which is the property that matters.</span>
+<span class="sd">    """</span>
+    <span class="n">first</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">minimal_hitting_sets</span><span class="p">(</span><span class="n">conflicts</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)),</span> <span class="nb">frozenset</span><span class="p">())</span>
+    <span class="n">unclosed</span> <span class="o">=</span> <span class="n">universe</span> <span class="o">-</span> <span class="n">first</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">stacked</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">unclosed</span><span class="p">,</span> <span class="n">weight_of</span><span class="p">(</span><span class="n">unclosed</span><span class="p">)</span>
+    <span class="n">best_set</span><span class="p">,</span> <span class="n">best</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">seen</span><span class="p">,</span> <span class="n">hitting</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">minimal_hitting_sets</span><span class="p">(</span><span class="n">conflicts</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">seen</span> <span class="o">&gt;=</span> <span class="n">limit</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">unclosed</span><span class="p">,</span> <span class="n">weight_of</span><span class="p">(</span><span class="n">unclosed</span><span class="p">)</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="n">feasible</span><span class="p">(</span><span class="n">universe</span> <span class="o">-</span> <span class="n">hitting</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">weight_of</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">best</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">best_set</span><span class="p">:</span>
+            <span class="n">best_set</span><span class="p">,</span> <span class="n">best</span> <span class="o">=</span> <span class="n">candidate</span><span class="p">,</span> <span class="n">weight_of</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">best_set</span><span class="p">,</span> <span class="n">best</span>
+
+
+<div class="viewcode-block" id="anytime_answer">
+<a class="viewcode-back" href="../../module_docs/mergeset/tiers.html#mergeset.anytime_answer">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">anytime_answer</span><span class="p">(</span>
+    <span class="n">change_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">],</span>
+    <span class="n">conflicts</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">weight</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">ChangeId</span><span class="p">],</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="n">verified</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]],</span>
+    <span class="n">tiers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tier</span><span class="p">],</span>
+    <span class="n">cost_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CostModel</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">remaining_tiers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+    <span class="n">depends_on</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="n">ChangeId</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">spent</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">pending_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="n">bound_search_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnytimeAnswer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The best validated set so far, plus a sound bound on what is being missed.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        change_ids: The universe.</span>
+<span class="sd">        conflicts: Every refuted set, from any tier or pre-oracle.</span>
+<span class="sd">        weight: ``change id -&gt; weight``; a set's weight is the sum of its own.</span>
+<span class="sd">        verified: ``(set, deepest tier that ran on it)`` pairs.</span>
+<span class="sd">        tiers: The tier chain, which is what "full depth" means.</span>
+<span class="sd">        cost_model, remaining_tiers: Used to price ``pending``.</span>
+<span class="sd">        depends_on: ``child -&gt; parent`` for stacked changes. Without it the</span>
+<span class="sd">            bound names sets that could never land — a child without its parent</span>
+<span class="sd">            — so ``optimal`` never becomes true however much is validated, and</span>
+<span class="sd">            ``pending`` prices candidates nobody can run.</span>
+<span class="sd">        bound_search_limit: How many minimal hitting sets to consider when</span>
+<span class="sd">            tightening the bound under stack closure. Closure can only shrink a</span>
+<span class="sd">            complement, so it breaks the weight ordering the enumeration relies</span>
+<span class="sd">            on; past this many, the loose-but-sound unclosed bound is used.</span>
+<span class="sd">        spent: Seconds per tier, carried through for reporting.</span>
+<span class="sd">        pending_limit: How many unconfirmed candidates to price.</span>
+
+<span class="sd">    &gt;&gt;&gt; tiers = [Tier('unit', lambda w: None), Tier('e2e', lambda w: None)]</span>
+<span class="sd">    &gt;&gt;&gt; answer = anytime_answer(</span>
+<span class="sd">    ...     ['a', 'b', 'c'], [frozenset({'a', 'b'})], weight=lambda c: 1.0,</span>
+<span class="sd">    ...     verified=[(frozenset({'a', 'c'}), 'e2e')], tiers=tiers)</span>
+<span class="sd">    &gt;&gt;&gt; answer.best_weight, answer.bound, answer.optimal</span>
+<span class="sd">    (2.0, 2.0, True)</span>
+
+<span class="sd">    Same conflicts, but the deep tier never ran. The bound is unchanged and the</span>
+<span class="sd">    answer is explicitly *not* optimal, because a tier that did not run is not a</span>
+<span class="sd">    tier that passed:</span>
+
+<span class="sd">    &gt;&gt;&gt; partial = anytime_answer(</span>
+<span class="sd">    ...     ['a', 'b', 'c'], [frozenset({'a', 'b'})], weight=lambda c: 1.0,</span>
+<span class="sd">    ...     verified=[(frozenset({'a', 'c'}), 'unit')], tiers=tiers)</span>
+<span class="sd">    &gt;&gt;&gt; partial.optimal, partial.full_depth, partial.best_tier</span>
+<span class="sd">    (False, False, 'unit')</span>
+<span class="sd">    """</span>
+    <span class="n">universe</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">change_ids</span><span class="p">)</span>
+    <span class="n">parents</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">depends_on</span> <span class="ow">or</span> <span class="p">{})</span>
+    <span class="n">negative</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">cid</span> <span class="k">for</span> <span class="n">cid</span> <span class="ow">in</span> <span class="n">universe</span> <span class="k">if</span> <span class="n">weight</span><span class="p">(</span><span class="n">cid</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">negative</span><span class="p">:</span>
+        <span class="c1"># The bound is the complement of the *cheapest* minimal hitting set, and</span>
+        <span class="c1"># that enumeration is best-first over cumulative weight -- Dijkstra,</span>
+        <span class="c1"># which is simply wrong with negative edges. Rather than return a bound</span>
+        <span class="c1"># silently below the true optimum while reporting `optimal`, refuse.</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Change weights must be non-negative; </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">negative</span><span class="p">)</span><span class="si">}</span><span class="s2"> are "</span>
+            <span class="s2">"negative. Weight is the cost of *dropping* a change, so 'drop this "</span>
+            <span class="s2">"one first' is expressed by a weight of zero, not a negative one."</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">weight_of</span><span class="p">(</span><span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">weight</span><span class="p">(</span><span class="n">cid</span><span class="p">)</span> <span class="k">for</span> <span class="n">cid</span> <span class="ow">in</span> <span class="n">subset</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">feasible</span><span class="p">(</span><span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The largest part of ``subset`` that could actually land."""</span>
+        <span class="k">return</span> <span class="n">largest_closed_subset</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">parents</span><span class="p">)</span> <span class="k">if</span> <span class="n">parents</span> <span class="k">else</span> <span class="n">subset</span>
+
+    <span class="n">deepest</span> <span class="o">=</span> <span class="n">tiers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">tiers</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">best_set</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">best_weight</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"-inf"</span><span class="p">)</span>
+    <span class="n">best_tier</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">subset</span><span class="p">,</span> <span class="n">tier_name</span> <span class="ow">in</span> <span class="n">verified</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">tier_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">candidate_weight</span> <span class="o">=</span> <span class="n">weight_of</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
+        <span class="c1"># Depth outranks weight: a set confirmed at the deepest tier is a better</span>
+        <span class="c1"># *answer* than a heavier set confirmed only at the screen, however much</span>
+        <span class="c1"># better the screen result looks on paper. Separating the tiers is</span>
+        <span class="c1"># pointless if the ranking then ignores which one ran.</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="p">(</span><span class="n">tier_name</span> <span class="o">==</span> <span class="n">deepest</span><span class="p">,</span> <span class="n">candidate_weight</span><span class="p">)</span>
+        <span class="n">best_rank</span> <span class="o">=</span> <span class="p">(</span><span class="n">best_tier</span> <span class="o">==</span> <span class="n">deepest</span><span class="p">,</span> <span class="n">best_weight</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">best_set</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">rank</span> <span class="o">&gt;</span> <span class="n">best_rank</span><span class="p">:</span>
+            <span class="n">best_set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
+            <span class="n">best_weight</span> <span class="o">=</span> <span class="n">candidate_weight</span>
+            <span class="n">best_tier</span> <span class="o">=</span> <span class="n">tier_name</span>
+
+    <span class="n">live</span> <span class="o">=</span> <span class="p">[</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">conflicts</span> <span class="k">if</span> <span class="n">c</span><span class="p">]</span>
+    <span class="n">bound_set</span><span class="p">,</span> <span class="n">bound</span> <span class="o">=</span> <span class="n">_upper_bound</span><span class="p">(</span>
+        <span class="n">universe</span><span class="p">,</span> <span class="n">live</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">weight_of</span><span class="p">,</span> <span class="n">feasible</span><span class="p">,</span> <span class="nb">bool</span><span class="p">(</span><span class="n">parents</span><span class="p">),</span> <span class="n">bound_search_limit</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">best_set</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">best_weight</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">full_depth</span> <span class="o">=</span> <span class="n">best_tier</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">best_tier</span> <span class="o">==</span> <span class="n">deepest</span>
+    <span class="c1"># Comparable only at full depth. A screen-confirmed set's weight is not a</span>
+    <span class="c1"># lower bound on what passes *every* tier, and subtracting it produced a</span>
+    <span class="c1"># negative gap -- and a report claiming more than the log held -- whenever</span>
+    <span class="c1"># the deep tier refuted everything the screen had accepted.</span>
+    <span class="n">gap</span> <span class="o">=</span> <span class="n">bound</span> <span class="o">-</span> <span class="p">(</span><span class="n">best_weight</span> <span class="k">if</span> <span class="n">full_depth</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">optimal</span> <span class="o">=</span> <span class="n">full_depth</span> <span class="ow">and</span> <span class="n">gap</span> <span class="o">&lt;=</span> <span class="mi">0</span>
+
+    <span class="n">pending</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">cost_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">remaining_tiers</span><span class="p">:</span>
+        <span class="n">confirmed</span> <span class="o">=</span> <span class="p">{</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">verified</span> <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="n">deepest</span><span class="p">}</span>
+        <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">hitting_set</span> <span class="ow">in</span> <span class="n">minimal_hitting_sets</span><span class="p">(</span><span class="n">live</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">):</span>
+            <span class="n">candidate</span> <span class="o">=</span> <span class="n">feasible</span><span class="p">(</span><span class="n">universe</span> <span class="o">-</span> <span class="n">hitting_set</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">candidate</span> <span class="ow">or</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">confirmed</span> <span class="ow">or</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+            <span class="n">price</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+                <span class="n">cost_model</span><span class="o">.</span><span class="n">pessimistic</span><span class="p">(</span><span class="n">tier</span><span class="p">,</span> <span class="n">candidate</span><span class="p">)</span> <span class="k">for</span> <span class="n">tier</span> <span class="ow">in</span> <span class="n">remaining_tiers</span>
+            <span class="p">)</span>
+            <span class="n">pending</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">candidate</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">price</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pending</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">pending_limit</span><span class="p">:</span>
+                <span class="k">break</span>
+
+    <span class="k">return</span> <span class="n">AnytimeAnswer</span><span class="p">(</span>
+        <span class="n">best</span><span class="o">=</span><span class="n">best_set</span><span class="p">,</span>
+        <span class="n">best_weight</span><span class="o">=</span><span class="n">best_weight</span> <span class="k">if</span> <span class="n">best_set</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">best_tier</span><span class="o">=</span><span class="n">best_tier</span><span class="p">,</span>
+        <span class="n">full_depth</span><span class="o">=</span><span class="n">full_depth</span><span class="p">,</span>
+        <span class="n">bound</span><span class="o">=</span><span class="n">bound</span><span class="p">,</span>
+        <span class="n">bound_set</span><span class="o">=</span><span class="n">bound_set</span><span class="p">,</span>
+        <span class="n">gap</span><span class="o">=</span><span class="n">gap</span><span class="p">,</span>
+        <span class="n">optimal</span><span class="o">=</span><span class="n">optimal</span><span class="p">,</span>
+        <span class="n">pending</span><span class="o">=</span><span class="n">pending</span><span class="p">,</span>
+        <span class="n">spent</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">spent</span> <span class="ow">or</span> <span class="p">{}),</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------</span>
+<span class="c1"># The other frontier: the best plan that KEEPS a particular change</span>
+<span class="c1"># --------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="best_set_including">
+<a class="viewcode-back" href="../../module_docs/mergeset/tiers.html#mergeset.best_set_including">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">best_set_including</span><span class="p">(</span>
+    <span class="n">change_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">],</span>
+    <span class="n">evaluate</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">ChangeSet</span><span class="p">],</span> <span class="n">Evaluation</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">must_include</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">],</span>
+    <span class="n">conflicts</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+    <span class="n">weight</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">ChangeId</span><span class="p">],</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">depends_on</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="n">ChangeId</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_evaluations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">shrink</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">ChangeSet</span><span class="p">]</span> <span class="o">=</span> <span class="n">quickxplain</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">],</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The heaviest validated set that **contains** every change in ``must_include``.</span>
+
+<span class="sd">    This is a different question from "the heaviest validated set", and on real</span>
+<span class="sd">    data the two answers can be far apart. A change that must land — because it</span>
+<span class="sd">    is the one the expensive tier exists for, or because someone has decided it</span>
+<span class="sd">    ships — may conflict with several members of the unconstrained best plan; the</span>
+<span class="sd">    best plan that keeps it is then not a superset of that plan, not a subset,</span>
+<span class="sd">    and not reachable by adding anything to it. It is the complement of a minimal</span>
+<span class="sd">    hitting set that *avoids* the required changes, which is what this</span>
+<span class="sd">    enumerates.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        change_ids: The universe.</span>
+<span class="sd">        evaluate: The (chained, log-cached) oracle.</span>
+<span class="sd">        must_include: Changes the answer must contain. With stacked changes the</span>
+<span class="sd">            set is closed downward first, since keeping a change means keeping</span>
+<span class="sd">            what it is built on.</span>
+<span class="sd">        conflicts: Conflicts already known — the point of the exercise is to</span>
+<span class="sd">            reuse everything the unconstrained search learned.</span>
+<span class="sd">        weight: ``id -&gt; weight``; candidates are proposed heaviest-first.</span>
+<span class="sd">        depends_on: ``child -&gt; parent`` for stacked changes.</span>
+<span class="sd">        max_evaluations: Budget, in real (uncached) evaluations.</span>
+<span class="sd">        shrink: Conflict-minimization strategy.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ``(best set or None, the conflicts now known, evaluations spent)``.</span>
+<span class="sd">        ``None`` means the required changes cannot all be kept: every way of</span>
+<span class="sd">        resolving the known conflicts drops one of them.</span>
+
+<span class="sd">    &gt;&gt;&gt; from mergeset.base import Evaluation, Verdict</span>
+<span class="sd">    &gt;&gt;&gt; def oracle(subset):                      # 'h' conflicts with 'a' and 'b'</span>
+<span class="sd">    ...     bad = {'h', 'a'} &lt;= subset or {'h', 'b'} &lt;= subset</span>
+<span class="sd">    ...     return Evaluation(subset, Verdict.FAIL if bad else Verdict.PASS)</span>
+<span class="sd">    &gt;&gt;&gt; best, _, _ = best_set_including('abch', oracle, must_include=['h'])</span>
+<span class="sd">    &gt;&gt;&gt; set_key(best)</span>
+<span class="sd">    ('c', 'h')</span>
+
+<span class="sd">    Unconstrained, the answer would have been the three changes that exclude</span>
+<span class="sd">    ``h`` — bigger, and not an answer to the question that was asked.</span>
+<span class="sd">    """</span>
+    <span class="n">universe</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">change_ids</span><span class="p">)</span>
+    <span class="n">parents</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">depends_on</span> <span class="ow">or</span> <span class="p">{})</span>
+    <span class="n">must</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">must_include</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">parents</span><span class="p">:</span>
+        <span class="n">must</span> <span class="o">=</span> <span class="n">close_down</span><span class="p">(</span><span class="n">must</span><span class="p">,</span> <span class="n">parents</span><span class="p">)</span>
+    <span class="n">unknown</span> <span class="o">=</span> <span class="n">must</span> <span class="o">-</span> <span class="n">universe</span>
+    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"must_include names changes that are not candidates: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span> <span class="ow">or</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">_</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">known</span> <span class="o">=</span> <span class="n">_minimal</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">conflicts</span><span class="p">))</span>
+    <span class="n">tried</span><span class="p">:</span> <span class="nb">set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">spent</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">counted</span><span class="p">(</span><span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Evaluation</span><span class="p">:</span>
+        <span class="k">nonlocal</span> <span class="n">spent</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">subset</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">cached</span><span class="p">:</span>
+            <span class="n">spent</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">while</span> <span class="n">max_evaluations</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">spent</span> <span class="o">&lt;</span> <span class="n">max_evaluations</span><span class="p">:</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">hitting_set</span> <span class="ow">in</span> <span class="n">minimal_hitting_sets</span><span class="p">(</span><span class="n">known</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">):</span>
+            <span class="n">proposal</span> <span class="o">=</span> <span class="n">universe</span> <span class="o">-</span> <span class="n">hitting_set</span>
+            <span class="k">if</span> <span class="n">parents</span><span class="p">:</span>
+                <span class="n">proposal</span> <span class="o">=</span> <span class="n">largest_closed_subset</span><span class="p">(</span><span class="n">proposal</span><span class="p">,</span> <span class="n">parents</span><span class="p">)</span>
+            <span class="c1"># The one constraint that makes this a different search: a</span>
+            <span class="c1"># resolution that drops a required change is not an answer to this</span>
+            <span class="c1"># question, however good an answer it is to the unconstrained one.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">must</span> <span class="o">&lt;=</span> <span class="n">proposal</span><span class="p">)</span> <span class="ow">or</span> <span class="n">proposal</span> <span class="ow">in</span> <span class="n">tried</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">candidate</span> <span class="o">=</span> <span class="n">proposal</span>
+            <span class="k">break</span>
+        <span class="k">if</span> <span class="n">candidate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">known</span><span class="p">,</span> <span class="n">spent</span>
+        <span class="n">tried</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">counted</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">:</span>
+            <span class="c1"># Proposals arrive in hitting-set weight order, but stack closure</span>
+            <span class="c1"># shrinks them *after* that order is fixed, so the first passing</span>
+            <span class="c1"># proposal need not be the heaviest -- it can be a whole change</span>
+            <span class="c1"># short. `solve.py::_grow_within_known` exists for exactly this and</span>
+            <span class="c1"># says so; re-implementing the loop here without it re-introduced</span>
+            <span class="c1"># the bug it documents. Growing costs no evaluations of its own: it</span>
+            <span class="c1"># only consults conflicts already known.</span>
+            <span class="n">grown</span> <span class="o">=</span> <span class="n">_grow_within</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="n">universe</span><span class="p">,</span> <span class="n">known</span><span class="p">,</span> <span class="n">parents</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">grown</span> <span class="o">!=</span> <span class="n">candidate</span> <span class="ow">and</span> <span class="n">counted</span><span class="p">(</span><span class="n">grown</span><span class="p">)</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">grown</span><span class="p">,</span> <span class="n">known</span><span class="p">,</span> <span class="n">spent</span>
+            <span class="k">return</span> <span class="n">candidate</span><span class="p">,</span> <span class="n">known</span><span class="p">,</span> <span class="n">spent</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">known</span><span class="p">,</span> <span class="n">spent</span>
+        <span class="n">conflict</span> <span class="o">=</span> <span class="n">shrink</span><span class="p">(</span><span class="n">counted</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">candidate</span><span class="p">))</span>
+        <span class="n">known</span> <span class="o">=</span> <span class="n">_minimal</span><span class="p">(</span><span class="n">known</span> <span class="o">+</span> <span class="p">[</span><span class="n">conflict</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">conflict</span> <span class="o">&lt;=</span> <span class="n">must</span><span class="p">:</span>
+            <span class="c1"># The required changes conflict with each other (or with the base).</span>
+            <span class="c1"># No set containing them all can pass; say so rather than looping.</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">known</span><span class="p">,</span> <span class="n">spent</span>
+    <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">known</span><span class="p">,</span> <span class="n">spent</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------</span>
+<span class="c1"># The facade</span>
+<span class="c1"># --------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="analyze_tiered">
+<a class="viewcode-back" href="../../module_docs/mergeset/tiers.html#mergeset.analyze_tiered">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">analyze_tiered</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">changes</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Change</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tiers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tier</span><span class="p">],</span>
+    <span class="n">cost_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CostModel</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">confirm_budget_seconds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">confirm_max_runs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">confirm_max_sets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">must_include</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+    <span class="n">on_event</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">analyze_kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TieredAnalysis</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Screen with the cheap tier, confirm the frontier with the expensive ones.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        repo, changes: As :func:`mergeset.analyze`.</span>
+<span class="sd">        tiers: Ordered cheapest-first. The first is the **screen** and pays for</span>
+<span class="sd">            the whole search interior; each later one confirms what its</span>
+<span class="sd">            predecessor left standing. One tier reproduces today's behaviour</span>
+<span class="sd">            exactly.</span>
+<span class="sd">        cost_model: The price list — a seam. Default:</span>
+<span class="sd">            :class:`~mergeset.cost.MeasuredCost` seeded from each tier's</span>
+<span class="sd">            declared ``cost``, then fitted to the durations the tier's own</span>
+<span class="sd">            evaluation log records. Measurements from one run price the next.</span>
+<span class="sd">        confirm_budget_seconds: Wall-clock a deep tier may spend. Admission uses</span>
+<span class="sd">            the model's *pessimistic* estimate, because overrunning a budget is</span>
+<span class="sd">            worse than deferring one evaluation.</span>
+<span class="sd">        confirm_max_runs: Hard cap on evaluations per deep tier. Takes</span>
+<span class="sd">            precedence over the budget when both are given.</span>
+<span class="sd">        confirm_max_sets: Stop a deep tier after this many confirmed maximal</span>
+<span class="sd">            sets. ``1`` is "just tell me the single best plan, cheaply".</span>
+<span class="sd">        must_include: Changes that must be in the answer. Answers a *different*</span>
+<span class="sd">            question alongside the main one — "the best plan that keeps this" —</span>
+<span class="sd">            and the two can be far apart when the required change conflicts with</span>
+<span class="sd">            members of the unconstrained best plan. Reported as</span>
+<span class="sd">            ``TieredAnalysis.best_including``; see :func:`best_set_including`.</span>
+<span class="sd">        on_event: ``(event, payload)``. Adds ``tier``, ``tier_skipped`` and</span>
+<span class="sd">            ``anytime`` on top of the events :func:`mergeset.analyze` emits, so</span>
+<span class="sd">            a caller can display the best-so-far after every deep run.</span>
+<span class="sd">        **analyze_kwargs: Everything else goes to :func:`mergeset.analyze`</span>
+<span class="sd">            unchanged (``base``, ``decompose``, ``max_evaluations``, ...). Not</span>
+<span class="sd">            ``validate`` and not ``log``: the tiers own both.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A :class:`TieredAnalysis`.</span>
+<span class="sd">    """</span>
+    <span class="n">tiers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tiers</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">tiers</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"analyze_tiered needs at least one tier. For a single validator pass "</span>
+            <span class="s2">"tiers=[Tier('validate', my_validator)] -- or call analyze(), which "</span>
+            <span class="s2">"is the same thing."</span>
+        <span class="p">)</span>
+    <span class="c1"># `log_path` belongs in this list even though it names a path rather than a</span>
+    <span class="c1"># log. One path cannot hold several tiers without collapsing them into the</span>
+    <span class="c1"># one shared cache entry this design exists to prevent -- and since the</span>
+    <span class="c1"># screen's log is passed explicitly below, `analyze` would ignore it in</span>
+    <span class="c1"># silence. An argument that is quietly discarded is worse than one refused.</span>
+    <span class="k">for</span> <span class="n">reserved</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"validate"</span><span class="p">,</span> <span class="s2">"log"</span><span class="p">,</span> <span class="s2">"log_path"</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">reserved</span> <span class="ow">in</span> <span class="n">analyze_kwargs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MergesetError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"analyze_tiered owns `</span><span class="si">{</span><span class="n">reserved</span><span class="si">}</span><span class="s2">`: each tier has its own "</span>
+                <span class="s2">"validator and its own evaluation log, because a cheap-tier PASS "</span>
+                <span class="s2">"is not evidence about an expensive tier and the two must not "</span>
+                <span class="s2">"share a cache entry. Put a validator in a Tier; for the logs' "</span>
+                <span class="s2">"location, pass `artifacts=` (the storage seam), which routes "</span>
+                <span class="sa">f</span><span class="s2">"every tier's log through one store. Do not pass </span><span class="si">{</span><span class="n">reserved</span><span class="si">}</span><span class="s2">=."</span>
+            <span class="p">)</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tiers</span><span class="p">]</span>
+    <span class="c1"># Uniqueness of *keys*, not of names: the name identifies the tier's</span>
+    <span class="c1"># evaluation log, and two names differing only in case or punctuation are</span>
+    <span class="c1"># one log on a case-insensitive filesystem.</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">tier_key</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">keys</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Tier names must stay distinct once made key-safe; </span><span class="si">{</span><span class="n">names</span><span class="si">}</span><span class="s2"> give "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">keys</span><span class="si">}</span><span class="s2">. Each tier keeps its own evaluation log, so two tiers "</span>
+            <span class="s2">"sharing a key would let a cheap PASS answer an expensive question."</span>
+        <span class="p">)</span>
+
+    <span class="n">emit</span> <span class="o">=</span> <span class="n">on_event</span> <span class="ow">or</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">name</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">cost_model</span> <span class="o">=</span> <span class="n">cost_model</span> <span class="ow">or</span> <span class="n">MeasuredCost</span><span class="p">(</span>
+        <span class="n">declared</span><span class="o">=</span><span class="p">{</span><span class="n">t</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">cost</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tiers</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">cost</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">artifacts</span> <span class="o">=</span> <span class="n">analyze_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"artifacts"</span><span class="p">)</span>
+    <span class="n">store</span> <span class="o">=</span> <span class="n">artifacts</span><span class="p">[</span><span class="s2">"evaluations"</span><span class="p">]</span> <span class="k">if</span> <span class="n">artifacts</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">logs</span> <span class="o">=</span> <span class="p">{</span><span class="n">t</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">EvaluationLog</span><span class="p">(</span><span class="n">tier_lines</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">))</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tiers</span><span class="p">}</span>
+
+    <span class="c1"># --- stage 1: screen --------------------------------------------------</span>
+    <span class="n">screen</span> <span class="o">=</span> <span class="n">tiers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">emit</span><span class="p">(</span><span class="s2">"tier"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">screen</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">"role"</span><span class="p">:</span> <span class="s2">"screen"</span><span class="p">})</span>
+    <span class="n">analysis</span> <span class="o">=</span> <span class="n">analyze</span><span class="p">(</span>
+        <span class="n">repo</span><span class="p">,</span>
+        <span class="n">changes</span><span class="p">,</span>
+        <span class="n">validate</span><span class="o">=</span><span class="n">screen</span><span class="o">.</span><span class="n">validate</span><span class="p">,</span>
+        <span class="n">log</span><span class="o">=</span><span class="n">logs</span><span class="p">[</span><span class="n">screen</span><span class="o">.</span><span class="n">name</span><span class="p">],</span>
+        <span class="n">on_event</span><span class="o">=</span><span class="n">on_event</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">analyze_kwargs</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">TieredAnalysis</span><span class="p">(</span>
+        <span class="n">tiers</span><span class="o">=</span><span class="n">tiers</span><span class="p">,</span>
+        <span class="n">analysis</span><span class="o">=</span><span class="n">analysis</span><span class="p">,</span>
+        <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">,</span>
+        <span class="n">cost_model</span><span class="o">=</span><span class="n">cost_model</span><span class="p">,</span>
+        <span class="n">depth_reached</span><span class="o">=</span><span class="n">screen</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ingested</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># Every tier's log, not just the screen's. Budget admission for a deep tier</span>
+    <span class="c1"># happens before that tier has run anything in *this* process, so pricing it</span>
+    <span class="c1"># from `declared` while a log full of real timings sat on disk is how a</span>
+    <span class="c1"># 600 s budget admitted 3000 s of work. The docstring promised "measurements</span>
+    <span class="c1"># from one run price the next"; this is what makes that true.</span>
+    <span class="k">for</span> <span class="n">tier</span> <span class="ow">in</span> <span class="n">tiers</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">spent</span><span class="p">[</span><span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_sync_costs</span><span class="p">(</span>
+            <span class="n">cost_model</span><span class="p">,</span> <span class="n">logs</span><span class="p">[</span><span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">ingested</span>
+        <span class="p">)</span>
+        <span class="c1"># Evaluations are counted from the tier's log, not from the search</span>
+        <span class="c1"># state: a search resumed against a complete log runs nothing and would</span>
+        <span class="c1"># report zero spend for work that really happened (i2mint/mergeset#16).</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">runs</span><span class="p">[</span><span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">logs</span><span class="p">[</span><span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
+
+    <span class="n">change_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">]</span>
+    <span class="n">universe</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">change_ids</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">weight_of_id</span><span class="p">(</span><span class="n">cid</span><span class="p">:</span> <span class="n">ChangeId</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">analysis</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cid</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+
+    <span class="n">conflicts</span> <span class="o">=</span> <span class="n">_seed_conflicts</span><span class="p">(</span><span class="n">analysis</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">refresh_answer</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AnytimeAnswer</span><span class="p">:</span>
+        <span class="n">reached</span> <span class="o">=</span> <span class="n">names</span><span class="p">[:</span> <span class="n">names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">depth_reached</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">remaining</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">reached</span><span class="p">]</span>
+        <span class="n">answer</span> <span class="o">=</span> <span class="n">anytime_answer</span><span class="p">(</span>
+            <span class="n">change_ids</span><span class="p">,</span>
+            <span class="n">conflicts</span><span class="p">,</span>
+            <span class="n">weight</span><span class="o">=</span><span class="n">weight_of_id</span><span class="p">,</span>
+            <span class="n">verified</span><span class="o">=</span><span class="p">[(</span><span class="n">s</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">verified_tier</span><span class="p">(</span><span class="n">s</span><span class="p">))</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">maximal_sets</span><span class="p">],</span>
+            <span class="n">tiers</span><span class="o">=</span><span class="n">tiers</span><span class="p">,</span>
+            <span class="n">cost_model</span><span class="o">=</span><span class="n">cost_model</span><span class="p">,</span>
+            <span class="n">remaining_tiers</span><span class="o">=</span><span class="n">remaining</span><span class="p">,</span>
+            <span class="n">depends_on</span><span class="o">=</span><span class="n">analysis</span><span class="o">.</span><span class="n">stacks</span><span class="p">,</span>
+            <span class="n">spent</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">spent</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">answer</span> <span class="o">=</span> <span class="n">answer</span>
+        <span class="n">emit</span><span class="p">(</span><span class="s2">"anytime"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"summary"</span><span class="p">:</span> <span class="n">answer</span><span class="o">.</span><span class="n">summary</span><span class="p">(),</span> <span class="s2">"gap"</span><span class="p">:</span> <span class="n">answer</span><span class="o">.</span><span class="n">gap</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">answer</span>
+
+    <span class="n">refresh_answer</span><span class="p">()</span>
+
+    <span class="c1"># --- stages 2..n: confirm the frontier, one tier deeper each time -----</span>
+    <span class="n">evaluators</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_tier_evaluator</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">analysis</span><span class="p">,</span> <span class="n">changes</span><span class="p">,</span> <span class="n">screen</span><span class="p">,</span> <span class="n">logs</span><span class="p">[</span><span class="n">screen</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="n">emit</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">tier</span> <span class="ow">in</span> <span class="n">tiers</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">tier</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+            <span class="n">_skip</span><span class="p">(</span>
+                <span class="n">result</span><span class="p">,</span>
+                <span class="n">analysis</span><span class="p">,</span>
+                <span class="n">tier</span><span class="p">,</span>
+                <span class="s2">"the infrastructure it needs is not available"</span><span class="p">,</span>
+                <span class="n">emit</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">break</span>
+        <span class="n">check_base</span> <span class="o">=</span> <span class="n">analyze_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"check_base"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">allowance</span> <span class="o">=</span> <span class="n">_runs_allowed</span><span class="p">(</span>
+            <span class="n">cost_model</span><span class="p">,</span>
+            <span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">universe</span><span class="p">,</span>
+            <span class="n">budget_seconds</span><span class="o">=</span><span class="n">confirm_budget_seconds</span><span class="p">,</span>
+            <span class="n">max_runs</span><span class="o">=</span><span class="n">confirm_max_runs</span><span class="p">,</span>
+            <span class="n">reserve</span><span class="o">=</span><span class="p">(</span>
+                <span class="n">cost_model</span><span class="o">.</span><span class="n">pessimistic</span><span class="p">(</span><span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">())</span> <span class="k">if</span> <span class="n">check_base</span> <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">allowance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">allowance</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">price</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">cost_model</span><span class="o">.</span><span class="n">pessimistic</span><span class="p">(</span><span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">universe</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">_skip</span><span class="p">(</span>
+                <span class="n">result</span><span class="p">,</span>
+                <span class="n">analysis</span><span class="p">,</span>
+                <span class="n">tier</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"the budget does not admit even one run (estimated </span><span class="si">{</span><span class="n">price</span><span class="si">}</span><span class="s2">s each)"</span><span class="p">,</span>
+                <span class="n">emit</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">break</span>
+        <span class="n">evaluators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">_tier_evaluator</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">analysis</span><span class="p">,</span> <span class="n">changes</span><span class="p">,</span> <span class="n">tier</span><span class="p">,</span> <span class="n">logs</span><span class="p">[</span><span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="n">emit</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="c1"># ADR-0018 applies to every tier, not only the first. `analyze` checks</span>
+        <span class="c1"># the base for the screen; without the same check here, a deep tier that</span>
+        <span class="c1"># is red on the base alone makes every frontier set fail, and the run</span>
+        <span class="c1"># reports "nothing passes &lt;tier&gt;" as a *finding* rather than as the</span>
+        <span class="c1"># misconfiguration it is. That is worst exactly where it is hardest to</span>
+        <span class="c1"># notice: a tier expensive enough to need this design is a tier nobody</span>
+        <span class="c1"># can cheaply re-run by hand to cross-check.</span>
+        <span class="k">if</span> <span class="n">check_base</span><span class="p">:</span>
+            <span class="n">baseline</span> <span class="o">=</span> <span class="n">chained_evaluate</span><span class="p">(</span><span class="n">evaluators</span><span class="p">)(</span><span class="nb">frozenset</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">baseline</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">:</span>
+                <span class="c1"># Skipped, not raised -- the one place this departs from</span>
+                <span class="c1"># ADR-0018. By now the screen search is banked, often many</span>
+                <span class="c1"># minutes of it, and discarding a true answer in order to report</span>
+                <span class="c1"># a misconfiguration is the worse trade. The depth label already</span>
+                <span class="c1"># says this tier confirmed nothing.</span>
+                <span class="n">evaluators</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">_skip</span><span class="p">(</span>
+                    <span class="n">result</span><span class="p">,</span>
+                    <span class="n">analysis</span><span class="p">,</span>
+                    <span class="n">tier</span><span class="p">,</span>
+                    <span class="s2">"it does not pass on the base alone, so every result from it "</span>
+                    <span class="sa">f</span><span class="s2">"would be meaningless (</span><span class="si">{</span><span class="n">_why</span><span class="p">(</span><span class="n">baseline</span><span class="p">)</span><span class="si">}</span><span class="s2">). Fix the tier's "</span>
+                    <span class="s2">"command or its environment, then re-run"</span><span class="p">,</span>
+                    <span class="n">emit</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">break</span>
+        <span class="n">emit</span><span class="p">(</span><span class="s2">"tier"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">"role"</span><span class="p">:</span> <span class="s2">"confirm"</span><span class="p">,</span> <span class="s2">"max_runs"</span><span class="p">:</span> <span class="n">allowance</span><span class="p">})</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">find_maximal_good_sets</span><span class="p">(</span>
+            <span class="n">change_ids</span><span class="p">,</span>
+            <span class="n">chained_evaluate</span><span class="p">(</span><span class="n">evaluators</span><span class="p">),</span>
+            <span class="n">known_conflicts</span><span class="o">=</span><span class="n">conflicts</span><span class="p">,</span>
+            <span class="n">depends_on</span><span class="o">=</span><span class="n">analysis</span><span class="o">.</span><span class="n">stacks</span><span class="p">,</span>
+            <span class="n">weight</span><span class="o">=</span><span class="n">weight_of_id</span><span class="p">,</span>
+            <span class="n">max_evaluations</span><span class="o">=</span><span class="n">allowance</span><span class="p">,</span>
+            <span class="n">max_seconds</span><span class="o">=</span><span class="n">confirm_budget_seconds</span><span class="p">,</span>
+            <span class="n">max_sets</span><span class="o">=</span><span class="n">confirm_max_sets</span><span class="p">,</span>
+            <span class="n">on_event</span><span class="o">=</span><span class="n">on_event</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">analysis</span><span class="o">.</span><span class="n">searches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="n">conflicts</span> <span class="o">=</span> <span class="n">conflicts</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">conflicts</span><span class="p">)</span>
+        <span class="n">analysis</span><span class="o">.</span><span class="n">conflicts</span> <span class="o">=</span> <span class="n">_minimal</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">conflicts</span> <span class="o">+</span> <span class="n">state</span><span class="o">.</span><span class="n">conflicts</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">spent</span><span class="p">[</span><span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_sync_costs</span><span class="p">(</span>
+            <span class="n">cost_model</span><span class="p">,</span> <span class="n">logs</span><span class="p">[</span><span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">ingested</span>
+        <span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">runs</span><span class="p">[</span><span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">logs</span><span class="p">[</span><span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">maximal_good_sets</span><span class="p">:</span>
+            <span class="n">analysis</span><span class="o">.</span><span class="n">maximal_sets</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">maximal_good_sets</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">depth_reached</span> <span class="o">=</span> <span class="n">tier</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">refresh_answer</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
+            <span class="n">_skip</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">analysis</span><span class="p">,</span> <span class="n">tier</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"it aborted: </span><span class="si">{</span><span class="n">state</span><span class="o">.</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">emit</span><span class="p">)</span>
+            <span class="k">break</span>
+
+    <span class="k">if</span> <span class="n">must_include</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">must_include</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">must_include</span><span class="p">)</span>
+        <span class="c1"># The same budget, priced at the depth actually reached. Passing only</span>
+        <span class="c1"># `confirm_max_runs` left this phase completely uncapped whenever the</span>
+        <span class="c1"># caller had expressed its budget in seconds -- which is the documented</span>
+        <span class="c1"># way to express one -- so a 600 s budget could spend thousands.</span>
+        <span class="n">deepest_reached</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">depth_reached</span> <span class="ow">or</span> <span class="n">screen</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">constrained_allowance</span> <span class="o">=</span> <span class="n">_runs_allowed</span><span class="p">(</span>
+            <span class="n">cost_model</span><span class="p">,</span>
+            <span class="n">deepest_reached</span><span class="p">,</span>
+            <span class="n">universe</span><span class="p">,</span>
+            <span class="n">budget_seconds</span><span class="o">=</span><span class="n">confirm_budget_seconds</span><span class="p">,</span>
+            <span class="n">max_runs</span><span class="o">=</span><span class="n">confirm_max_runs</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">best</span><span class="p">,</span> <span class="n">found</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">best_set_including</span><span class="p">(</span>
+            <span class="n">change_ids</span><span class="p">,</span>
+            <span class="n">chained_evaluate</span><span class="p">(</span><span class="n">evaluators</span><span class="p">),</span>
+            <span class="n">must_include</span><span class="o">=</span><span class="n">must_include</span><span class="p">,</span>
+            <span class="n">conflicts</span><span class="o">=</span><span class="n">conflicts</span><span class="p">,</span>
+            <span class="n">weight</span><span class="o">=</span><span class="n">weight_of_id</span><span class="p">,</span>
+            <span class="n">depends_on</span><span class="o">=</span><span class="n">analysis</span><span class="o">.</span><span class="n">stacks</span><span class="p">,</span>
+            <span class="n">max_evaluations</span><span class="o">=</span><span class="n">constrained_allowance</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">best_including</span> <span class="o">=</span> <span class="n">best</span>
+        <span class="n">conflicts</span> <span class="o">=</span> <span class="n">_minimal</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">conflicts</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">found</span><span class="p">))</span>
+        <span class="n">analysis</span><span class="o">.</span><span class="n">conflicts</span> <span class="o">=</span> <span class="n">_minimal</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">conflicts</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">found</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">tier_name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">spent</span><span class="p">[</span><span class="n">tier_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_sync_costs</span><span class="p">(</span>
+                <span class="n">cost_model</span><span class="p">,</span> <span class="n">logs</span><span class="p">[</span><span class="n">tier_name</span><span class="p">],</span> <span class="n">tier_name</span><span class="p">,</span> <span class="n">ingested</span>
+            <span class="p">)</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">runs</span><span class="p">[</span><span class="n">tier_name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">logs</span><span class="p">[</span><span class="n">tier_name</span><span class="p">])</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">must_include</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">best</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"No validated set keeps </span><span class="si">{</span><span class="n">kept</span><span class="si">}</span><span class="s2">: every way of resolving the known "</span>
+                <span class="s2">"conflicts drops at least one of them. Landing it means fixing a "</span>
+                <span class="s2">"conflict, not choosing a different subset."</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Best validated set that keeps </span><span class="si">{</span><span class="n">kept</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">best</span><span class="p">)</span><span class="si">}</span><span class="s2"> of "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">change_ids</span><span class="p">)</span><span class="si">}</span><span class="s2"> changes (</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">set_key</span><span class="p">(</span><span class="n">best</span><span class="p">))</span><span class="si">}</span><span class="s2">). This is a "</span>
+                <span class="s2">"different question from the maximal set above, and a smaller "</span>
+                <span class="s2">"answer to it is not a worse answer."</span>
+            <span class="p">)</span>
+
+    <span class="n">_record_what_may_be_claimed</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">analysis</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">refresh_answer</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_tier_evaluator</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">analysis</span><span class="p">:</span> <span class="n">Analysis</span><span class="p">,</span>
+    <span class="n">changes</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Change</span><span class="p">],</span>
+    <span class="n">tier</span><span class="p">:</span> <span class="n">Tier</span><span class="p">,</span>
+    <span class="n">log</span><span class="p">:</span> <span class="n">EvaluationLog</span><span class="p">,</span>
+    <span class="n">emit</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span> <span class="kc">None</span><span class="p">],</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A log-cached evaluator for one tier: merge onto the base, then run the tier.</span>
+
+<span class="sd">    Backed by the tier's *own* log, so a set the screen already decided is a</span>
+<span class="sd">    cache hit at the screen and a real run only at the tier that has not seen it.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">log</span><span class="o">.</span><span class="n">caching</span><span class="p">(</span>
+        <span class="n">git_oracle</span><span class="p">(</span>
+            <span class="n">repo</span><span class="p">,</span>
+            <span class="n">analysis</span><span class="o">.</span><span class="n">base_sha</span><span class="p">,</span>
+            <span class="n">changes</span><span class="p">,</span>
+            <span class="n">validate</span><span class="o">=</span><span class="n">tier</span><span class="o">.</span><span class="n">validate</span><span class="p">,</span>
+            <span class="n">depends_on</span><span class="o">=</span><span class="n">analysis</span><span class="o">.</span><span class="n">stacks</span><span class="p">,</span>
+            <span class="n">on_event</span><span class="o">=</span><span class="k">lambda</span> <span class="n">event</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="n">emit</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="p">{</span><span class="o">**</span><span class="n">payload</span><span class="p">,</span> <span class="s2">"tier"</span><span class="p">:</span> <span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">}),</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_why</span><span class="p">(</span><span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The most specific thing that can be said about why an evaluation failed.</span>
+
+<span class="sd">    "exit code 1 and nothing else" is exactly the case where a bare verdict</span>
+<span class="sd">    leaves the reader nowhere to look, so name the failing tests when the runner</span>
+<span class="sd">    named some, and fall back to what it printed.</span>
+<span class="sd">    """</span>
+    <span class="n">validation</span> <span class="o">=</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">validation</span>
+    <span class="k">if</span> <span class="n">validation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">validation</span><span class="o">.</span><span class="n">failing_tests</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">validation</span><span class="o">.</span><span class="n">failing_tests</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">tail</span> <span class="o">=</span> <span class="p">(</span><span class="n">validation</span><span class="o">.</span><span class="n">stdout_tail</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">tail</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"exit </span><span class="si">{</span><span class="n">validation</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">: "</span> <span class="o">+</span> <span class="s2">" / "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tail</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:])</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"the command exited </span><span class="si">{</span><span class="n">validation</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2"> and printed nothing"</span>
+    <span class="k">if</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">merge</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">merge</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">merge</span><span class="o">.</span><span class="n">detail</span> <span class="ow">or</span> <span class="s2">"the merge failed"</span>
+    <span class="k">return</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">note</span> <span class="ow">or</span> <span class="s2">"no detail was reported"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_grow_within</span><span class="p">(</span>
+    <span class="n">candidate</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">,</span>
+    <span class="n">universe</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">,</span>
+    <span class="n">conflicts</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">],</span>
+    <span class="n">parents</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="n">ChangeId</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Add back anything no *known* conflict forbids, keeping the set closed.</span>
+
+<span class="sd">    Costs no evaluations: it consults only conflicts already found. A change is</span>
+<span class="sd">    added together with its ancestors, because a set holding a child must hold</span>
+<span class="sd">    what the child is built on.</span>
+<span class="sd">    """</span>
+    <span class="n">grown</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">extra</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">universe</span> <span class="o">-</span> <span class="n">candidate</span><span class="p">):</span>
+        <span class="n">trial</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">grown</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="n">extra</span><span class="p">}</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="n">parents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">extra</span><span class="p">)</span>
+        <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">while</span> <span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">universe</span> <span class="ow">and</span> <span class="n">parent</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+            <span class="n">trial</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="n">parents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">conflict</span> <span class="o">&lt;=</span> <span class="n">trial</span> <span class="k">for</span> <span class="n">conflict</span> <span class="ow">in</span> <span class="n">conflicts</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">grown</span> <span class="o">=</span> <span class="n">trial</span>
+    <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">grown</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_minimal</span><span class="p">(</span><span class="n">conflicts</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Keep only minimal conflicts; a superset of a conflict says nothing new."""</span>
+    <span class="n">unique</span> <span class="o">=</span> <span class="p">{</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">conflicts</span> <span class="k">if</span> <span class="n">c</span><span class="p">}</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">unique</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">other</span> <span class="o">&lt;</span> <span class="n">c</span> <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">unique</span><span class="p">)),</span>
+        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">set_key</span><span class="p">(</span><span class="n">c</span><span class="p">)),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_skip</span><span class="p">(</span>
+    <span class="n">result</span><span class="p">:</span> <span class="n">TieredAnalysis</span><span class="p">,</span>
+    <span class="n">analysis</span><span class="p">:</span> <span class="n">Analysis</span><span class="p">,</span>
+    <span class="n">tier</span><span class="p">:</span> <span class="n">Tier</span><span class="p">,</span>
+    <span class="n">why</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">emit</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span> <span class="kc">None</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">skipped</span><span class="p">[</span><span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">why</span>
+    <span class="n">emit</span><span class="p">(</span><span class="s2">"tier_skipped"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">tier</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">"why"</span><span class="p">:</span> <span class="n">why</span><span class="p">})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_record_what_may_be_claimed</span><span class="p">(</span>
+    <span class="n">result</span><span class="p">:</span> <span class="n">TieredAnalysis</span><span class="p">,</span>
+    <span class="n">analysis</span><span class="p">:</span> <span class="n">Analysis</span><span class="p">,</span>
+    <span class="n">names</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">answer</span><span class="p">:</span> <span class="n">AnytimeAnswer</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Write the tier depth into the Analysis, so every report says it.</span>
+
+<span class="sd">    ``unverified_sets`` is the existing mechanism for "reported but never run as</span>
+<span class="sd">    a whole" (D25). A set confirmed only to the screen is exactly that, one</span>
+<span class="sd">    level up, so it goes in the same field and the same reports flag it.</span>
+<span class="sd">    """</span>
+    <span class="n">deepest</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">depth_reached</span>
+    <span class="c1"># `components_combined` is `analyze`'s record of whether the per-component</span>
+    <span class="c1"># answers were *trusted* to combine (a merge-only validator declares that</span>
+    <span class="c1"># they may). Where it trusted them, this layer must not be stricter than the</span>
+    <span class="c1"># untiered path for the same validator -- that would report NOT VERIFIED on</span>
+    <span class="c1"># every merge-only run. It only ever applies to the screen: every deeper tier</span>
+    <span class="c1"># here is searched globally, so an exact PASS genuinely exists or does not.</span>
+    <span class="n">trusted</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">analysis</span><span class="o">.</span><span class="n">components_combined</span>
+        <span class="ow">and</span> <span class="n">deepest</span> <span class="o">==</span> <span class="n">result</span><span class="o">.</span><span class="n">tiers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+        <span class="ow">and</span> <span class="n">deepest</span> <span class="o">==</span> <span class="n">names</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">analysis</span><span class="o">.</span><span class="n">unverified_sets</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">trusted</span>
+        <span class="k">else</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">maximal_sets</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">verified_tier</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">!=</span> <span class="n">deepest</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">chain</span> <span class="o">=</span> <span class="s2">" -&gt; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">deepest</span> <span class="o">==</span> <span class="n">names</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">analysis</span><span class="o">.</span><span class="n">unverified_sets</span><span class="p">:</span>
+        <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Validation was tiered (</span><span class="si">{</span><span class="n">chain</span><span class="si">}</span><span class="s2">); every set below was confirmed at "</span>
+            <span class="sa">f</span><span class="s2">"the deepest tier, `</span><span class="si">{</span><span class="n">deepest</span><span class="si">}</span><span class="s2">`."</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">deepest</span> <span class="o">==</span> <span class="n">names</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="c1"># The deepest tier was entered but confirmed nothing -- a budget that</span>
+        <span class="c1"># admitted no runs, or a tier that refuted everything the screen had</span>
+        <span class="c1"># accepted. Saying "confirmed at the deepest tier" here would contradict</span>
+        <span class="c1"># the NOT VERIFIED list three lines below, and the prose is what a</span>
+        <span class="c1"># reader believes.</span>
+        <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Validation was tiered (</span><span class="si">{</span><span class="n">chain</span><span class="si">}</span><span class="s2">) and reached `</span><span class="si">{</span><span class="n">deepest</span><span class="si">}</span><span class="s2">`, but not "</span>
+            <span class="sa">f</span><span class="s2">"every set below was confirmed there. `</span><span class="si">{</span><span class="n">deepest</span><span class="si">}</span><span class="s2">` refuted or did "</span>
+            <span class="s2">"not run on the sets marked NOT VERIFIED; they hold only at the "</span>
+            <span class="s2">"tier that did accept them."</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">`"</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">[</span><span class="n">names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">deepest</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:])</span>
+        <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Validation was tiered (</span><span class="si">{</span><span class="n">chain</span><span class="si">}</span><span class="s2">) but only reached `</span><span class="si">{</span><span class="n">deepest</span><span class="si">}</span><span class="s2">`. The "</span>
+            <span class="sa">f</span><span class="s2">"sets below were NOT validated at </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">, and a tier that did "</span>
+            <span class="sa">f</span><span class="s2">"not run is not a tier that passed."</span>
+        <span class="p">)</span>
+    <span class="k">for</span> <span class="n">tier_name</span><span class="p">,</span> <span class="n">why</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">skipped</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Tier `</span><span class="si">{</span><span class="n">tier_name</span><span class="si">}</span><span class="s2">` did not run because </span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+    <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"Anytime status: "</span> <span class="o">+</span> <span class="n">answer</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">answer</span><span class="o">.</span><span class="n">optimal</span> <span class="ow">and</span> <span class="n">answer</span><span class="o">.</span><span class="n">pending</span><span class="p">:</span>
+        <span class="n">cheapest</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">price</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">price</span> <span class="ow">in</span> <span class="n">answer</span><span class="o">.</span><span class="n">pending</span><span class="p">)</span>
+        <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The gap is </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">gap</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">. Closing it means confirming at "</span>
+            <span class="sa">f</span><span class="s2">"least one more candidate, the cheapest of which is estimated at "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cheapest</span><span class="si">}</span><span class="s2">s at the remaining tiers."</span>
+        <span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

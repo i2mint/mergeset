@@ -1,0 +1,429 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.cost &mdash; mergeset 0.0.14 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=544df88d"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="mergeset.gitops" href="gitops.html" />
+    <link rel="prev" title="mergeset.cli" href="cli.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">mergeset.cli</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">mergeset.cost</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.cost.CostModel"><code class="docutils literal notranslate"><span class="pre">CostModel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.cost.CostModel.estimate"><code class="docutils literal notranslate"><span class="pre">CostModel.estimate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.cost.CostModel.is_measured"><code class="docutils literal notranslate"><span class="pre">CostModel.is_measured()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.cost.CostModel.observe"><code class="docutils literal notranslate"><span class="pre">CostModel.observe()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.cost.CostModel.pessimistic"><code class="docutils literal notranslate"><span class="pre">CostModel.pessimistic()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.cost.MeasuredCost"><code class="docutils literal notranslate"><span class="pre">MeasuredCost</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.cost.MeasuredCost.central"><code class="docutils literal notranslate"><span class="pre">MeasuredCost.central()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.cost.MeasuredCost.estimate"><code class="docutils literal notranslate"><span class="pre">MeasuredCost.estimate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.cost.MeasuredCost.forget"><code class="docutils literal notranslate"><span class="pre">MeasuredCost.forget()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.cost.MeasuredCost.is_measured"><code class="docutils literal notranslate"><span class="pre">MeasuredCost.is_measured()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.cost.MeasuredCost.observe"><code class="docutils literal notranslate"><span class="pre">MeasuredCost.observe()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.cost.MeasuredCost.pessimistic"><code class="docutils literal notranslate"><span class="pre">MeasuredCost.pessimistic()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.cost.MeasuredCost.runs"><code class="docutils literal notranslate"><span class="pre">MeasuredCost.runs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.cost.MeasuredCost.summary"><code class="docutils literal notranslate"><span class="pre">MeasuredCost.summary()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.cost.Seconds"><code class="docutils literal notranslate"><span class="pre">Seconds</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.cost.UNMEASURED_TIER_SECONDS"><code class="docutils literal notranslate"><span class="pre">UNMEASURED_TIER_SECONDS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.cost.cost_from_log"><code class="docutils literal notranslate"><span class="pre">cost_from_log()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.cost.set_cost"><code class="docutils literal notranslate"><span class="pre">set_cost()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="skills.html">mergeset.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storage.html">mergeset.storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tiers.html">mergeset.tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">mergeset.cost</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/mergeset/cost.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mergeset.cost">
+<span id="mergeset-cost"></span><h1>mergeset.cost<a class="headerlink" href="#module-mergeset.cost" title="Link to this heading"></a></h1>
+<p>What an evaluation costs — per validation tier, and per change.</p>
+<p>Until now <code class="docutils literal notranslate"><span class="pre">mergeset</span></code> treated every evaluation as costing the same: one suite
+run. That is true only while there is one suite. As soon as validation is
+<em>tiered</em> — a fast unit run, then a slow end-to-end run needing containers, a
+database and a browser — the search is choosing between evaluations that differ
+by two orders of magnitude, and it cannot choose well while it is told they are
+the same.</p>
+<p>So cost becomes an <strong>input</strong>, on the same footing as the changes and the base.
+It is one keyword argument, and its default is measured rather than declared:
+the evaluation log already records the wall-clock duration of everything that
+has ever been run, so <a class="reference internal" href="#mergeset.cost.cost_from_log" title="mergeset.cost.cost_from_log"><code class="xref py py-func docutils literal notranslate"><span class="pre">cost_from_log()</span></code></a> reads back data the package has been
+storing all along.</p>
+<p><strong>A cost model over CI timings has at least two regimes, because caching is what
+makes CI affordable.</strong> On a real run the base check — the empty set, evaluated
+before anything else — took 51.2 s, while the nine candidate sets took 27.2 to
+37.2 s. The base check is not a small candidate set: it is the first evaluation,
+so it is the one that always pays the cold dependency install that every later
+evaluation skips through a fingerprinted setup stage. It sits at the extreme of
+the independent variable (size 0) <em>and</em> is the slowest run, which is exactly the
+shape that dominates a linear fit: fit one line through both regimes and the
+slope comes out <strong>negative</strong>, i.e. the model concludes that adding changes makes
+validation faster. Budgets survive that, because the residual is enormous.
+Ordering does not — and a wrong budget is visible where a wrong order is not.</p>
+<p>Hence <a class="reference internal" href="#mergeset.cost.MeasuredCost.central" title="mergeset.cost.MeasuredCost.central"><code class="xref py py-meth docutils literal notranslate"><span class="pre">MeasuredCost.central()</span></code></a>: the slope is fitted on the body only, the
+empty set is priced from its own regime instead of being extrapolated, and a
+negative fitted slope degrades to the mean because adding a change cannot make
+validation faster.</p>
+<p>Two estimates, not one, because they answer different questions:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#mergeset.cost.MeasuredCost.estimate" title="mergeset.cost.MeasuredCost.estimate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">estimate()</span></code></a> — the central estimate, used for <strong>ordering</strong>.</p></li>
+<li><p><a class="reference internal" href="#mergeset.cost.MeasuredCost.pessimistic" title="mergeset.cost.MeasuredCost.pessimistic"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pessimistic()</span></code></a> — plus the worst residual against that same
+model, used for <strong>budget admission</strong>, because overrunning a budget is a worse
+failure than deferring one evaluation. What it carries is the spread <em>within</em>
+a regime — an install that ran because the lockfile moved, a slow runner — and
+never a stand-in for a regime that should have been separated. The expensive
+regime is priced where it occurs and reserved explicitly instead; see
+<code class="docutils literal notranslate"><span class="pre">mergeset.tiers._runs_allowed</span></code>.</p></li>
+</ul>
+<p>Held as a hypothesis rather than a law: on the only data available the body was
+remarkably <strong>flat</strong> — sd 3.1 s across set sizes 1 to 13, against a 27 s floor —
+so set size may barely predict cost at all, and the slope may be modelling
+noise. Nine points on one repository is not enough to drop it (a validator that
+selects tests per change would genuinely have a slope), but it is enough to say
+that the reserve is load-bearing and the fit is not yet demonstrated to be.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.cost.CostModel">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.cost.</span></span><span class="sig-name descname"><span class="pre">CostModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mergeset/cost.html#CostModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.cost.CostModel" title="Link to this definition"></a></dt>
+<dd><p>What the scheduler needs to know about price.</p>
+<p>Any object with these four methods is a cost model: a table of declared
+constants, a model fitted to the log, or something that queries a CI
+provider’s historical timings.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.cost.CostModel.estimate">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">frozenset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../_modules/mergeset/cost.html#CostModel.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.cost.CostModel.estimate" title="Link to this definition"></a></dt>
+<dd><p>Central estimate, in seconds. Used to <em>order</em> candidate work.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.cost.CostModel.is_measured">
+<span class="sig-name descname"><span class="pre">is_measured</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/mergeset/cost.html#CostModel.is_measured"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.cost.CostModel.is_measured" title="Link to this definition"></a></dt>
+<dd><p>Whether this tier’s estimate rests on observation or on a guess.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.cost.CostModel.observe">
+<span class="sig-name descname"><span class="pre">observe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">frozenset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seconds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/mergeset/cost.html#CostModel.observe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.cost.CostModel.observe" title="Link to this definition"></a></dt>
+<dd><p>Record what an evaluation cost, so the next estimate is better.</p>
+<p><code class="docutils literal notranslate"><span class="pre">seconds</span></code> is a total, or a per-stage mapping that is summed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.cost.CostModel.pessimistic">
+<span class="sig-name descname"><span class="pre">pessimistic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">frozenset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../_modules/mergeset/cost.html#CostModel.pessimistic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.cost.CostModel.pessimistic" title="Link to this definition"></a></dt>
+<dd><p>Upper estimate, in seconds. Used to <em>admit</em> work against a budget.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.cost.MeasuredCost">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.cost.</span></span><span class="sig-name descname"><span class="pre">MeasuredCost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">declared</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">float]</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_change</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">float]</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unmeasured_seconds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">60.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mergeset/cost.html#MeasuredCost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.cost.MeasuredCost" title="Link to this definition"></a></dt>
+<dd><p>A per-tier cost model fitted to observations, backed by declarations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>declared</strong> – <code class="docutils literal notranslate"><span class="pre">tier</span> <span class="pre">-&gt;</span> <span class="pre">seconds</span></code>, used until that tier has been observed.
+This is how a tier nobody has ever run gets a sane price: the person
+adding it usually knows roughly what it costs.</p></li>
+<li><p><strong>per_change</strong> – <code class="docutils literal notranslate"><span class="pre">change</span> <span class="pre">id</span> <span class="pre">-&gt;</span> <span class="pre">extra</span> <span class="pre">seconds</span></code> this change adds to any
+evaluation containing it. The per-change half of the model, for the
+case where one candidate is known to be much heavier than the rest.
+Default: nothing, and the fitted slope carries the average
+per-change cost instead.</p></li>
+<li><p><strong>unmeasured_seconds</strong> – Price of a tier with neither observations nor a
+declaration. See <a class="reference internal" href="#mergeset.cost.UNMEASURED_TIER_SECONDS" title="mergeset.cost.UNMEASURED_TIER_SECONDS"><code class="xref py py-data docutils literal notranslate"><span class="pre">UNMEASURED_TIER_SECONDS</span></code></a>.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span> <span class="o">=</span> <span class="n">MeasuredCost</span><span class="p">(</span><span class="n">declared</span><span class="o">=</span><span class="p">{</span><span class="s1">'e2e'</span><span class="p">:</span> <span class="mf">300.0</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="s1">'e2e'</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">}))</span>
+<span class="go">300.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span><span class="o">.</span><span class="n">is_measured</span><span class="p">(</span><span class="s1">'e2e'</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="s1">'unit'</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">}),</span> <span class="mf">10.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="s1">'unit'</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">}),</span> <span class="mf">20.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="s1">'unit'</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">,</span> <span class="s1">'d'</span><span class="p">,</span> <span class="s1">'e'</span><span class="p">}),</span> <span class="mf">30.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="s1">'unit'</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">,</span> <span class="s1">'d'</span><span class="p">}))</span>
+<span class="go">25.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span><span class="o">.</span><span class="n">is_measured</span><span class="p">(</span><span class="s1">'unit'</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>An unknown tier is priced, not free — otherwise a cost-ordered scheduler
+would run it first, precisely because nobody has ever timed it:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="s1">'nobody-timed-this'</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">}))</span>
+<span class="go">60.0</span>
+</pre></div>
+</div>
+<p>The base check is read from its own regime rather than extrapolated:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cold</span> <span class="o">=</span> <span class="n">MeasuredCost</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cold</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="s1">'unit'</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">(),</span> <span class="mf">51.2</span><span class="p">)</span>                  <span class="c1"># base, cold</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">cold</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="s1">'unit'</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)),</span> <span class="mf">30.0</span> <span class="o">+</span> <span class="n">n</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">cold</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="s1">'unit'</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">()),</span> <span class="mi">1</span><span class="p">)</span>             <span class="c1"># its own regime</span>
+<span class="go">51.2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">cold</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="s1">'unit'</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">))),</span> <span class="mi">1</span><span class="p">)</span>     <span class="c1"># the body's</span>
+<span class="go">30.9</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.cost.MeasuredCost.central">
+<span class="sig-name descname"><span class="pre">central</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../_modules/mergeset/cost.html#MeasuredCost.central"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.cost.MeasuredCost.central" title="Link to this definition"></a></dt>
+<dd><p>Seconds for a set of <code class="docutils literal notranslate"><span class="pre">size</span></code> at <code class="docutils literal notranslate"><span class="pre">tier</span></code>, before per-change extras.</p>
+<p>The one place the model lives, so <a class="reference internal" href="#mergeset.cost.MeasuredCost.estimate" title="mergeset.cost.MeasuredCost.estimate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">estimate()</span></code></a> and
+<a class="reference internal" href="#mergeset.cost.MeasuredCost.pessimistic" title="mergeset.cost.MeasuredCost.pessimistic"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pessimistic()</span></code></a> cannot drift apart.</p>
+<p>Never below the fastest run ever observed for the tier. An evaluation
+that has never taken less than 27 s will not take 0 s, and a floor of
+zero is not merely inaccurate: it makes a budget check divide by nothing
+and conclude the tier is unlimited.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.cost.MeasuredCost.estimate">
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">frozenset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../_modules/mergeset/cost.html#MeasuredCost.estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.cost.MeasuredCost.estimate" title="Link to this definition"></a></dt>
+<dd><p>Central estimate of what evaluating <code class="docutils literal notranslate"><span class="pre">subset</span></code> at <code class="docutils literal notranslate"><span class="pre">tier</span></code> will cost.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span> <span class="o">=</span> <span class="n">MeasuredCost</span><span class="p">(</span><span class="n">declared</span><span class="o">=</span><span class="p">{</span><span class="s1">'unit'</span><span class="p">:</span> <span class="mf">10.0</span><span class="p">},</span> <span class="n">per_change</span><span class="o">=</span><span class="p">{</span><span class="s1">'x'</span><span class="p">:</span> <span class="o">-</span><span class="mf">50.0</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="s1">'unit'</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s1">'x'</span><span class="p">}))</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.cost.MeasuredCost.forget">
+<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/mergeset/cost.html#MeasuredCost.forget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.cost.MeasuredCost.forget" title="Link to this definition"></a></dt>
+<dd><p>Drop this tier’s observations, so a caller can re-ingest a log.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.cost.MeasuredCost.is_measured">
+<span class="sig-name descname"><span class="pre">is_measured</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/mergeset/cost.html#MeasuredCost.is_measured"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.cost.MeasuredCost.is_measured" title="Link to this definition"></a></dt>
+<dd><p>True iff this tier’s estimate comes from observations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.cost.MeasuredCost.observe">
+<span class="sig-name descname"><span class="pre">observe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">frozenset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seconds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/mergeset/cost.html#MeasuredCost.observe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.cost.MeasuredCost.observe" title="Link to this definition"></a></dt>
+<dd><p>Record one real timing, as a total or a per-stage breakdown.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.cost.MeasuredCost.pessimistic">
+<span class="sig-name descname"><span class="pre">pessimistic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">frozenset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../_modules/mergeset/cost.html#MeasuredCost.pessimistic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.cost.MeasuredCost.pessimistic" title="Link to this definition"></a></dt>
+<dd><p>Upper estimate: the central one plus the worst residual ever seen.</p>
+<p>With no observations there is no residual to add and this is the central
+estimate — the honest position, not an optimistic one: the declared or
+unmeasured number is already the only thing known.</p>
+<p>Note what this is <em>not</em> doing. The cold base check is priced by its own
+regime (see <a class="reference internal" href="#mergeset.cost.MeasuredCost.central" title="mergeset.cost.MeasuredCost.central"><code class="xref py py-meth docutils literal notranslate"><span class="pre">central()</span></code></a>), so it contributes no residual here. What
+this carries is the spread <em>within</em> a regime, which is the variance no
+candidate set predicts. The expensive regime is reserved explicitly by
+the scheduler instead of being smuggled in as a hedge.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span> <span class="o">=</span> <span class="n">MeasuredCost</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="s1">'unit'</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">}),</span> <span class="mf">45.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="s1">'unit'</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">}),</span> <span class="mf">80.0</span><span class="p">)</span>   <span class="c1"># the lockfile moved</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">cost</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="s1">'unit'</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">})),</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">62.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">cost</span><span class="o">.</span><span class="n">pessimistic</span><span class="p">(</span><span class="s1">'unit'</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">})),</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">80.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.cost.MeasuredCost.runs">
+<span class="sig-name descname"><span class="pre">runs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../../_modules/mergeset/cost.html#MeasuredCost.runs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.cost.MeasuredCost.runs" title="Link to this definition"></a></dt>
+<dd><p>How many timings this tier’s estimate rests on.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.cost.MeasuredCost.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/cost.html#MeasuredCost.summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.cost.MeasuredCost.summary" title="Link to this definition"></a></dt>
+<dd><p>Per-tier view of the model, for a report to print.</p>
+<p>Says what the number is <em>and where it came from</em>, because an estimate
+with no provenance is indistinguishable from a magic constant. This is
+the published view of the evidence; the observation list itself is
+private, so its shape can change without breaking callers.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mergeset.cost.Seconds">
+<span class="sig-prename descclassname"><span class="pre">mergeset.cost.</span></span><span class="sig-name descname"><span class="pre">Seconds</span></span><a class="headerlink" href="#mergeset.cost.Seconds" title="Link to this definition"></a></dt>
+<dd><p>total seconds, or a per-stage breakdown that is
+summed. The mapping form exists so that recording per-stage durations
+(i2mint/mergeset#17) lands as <em>data</em> rather than as a change to a published
+signature — the regime this module infers today is one a breakdown states.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>What one evaluation cost</p>
+</dd>
+</dl>
+<p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mergeset.cost.UNMEASURED_TIER_SECONDS">
+<span class="sig-prename descclassname"><span class="pre">mergeset.cost.</span></span><span class="sig-name descname"><span class="pre">UNMEASURED_TIER_SECONDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">60.0</span></span><a class="headerlink" href="#mergeset.cost.UNMEASURED_TIER_SECONDS" title="Link to this definition"></a></dt>
+<dd><p>What one evaluation of a tier is assumed to cost when nothing is known about
+it — nothing measured, nothing declared. It is the first run of a brand new
+tier, and the honest answer is “we do not know yet”.</p>
+<p>One minute is chosen to be <em>wrong in the safe direction</em>: large enough that a
+cost-ordered scheduler puts an unknown tier after every tier it has actually
+timed, small enough that a first run still gets scheduled at all. <code class="docutils literal notranslate"><span class="pre">inf</span></code>
+would be safer still and would mean no new tier ever runs a first time, which
+is not a cost model but a refusal. Override it with one keyword argument.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.cost.cost_from_log">
+<span class="sig-prename descclassname"><span class="pre">mergeset.cost.</span></span><span class="sig-name descname"><span class="pre">cost_from_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">tier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">declared</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_change</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unmeasured_seconds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">60.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mergeset.cost.MeasuredCost" title="mergeset.cost.MeasuredCost"><span class="pre">MeasuredCost</span></a></span></span><a class="reference internal" href="../../_modules/mergeset/cost.html#cost_from_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.cost.cost_from_log" title="Link to this definition"></a></dt>
+<dd><p>Seed a cost model from an existing evaluation log — the real default.</p>
+<p>Every row of the log already carries <code class="docutils literal notranslate"><span class="pre">subset</span></code> and <code class="docutils literal notranslate"><span class="pre">duration</span></code>, so the
+price of the tier that produced that log is not a thing anyone needs to
+declare: it has been measured, repeatedly, and thrown away. This reads it
+back.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tier</span></code> names which tier those rows belong to, because the log itself does
+not say — one log holds one tier’s rows by construction
+(see <a class="reference internal" href="tiers.html#module-mergeset.tiers" title="mergeset.tiers"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mergeset.tiers</span></code></a>).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Evaluation</span><span class="p">,</span> <span class="n">Verdict</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rows</span> <span class="o">=</span> <span class="p">[</span><span class="n">Evaluation</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">}),</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">40.0</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="n">Evaluation</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">}),</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">60.0</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span> <span class="o">=</span> <span class="n">cost_from_log</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">tier</span><span class="o">=</span><span class="s1">'unit'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="s1">'unit'</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">}))</span>
+<span class="go">50.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.cost.set_cost">
+<span class="sig-prename descclassname"><span class="pre">mergeset.cost.</span></span><span class="sig-name descname"><span class="pre">set_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cost_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#mergeset.cost.CostModel" title="mergeset.cost.CostModel"><span class="pre">CostModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tiers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">frozenset</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">pessimistic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../_modules/mergeset/cost.html#set_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.cost.set_cost" title="Link to this definition"></a></dt>
+<dd><p>What it costs to take <code class="docutils literal notranslate"><span class="pre">subset</span></code> all the way down <code class="docutils literal notranslate"><span class="pre">tiers</span></code>.</p>
+<p>The tiers run in order and every one of them runs, so the price of a full
+verdict is their sum — which is exactly what makes a cheap first tier worth
+having: most sets never reach the second term.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span> <span class="o">=</span> <span class="n">MeasuredCost</span><span class="p">(</span><span class="n">declared</span><span class="o">=</span><span class="p">{</span><span class="s1">'unit'</span><span class="p">:</span> <span class="mf">45.0</span><span class="p">,</span> <span class="s1">'e2e'</span><span class="p">:</span> <span class="mf">300.0</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">set_cost</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="p">[</span><span class="s1">'unit'</span><span class="p">,</span> <span class="s1">'e2e'</span><span class="p">],</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">}))</span>
+<span class="go">345.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cli.html" class="btn btn-neutral float-left" title="mergeset.cli" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gitops.html" class="btn btn-neutral float-right" title="mergeset.gitops" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

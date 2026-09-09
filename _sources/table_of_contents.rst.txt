@@ -8,6 +8,7 @@
    module_docs/mergeset/attribution
    module_docs/mergeset/base
    module_docs/mergeset/cli
+   module_docs/mergeset/cost
    module_docs/mergeset/gitops
    module_docs/mergeset/log
    module_docs/mergeset/oracle
@@ -17,4 +18,5 @@
    module_docs/mergeset/sources
    module_docs/mergeset/stacks
    module_docs/mergeset/storage
+   module_docs/mergeset/tiers
    module_docs/mergeset/validation

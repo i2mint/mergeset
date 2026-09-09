@@ -1,0 +1,617 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.cost &mdash; mergeset 0.0.14 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=544df88d"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/cost.html">mergeset.cost</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/skills.html">mergeset.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/storage.html">mergeset.storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/tiers.html">mergeset.tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mergeset.cost</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mergeset.cost</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""What an evaluation costs — per validation tier, and per change.</span>
+
+<span class="sd">Until now ``mergeset`` treated every evaluation as costing the same: one suite</span>
+<span class="sd">run. That is true only while there is one suite. As soon as validation is</span>
+<span class="sd">*tiered* — a fast unit run, then a slow end-to-end run needing containers, a</span>
+<span class="sd">database and a browser — the search is choosing between evaluations that differ</span>
+<span class="sd">by two orders of magnitude, and it cannot choose well while it is told they are</span>
+<span class="sd">the same.</span>
+
+<span class="sd">So cost becomes an **input**, on the same footing as the changes and the base.</span>
+<span class="sd">It is one keyword argument, and its default is measured rather than declared:</span>
+<span class="sd">the evaluation log already records the wall-clock duration of everything that</span>
+<span class="sd">has ever been run, so :func:`cost_from_log` reads back data the package has been</span>
+<span class="sd">storing all along.</span>
+
+<span class="sd">**A cost model over CI timings has at least two regimes, because caching is what</span>
+<span class="sd">makes CI affordable.** On a real run the base check — the empty set, evaluated</span>
+<span class="sd">before anything else — took 51.2 s, while the nine candidate sets took 27.2 to</span>
+<span class="sd">37.2 s. The base check is not a small candidate set: it is the first evaluation,</span>
+<span class="sd">so it is the one that always pays the cold dependency install that every later</span>
+<span class="sd">evaluation skips through a fingerprinted setup stage. It sits at the extreme of</span>
+<span class="sd">the independent variable (size 0) *and* is the slowest run, which is exactly the</span>
+<span class="sd">shape that dominates a linear fit: fit one line through both regimes and the</span>
+<span class="sd">slope comes out **negative**, i.e. the model concludes that adding changes makes</span>
+<span class="sd">validation faster. Budgets survive that, because the residual is enormous.</span>
+<span class="sd">Ordering does not — and a wrong budget is visible where a wrong order is not.</span>
+
+<span class="sd">Hence :meth:`MeasuredCost.central`: the slope is fitted on the body only, the</span>
+<span class="sd">empty set is priced from its own regime instead of being extrapolated, and a</span>
+<span class="sd">negative fitted slope degrades to the mean because adding a change cannot make</span>
+<span class="sd">validation faster.</span>
+
+<span class="sd">Two estimates, not one, because they answer different questions:</span>
+
+<span class="sd">- :meth:`~MeasuredCost.estimate` — the central estimate, used for **ordering**.</span>
+<span class="sd">- :meth:`~MeasuredCost.pessimistic` — plus the worst residual against that same</span>
+<span class="sd">  model, used for **budget admission**, because overrunning a budget is a worse</span>
+<span class="sd">  failure than deferring one evaluation. What it carries is the spread *within*</span>
+<span class="sd">  a regime — an install that ran because the lockfile moved, a slow runner — and</span>
+<span class="sd">  never a stand-in for a regime that should have been separated. The expensive</span>
+<span class="sd">  regime is priced where it occurs and reserved explicitly instead; see</span>
+<span class="sd">  ``mergeset.tiers._runs_allowed``.</span>
+
+<span class="sd">Held as a hypothesis rather than a law: on the only data available the body was</span>
+<span class="sd">remarkably **flat** — sd 3.1 s across set sizes 1 to 13, against a 27 s floor —</span>
+<span class="sd">so set size may barely predict cost at all, and the slope may be modelling</span>
+<span class="sd">noise. Nine points on one repository is not enough to drop it (a validator that</span>
+<span class="sd">selects tests per change would genuinely have a slope), but it is enough to say</span>
+<span class="sd">that the reserve is load-bearing and the fit is not yet demonstrated to be.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">Iterable</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Mapping</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Protocol</span><span class="p">,</span>
+    <span class="n">Sequence</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+    <span class="n">runtime_checkable</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChangeId</span><span class="p">,</span> <span class="n">ChangeSet</span>
+
+<span class="c1">#: What one evaluation of a tier is assumed to cost when nothing is known about</span>
+<span class="c1">#: it — nothing measured, nothing declared. It is the first run of a brand new</span>
+<span class="c1">#: tier, and the honest answer is "we do not know yet".</span>
+<span class="c1">#:</span>
+<span class="c1">#: One minute is chosen to be *wrong in the safe direction*: large enough that a</span>
+<span class="c1">#: cost-ordered scheduler puts an unknown tier after every tier it has actually</span>
+<span class="c1">#: timed, small enough that a first run still gets scheduled at all. ``inf``</span>
+<span class="c1">#: would be safer still and would mean no new tier ever runs a first time, which</span>
+<span class="c1">#: is not a cost model but a refusal. Override it with one keyword argument.</span>
+<span class="n">UNMEASURED_TIER_SECONDS</span> <span class="o">=</span> <span class="mf">60.0</span>
+
+<span class="c1">#: What one evaluation cost: total seconds, or a per-stage breakdown that is</span>
+<span class="c1">#: summed. The mapping form exists so that recording per-stage durations</span>
+<span class="c1">#: (i2mint/mergeset#17) lands as *data* rather than as a change to a published</span>
+<span class="c1">#: signature — the regime this module infers today is one a breakdown states.</span>
+<span class="n">Seconds</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_total</span><span class="p">(</span><span class="n">seconds</span><span class="p">:</span> <span class="n">Seconds</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Total seconds, whether given as a number or a per-stage breakdown.</span>
+
+<span class="sd">    &gt;&gt;&gt; _total(42.0)</span>
+<span class="sd">    42.0</span>
+<span class="sd">    &gt;&gt;&gt; _total({'setup': 33.0, 'build': 9.0, 'test': 6.0})</span>
+<span class="sd">    48.0</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">seconds</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">seconds</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">seconds</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_mean</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Arithmetic mean.</span>
+
+<span class="sd">    Hand-rolled rather than ``statistics.fmean``: importing ``statistics`` pulls</span>
+<span class="sd">    in ``decimal``, ``fractions`` and ``numbers``, about 10% of this package's</span>
+<span class="sd">    cold import time, and this package has a CLI.</span>
+
+<span class="sd">    &gt;&gt;&gt; _mean([1.0, 2.0, 3.0])</span>
+<span class="sd">    2.0</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_median</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Middle value, averaging the two middle ones for an even count.</span>
+
+<span class="sd">    &gt;&gt;&gt; _median([3.0, 1.0, 2.0])</span>
+<span class="sd">    2.0</span>
+<span class="sd">    &gt;&gt;&gt; _median([1.0, 2.0, 3.0, 4.0])</span>
+<span class="sd">    2.5</span>
+<span class="sd">    """</span>
+    <span class="n">ordered</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="n">middle</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ordered</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ordered</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ordered</span><span class="p">[</span><span class="n">middle</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">ordered</span><span class="p">[</span><span class="n">middle</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">ordered</span><span class="p">[</span><span class="n">middle</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+
+
+<div class="viewcode-block" id="CostModel">
+<a class="viewcode-back" href="../../module_docs/mergeset/cost.html#mergeset.CostModel">[docs]</a>
+<span class="nd">@runtime_checkable</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CostModel</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""What the scheduler needs to know about price.</span>
+
+<span class="sd">    Any object with these four methods is a cost model: a table of declared</span>
+<span class="sd">    constants, a model fitted to the log, or something that queries a CI</span>
+<span class="sd">    provider's historical timings.</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="CostModel.estimate">
+<a class="viewcode-back" href="../../module_docs/mergeset/cost.html#mergeset.CostModel.estimate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Central estimate, in seconds. Used to *order* candidate work."""</span>
+        <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="CostModel.pessimistic">
+<a class="viewcode-back" href="../../module_docs/mergeset/cost.html#mergeset.CostModel.pessimistic">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pessimistic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Upper estimate, in seconds. Used to *admit* work against a budget."""</span>
+        <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="CostModel.observe">
+<a class="viewcode-back" href="../../module_docs/mergeset/cost.html#mergeset.CostModel.observe">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">observe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">,</span> <span class="n">seconds</span><span class="p">:</span> <span class="n">Seconds</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Record what an evaluation cost, so the next estimate is better.</span>
+
+<span class="sd">        ``seconds`` is a total, or a per-stage mapping that is summed.</span>
+<span class="sd">        """</span>
+        <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="CostModel.is_measured">
+<a class="viewcode-back" href="../../module_docs/mergeset/cost.html#mergeset.CostModel.is_measured">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_measured</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether this tier's estimate rests on observation or on a guess."""</span>
+        <span class="o">...</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_fit</span><span class="p">(</span><span class="n">points</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Least-squares ``(intercept, slope)`` of seconds against set size.</span>
+
+<span class="sd">    Falls back gracefully as data thins out: with a single distinct size there</span>
+<span class="sd">    is no slope to fit, so the whole cost is attributed to the intercept — which</span>
+<span class="sd">    is the right reading of "every run I have seen took about this long".</span>
+
+<span class="sd">    &gt;&gt;&gt; _fit([(0, 10.0), (2, 20.0), (4, 30.0)])</span>
+<span class="sd">    (10.0, 5.0)</span>
+<span class="sd">    &gt;&gt;&gt; _fit([(3, 42.0), (3, 44.0)])</span>
+<span class="sd">    (43.0, 0.0)</span>
+
+<span class="sd">    A downward fit is not a discount, it is a broken model — adding a change</span>
+<span class="sd">    cannot make validation faster — so it degrades to the mean rather than</span>
+<span class="sd">    predicting that bigger sets are cheaper:</span>
+
+<span class="sd">    &gt;&gt;&gt; _fit([(0, 51.0), (10, 30.0)])</span>
+<span class="sd">    (40.5, 0.0)</span>
+<span class="sd">    """</span>
+    <span class="n">sizes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">points</span><span class="p">]</span>
+    <span class="n">seconds</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">points</span><span class="p">]</span>
+    <span class="n">mean_size</span> <span class="o">=</span> <span class="n">_mean</span><span class="p">(</span><span class="n">sizes</span><span class="p">)</span>
+    <span class="n">mean_seconds</span> <span class="o">=</span> <span class="n">_mean</span><span class="p">(</span><span class="n">seconds</span><span class="p">)</span>
+    <span class="n">variance</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">n</span> <span class="o">-</span> <span class="n">mean_size</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">sizes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">variance</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># one distinct size: no slope is inferable</span>
+        <span class="k">return</span> <span class="n">mean_seconds</span><span class="p">,</span> <span class="mf">0.0</span>
+    <span class="n">slope</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="nb">sum</span><span class="p">((</span><span class="n">n</span> <span class="o">-</span> <span class="n">mean_size</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">s</span> <span class="o">-</span> <span class="n">mean_seconds</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">seconds</span><span class="p">))</span>
+        <span class="o">/</span> <span class="n">variance</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">slope</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mean_seconds</span><span class="p">,</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="n">mean_seconds</span> <span class="o">-</span> <span class="n">slope</span> <span class="o">*</span> <span class="n">mean_size</span><span class="p">,</span> <span class="n">slope</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_regimes</span><span class="p">(</span><span class="n">points</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]):</span>
+<span class="w">    </span><span class="sd">"""Split observations into the base regime (size 0) and the body.</span>
+
+<span class="sd">    The empty set is not a small candidate set. It is the base check — the one</span>
+<span class="sd">    evaluation that always runs first and therefore always pays the cold path</span>
+<span class="sd">    every later evaluation skips. See the module docstring.</span>
+
+<span class="sd">    &gt;&gt;&gt; _regimes([(0, 51.0), (6, 28.0), (9, 31.0)])</span>
+<span class="sd">    ([(0, 51.0)], [(6, 28.0), (9, 31.0)])</span>
+<span class="sd">    """</span>
+    <span class="n">base</span> <span class="o">=</span> <span class="p">[(</span><span class="n">n</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">points</span> <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="p">[(</span><span class="n">n</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">points</span> <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">base</span><span class="p">,</span> <span class="n">body</span>
+
+
+<div class="viewcode-block" id="MeasuredCost">
+<a class="viewcode-back" href="../../module_docs/mergeset/cost.html#mergeset.MeasuredCost">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MeasuredCost</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A per-tier cost model fitted to observations, backed by declarations.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        declared: ``tier -&gt; seconds``, used until that tier has been observed.</span>
+<span class="sd">            This is how a tier nobody has ever run gets a sane price: the person</span>
+<span class="sd">            adding it usually knows roughly what it costs.</span>
+<span class="sd">        per_change: ``change id -&gt; extra seconds`` this change adds to any</span>
+<span class="sd">            evaluation containing it. The per-change half of the model, for the</span>
+<span class="sd">            case where one candidate is known to be much heavier than the rest.</span>
+<span class="sd">            Default: nothing, and the fitted slope carries the average</span>
+<span class="sd">            per-change cost instead.</span>
+<span class="sd">        unmeasured_seconds: Price of a tier with neither observations nor a</span>
+<span class="sd">            declaration. See :data:`UNMEASURED_TIER_SECONDS`.</span>
+
+<span class="sd">    &gt;&gt;&gt; cost = MeasuredCost(declared={'e2e': 300.0})</span>
+<span class="sd">    &gt;&gt;&gt; cost.estimate('e2e', frozenset({'a'}))</span>
+<span class="sd">    300.0</span>
+<span class="sd">    &gt;&gt;&gt; cost.is_measured('e2e')</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; cost.observe('unit', frozenset({'a'}), 10.0)</span>
+<span class="sd">    &gt;&gt;&gt; cost.observe('unit', frozenset({'a', 'b', 'c'}), 20.0)</span>
+<span class="sd">    &gt;&gt;&gt; cost.observe('unit', frozenset({'a', 'b', 'c', 'd', 'e'}), 30.0)</span>
+<span class="sd">    &gt;&gt;&gt; cost.estimate('unit', frozenset({'a', 'b', 'c', 'd'}))</span>
+<span class="sd">    25.0</span>
+<span class="sd">    &gt;&gt;&gt; cost.is_measured('unit')</span>
+<span class="sd">    True</span>
+
+<span class="sd">    An unknown tier is priced, not free — otherwise a cost-ordered scheduler</span>
+<span class="sd">    would run it first, precisely because nobody has ever timed it:</span>
+
+<span class="sd">    &gt;&gt;&gt; cost.estimate('nobody-timed-this', frozenset({'a'}))</span>
+<span class="sd">    60.0</span>
+
+<span class="sd">    The base check is read from its own regime rather than extrapolated:</span>
+
+<span class="sd">    &gt;&gt;&gt; cold = MeasuredCost()</span>
+<span class="sd">    &gt;&gt;&gt; cold.observe('unit', frozenset(), 51.2)                  # base, cold</span>
+<span class="sd">    &gt;&gt;&gt; for n in range(1, 10):</span>
+<span class="sd">    ...     cold.observe('unit', frozenset(range(n)), 30.0 + n / 10)</span>
+<span class="sd">    &gt;&gt;&gt; round(cold.estimate('unit', frozenset()), 1)             # its own regime</span>
+<span class="sd">    51.2</span>
+<span class="sd">    &gt;&gt;&gt; round(cold.estimate('unit', frozenset(range(9))), 1)     # the body's</span>
+<span class="sd">    30.9</span>
+<span class="sd">    """</span>
+
+    <span class="n">declared</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">per_change</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">unmeasured_seconds</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">UNMEASURED_TIER_SECONDS</span>
+    <span class="c1">#: ``tier -&gt; [(set size, seconds)]``. Private, deliberately: the shape of one</span>
+    <span class="c1">#: observation is exactly what recording per-stage durations would change</span>
+    <span class="c1">#: (i2mint/mergeset#17), and a public attribute is an interface a PyPI</span>
+    <span class="c1">#: release burns. The evidence behind an estimate is published through</span>
+    <span class="c1">#: :meth:`summary`, which is a dict and can gain keys without breaking</span>
+    <span class="c1">#: anyone.</span>
+    <span class="n">_observations</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="MeasuredCost.observe">
+<a class="viewcode-back" href="../../module_docs/mergeset/cost.html#mergeset.MeasuredCost.observe">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">observe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">,</span> <span class="n">seconds</span><span class="p">:</span> <span class="n">Seconds</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Record one real timing, as a total or a per-stage breakdown."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_observations</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">tier</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">subset</span><span class="p">),</span> <span class="n">_total</span><span class="p">(</span><span class="n">seconds</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="MeasuredCost.is_measured">
+<a class="viewcode-back" href="../../module_docs/mergeset/cost.html#mergeset.MeasuredCost.is_measured">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_measured</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""True iff this tier's estimate comes from observations."""</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_observations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tier</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="MeasuredCost.runs">
+<a class="viewcode-back" href="../../module_docs/mergeset/cost.html#mergeset.MeasuredCost.runs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">runs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""How many timings this tier's estimate rests on."""</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_observations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tier</span><span class="p">,</span> <span class="p">()))</span></div>
+
+
+<div class="viewcode-block" id="MeasuredCost.forget">
+<a class="viewcode-back" href="../../module_docs/mergeset/cost.html#mergeset.MeasuredCost.forget">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Drop this tier's observations, so a caller can re-ingest a log."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_observations</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">tier</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MeasuredCost.central">
+<a class="viewcode-back" href="../../module_docs/mergeset/cost.html#mergeset.MeasuredCost.central">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">central</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Seconds for a set of ``size`` at ``tier``, before per-change extras.</span>
+
+<span class="sd">        The one place the model lives, so :meth:`estimate` and</span>
+<span class="sd">        :meth:`pessimistic` cannot drift apart.</span>
+
+<span class="sd">        Never below the fastest run ever observed for the tier. An evaluation</span>
+<span class="sd">        that has never taken less than 27 s will not take 0 s, and a floor of</span>
+<span class="sd">        zero is not merely inaccurate: it makes a budget check divide by nothing</span>
+<span class="sd">        and conclude the tier is unlimited.</span>
+<span class="sd">        """</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tier</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">points</span><span class="p">:</span>
+            <span class="n">base</span><span class="p">,</span> <span class="n">body</span> <span class="o">=</span> <span class="n">_regimes</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">size</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">base</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">_mean</span><span class="p">([</span><span class="n">seconds</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">seconds</span> <span class="ow">in</span> <span class="n">base</span><span class="p">])</span>
+            <span class="c1"># Fit the slope on the regime every candidate set actually lives in.</span>
+            <span class="c1"># Falling back to all points keeps a first run working, when the</span>
+            <span class="c1"># base check may be the only thing measured.</span>
+            <span class="n">intercept</span><span class="p">,</span> <span class="n">slope</span> <span class="o">=</span> <span class="n">_fit</span><span class="p">(</span><span class="n">body</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">body</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="k">else</span> <span class="n">points</span><span class="p">)</span>
+            <span class="n">floor</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">seconds</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">seconds</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">floor</span><span class="p">,</span> <span class="n">intercept</span> <span class="o">+</span> <span class="n">slope</span> <span class="o">*</span> <span class="n">size</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tier</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">declared</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">declared</span><span class="p">[</span><span class="n">tier</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unmeasured_seconds</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MeasuredCost.estimate">
+<a class="viewcode-back" href="../../module_docs/mergeset/cost.html#mergeset.MeasuredCost.estimate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Central estimate of what evaluating ``subset`` at ``tier`` will cost.</span>
+
+<span class="sd">        &gt;&gt;&gt; cost = MeasuredCost(declared={'unit': 10.0}, per_change={'x': -50.0})</span>
+<span class="sd">        &gt;&gt;&gt; cost.estimate('unit', frozenset({'x'}))</span>
+<span class="sd">        0.0</span>
+<span class="sd">        """</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">per_change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cid</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">cid</span> <span class="ow">in</span> <span class="n">subset</span><span class="p">)</span>
+        <span class="c1"># Clamped *after* the surcharges, not before: a negative per-change</span>
+        <span class="c1"># value would otherwise sail past a floor applied to the tier term alone</span>
+        <span class="c1"># and produce a negative price.</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">central</span><span class="p">(</span><span class="n">tier</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">subset</span><span class="p">))</span> <span class="o">+</span> <span class="n">extra</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MeasuredCost.pessimistic">
+<a class="viewcode-back" href="../../module_docs/mergeset/cost.html#mergeset.MeasuredCost.pessimistic">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pessimistic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Upper estimate: the central one plus the worst residual ever seen.</span>
+
+<span class="sd">        With no observations there is no residual to add and this is the central</span>
+<span class="sd">        estimate — the honest position, not an optimistic one: the declared or</span>
+<span class="sd">        unmeasured number is already the only thing known.</span>
+
+<span class="sd">        Note what this is *not* doing. The cold base check is priced by its own</span>
+<span class="sd">        regime (see :meth:`central`), so it contributes no residual here. What</span>
+<span class="sd">        this carries is the spread *within* a regime, which is the variance no</span>
+<span class="sd">        candidate set predicts. The expensive regime is reserved explicitly by</span>
+<span class="sd">        the scheduler instead of being smuggled in as a hedge.</span>
+
+<span class="sd">        &gt;&gt;&gt; cost = MeasuredCost()</span>
+<span class="sd">        &gt;&gt;&gt; cost.observe('unit', frozenset({'a'}), 45.0)</span>
+<span class="sd">        &gt;&gt;&gt; cost.observe('unit', frozenset({'a'}), 80.0)   # the lockfile moved</span>
+<span class="sd">        &gt;&gt;&gt; round(cost.estimate('unit', frozenset({'a'})), 1)</span>
+<span class="sd">        62.5</span>
+<span class="sd">        &gt;&gt;&gt; round(cost.pessimistic('unit', frozenset({'a'})), 1)</span>
+<span class="sd">        80.0</span>
+<span class="sd">        """</span>
+        <span class="n">central</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">tier</span><span class="p">,</span> <span class="n">subset</span><span class="p">)</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tier</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">points</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">central</span>
+        <span class="n">worst</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">seconds</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">central</span><span class="p">(</span><span class="n">tier</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">seconds</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">central</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">worst</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MeasuredCost.summary">
+<a class="viewcode-back" href="../../module_docs/mergeset/cost.html#mergeset.MeasuredCost.summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Per-tier view of the model, for a report to print.</span>
+
+<span class="sd">        Says what the number is *and where it came from*, because an estimate</span>
+<span class="sd">        with no provenance is indistinguishable from a magic constant. This is</span>
+<span class="sd">        the published view of the evidence; the observation list itself is</span>
+<span class="sd">        private, so its shape can change without breaking callers.</span>
+<span class="sd">        """</span>
+        <span class="n">out</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">tier</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_observations</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">declared</span><span class="p">)):</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tier</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">"runs"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">),</span>
+                <span class="s2">"source"</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">"measured"</span>
+                    <span class="k">if</span> <span class="n">points</span>
+                    <span class="k">else</span> <span class="p">(</span><span class="s2">"declared"</span> <span class="k">if</span> <span class="n">tier</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">declared</span> <span class="k">else</span> <span class="s2">"unknown"</span><span class="p">)</span>
+                <span class="p">),</span>
+            <span class="p">}</span>
+            <span class="k">if</span> <span class="n">points</span><span class="p">:</span>
+                <span class="n">base</span><span class="p">,</span> <span class="n">body</span> <span class="o">=</span> <span class="n">_regimes</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+                <span class="n">seconds</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">points</span><span class="p">]</span>
+                <span class="n">row</span><span class="p">[</span><span class="s2">"total_seconds"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">seconds</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">row</span><span class="p">[</span><span class="s2">"median_seconds"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">_median</span><span class="p">(</span><span class="n">seconds</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">row</span><span class="p">[</span><span class="s2">"range_seconds"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">seconds</span><span class="p">),</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">seconds</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="c1"># The regimes are reported separately, because the whole point</span>
+                <span class="c1"># is that their means are not comparable.</span>
+                <span class="k">if</span> <span class="n">base</span><span class="p">:</span>
+                    <span class="n">row</span><span class="p">[</span><span class="s2">"base_seconds"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">_mean</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">base</span><span class="p">]),</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">body</span><span class="p">:</span>
+                    <span class="n">row</span><span class="p">[</span><span class="s2">"body_median_seconds"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">_median</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">body</span><span class="p">]),</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">tier</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">declared</span><span class="p">:</span>
+                <span class="n">row</span><span class="p">[</span><span class="s2">"declared_seconds"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">declared</span><span class="p">[</span><span class="n">tier</span><span class="p">])</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">tier</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="cost_from_log">
+<a class="viewcode-back" href="../../module_docs/mergeset/cost.html#mergeset.cost_from_log">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cost_from_log</span><span class="p">(</span>
+    <span class="n">log</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">declared</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">per_change</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">unmeasured_seconds</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">UNMEASURED_TIER_SECONDS</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MeasuredCost</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Seed a cost model from an existing evaluation log — the real default.</span>
+
+<span class="sd">    Every row of the log already carries ``subset`` and ``duration``, so the</span>
+<span class="sd">    price of the tier that produced that log is not a thing anyone needs to</span>
+<span class="sd">    declare: it has been measured, repeatedly, and thrown away. This reads it</span>
+<span class="sd">    back.</span>
+
+<span class="sd">    ``tier`` names which tier those rows belong to, because the log itself does</span>
+<span class="sd">    not say — one log holds one tier's rows by construction</span>
+<span class="sd">    (see :mod:`mergeset.tiers`).</span>
+
+<span class="sd">    &gt;&gt;&gt; from mergeset.base import Evaluation, Verdict</span>
+<span class="sd">    &gt;&gt;&gt; rows = [Evaluation(frozenset({'a'}), Verdict.PASS, duration=40.0),</span>
+<span class="sd">    ...         Evaluation(frozenset({'a', 'b', 'c'}), Verdict.FAIL, duration=60.0)]</span>
+<span class="sd">    &gt;&gt;&gt; cost = cost_from_log(rows, tier='unit')</span>
+<span class="sd">    &gt;&gt;&gt; cost.estimate('unit', frozenset({'a', 'b'}))</span>
+<span class="sd">    50.0</span>
+<span class="sd">    """</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">MeasuredCost</span><span class="p">(</span>
+        <span class="n">declared</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">declared</span> <span class="ow">or</span> <span class="p">{}),</span>
+        <span class="n">per_change</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">per_change</span> <span class="ow">or</span> <span class="p">{}),</span>
+        <span class="n">unmeasured_seconds</span><span class="o">=</span><span class="n">unmeasured_seconds</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">evaluation</span> <span class="ow">in</span> <span class="n">log</span><span class="p">:</span>
+        <span class="n">duration</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">evaluation</span><span class="p">,</span> <span class="s2">"duration"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="n">duration</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">tier</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">subset</span><span class="p">,</span> <span class="n">duration</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+
+<div class="viewcode-block" id="set_cost">
+<a class="viewcode-back" href="../../module_docs/mergeset/cost.html#mergeset.set_cost">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_cost</span><span class="p">(</span>
+    <span class="n">cost_model</span><span class="p">:</span> <span class="n">CostModel</span><span class="p">,</span>
+    <span class="n">tiers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">pessimistic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What it costs to take ``subset`` all the way down ``tiers``.</span>
+
+<span class="sd">    The tiers run in order and every one of them runs, so the price of a full</span>
+<span class="sd">    verdict is their sum — which is exactly what makes a cheap first tier worth</span>
+<span class="sd">    having: most sets never reach the second term.</span>
+
+<span class="sd">    &gt;&gt;&gt; cost = MeasuredCost(declared={'unit': 45.0, 'e2e': 300.0})</span>
+<span class="sd">    &gt;&gt;&gt; set_cost(cost, ['unit', 'e2e'], frozenset({'a'}))</span>
+<span class="sd">    345.0</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">cost_model</span><span class="o">.</span><span class="n">pessimistic</span> <span class="k">if</span> <span class="n">pessimistic</span> <span class="k">else</span> <span class="n">cost_model</span><span class="o">.</span><span class="n">estimate</span><span class="p">)(</span><span class="n">tier</span><span class="p">,</span> <span class="n">subset</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">tier</span> <span class="ow">in</span> <span class="n">tiers</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
