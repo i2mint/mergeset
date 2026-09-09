@@ -19,7 +19,7 @@ from mergeset.base import CapabilityError, MergesetError
 from mergeset.gitops import create_integration_branch
 from mergeset.oracle import claude_code_resolver
 from mergeset.log import EvaluationLog
-from mergeset.report import html_report, markdown_report
+from mergeset.report import REPORT_FORMATS, markdown_report, write_reports
 from mergeset.storage import (
     artifact_store,
     evaluation_log_path,
@@ -162,41 +162,46 @@ def _emit_reports(
     report_dir: Optional[str],
     title: str,
     *,
+    formats: Sequence[str] = ("markdown", "html"),
     reports=None,
     run: Optional[str] = None,
 ) -> list:
-    """Write the two reports and return where they went.
+    """Write the run's reports and return where they went.
 
-    With no ``report_dir``, they go to the artifact store's ``reports``
-    sub-store under ``<repo-slug>/<timestamp>/`` — outside any repository by
-    construction, and *per run*, so re-analysing the same repository does not
-    overwrite the previous answer. Comparing a re-run against the run before it
-    is most of what these reports are for.
-
-    ``report_dir`` is the explicit override for "put it right here", and it does
-    overwrite, because that is what naming a directory asks for.
+    Naming and placement live in :func:`mergeset.report.write_reports`, so the
+    CLI cannot drift from the library on where a report goes. ``report_dir`` is
+    the explicit override for "put it right here", and it does overwrite,
+    because that is what naming a directory asks for.
     """
-    rendered = {
-        "REPORT.md": markdown_report(analysis, title=title),
-        "report.html": html_report(analysis, title=title),
-    }
     if report_dir:
-        store, prefix = _dir_store(report_dir), ""
+        text_store, binary_store = (
+            _dir_store(report_dir),
+            _dir_store(report_dir, binary=True),
+        )
+        key = ""
     else:
-        store = reports if reports is not None else artifact_store("reports")
-        prefix = f"{run or run_key(analysis.repo)}/"
-    for name, text in rendered.items():
-        store[prefix + name] = text
-    return [_where(store, prefix + name) for name in rendered]
+        text_store, binary_store, key = reports, None, run or run_key(analysis.repo)
+
+    written = write_reports(
+        analysis,
+        title=title,
+        formats=formats,
+        key=key,
+        reports=text_store,
+        binary_reports=binary_store,
+    )
+    store = text_store if text_store is not None else artifact_store("reports")
+    return [_where(store, k) for k in written.values()]
 
 
-def _dir_store(directory: str):
-    """A ``str``-valued store rooted at an explicit directory."""
-    from dol import TextFiles, mk_dirs_if_missing
+def _dir_store(directory: str, *, binary: bool = False):
+    """A store rooted at an explicit directory — ``str`` values, or ``bytes``."""
+    from dol import Files, TextFiles, mk_dirs_if_missing
 
     os.makedirs(directory, exist_ok=True)
     # Same slash rule as the artifact store: one key namespace, every platform.
-    return slash_separated_keys(mk_dirs_if_missing(TextFiles(directory)))
+    cls = Files if binary else TextFiles
+    return slash_separated_keys(mk_dirs_if_missing(cls(directory)))
 
 
 def _where(store, key: str) -> str:
@@ -228,6 +233,7 @@ def branches(
     max_sets: Optional[int] = None,
     log_path: Optional[str] = None,
     report_dir: Optional[str] = None,
+    report_format: list = None,
     integration_branches: bool = False,
     reuse_worktree: Optional[str] = None,
     resolver: str = "none",
@@ -298,6 +304,7 @@ def branches(
         max_sets=max_sets,
         log_path=log_path,
         report_dir=report_dir,
+        report_format=tuple(report_format) if report_format else None,
         integration_branches=integration_branches,
         reuse_worktree=reuse_worktree,
         resolver=resolver,
@@ -328,6 +335,7 @@ def prs(
     max_sets: Optional[int] = None,
     log_path: Optional[str] = None,
     report_dir: Optional[str] = None,
+    report_format: list = None,
     integration_branches: bool = False,
     reuse_worktree: Optional[str] = None,
     resolver: str = "none",
@@ -356,6 +364,8 @@ def prs(
             By default they go to the artifact store, under
             ``reports/<repo-slug>/<timestamp>/``, so a re-run never overwrites
             the run before it.
+        report_format: Repeatable — ``markdown``, ``html``, ``pdf``. Default:
+            markdown and html. ``pdf`` needs ``pip install 'mergeset[pdf]'``.
     """
     from datetime import datetime, timedelta, timezone
 
@@ -389,6 +399,7 @@ def prs(
         max_sets=max_sets,
         log_path=log_path,
         report_dir=report_dir,
+        report_format=tuple(report_format) if report_format else None,
         integration_branches=integration_branches,
         reuse_worktree=reuse_worktree,
         resolver=resolver,
@@ -416,6 +427,7 @@ def _run(
     max_sets,
     log_path,
     report_dir,
+    report_format,
     integration_branches,
     reuse_worktree,
     resolver,
@@ -463,7 +475,9 @@ def _run(
         # message as any other, not a traceback with the reason at the bottom.
         return f"mergeset refused to run:\n\n{e}"
     lines = [markdown_report(analysis, title=title)]
-    for path in _emit_reports(analysis, report_dir, title):
+    for path in _emit_reports(
+        analysis, report_dir, title, formats=report_format or ("markdown", "html")
+    ):
         lines.append(f"\nWrote {path}")
     if integration_branches:
         lines.append("\n## Integration branches\n")

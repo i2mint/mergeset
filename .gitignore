@@ -138,3 +138,7 @@ venv.bak/
 # rot, and they accumulate exactly the private detail that must not be published
 # from a public repository.
 /.claude/handoffs/
+
+# Agent git worktrees. Several sessions work this repo at once; their worktrees
+# land here and must never be committed (git even warns they'd be embedded repos).
+/.claude/worktrees/

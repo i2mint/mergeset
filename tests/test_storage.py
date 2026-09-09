@@ -70,8 +70,8 @@ def test_backend_is_a_keyword_argument(tmp_path):
     """The S3 migration is this: pass a different factory. Nothing else moves."""
     seen = []
 
-    def dict_backend(kind, rootdir):
-        seen.append((kind, rootdir))
+    def dict_backend(kind, rootdir, *, binary=False):
+        seen.append((kind, rootdir, binary))
         return {}
 
     store = artifact_store("reports", rootdir=str(tmp_path), store_factory=dict_backend)
@@ -80,7 +80,7 @@ def test_backend_is_a_keyword_argument(tmp_path):
     # The factory is handed the KIND and the ROOT separately, never a joined
     # filesystem path: a backend with no filesystem must not have to parse one
     # out, and on Windows a joined path would put backslashes in S3 keys.
-    assert seen == [("reports", str(tmp_path))]
+    assert seen == [("reports", str(tmp_path), False)]
     assert not os.path.exists(os.path.join(str(tmp_path), "reports"))
 
 
@@ -89,7 +89,7 @@ def test_a_non_filesystem_backend_needs_no_filesystem(tmp_path):
     backing = {}
     mall = artifact_mall(
         rootdir=str(tmp_path / "never-created"),
-        store_factory=lambda kind, root: backing.setdefault(kind, {}),
+        store_factory=lambda kind, root, binary=False: backing.setdefault(kind, {}),
     )
     mall["reports"]["a/b.md"] = "x"
     mall["evaluations"]["c.jsonl"] = "{}"
@@ -284,7 +284,7 @@ def test_analyze_writes_its_log_through_a_caller_supplied_store(tmp_path):
     backing = {}
     mall = artifact_mall(
         rootdir=str(tmp_path / "unused"),
-        store_factory=lambda kind, root: backing.setdefault(kind, {}),
+        store_factory=lambda kind, root, binary=False: backing.setdefault(kind, {}),
     )
     repo = _one_commit_repo(tmp_path / "repo")
 
@@ -394,3 +394,74 @@ def test_the_suite_cannot_reach_the_real_artifact_store():
     assert root != real
     assert os.environ.get("MERGESET_DATA_DIR"), "conftest must pin the data root"
     assert root == os.environ["MERGESET_DATA_DIR"]
+
+
+# -- report formats --------------------------------------------------------
+
+
+def test_write_reports_names_and_places_every_format(tmp_path):
+    from mergeset.report import write_reports
+
+    written = write_reports(
+        _stub_analysis(),
+        key="run-1",
+        formats=("markdown", "html", "pdf"),
+        rootdir=str(tmp_path),
+    )
+    assert written == {
+        "markdown": "run-1/REPORT.md",
+        "html": "run-1/report.html",
+        "pdf": "run-1/report.pdf",
+    }
+    out = tmp_path / "reports" / "run-1"
+    assert sorted(p.name for p in out.iterdir()) == [
+        "REPORT.md",
+        "report.html",
+        "report.pdf",
+    ]
+    assert (out / "report.pdf").read_bytes().startswith(b"%PDF")
+
+
+def test_text_and_binary_reports_share_one_directory(tmp_path):
+    """A run's PDF sits beside its Markdown; only the value type differs."""
+    text = artifact_store("reports", rootdir=str(tmp_path))
+    binary = artifact_store("reports", rootdir=str(tmp_path), binary=True)
+    text["r/REPORT.md"] = "# hi"
+    binary["r/report.pdf"] = b"%PDF-1.4 not really"
+    assert sorted(text) == ["r/REPORT.md", "r/report.pdf"]
+    assert binary["r/report.pdf"] == b"%PDF-1.4 not really"
+    assert text["r/REPORT.md"] == "# hi"
+
+
+def test_an_unknown_report_format_says_which_are_known(tmp_path):
+    from mergeset.report import write_reports
+
+    with pytest.raises(ValueError) as e:
+        write_reports(
+            _stub_analysis(), key="k", formats=("docx",), rootdir=str(tmp_path)
+        )
+    assert "docx" in str(e.value) and "markdown" in str(e.value)
+
+
+def test_the_pdf_is_not_mojibake(tmp_path):
+    """wkhtmltopdf defaults to latin-1, and the report is full of `·` and em dashes.
+
+    A PDF with mangled characters looks fine until someone opens it, so this
+    asserts against text extracted back out of the bytes, not against the input.
+    """
+    pytest.importorskip("pdfdol")
+    import shutil
+    import subprocess
+
+    if not shutil.which("pdftotext"):
+        pytest.skip("pdftotext not available to read the PDF back")
+    from mergeset.report import pdf_report
+
+    path = tmp_path / "r.pdf"
+    path.write_bytes(pdf_report(_stub_analysis(), title="Encoding Check"))
+    text = subprocess.run(
+        ["pdftotext", str(path), "-"], capture_output=True, text=True
+    ).stdout
+    assert "Encoding Check" in text
+    assert "·" in text, "the separator survived"
+    assert "Â" not in text and "â€" not in text, f"mojibake in the PDF: {text[:200]!r}"

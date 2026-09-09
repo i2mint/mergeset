@@ -61,6 +61,14 @@ A factory is handed the **kind and the root separately**, never a joined filesys
 
 `--report-dir` still writes wherever you point it — an explicit choice, not a default. Without it, each run gets its own key, so re-analysing a repository never overwrites the answer you are comparing against.
 
+Reports render as Markdown and HTML by default, and PDF on request:
+
+```bash
+python -m mergeset prs OWNER/REPO --report-format markdown html pdf   # needs mergeset[pdf]
+```
+
+The PDF is rendered from the Markdown, not the HTML — the HTML report draws itself from an embedded JSON blob at load time, so a print pipeline that does not run JavaScript would give you a blank page that looks fine until someone opens it.
+
 ## Progressive disclosure
 
 The call above takes no configuration and works. Every piece of it is one keyword argument away from being replaced.
