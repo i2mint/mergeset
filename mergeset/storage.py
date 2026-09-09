@@ -36,7 +36,11 @@ The backend is one keyword argument (``store_factory``), so pointing the same
 code at S3 is a one-line change and no caller notices::
 
     from s3dol import S3Store
-    mall = artifact_mall(store_factory=lambda kind: S3Store(bucket, prefix=kind))
+    mall = artifact_mall(store_factory=lambda kind, root: S3Store(bucket, prefix=kind))
+
+A factory is handed the **kind and the root separately**, never a joined
+filesystem path — a backend that has no filesystem must not have to parse one
+out, and on Windows a joined path would put backslashes in S3 keys.
 
 The root is overridden by one environment variable, ``MERGESET_DATA_DIR`` — one
 knob for the root, never one per kind.
@@ -46,6 +50,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Mapping, MutableMapping
+from datetime import datetime, timezone
 from typing import Callable, Optional, Tuple
 
 DEFAULT_APP_NAME = "mergeset"
@@ -55,8 +60,9 @@ ROOTDIR_ENVVAR = "MERGESET_DATA_DIR"
 #: the root itself, so a fifth kind costs no migration.
 ARTIFACT_KINDS: Tuple[str, ...] = ("reports", "evaluations", "logs", "fixtures")
 
-#: What a ``store_factory`` must be: a directory -> a ``str``-valued store.
-StoreFactory = Callable[[str], MutableMapping]
+#: What a ``store_factory`` must be: ``(kind, rootdir) -> str``-valued store.
+#: The two are passed separately on purpose — see the module docstring.
+StoreFactory = Callable[[str, str], MutableMapping]
 
 
 def _platform_data_home() -> str:
@@ -132,15 +138,16 @@ def slash_separated_keys(store: MutableMapping, *, sep: str = os.sep) -> Mutable
     )
 
 
-def _text_files_factory(directory: str) -> MutableMapping:
-    """The default backend: ``dol.TextFiles`` over a directory, created on demand.
+def _text_files_factory(kind: str, rootdir: str) -> MutableMapping:
+    """The default backend: ``dol.TextFiles`` over ``<rootdir>/<kind>/``.
 
-    ``dol`` is the strongest local backend that is already in this ecosystem:
-    it has no dependencies of its own and gives relative-path keys, nested keys,
-    and the full ``MutableMapping`` surface for free.
+    ``dol`` is the strongest local backend already in this ecosystem: no
+    dependencies of its own, and relative-path keys, nested keys and the full
+    ``MutableMapping`` surface for free.
     """
     from dol import TextFiles, mk_dirs_if_missing
 
+    directory = os.path.join(rootdir, kind)
     os.makedirs(directory, exist_ok=True)
     # ``mk_dirs_if_missing`` is what makes a nested key such as
     # ``'<run>/REPORT.md'`` just work — without it the write fails on the
@@ -161,9 +168,9 @@ def artifact_store(
         kind: One of :data:`ARTIFACT_KINDS` (any name works; the tuple is the
             set mergeset itself uses).
         rootdir: Artifact root. Defaults to :func:`app_data_rootdir`.
-        store_factory: The backend seam — ``directory -> MutableMapping``.
-            Defaults to ``dol.TextFiles``. Swap it for S3, a database, or a
-            dict without touching a single caller.
+        store_factory: The backend seam — ``(kind, rootdir) -> MutableMapping``.
+            Defaults to ``dol.TextFiles`` under ``<rootdir>/<kind>/``. Swap it
+            for S3, a database, or a dict without touching a single caller.
 
     >>> import tempfile
     >>> store = artifact_store('logs', rootdir=tempfile.mkdtemp())
@@ -173,7 +180,7 @@ def artifact_store(
     """
     rootdir = rootdir or app_data_rootdir(app_name=app_name)
     factory = store_factory or _text_files_factory
-    return factory(os.path.join(rootdir, kind))
+    return factory(kind, rootdir)
 
 
 def artifact_mall(
@@ -258,20 +265,42 @@ def artifact_path(
     return os.path.join(rootdir, kind, key) if key else os.path.join(rootdir, kind)
 
 
-def slugify(text: str, *, maxlen: int = 60) -> str:
+def slugify(text: str, *, maxlen: int = 48) -> str:
     """A filesystem-safe key naming a run after its repository.
 
-    Two path components, not one, so ``c/cosmograph`` and ``py/cosmograph``
-    do not collide into the same log.
+    Two path components, not one, so ``c/cosmograph`` and ``py/cosmograph`` do
+    not collide. Two components are still not unique — ``/a/b/proj`` and
+    ``/c/b/proj`` both read as ``b-proj`` — and two repos sharing one evaluation
+    log would mix their change ids into one monotone closure, which is a wrong
+    answer rather than an untidy one. So a short digest of the *full* input is
+    appended whenever the readable part is not the whole story.
+
+    The digest also survives truncation: a long parent directory used to eat the
+    only component that distinguished anything.
 
     >>> slugify('/Users/me/proj/i/mergeset')
-    'i-mergeset'
+    'i-mergeset-ed5b44'
     >>> slugify('git@github.com:i2mint/mergeset.git')
-    'i2mint-mergeset'
+    'i2mint-mergeset-b35f45'
     >>> slugify('.')
-    'repo'
+    'repo-cdb4ee'
+
+    Different repositories that read alike still get different keys:
+
+    >>> slugify('/a/b/proj') != slugify('/c/b/proj')
+    True
+
+    And a long parent no longer swallows the name:
+
+    >>> slugify('/x/' + 'a' * 80 + '/repo').startswith('a')
+    True
+    >>> 'repo' in slugify('/x/' + 'a' * 80 + '/repo')
+    True
     """
-    text = str(text).strip().rstrip("/")
+    import hashlib
+
+    original = str(text)
+    text = original.strip().rstrip("/")
     if text.endswith(".git"):
         text = text[: -len(".git")]
     if ":" in text and "/" in text.rsplit(":", 1)[-1]:  # scp-style remote or URL
@@ -279,9 +308,20 @@ def slugify(text: str, *, maxlen: int = 60) -> str:
     parts = [
         p for p in text.replace("\\", "/").split("/") if p and p not in (".", "..")
     ]
-    joined = "-".join(parts[-2:])
-    safe = "".join(c if (c.isalnum() or c in "-_.") else "-" for c in joined)
-    return "-".join(filter(None, safe.split("-")))[:maxlen] or "repo"
+    digest = hashlib.sha256(original.encode("utf-8")).hexdigest()[:6]
+    readable = _safe(parts[-1] if parts else "repo")
+    parent = _safe(parts[-2]) if len(parts) > 1 else ""
+    # Budget the readable half so the digest is never what gets truncated.
+    room = maxlen - len(digest) - 1
+    if parent:
+        readable = f"{parent[: max(1, room - len(readable) - 1)]}-{readable}"
+    return f"{readable[:room] or 'repo'}-{digest}"
+
+
+def _safe(text: str) -> str:
+    """Keep only characters every filesystem and object store agrees on."""
+    safe = "".join(c if (c.isalnum() or c in "-_.") else "-" for c in text)
+    return "-".join(filter(None, safe.split("-")))
 
 
 def evaluation_log_path(
@@ -300,11 +340,65 @@ def evaluation_log_path(
     directory rather than collapsing every project into one ``repo.jsonl``.
 
     >>> import tempfile, os
-    >>> p = evaluation_log_path('/x/y/cosmograph', rootdir=tempfile.mkdtemp())
-    >>> os.path.basename(p)
-    'y-cosmograph.jsonl'
+    >>> p = evaluation_log_path('/x/proj/widget', rootdir=tempfile.mkdtemp())
+    >>> os.path.basename(p).startswith('proj-widget-')
+    True
+    >>> os.path.basename(p).endswith('.jsonl')
+    True
     """
     repo = os.path.abspath(os.path.expanduser(str(repo)))
     return artifact_path(
         "evaluations", f"{slugify(repo)}.jsonl", rootdir=rootdir, app_name=app_name
     )
+
+
+def run_key(repo: str, *, at: Optional[str] = None) -> str:
+    """A key naming one run of one repository: ``<repo-slug>/<timestamp>``.
+
+    Reports are keyed by run, not by repository, so a second analysis of the
+    same repo does not overwrite the first. The 18-PR re-run of an earlier
+    analysis is exactly the case that made this necessary: the interesting thing
+    about it is the *diff* against the previous run, and there is no diff if the
+    previous run was clobbered.
+
+    >>> key = run_key('/x/proj/widget', at='2026-09-09T14-00-00Z')
+    >>> key.endswith('/2026-09-09T14-00-00Z')
+    True
+    >>> key.startswith('proj-widget-')
+    True
+    """
+    at = at or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
+    return f"{slugify(os.path.abspath(os.path.expanduser(str(repo))))}/{at}"
+
+
+def evaluation_lines(
+    repo: str,
+    *,
+    store: Optional[MutableMapping] = None,
+    rootdir: Optional[str] = None,
+    app_name: str = DEFAULT_APP_NAME,
+):
+    """The append-only lines object backing this repo's evaluation log.
+
+    With no ``store``, the local filesystem backend is used directly, because
+    ``open(path, 'a')`` is a *true* append and re-writing a growing log on every
+    evaluation is not. With a ``store`` (S3, a database, a dict), the log goes
+    through it like every other artifact — the source of truth is not allowed to
+    be the one thing that cannot leave the filesystem.
+
+    >>> import tempfile
+    >>> lines = evaluation_lines('/x/proj/widget', rootdir=tempfile.mkdtemp())
+    >>> lines.append({'a': 1}); [d['a'] for d in lines]
+    [1]
+
+    >>> backing = {}
+    >>> lines = evaluation_lines('/x/proj/widget', store=backing)
+    >>> lines.append({'a': 1}); list(backing)[0].endswith('.jsonl')
+    True
+    """
+    from mergeset.log import JsonlLines, StoreLines
+
+    key = f"{slugify(os.path.abspath(os.path.expanduser(str(repo))))}.jsonl"
+    if store is None:
+        return JsonlLines(evaluation_log_path(repo, rootdir=rootdir, app_name=app_name))
+    return StoreLines(store, key)

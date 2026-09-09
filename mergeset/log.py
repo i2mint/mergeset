@@ -63,6 +63,51 @@ class JsonlLines:
         return sum(1 for _ in self)
 
 
+class StoreLines:
+    r"""Lines backed by one key of a ``MutableMapping`` — the non-file backend.
+
+    :class:`JsonlLines` is the right thing over a filesystem: ``open(..., 'a')``
+    is a true append. An object store has no append, so this reads, concatenates
+    and writes back. That is honest about the cost rather than pretending, and it
+    is what lets the evaluation log — the source of truth — reach S3 through the
+    same seam as everything else.
+
+    A missing key reads as empty rather than raising, so a first run works.
+
+    >>> backing = {}
+    >>> lines = StoreLines(backing, 'run.jsonl')
+    >>> list(lines)
+    []
+    >>> lines.append({'a': 1}); lines.append({'a': 2})
+    >>> [d['a'] for d in lines]
+    [1, 2]
+    >>> backing['run.jsonl']
+    '{"a": 1}\n{"a": 2}\n'
+    """
+
+    def __init__(self, store, key: str):
+        self.store = store
+        self.key = key
+
+    def _text(self) -> str:
+        try:
+            return self.store[self.key]
+        except KeyError:
+            return ""
+
+    def append(self, jdict: dict) -> None:
+        """Append one record by rewriting the value (no append primitive here)."""
+        self.store[self.key] = self._text() + json.dumps(jdict, sort_keys=True) + "\n"
+
+    def __iter__(self) -> Iterator[dict]:
+        return iter(
+            [json.loads(line) for line in self._text().splitlines() if line.strip()]
+        )
+
+    def __len__(self) -> int:
+        return sum(1 for _ in self)
+
+
 class MemoryLines(list):
     """In-memory stand-in for :class:`JsonlLines` (tests, dry runs)."""
 
@@ -88,8 +133,11 @@ class EvaluationLog:
     """Append-only record of evaluations, plus the monotone closure over it.
 
     Args:
-        store: Persistence seam; a path (str/PathLike) is wrapped in
-            :class:`JsonlLines`. Pass :class:`MemoryLines` for an ephemeral log.
+        store: Persistence seam. A path (str/PathLike) is wrapped in
+            :class:`JsonlLines`; pass :class:`StoreLines` to put the log in an
+            artifact store (S3 and friends), or :class:`MemoryLines` for an
+            ephemeral log. With no argument at all the log goes to the artifact
+            store's ``evaluations/adhoc.jsonl`` — never the working directory.
 
     >>> log = EvaluationLog(MemoryLines())
     >>> from mergeset.base import Evaluation, Verdict
@@ -106,8 +154,15 @@ class EvaluationLog:
     """
 
     def __init__(self, store: Any = None):
-        if store is None or isinstance(store, (str, os.PathLike)):
-            store = JsonlLines(str(store or "evaluations.jsonl"))
+        if store is None:
+            # Never ``./evaluations.jsonl``: that writes derived data into
+            # whatever repository the caller happens to be standing in, which is
+            # the default this package exists to have removed.
+            from mergeset.storage import artifact_path
+
+            store = JsonlLines(artifact_path("evaluations", "adhoc.jsonl"))
+        elif isinstance(store, (str, os.PathLike)):
+            store = JsonlLines(str(store))
         self.store = store
         self._evaluations: List[Evaluation] = [
             Evaluation.from_jdict(d) for d in self.store

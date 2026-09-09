@@ -42,7 +42,7 @@ from mergeset.base import (
     change_set,
     set_key,
 )
-from mergeset.log import EvaluationLog, JsonlLines, MemoryLines
+from mergeset.log import EvaluationLog, JsonlLines, MemoryLines, StoreLines
 from mergeset.solve import (
     combine_components,
     find_maximal_good_sets,
@@ -96,7 +96,10 @@ from mergeset.storage import (
     artifact_mall,
     artifact_path,
     artifact_store,
+    evaluation_lines,
     evaluation_log_path,
+    run_key,
+    slash_separated_keys,
 )
 from mergeset.oracle import claude_code_resolver, git_oracle, merge_order
 from mergeset.analysis import Analysis, analyze
@@ -163,6 +166,10 @@ __all__ = [
     "artifact_path",
     "app_data_rootdir",
     "evaluation_log_path",
+    "evaluation_lines",
+    "run_key",
+    "slash_separated_keys",
+    "StoreLines",
     "ARTIFACT_KINDS",
     "MergesetError",
     "CapabilityError",

@@ -68,15 +68,33 @@ def test_kinds_do_not_share_a_namespace(tmp_path):
 
 def test_backend_is_a_keyword_argument(tmp_path):
     """The S3 migration is this: pass a different factory. Nothing else moves."""
-    made = {}
+    seen = []
 
-    def dict_backend(directory):
-        return made.setdefault(directory, {})
+    def dict_backend(kind, rootdir):
+        seen.append((kind, rootdir))
+        return {}
 
     store = artifact_store("reports", rootdir=str(tmp_path), store_factory=dict_backend)
     store["k"] = "v"
-    assert made == {os.path.join(str(tmp_path), "reports"): {"k": "v"}}
+    assert store == {"k": "v"}
+    # The factory is handed the KIND and the ROOT separately, never a joined
+    # filesystem path: a backend with no filesystem must not have to parse one
+    # out, and on Windows a joined path would put backslashes in S3 keys.
+    assert seen == [("reports", str(tmp_path))]
     assert not os.path.exists(os.path.join(str(tmp_path), "reports"))
+
+
+def test_a_non_filesystem_backend_needs_no_filesystem(tmp_path):
+    """The whole point: nothing is created on disk when the backend is not disk."""
+    backing = {}
+    mall = artifact_mall(
+        rootdir=str(tmp_path / "never-created"),
+        store_factory=lambda kind, root: backing.setdefault(kind, {}),
+    )
+    mall["reports"]["a/b.md"] = "x"
+    mall["evaluations"]["c.jsonl"] = "{}"
+    assert backing == {"reports": {"a/b.md": "x"}, "evaluations": {"c.jsonl": "{}"}}
+    assert not os.path.exists(str(tmp_path / "never-created"))
 
 
 def test_nothing_is_written_at_the_root(tmp_path):
@@ -86,7 +104,7 @@ def test_nothing_is_written_at_the_root(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "repo, expected",
+    "repo, readable",
     [
         ("/Users/me/proj/i/mergeset", "i-mergeset"),
         ("git@github.com:i2mint/mergeset.git", "i2mint-mergeset"),
@@ -94,15 +112,60 @@ def test_nothing_is_written_at_the_root(tmp_path):
         (".", "repo"),
     ],
 )
-def test_slugify_names_a_run_after_its_repo(repo, expected):
-    assert slugify(repo) == expected
+def test_slugify_names_a_run_after_its_repo(repo, readable):
+    """The key is readable, and carries a digest so it is also unique."""
+    key = slugify(repo)
+    assert key.startswith(readable + "-")
+    assert len(key) == len(readable) + 7  # '-' + 6 hex
 
 
-def test_slugified_names_do_not_escape_the_store(tmp_path):
-    """A repo path can be anything; the key it produces must stay a key."""
-    for repo in ("../../etc", "/a/b/../c", "weird name/with spaces"):
+@pytest.mark.parametrize(
+    "a, b",
+    [
+        ("/a/b/proj", "/c/b/proj"),  # same last two components
+        ("/x/" + "a" * 80 + "/one", "/x/" + "a" * 80 + "/two"),  # past maxlen
+        ("/p/q", "/p/q/"),  # only if they really differ after normalisation
+    ],
+)
+def test_different_repos_never_share_a_key(a, b):
+    """Two repos sharing one evaluation log would mix their change ids into one
+    monotone closure — a wrong answer, not an untidy one."""
+    if a.rstrip("/") == b.rstrip("/"):
+        pytest.skip("same repo")
+    assert slugify(a) != slugify(b)
+
+
+def test_a_long_parent_does_not_swallow_the_repo_name():
+    key = slugify("/x/" + "a" * 80 + "/mergeset")
+    assert "mergeset" in key, key
+
+
+def test_slugified_names_stay_inside_the_store(tmp_path):
+    """A repo path can be anything; the key it produces must stay one key."""
+    root = str(tmp_path)
+    adversarial = [
+        "../../etc",
+        "/a/b/../c",
+        "weird name/with spaces",
+        "..",
+        "/",
+        "",
+        "   ",
+        ".git",
+        "---",
+        "C:\\Users\\me\\proj",
+        "/a/b/" + "x" * 300,
+        "a\tb",
+        "naïve/répo",
+    ]
+    for repo in adversarial:
         key = slugify(repo)
-        assert "/" not in key and "\\" not in key and ".." not in key
+        assert key, f"{repo!r} produced an empty key"
+        assert "/" not in key and "\\" not in key, key
+        resolved = os.path.normpath(os.path.join(root, key))
+        assert os.path.dirname(resolved) == os.path.normpath(root), (
+            f"{repo!r} -> {key!r} escapes the store"
+        )
 
 
 # -- the regression this whole module exists for ---------------------------
@@ -121,7 +184,8 @@ def test_evaluation_log_never_defaults_inside_the_analysed_repo(tmp_path):
     path = evaluation_log_path(str(repo), rootdir=str(store_root))
     assert not os.path.abspath(path).startswith(os.path.abspath(str(repo)) + os.sep)
     assert os.path.abspath(path).startswith(os.path.abspath(str(store_root)))
-    assert path.endswith("some-private-repo.jsonl")
+    assert "some-private-repo-" in os.path.basename(path)
+    assert path.endswith(".jsonl")
 
 
 def test_analyze_defaults_its_log_to_the_artifact_store(tmp_path, monkeypatch):
@@ -210,3 +274,109 @@ def test_real_store_round_trips_a_nested_key_under_the_native_separator(tmp_path
     assert list(store) == ["a/b/c.md"]
     assert store["a/b/c.md"] == "x"
     assert os.path.isfile(os.path.join(str(tmp_path), "reports", "a", "b", "c.md"))
+
+
+# -- the seam has to reach production, not just exist ----------------------
+
+
+def test_analyze_writes_its_log_through_a_caller_supplied_store(tmp_path):
+    """`artifacts=` is the S3 migration. It must reach the log with no other change."""
+    backing = {}
+    mall = artifact_mall(
+        rootdir=str(tmp_path / "unused"),
+        store_factory=lambda kind, root: backing.setdefault(kind, {}),
+    )
+    repo = _one_commit_repo(tmp_path / "repo")
+
+    from mergeset.analysis import analyze
+    from mergeset.sources import branch_changes
+    from mergeset.validation import merge_only_validation
+
+    changes = list(branch_changes(repo, ["feature"], base="main"))
+    analyze(
+        repo, changes, base="main", validate=merge_only_validation(), artifacts=mall
+    )
+
+    assert list(backing) == ["evaluations"], backing
+    (key,) = backing["evaluations"]
+    assert key.endswith(".jsonl")
+    assert backing["evaluations"][key].strip(), "the log must actually be written"
+    assert not os.path.exists(str(tmp_path / "unused")), (
+        "a non-filesystem backend must not create directories"
+    )
+
+
+def test_a_bare_evaluation_log_does_not_write_to_the_working_directory(
+    tmp_path, monkeypatch
+):
+    """`EvaluationLog()` used to default to ./evaluations.jsonl."""
+    from mergeset.log import EvaluationLog
+
+    monkeypatch.setenv("MERGESET_DATA_DIR", str(tmp_path / "artifacts"))
+    monkeypatch.chdir(tmp_path)
+    log = EvaluationLog()
+    from mergeset.base import Evaluation, Verdict
+
+    log.record(Evaluation(frozenset({"a"}), Verdict.PASS))
+    assert not os.path.exists(str(tmp_path / "evaluations.jsonl"))
+    assert os.path.isdir(str(tmp_path / "artifacts" / "evaluations"))
+
+
+def test_store_lines_round_trip_through_a_plain_dict():
+    from mergeset.log import EvaluationLog, StoreLines
+    from mergeset.base import Evaluation, Verdict
+
+    backing = {}
+    log = EvaluationLog(StoreLines(backing, "run.jsonl"))
+    log.record(Evaluation(frozenset({"a", "b"}), Verdict.PASS))
+    log.record(Evaluation(frozenset({"c"}), Verdict.FAIL))
+    reread = EvaluationLog(StoreLines(backing, "run.jsonl"))
+    assert len(reread) == 2
+    assert reread.known(frozenset({"a"})).verdict is Verdict.PASS
+
+
+# -- reports: one run must not overwrite another ---------------------------
+
+
+def test_a_rerun_does_not_overwrite_the_previous_report(tmp_path):
+    """The interesting thing about a re-run is the diff against the run before."""
+    from mergeset.cli import _emit_reports
+    from mergeset.storage import run_key
+
+    analysis = _stub_analysis(repo="/some/where/proj")
+    reports = {}
+    first = _emit_reports(
+        analysis, None, "t", reports=reports, run=run_key(analysis.repo, at="run-1")
+    )
+    second = _emit_reports(
+        analysis, None, "t", reports=reports, run=run_key(analysis.repo, at="run-2")
+    )
+    assert len(reports) == 4, sorted(reports)
+    assert set(first).isdisjoint(second)
+
+
+def test_two_repos_do_not_share_a_report_key(tmp_path):
+    """`--repo .` slugified to the literal 'repo' for every project."""
+    from mergeset.cli import _emit_reports
+
+    a, b = _stub_analysis(repo="."), _stub_analysis(repo=str(tmp_path))
+    reports = {}
+    _emit_reports(a, None, "t", reports=reports)
+    _emit_reports(b, None, "t", reports=reports)
+    assert len(reports) == 4, sorted(reports)
+
+
+def test_an_explicit_report_dir_is_still_honoured(tmp_path):
+    from mergeset.cli import _emit_reports
+
+    out = str(tmp_path / "here")
+    written = _emit_reports(_stub_analysis(), out, "t")
+    assert sorted(os.listdir(out)) == ["REPORT.md", "report.html"]
+    assert all(w.startswith(out) for w in written)
+
+
+def _stub_analysis(repo="/x/y/proj"):
+    """The smallest Analysis the report renderers accept."""
+    from mergeset.analysis import Analysis
+
+    return Analysis(repo=repo, base="main", base_sha="0" * 40, changes=[])

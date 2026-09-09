@@ -35,11 +35,11 @@ Evaluating a subset means merging it and running a test suite. That is minutes, 
 Reports, evaluation logs, raw validation output and captured fixtures all land in an **artifact store**, never in a repository:
 
 ```
-~/.local/share/mergeset/       # $MERGESET_DATA_DIR overrides the root
-    reports/<repo>/            # REPORT.md, report.html
-    evaluations/<repo>.jsonl   # the append-only log — the source of truth
-    logs/                      # raw build/test/lint output
-    fixtures/                  # captured failures kept as regression tests
+~/.local/share/mergeset/            # $MERGESET_DATA_DIR overrides the root
+    reports/<repo>/<timestamp>/     # REPORT.md, report.html — one key per run
+    evaluations/<repo>.jsonl        # the append-only log — the source of truth
+    logs/                           # raw build/test/lint output
+    fixtures/                       # captured failures kept as regression tests
 ```
 
 This is not tidiness. Everything `mergeset` produces is **captured from the repository it analysed** — source paths, symbol names, stack traces with verbatim code, branch names, PR metadata. Written into that repository (or into `mergeset`'s own), one `git add .` publishes it. This project has already published a private repository's internals to a public one exactly that way, so the default is now a location no `git add` can reach.
@@ -47,13 +47,19 @@ This is not tidiness. Everything `mergeset` produces is **captured from the repo
 Each kind is a plain `MutableMapping[str, str]`, so the backend is one keyword argument:
 
 ```python
-from mergeset import artifact_store
+from mergeset import analyze, artifact_mall
 
-reports = artifact_store("reports")                       # local files
-reports = artifact_store("reports", store_factory=my_s3)  # ...or S3. No caller changes.
+# Local files, the default:
+analyze(repo, changes)
+
+# The same run, with every artifact in S3 — one keyword argument, no other change:
+s3 = artifact_mall(store_factory=lambda kind, root: S3Store(bucket, prefix=kind))
+analyze(repo, changes, artifacts=s3)
 ```
 
-`--report-dir` still writes wherever you point it — an explicit choice, not a default.
+A factory is handed the **kind and the root separately**, never a joined filesystem path: a backend with no filesystem should not have to parse one out.
+
+`--report-dir` still writes wherever you point it — an explicit choice, not a default. Without it, each run gets its own key, so re-analysing a repository never overwrites the answer you are comparing against.
 
 ## Progressive disclosure
 

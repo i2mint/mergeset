@@ -146,6 +146,11 @@ python_versions = [
 pytest_args = [
     "-v",
     "--tb=short",
+    # The doctests ARE the documentation of this package's seams, and one of
+    # them shipped wrong because nothing ran them. --doctest-modules makes CI
+    # check the examples it publishes.
+    "--doctest-modules",
+    "mergeset",
 ]
 coverage_enabled = true
 coverage_threshold = 0
