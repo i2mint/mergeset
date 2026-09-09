@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>mergeset.cli &mdash; mergeset 0.0.4 documentation</title>
+  <title>mergeset.cli &mdash; mergeset 0.0.5 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=8c5712d9"></script>
+      <script src="../../_static/documentation_options.js?v=282f96c0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -235,9 +235,9 @@
 <span class="w">    </span><span class="sd">"""Create the reusable worktree if it is not there yet, and return its path."""</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.gitops</span><span class="w"> </span><span class="kn">import</span> <span class="n">persistent_worktree</span>
 
-    <span class="k">return</span> <span class="n">persistent_worktree</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span> <span class="ow">or</span> <span class="s2">"HEAD"</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-    <span class="p">))</span>
+    <span class="k">return</span> <span class="n">persistent_worktree</span><span class="p">(</span>
+        <span class="n">repo</span><span class="p">,</span> <span class="n">base</span> <span class="ow">or</span> <span class="s2">"HEAD"</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_emit_reports</span><span class="p">(</span><span class="n">analysis</span><span class="p">,</span> <span class="n">report_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
