@@ -54,6 +54,9 @@ Repository = "https://github.com/i2mint/mergeset"
 Documentation = "https://i2mint.github.io/mergeset"
 
 [project.optional-dependencies]
+pdf = [
+    "pdfdol",
+]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
