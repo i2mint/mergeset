@@ -90,6 +90,9 @@ class Analysis:
     #: Whether the per-component answers were trusted to combine, or whether a
     #: global search had to verify them. See ``analyze(component_local=...)``.
     components_combined: bool = False
+    #: Sets reported without ever having been evaluated as a whole. Empty is the
+    #: normal case. See :meth:`merge_plan`'s ``verified`` and D22.
+    unverified_sets: List[ChangeSet] = field(default_factory=list)
     log: Optional[EvaluationLog] = None
     searches: List[SearchState] = field(default_factory=list)
     notes: List[str] = field(default_factory=list)
@@ -116,13 +119,13 @@ class Analysis:
         """
         all_ids = frozenset(c.id for c in self.changes)
         by_id = self.by_id
+        unverified = {frozenset(s) for s in self.unverified_sets}
         plans = []
-        for rank, subset in enumerate(self.maximal_sets, start=1):
+        for subset in self.maximal_sets:
             dropped = all_ids - subset
             merge_these = tips(subset, self.stacks)
             plans.append(
                 {
-                    "rank": rank,
                     "changes": list(merge_order(subset, by_id)),
                     # Merging a stack's tip brings its ancestors along, so these
                     # are the merges you actually perform.
@@ -135,9 +138,21 @@ class Analysis:
                         sum(self.weights.get(i, 1.0) for i in subset), 3
                     ),
                     "size": len(subset),
+                    # False means: this exact set was never merged and validated
+                    # as a whole. It is a *combination* of answers, and a
+                    # whole-repo validator can object to a combination it has
+                    # never seen. Do not present such a plan as a result.
+                    "verified": frozenset(subset) not in unverified,
                 }
             )
-        return sorted(plans, key=lambda p: (p["dropped_weight"], -p["size"]))
+        # Unverified plans rank last however cheap they look: a plan nobody ran
+        # is not a better answer than a smaller one somebody did.
+        plans.sort(key=lambda p: (not p["verified"], p["dropped_weight"], -p["size"]))
+        # Rank is assigned *after* ordering, so "Plan 1" is the first plan the
+        # reader sees. Numbering before the sort made the two disagree.
+        for rank, plan in enumerate(plans, start=1):
+            plan["rank"] = rank
+        return plans
 
 
 def analyze(
@@ -434,7 +449,9 @@ def analyze(
         analysis.conflicts = _dedupe_conflicts(
             analysis.conflicts + global_state.conflicts
         )
-        analysis.maximal_sets = global_state.maximal_good_sets or combined
+        analysis.maximal_sets = global_state.maximal_good_sets or _fallback_sets(
+            combined, log, analysis
+        )
 
     for state in analysis.searches:
         if state.error:
@@ -442,6 +459,8 @@ def analyze(
                 f"ABORTED: {state.error}. The sets below are whatever had been "
                 "established before that point; they are not an answer."
             )
+    _mark_unverified(analysis, log, trusted=component_local)
+
     violations = log.monotonicity_violations()
     for good, bad in violations:
         analysis.notes.append(
@@ -450,6 +469,78 @@ def analyze(
             "that fixes another. Results below are not fully trustworthy."
         )
     return analysis
+
+
+def _fallback_sets(
+    combined: Sequence[ChangeSet], log: EvaluationLog, analysis: "Analysis"
+) -> List[ChangeSet]:
+    """Combined sets to fall back on when the global search produced nothing.
+
+    The global search runs out of budget (or aborts) before finding a single
+    passing set, and the only other answer in hand is the cartesian combination
+    of the per-component answers. That combination has never been evaluated as a
+    whole — and a whole-repo validator can fail on changes that share no file,
+    which is the entire reason the global search exists.
+
+    So: never hand back a set the log already refutes, and let whatever is left
+    through only as *unverified*. Recommending a set recorded as failing is the
+    original defect this whole path was written to prevent.
+    """
+    refuted = [s for s in combined if log.known(s).verdict is Verdict.FAIL]
+    for s in refuted:
+        analysis.notes.append(
+            f"Dropped the combined set {set_key(s)}: the log records it as "
+            "failing. Component answers do not combine freely for a validator "
+            "that sees the whole repository."
+        )
+    surviving = [s for s in combined if s not in refuted]
+    if surviving:
+        return surviving
+    # Nothing combinable survives. Rather than report nothing, report what was
+    # actually established: the largest sets the log records as passing. They
+    # are smaller than the answer, and they are true, which is the right trade.
+    established = log.maximal_passing_sets()
+    if established:
+        analysis.notes.append(
+            "Every combined set was refuted, so the sets below are the largest "
+            "the log records as *passing*. They are what was established within "
+            "the budget, not the maximal answer — re-run with a larger budget."
+        )
+    return established
+
+
+def _mark_unverified(
+    analysis: "Analysis", log: EvaluationLog, *, trusted: bool
+) -> None:
+    """Flag every reported set that was never evaluated as a whole.
+
+    The log is the source of truth: a set is verified iff it has an exact
+    recorded PASS. Inference across the monotone closure does not count here —
+    a passing *superset* is what makes a set good by inference, and if such a
+    superset existed it would be the answer instead.
+
+    ``trusted`` (the validator declared itself component-local) means combining
+    is sound by contract, so nothing is flagged.
+    """
+    if trusted:
+        return
+    analysis.unverified_sets = [
+        s
+        for s in analysis.maximal_sets
+        if not (log.exact(s) and log.exact(s).verdict is Verdict.PASS)
+    ]
+    if analysis.unverified_sets:
+        analysis.notes.append(
+            "NOT VERIFIED: "
+            + "; ".join(
+                set_key(s) and ", ".join(set_key(s)) or "(base alone)"
+                for s in analysis.unverified_sets
+            )
+            + " — reported without ever being merged and validated as a whole. "
+            "These are combinations of per-component answers, and a whole-repo "
+            "validator can object to a combination it has never seen. Re-run "
+            "with a larger budget before acting on them."
+        )
 
 
 def _common_base(repo: str, changes: Sequence[Change]) -> str:

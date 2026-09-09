@@ -50,8 +50,17 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
     for plan in plans:
         yield (
             f"### Plan {plan['rank']} — merge {plan['size']} of {len(analysis.changes)}"
+            + ("" if plan["verified"] else " — NOT VERIFIED")
         )
         yield ""
+        if not plan["verified"]:
+            yield (
+                "> This set was **never merged and validated as a whole**. It is a "
+                "combination of per-component answers, and a validator that sees the "
+                "whole repository can object to a combination it has never seen. "
+                "Re-run with a larger budget before acting on it."
+            )
+            yield ""
         yield "Merge in this order:"
         yield ""
         for i, cid in enumerate(plan["merge"], start=1):
@@ -346,6 +355,7 @@ document.getElementById('summary').innerHTML =
 document.getElementById('plans').innerHTML = DATA.plans.length ? DATA.plans.map(p =>
   `<div class="card"><b>Plan ${p.rank}</b> — merge ${p.size} of ${DATA.changes.length}
    <span class="pill">dropped weight ${p.dropped_weight}</span>
+   ${p.verified === false ? '<span class="pill" style="background:#b3261e;color:#fff">NOT VERIFIED — never validated as a whole</span>' : ''}
    <ol>${p.changes.map(id => {
      const c = DATA.changes.find(x => x.id === id) || {};
      const t = (c.meta && c.meta.title) || c.head || '';

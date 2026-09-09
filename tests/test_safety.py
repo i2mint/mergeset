@@ -12,6 +12,7 @@ from mergeset.analysis import analyze
 from mergeset.base import Evaluation, MergesetError, Verdict
 from mergeset.log import EvaluationLog, MemoryLines
 from mergeset.solve import find_maximal_good_sets
+from mergeset.report import markdown_report
 from mergeset.sources import branch_changes
 from conftest import py_command, run
 from mergeset.validation import (
@@ -369,3 +370,110 @@ def test_cache_hits_are_marked_in_the_progress_stream():
     evaluated = [p for name, p in events if name == "evaluated"]
     assert evaluated, "no evaluation events were emitted"
     assert all(p["cached"] for p in evaluated), "a free re-run looked expensive"
+
+
+# -- a recommendation must have been evaluated as a whole ------------------
+
+
+def _whole_repo_validator():
+    """Objects to feat-b + feat-d together, though they share no file."""
+    return callable_validation(
+        lambda worktree: (
+            not (
+                os.path.exists(os.path.join(worktree, "new-d.txt"))
+                and "changed by b" in open(os.path.join(worktree, "other.txt")).read()
+            )
+        )
+    )
+
+
+def test_a_recommended_set_is_never_one_the_log_records_as_failing(repo):
+    """The original defect, in the form that survives the component guard.
+
+    The per-component searches each find their own answer; the global search
+    that is supposed to verify the combination runs out of budget before it
+    finds a single passing set. Falling back to the cartesian combination then
+    recommended ``{feat-b, feat-d}`` — a set sitting in the run's own log,
+    recorded as FAIL.
+    """
+    log = EvaluationLog(MemoryLines())
+    changes = list(branch_changes(repo, ["feat-b", "feat-d"], base="main"))
+    analysis = analyze(
+        repo,
+        changes,
+        base="main",
+        validate=_whole_repo_validator(),
+        log=log,
+        max_evaluations=1,  # enough for the components, not for the global search
+    )
+    assert len(analysis.components) == 2, "the fixture must actually decompose"
+    assert log.exact(frozenset({"feat-b", "feat-d"})).verdict is Verdict.FAIL
+
+    for subset in analysis.maximal_sets:
+        assert log.known(subset).verdict is not Verdict.FAIL, (
+            f"recommended {sorted(subset)}, which this run's own log refutes"
+        )
+
+
+def test_every_reported_plan_was_evaluated_as_a_whole(repo):
+    """`verified` is not decoration: it must be true of every plan reported."""
+    log = EvaluationLog(MemoryLines())
+    changes = list(branch_changes(repo, ["feat-b", "feat-d"], base="main"))
+    analysis = analyze(
+        repo,
+        changes,
+        base="main",
+        validate=_whole_repo_validator(),
+        log=log,
+        max_evaluations=1,
+    )
+    plans = analysis.merge_plan()
+    assert plans, "falling back to nothing at all is not an acceptable answer"
+    for plan in plans:
+        subset = frozenset(plan["changes"])
+        exact = log.exact(subset)
+        assert plan["verified"] is True, plan
+        assert exact is not None and exact.verdict is Verdict.PASS, (
+            f"plan {plan['rank']} claims verified but the log has no PASS for "
+            f"{sorted(subset)}"
+        )
+
+
+def test_an_unverified_plan_is_labelled_and_ranked_last(repo):
+    """When a combination *is* reported, it must say so and never lead."""
+    from mergeset.analysis import Analysis
+
+    changes = list(branch_changes(repo, ["feat-b", "feat-d"], base="main"))
+    verified = frozenset({"feat-b"})
+    guess = frozenset({"feat-b", "feat-d"})
+    analysis = Analysis(
+        repo=repo,
+        base="main",
+        base_sha="0" * 40,
+        changes=changes,
+        maximal_sets=[verified, guess],
+        unverified_sets=[guess],
+    )
+    plans = analysis.merge_plan()
+    assert [p["verified"] for p in plans] == [True, False]
+    assert [p["rank"] for p in plans] == [1, 2], "rank must follow the order shown"
+    assert plans[0]["size"] < plans[1]["size"], (
+        "the bigger plan is the unverified one; it must still rank last"
+    )
+    md = markdown_report(analysis)
+    assert "NOT VERIFIED" in md
+    assert "never merged and validated as a whole" in md
+
+
+def test_a_component_local_validator_combines_without_being_flagged(repo):
+    """Combining is sound by contract there, so nothing is marked unverified."""
+    changes = list(branch_changes(repo, ["feat-a", "feat-b", "feat-d"], base="main"))
+    analysis = analyze(
+        repo,
+        changes,
+        base="main",
+        validate=merge_only_validation(),  # declares component_local = True
+        log=EvaluationLog(MemoryLines()),
+    )
+    assert analysis.unverified_sets == []
+    assert all(p["verified"] for p in analysis.merge_plan())
