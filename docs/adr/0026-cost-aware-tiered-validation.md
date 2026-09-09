@@ -25,7 +25,17 @@ Three facts about the problem shape everything below. All three are established,
 - **The tiers are monotone in each other.** A cheap-tier failure implies overall failure. So a cheap tier is a **sound filter**, and an expensive tier only ever needs to run on cheap-tier survivors. This is the single largest lever available and it is currently unused.
 - **Textual pre-oracles are not enough, and neither is decomposition.** File-overlap decomposition is sound for textual conflicts and unsound for anything a whole-repo test run can see; that was the defect fixed in #9 (ADR-0019, ADR-0025). Semantic conflicts — a drift test guarding artifacts generated from sources another change edits; a barrel export whose evaluation order changes — are invisible to any merge-level check, and pairwise-green does not imply set-green.
 
-Measured on the run in progress, with the staged validator and a reused worktree: an evaluation costs 27.2 s at best, 32.2 s median, 51.2 s at worst; the merge itself costs 0.21–0.69 s. **Merging is free and validating is everything — three orders of magnitude apart.** A cost model that prices merges is pricing noise. Nearly all of the 27→51 s spread is one fingerprinted dependency-install stage that is skipped when the lockfile has not moved, and nothing in the candidate set predicts which will happen.
+Measured on the run in progress, with the staged validator and a reused worktree: the merge itself costs 0.21–0.69 s against 27–51 s of validation. **Merging is free and validating is everything — three orders of magnitude apart.** A cost model that prices merges is pricing noise; the interesting axis is entirely inside the validator.
+
+Splitting those timings by set size is what the design turns on:
+
+```
+size 0   (the base check):  51.2 s                                      -- one point
+size >=1 (the body, n=9):   27.2 30.2 30.7 31.0 31.6 32.8 34.8 36.9 37.2
+                            mean 32.5, sd 3.1
+```
+
+The base check is not a small candidate set. It is the first evaluation, so it is the one that always pays the cold dependency install that every later evaluation skips through a fingerprinted setup stage. It is therefore simultaneously at the extreme of the independent variable (size 0) and the slowest run — which is exactly the shape that dominates a linear fit.
 
 ## What the literature already solves — and what it does not
 
@@ -79,11 +89,16 @@ The default is `MeasuredCost`, fitted by ordinary least squares to `(set size, s
 seconds(tier, subset) = intercept(tier) + slope(tier) · |subset| + per-change surcharges
 ```
 
-Three properties are deliberate.
+Four properties are deliberate.
 
 - **Measurements beat declarations.** A tier's declared `cost` prices it until it has been run; after that, observation wins.
 - **An unmeasured, undeclared tier is not free.** It is priced at `UNMEASURED_TIER_SECONDS` (60 s, one keyword away), chosen to be wrong in the safe direction: high enough that a cost-ordered scheduler runs an untimed tier *after* every tier it has actually measured, low enough that a first run still happens. `inf` would be safer and would mean no new tier ever runs, which is a refusal rather than a model.
-- **Two estimates, because they are used for different decisions.** Ordering can afford to be wrong; a budget check cannot. This is also the design's answer to the unrecorded install-skip: the 27→51 s spread is bimodal on a variable the model cannot see, so it is reported as spread (`pessimistic`) rather than fitted away.
+- **A cost model over CI timings has at least two regimes, because caching is what makes CI affordable.** Fitting one line through both inverts it: the size-0 point at 51 s against a body around 32 s produces a *negative* slope, so the model concludes that adding changes makes validation faster. Budgets survive that — the residual is enormous — but `estimate` drives **ordering**, and ordering was silently backwards, which is the worse failure because a wrong budget is visible and a wrong order is not. So the slope is fitted on the body only, the empty set is priced from its own regime rather than extrapolated, and a negative fitted slope degrades to the mean because adding a change cannot make validation faster.
+- **Two estimates, because they are used for different decisions.** Ordering can afford to be wrong; a budget check cannot. `pessimistic` is the central estimate plus the worst residual *against the same model*, so it carries the spread **within** a regime — an install that ran because the lockfile moved, a slow runner — and never stands in for a regime that should have been separated.
+
+**Price each regime where it occurs; reserve the expensive one explicitly.** This is the correction that matters, and it was nearly missed. Before the regimes were separated, the cold base check inflated `pessimistic`'s residual and so a warm-set budget happened to cover a cold run — by accident, and only until someone improved the fit. With the regimes separated the base check's residual is ~0, and a warm-set `pessimistic` of about 38.7 s (mean + 2 sd) falls **12.5 s short** of the 51.2 s a cold evaluation actually costs — roughly a third under. So `_runs_allowed` takes `reserve = pessimistic(tier, ∅)` off the budget before dividing: the tier's own base check is a real evaluation and the most expensive one it will run. Correctness that depends on an unrelated inaccuracy is correctness that evaporates the next time someone fixes something.
+
+**Held as a hypothesis, not published as a law: the warm regime may be flat.** Across set sizes 1–13 the body's standard deviation is 3.1 s against a 27 s floor — a size-1 evaluation took 30.2 s and a size-13 took 34.8 s. On this evidence set size barely predicts cost at all; the dominant term is *which regime you are in*, and fitting a slope may be modelling noise. The slope is kept because it is guarded, costs nothing, and a validator that selects tests per change would genuinely have one — but this is **nine points on one repository**, and the honest reading is that the reserve is load-bearing while the fit is not yet demonstrated to be. Check it on a second project before treating the slope as real.
 
 ### 2. Validation is an ordered chain of monotone tiers
 
@@ -98,6 +113,8 @@ The lemma that licenses everything:
 > **Every maximal good set of the full oracle is contained in some maximal good set of the screen.**
 > If `S` passes every tier then it passes the screen, so it lies inside some maximal screen-passing set. ∎
 
+An earlier draft of this record overstated the consequence as *"the expensive tier runs on the frontier and never on the interior"*. That is false, and measuring it says so: a conflict visible **only** to the deep tier has to be *shrunk* at deep prices, and QuickXplain's `O(k log(n/k))` queries are interior by construction. On eight branches with one deep-only conflict, 5 of 7 deep evaluations were interior. What survives is the useful half, and it is enough: **a set the screen refutes is never paid for at depth**, so the interior the *screen* explores is free, and deep spending is bounded by the frontier plus whatever genuine deep-only conflicts force. With no deep-only conflict it is the frontier and nothing else.
+
 The maximal screen-passing sets are the **frontier**. There are usually a handful — four, on a real eighteen-change run. Everything else the search touches is *interior*: hitting-set probes, QuickXplain steps, growth checks. None of them can be the answer, and all of them are where the evaluations go.
 
 So:
@@ -109,7 +126,11 @@ The composed evaluator is the mechanism; the seeded conflicts are what keep the 
 
 On the observed run's shape that is roughly `21 × cheap + 4–8 × deep` in place of `21 × deep`.
 
-**A deep tier that cannot run is skipped, not degraded.** No container daemon, or a budget that will not admit one run, and stage 2 does not happen: the answer is the screen's, labelled with the depth it reached and routed through the existing `unverified_sets` machinery so every report already flags it. **A tier that did not run is not a tier that passed.**
+**Every tier checks the base, not just the first.** ADR-0018 evaluates the base commit alone before anything else, so that a broken base or a wrong command is a refusal rather than *n* confident failures. That check lives inside `analyze`, which means only the screen got one — and a deep tier that is red on the base itself makes every frontier set fail, so the run reports "nothing passes `e2e`" as a **finding** rather than as the misconfiguration it is. That is worst exactly where it is hardest to catch: a tier expensive enough to need this design is a tier nobody can cheaply re-run by hand to cross-check. So each tier evaluates the empty set at its own depth before searching, and the budget reserves it.
+
+It **skips** rather than raising, which is the one place this departs from ADR-0018. By the time a deep tier is reached the screen search is banked — often many minutes of it — and discarding a true answer in order to report a misconfiguration would be the worse trade. The depth label already says the tier confirmed nothing, and the reason names the tier and what it printed.
+
+**A deep tier that cannot run is skipped, not degraded.** No container daemon, an authorisation that has not arrived, or a budget that will not admit one run, and stage 2 does not happen: the answer is the screen's, labelled with the depth it reached and routed through the existing `unverified_sets` machinery so every report already flags it. **A tier that did not run is not a tier that passed.** This is what makes a permanently-unrunnable tier representable rather than a caveat someone has to remember: `Tier(available=lambda: False)` turns "we cannot run e2e here" into a property of the answer instead of a sentence in a handover.
 
 ### 4. Anytime, with a certificate rather than an exhausted budget
 
@@ -152,12 +173,36 @@ That is a good heuristic. It has two failure modes, and only the second is the d
 
 **When it is safe, concretely:** the two-phase heuristic is sound and within `w(H)` when (a) monotonicity holds — checked, not assumed, and `monotonicity_violations()` is the check; and (b) phase 1 ran *every* tier on the `H`-free sets. Under those two conditions, running it is a perfectly reasonable thing to do while a principled run is being built, which is exactly what is happening now.
 
+## What an adversarial review changed
+
+`landing-a-branch` requires an independent reviewer for a change of this size, briefed to **refute** rather than approve. It confirmed five defects that the branch's own green suite did not catch, and the two that matter most are worth recording because both are the *same shape as bugs this repository has already fixed once*:
+
+- **A constrained answer could be a whole change short.** `best_set_including` returned the first passing proposal in hitting-set weight order — but stack closure shrinks proposals *after* that order is fixed, so the first passing one need not be the heaviest. `solve.py::_grow_within_known` exists for exactly this and says so in its docstring; re-implementing the search loop without it re-introduced the bug it documents. **Re-implementing a loop is re-implementing its bug fixes.**
+- **Budget admission never read the deep tier's own log.** Costs were synced *after* a tier ran, so admission priced every deep tier from its declaration or the 60 s unmeasured default even when its log held dozens of real timings — a 600 s budget admitting 3000 s of work, while this document claimed "measurements from one run price the next".
+
+Also fixed: two tier names differing only in case (`e2e`, `E2E`) shared one log on macOS and Windows — a cheap PASS answering an expensive question, on the default filesystem of two of three platforms; `confirm_budget_seconds` did not reach the `must_include` phase, leaving it uncapped at deep prices; and the report's *prose* claimed confirmation at the deepest tier whenever that tier had merely been entered, contradicting the `NOT VERIFIED` list three lines below it. The data was right and the sentence was wrong, which is the worse half — the sentence is what a reader believes.
+
+Two findings changed the shape of the answer rather than fixing an arithmetic slip:
+
+- **The anytime gap was comparing two different things.** `best_weight` came from whatever depth had confirmed something, and `bound` describes what could pass *every* tier. Subtracting one from the other produced a **negative gap** whenever the deep tier refuted what the screen had accepted. The gap is now measured against a full-depth best, so "nothing confirmed at depth yet" reads as a full gap instead of as a suspiciously small one.
+- **The bound ignored stacks**, so on a stacked repository it named sets that could never land, `optimal` could never become true however much was validated, and `pending` priced candidates nobody could run.
+
+And one that the seam table had not covered, which is the finding that would have cost the most:
+
+> **The published cost interface would have been burned by #17 within a release or two.** `observe(tier, subset, seconds: float)`, a public `observations: Dict[str, List[Tuple[int, float]]]`, and `cost_from_log(tier: str)` all hard-code "one scalar per evaluation" — and merging publishes them to PyPI. Seam 2 is the `CostModel` *protocol*, and `observations` was not in the protocol; it was a public attribute that got exported. Worse, `runtime_checkable` only checks method presence, so a third-party model would keep passing `isinstance` while breaking at the call site.
+
+The fix is cheap and was made before merge: `observations` is now private and the evidence is published through `summary()` (a dict, which can gain keys), and `observe` accepts `float | Mapping[str, float]` so per-stage durations land as **data** rather than as a signature change. **A seam table protects the boundaries it names; a public attribute beside one is still a published interface.**
+
+Two mutations also survived the first pass — the tests named after "a tier that did not run is not a tier that passed" and after the constrained-maximality fix both stayed green when the property was deleted. Both were corrected rather than relabelled. Writing a test named after a regression is not the same as gating it.
+
 ## Consequences
 
 - The expensive tier becomes affordable without becoming optional. It runs a handful of times instead of never.
 - Every claim carries the tier it was validated at. Reports gain a true statement and lose the ability to make a false one.
 - Two evaluation logs per two-tier run instead of one. A tiered run does *not* reuse an existing untiered log, because the log key now carries the tier name — the first tiered run on a repository re-screens. This is a real cost, accepted: a shared key would be exactly the cache collision the design exists to prevent.
 - Cost estimates improve monotonically with use, and say when they are guesses.
+- Each deep tier now spends one evaluation on its own base check, and the budget reserves it. That is the most expensive single run of the tier, and it is the one that must not be skipped: without it "nothing passes `e2e`" is reported as a finding.
+- Change weights must be non-negative. The bound is the complement of the cheapest minimal hitting set, and that enumeration is best-first over cumulative weight — Dijkstra, which is wrong with negative edges, silently and in the dangerous direction. A negative weight is now refused rather than producing a bound below the true optimum labelled `provably maximal`.
 - Nothing about the untiered path changes. `analyze()` is untouched; `analyze_tiered()` composes it.
 
 ## Seams (architecture-first turn-1 table)
@@ -192,7 +237,7 @@ Surface for v1: library only. CLI/MCP/HTTP/frontend/skills: questions answered, 
 
 ## What this depends on and does not yet have
 
-**Per-stage durations are not recorded.** `ValidationOutcome` persists one blended `duration`. `staged_validation` computes each stage separately — that is its entire purpose — and the log then discards the breakdown, so the single largest term in the cost model (a fingerprinted install that runs or is skipped) can only be inferred from which evaluations happened to be cold. That is not evidence. Tracked as **i2mint/mergeset#17**; it is a change to `validation.py` and `base.py` and is deliberately not in this branch. Until it lands, the `pessimistic`/`estimate` split is the design's answer to that variance rather than a fit to it.
+**Per-stage durations are not recorded, and this is the gap the whole cost model rests on.** `ValidationOutcome` persists one blended `duration`. `staged_validation` computes each stage separately — that is its entire purpose — and the log then discards the breakdown. So the regime is **latent**: this design infers "that was the cold one" from the size-0 point, which works only because the base check happens to be both the first evaluation and the only size-0 one. Record `setup.skipped` and the regime is **observed** instead — and so is the assumption this design currently has to make, that no *other* evaluation ever pays cold, which stops being true the moment a lockfile moves mid-run. The body's own 27.2–37.2 s spread may well be the same two regimes one level down, read as within-regime variance for want of the field that would say. Tracked as **i2mint/mergeset#17**; it is a change to `validation.py` and `base.py` and is deliberately not in this branch.
 
 **Spend must be read from the log, not from the search state.** `Analysis.evaluations` counts what *this process* ran, so a re-run against a complete log reports zero spend for work that really happened (**i2mint/mergeset#16**). Everything here counts evaluations as rows in the tier's log.
 

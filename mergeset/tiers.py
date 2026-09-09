@@ -19,10 +19,19 @@ unaffordable tier affordable:
 The maximal screen-passing sets are the **frontier**, and there are usually a
 handful of them — four, on a real run of eighteen changes. Everything else the
 search touches is *interior*: hitting-set probes and conflict shrinking, dozens
-of evaluations, none of which can be the answer. So the expensive tier runs on
-the frontier and never on the interior, and the question stops being "which of
-2**18 subsets do I dare run browser tests on" and becomes "how few runs confirm
-these four".
+of evaluations, none of which can be the answer. So the question stops being
+"which of 2**18 subsets do I dare run browser tests on" and becomes "how few runs
+confirm these four".
+
+The claim is **not** that the expensive tier never touches the interior — that
+would be false, and measuring it says so. A conflict visible *only* to the deep
+tier has to be shrunk at deep prices, and QuickXplain's ``O(k log(n/k))`` queries
+for a conflict of size ``k`` are interior by construction. What holds is the
+useful half: a set the screen refutes is never paid for at depth, so the interior
+the *screen* explores is free, and deep spending is bounded by the frontier plus
+the shrinking that genuine deep-only conflicts force. On eight branches with one
+deep-only conflict that is 7 deep runs against 10 screen runs; with no deep-only
+conflict it is the frontier and nothing else.
 
 Mechanically that is one composed evaluator with two properties:
 
@@ -50,7 +59,9 @@ passed.**
 
 from __future__ import annotations
 
+import hashlib
 import os
+import re
 from dataclasses import dataclass, field
 from typing import (
     Callable,
@@ -284,40 +295,95 @@ def chained_evaluate(evaluators: Sequence[Callable[[ChangeSet], Evaluation]]):
     return evaluate
 
 
+_TIER_UNSAFE = re.compile(r"[^a-z0-9_-]+")
+
+
+def tier_key(tier: str) -> str:
+    """The key-safe form of a tier name.
+
+    The repository half of a log key has always been slugified; the tier half
+    was interpolated raw, and that is not merely untidy. ``e2e`` and ``E2E`` are
+    two tier names and one file on macOS and Windows — a cheap-tier PASS
+    answering an expensive-tier question, on the default filesystem of two of
+    three platforms. ``a/b`` and ``x/../y`` reach outside the store entirely.
+
+    Case is folded rather than preserved because the collision is the point: two
+    names differing only in case must be *rejected* as duplicates, never
+    silently merged into one log. A name that had to be changed at all carries a
+    short digest of the original, so two different unsafe names cannot be
+    flattened onto one key either.
+
+    ``mergeset.storage.slugify`` is not reused here: it always appends a digest,
+    which is right for a long filesystem path and wrong for a name a person
+    typed and will read back in a report.
+
+    >>> tier_key('e2e'), tier_key('E2E')
+    ('e2e', 'e2e')
+    >>> tier_key('a/b') == tier_key('x/../y')
+    False
+    >>> '/' in tier_key('a/b')
+    False
+    """
+    name = str(tier).strip()
+    if not name:
+        raise ValueError(
+            "A tier name cannot be blank; it names this tier's evaluation log, "
+            "and two blank names would be one log."
+        )
+    folded = name.lower()
+    key = _TIER_UNSAFE.sub("-", folded).strip("-")
+    if key != folded:
+        digest = hashlib.sha256(folded.encode()).hexdigest()[:6]
+        key = f"{key or 'tier'}-{digest}"
+    return key
+
+
 def tier_lines(repo: str, tier: str, *, store=None):
     """The append-only lines object backing one tier's evaluation log.
 
     One log per tier, in the same artifact store as everything else, keyed by
     repository *and* tier. Sharing one log between tiers would make a cheap
     PASS answer an expensive question, which is the one thing this module
-    exists to prevent.
+    exists to prevent — so both halves of the key are slugified.
 
     >>> backing = {}
     >>> lines = tier_lines('/x/proj/widget', 'e2e', store=backing)
     >>> lines.append({'a': 1}); list(backing)[0].endswith('.e2e.jsonl')
     True
     """
+    name = tier_key(tier)
     if store is None:
         path = evaluation_log_path(repo)
         stem, ext = os.path.splitext(path)
-        return JsonlLines(f"{stem}.{tier}{ext}")
-    key = f"{slugify(os.path.abspath(os.path.expanduser(str(repo))))}.{tier}.jsonl"
+        return JsonlLines(f"{stem}.{name}{ext}")
+    key = f"{slugify(os.path.abspath(os.path.expanduser(str(repo))))}.{name}.jsonl"
     return StoreLines(store, key)
 
 
-def _sync_costs(cost_model: CostModel, log: EvaluationLog, tier: str) -> float:
-    """Re-read a tier's log into the cost model; return the seconds it records.
+def _sync_costs(
+    cost_model: CostModel,
+    log: EvaluationLog,
+    tier: str,
+    ingested: Dict[str, int],
+) -> float:
+    """Feed a tier's new log rows to the cost model; return the seconds it records.
 
     The log has recorded the wall-clock of every evaluation since the package
     was written, so the price of a tier is measured rather than declared — this
-    is what reads it back. Idempotent: the tier's observations are rebuilt, not
-    appended to, so calling it after every stage is safe.
+    is what reads it back.
+
+    ``ingested`` tracks how many rows each tier has already contributed, so
+    calling this after every stage adds only what is new. An earlier version
+    cleared the model's observation list instead, which worked for
+    :class:`~mergeset.cost.MeasuredCost` and silently double-counted into every
+    other :class:`~mergeset.cost.CostModel`: the seam publishes a protocol with
+    no ``reset``, so the facade must not require one.
     """
     durations = [(e.subset, e.duration) for e in log if (e.duration or 0) > 0]
-    if isinstance(cost_model, MeasuredCost):
-        cost_model.observations[tier] = []
-    for subset, seconds in durations:
+    already = ingested.get(tier, 0)
+    for subset, seconds in durations[already:]:
         cost_model.observe(tier, subset, seconds)
+    ingested[tier] = len(durations)
     return sum(seconds for _, seconds in durations)
 
 
@@ -340,12 +406,17 @@ def _runs_allowed(
     *,
     budget_seconds: Optional[float],
     max_runs: Optional[int],
+    reserve: float = 0.0,
 ) -> Optional[int]:
     """How many runs of ``tier`` the budget admits; ``None`` means unlimited.
 
     Priced on the *largest* candidate with the *pessimistic* estimate, so the
     number is one the run can actually honour. An explicit ``max_runs`` wins,
     because a stated cap is a decision and a budget is an inference.
+
+    ``reserve`` comes off the budget before dividing — the tier's own base check
+    is a real evaluation, and the most expensive one it will run, being the only
+    one guaranteed to pay the cold setup path.
 
     >>> from mergeset.cost import MeasuredCost
     >>> cost = MeasuredCost(declared={'e2e': 300.0})
@@ -354,20 +425,61 @@ def _runs_allowed(
     >>> _runs_allowed(cost, 'e2e', frozenset({'a'}), budget_seconds=100, max_runs=None)
     0
     >>> _runs_allowed(cost, 'e2e', frozenset({'a'}), budget_seconds=None, max_runs=None)
+
+    The same budget admits one fewer run once the base check is reserved:
+
+    >>> _runs_allowed(cost, 'e2e', frozenset({'a'}), budget_seconds=700,
+    ...               max_runs=None, reserve=300.0)
+    1
     """
     if max_runs is not None:
         return max_runs
     if budget_seconds is None:
         return None
+    remaining = budget_seconds - reserve
+    if remaining <= 0:
+        return 0
     each = cost_model.pessimistic(tier, biggest)
     if each <= 0:
-        return None
-    return int(budget_seconds // each)
+        # A model pricing this tier at nothing has told us nothing, and
+        # "unlimited" is the one answer a *budget* must never produce. Admit a
+        # single run — which is also what re-prices the tier for the next one.
+        return 1
+    return int(remaining // each)
 
 
 # --------------------------------------------------------------------------
 # The anytime answer
 # --------------------------------------------------------------------------
+
+
+def _upper_bound(universe, conflicts, weight, weight_of, feasible, stacked, limit):
+    """The heaviest set no known conflict forbids, and that could actually land.
+
+    Every conflict refutes a real set, so the complement of a hitting set is an
+    upper bound on what can still pass. Without stacks the *cheapest* minimal
+    hitting set gives the heaviest complement, so the first one enumerated is
+    the answer.
+
+    With stacks it is not: closure can only shrink a complement, so the shrunken
+    weights no longer arrive in order and the first is not the largest. Scanning
+    is therefore required, and a partial scan would not be a bound at all — so
+    if the enumeration runs past ``limit`` the unclosed complement is used
+    instead. That is looser (it may name a set that could never land) but it is
+    still sound, which is the property that matters.
+    """
+    first = next(iter(minimal_hitting_sets(conflicts, weight=weight)), frozenset())
+    unclosed = universe - first
+    if not stacked:
+        return unclosed, weight_of(unclosed)
+    best_set, best = frozenset(), 0.0
+    for seen, hitting in enumerate(minimal_hitting_sets(conflicts, weight=weight)):
+        if seen >= limit:
+            return unclosed, weight_of(unclosed)
+        candidate = feasible(universe - hitting)
+        if weight_of(candidate) > best or not best_set:
+            best_set, best = candidate, weight_of(candidate)
+    return best_set, best
 
 
 def anytime_answer(
@@ -379,8 +491,10 @@ def anytime_answer(
     tiers: Sequence[Tier],
     cost_model: Optional[CostModel] = None,
     remaining_tiers: Sequence[str] = (),
+    depends_on: Optional[Mapping[ChangeId, ChangeId]] = None,
     spent: Optional[Mapping[str, float]] = None,
     pending_limit: int = 5,
+    bound_search_limit: int = 64,
 ) -> AnytimeAnswer:
     """The best validated set so far, plus a sound bound on what is being missed.
 
@@ -391,6 +505,14 @@ def anytime_answer(
         verified: ``(set, deepest tier that ran on it)`` pairs.
         tiers: The tier chain, which is what "full depth" means.
         cost_model, remaining_tiers: Used to price ``pending``.
+        depends_on: ``child -> parent`` for stacked changes. Without it the
+            bound names sets that could never land — a child without its parent
+            — so ``optimal`` never becomes true however much is validated, and
+            ``pending`` prices candidates nobody can run.
+        bound_search_limit: How many minimal hitting sets to consider when
+            tightening the bound under stack closure. Closure can only shrink a
+            complement, so it breaks the weight ordering the enumeration relies
+            on; past this many, the loose-but-sound unclosed bound is used.
         spent: Seconds per tier, carried through for reporting.
         pending_limit: How many unconfirmed candidates to price.
 
@@ -412,9 +534,25 @@ def anytime_answer(
     (False, False, 'unit')
     """
     universe = frozenset(change_ids)
+    parents = dict(depends_on or {})
+    negative = sorted(cid for cid in universe if weight(cid) < 0)
+    if negative:
+        # The bound is the complement of the *cheapest* minimal hitting set, and
+        # that enumeration is best-first over cumulative weight -- Dijkstra,
+        # which is simply wrong with negative edges. Rather than return a bound
+        # silently below the true optimum while reporting `optimal`, refuse.
+        raise ValueError(
+            f"Change weights must be non-negative; {', '.join(negative)} are "
+            "negative. Weight is the cost of *dropping* a change, so 'drop this "
+            "one first' is expressed by a weight of zero, not a negative one."
+        )
 
     def weight_of(subset: ChangeSet) -> float:
         return sum(weight(cid) for cid in subset)
+
+    def feasible(subset: ChangeSet) -> ChangeSet:
+        """The largest part of ``subset`` that could actually land."""
+        return largest_closed_subset(subset, parents) if parents else subset
 
     deepest = tiers[-1].name if tiers else None
     best_set: Optional[ChangeSet] = None
@@ -436,14 +574,18 @@ def anytime_answer(
             best_tier = tier_name
 
     live = [frozenset(c) for c in conflicts if c]
-    hitting = next(iter(minimal_hitting_sets(live, weight=weight)), frozenset())
-    bound_set = universe - hitting
-    bound = weight_of(bound_set)
+    bound_set, bound = _upper_bound(
+        universe, live, weight, weight_of, feasible, bool(parents), bound_search_limit
+    )
 
     if best_set is None:
         best_weight = 0.0
     full_depth = best_tier is not None and best_tier == deepest
-    gap = bound - best_weight
+    # Comparable only at full depth. A screen-confirmed set's weight is not a
+    # lower bound on what passes *every* tier, and subtracting it produced a
+    # negative gap -- and a report claiming more than the log held -- whenever
+    # the deep tier refuted everything the screen had accepted.
+    gap = bound - (best_weight if full_depth else 0.0)
     optimal = full_depth and gap <= 0
 
     pending: List[Tuple[ChangeSet, float]] = []
@@ -451,8 +593,8 @@ def anytime_answer(
         confirmed = {frozenset(s) for s, t in verified if t == deepest}
         seen = set()
         for hitting_set in minimal_hitting_sets(live, weight=weight):
-            candidate = universe - hitting_set
-            if candidate in confirmed or candidate in seen:
+            candidate = feasible(universe - hitting_set)
+            if not candidate or candidate in confirmed or candidate in seen:
                 continue
             seen.add(candidate)
             price = sum(
@@ -572,6 +714,16 @@ def best_set_including(
         tried.add(candidate)
         result = counted(candidate)
         if result.verdict is Verdict.PASS:
+            # Proposals arrive in hitting-set weight order, but stack closure
+            # shrinks them *after* that order is fixed, so the first passing
+            # proposal need not be the heaviest -- it can be a whole change
+            # short. `solve.py::_grow_within_known` exists for exactly this and
+            # says so; re-implementing the loop here without it re-introduced
+            # the bug it documents. Growing costs no evaluations of its own: it
+            # only consults conflicts already known.
+            grown = _grow_within(candidate, universe, known, parents)
+            if grown != candidate and counted(grown).verdict is Verdict.PASS:
+                return grown, known, spent
             return candidate, known, spent
         if result.verdict is not Verdict.FAIL:
             return None, known, spent
@@ -659,8 +811,16 @@ def analyze_tiered(
                 f"every tier's log through one store. Do not pass {reserved}=."
             )
     names = [t.name for t in tiers]
-    if len(set(names)) != len(names):
-        raise ValueError(f"Tier names must be unique; got {names}.")
+    # Uniqueness of *keys*, not of names: the name identifies the tier's
+    # evaluation log, and two names differing only in case or punctuation are
+    # one log on a case-insensitive filesystem.
+    keys = [tier_key(n) for n in names]
+    if len(set(keys)) != len(keys):
+        raise ValueError(
+            f"Tier names must stay distinct once made key-safe; {names} give "
+            f"{keys}. Each tier keeps its own evaluation log, so two tiers "
+            "sharing a key would let a cheap PASS answer an expensive question."
+        )
 
     emit = on_event or (lambda name, payload: None)
     cost_model = cost_model or MeasuredCost(
@@ -688,11 +848,20 @@ def analyze_tiered(
         cost_model=cost_model,
         depth_reached=screen.name,
     )
-    result.spent[screen.name] = _sync_costs(cost_model, logs[screen.name], screen.name)
-    # Evaluations are counted from the tier's log, not from the search state:
-    # a search resumed against a complete log runs nothing and would report
-    # zero spend for work that really happened (i2mint/mergeset#16).
-    result.runs[screen.name] = len(logs[screen.name])
+    ingested: Dict[str, int] = {}
+    # Every tier's log, not just the screen's. Budget admission for a deep tier
+    # happens before that tier has run anything in *this* process, so pricing it
+    # from `declared` while a log full of real timings sat on disk is how a
+    # 600 s budget admitted 3000 s of work. The docstring promised "measurements
+    # from one run price the next"; this is what makes that true.
+    for tier in tiers:
+        result.spent[tier.name] = _sync_costs(
+            cost_model, logs[tier.name], tier.name, ingested
+        )
+        # Evaluations are counted from the tier's log, not from the search
+        # state: a search resumed against a complete log runs nothing and would
+        # report zero spend for work that really happened (i2mint/mergeset#16).
+        result.runs[tier.name] = len(logs[tier.name])
 
     change_ids = [c.id for c in changes]
     universe = frozenset(change_ids)
@@ -703,7 +872,8 @@ def analyze_tiered(
     conflicts = _seed_conflicts(analysis)
 
     def refresh_answer() -> AnytimeAnswer:
-        remaining = [n for n in names if n not in result.spent]
+        reached = names[: names.index(result.depth_reached) + 1]
+        remaining = [n for n in names if n not in reached]
         answer = anytime_answer(
             change_ids,
             conflicts,
@@ -712,6 +882,7 @@ def analyze_tiered(
             tiers=tiers,
             cost_model=cost_model,
             remaining_tiers=remaining,
+            depends_on=analysis.stacks,
             spent=result.spent,
         )
         result.answer = answer
@@ -734,12 +905,16 @@ def analyze_tiered(
                 emit,
             )
             break
+        check_base = analyze_kwargs.get("check_base", True)
         allowance = _runs_allowed(
             cost_model,
             tier.name,
             universe,
             budget_seconds=confirm_budget_seconds,
             max_runs=confirm_max_runs,
+            reserve=(
+                cost_model.pessimistic(tier.name, frozenset()) if check_base else 0.0
+            ),
         )
         if allowance is not None and allowance < 1:
             price = round(cost_model.pessimistic(tier.name, universe), 1)
@@ -754,6 +929,32 @@ def analyze_tiered(
         evaluators.append(
             _tier_evaluator(repo, analysis, changes, tier, logs[tier.name], emit)
         )
+        # ADR-0018 applies to every tier, not only the first. `analyze` checks
+        # the base for the screen; without the same check here, a deep tier that
+        # is red on the base alone makes every frontier set fail, and the run
+        # reports "nothing passes <tier>" as a *finding* rather than as the
+        # misconfiguration it is. That is worst exactly where it is hardest to
+        # notice: a tier expensive enough to need this design is a tier nobody
+        # can cheaply re-run by hand to cross-check.
+        if check_base:
+            baseline = chained_evaluate(evaluators)(frozenset())
+            if baseline.verdict is not Verdict.PASS:
+                # Skipped, not raised -- the one place this departs from
+                # ADR-0018. By now the screen search is banked, often many
+                # minutes of it, and discarding a true answer in order to report
+                # a misconfiguration is the worse trade. The depth label already
+                # says this tier confirmed nothing.
+                evaluators.pop()
+                _skip(
+                    result,
+                    analysis,
+                    tier,
+                    "it does not pass on the base alone, so every result from it "
+                    f"would be meaningless ({_why(baseline)}). Fix the tier's "
+                    "command or its environment, then re-run",
+                    emit,
+                )
+                break
         emit("tier", {"name": tier.name, "role": "confirm", "max_runs": allowance})
         state = find_maximal_good_sets(
             change_ids,
@@ -769,7 +970,9 @@ def analyze_tiered(
         analysis.searches.append(state)
         conflicts = conflicts + list(state.conflicts)
         analysis.conflicts = _minimal(analysis.conflicts + state.conflicts)
-        result.spent[tier.name] = _sync_costs(cost_model, logs[tier.name], tier.name)
+        result.spent[tier.name] = _sync_costs(
+            cost_model, logs[tier.name], tier.name, ingested
+        )
         result.runs[tier.name] = len(logs[tier.name])
         if state.maximal_good_sets:
             analysis.maximal_sets = state.maximal_good_sets
@@ -781,6 +984,18 @@ def analyze_tiered(
 
     if must_include:
         result.must_include = frozenset(must_include)
+        # The same budget, priced at the depth actually reached. Passing only
+        # `confirm_max_runs` left this phase completely uncapped whenever the
+        # caller had expressed its budget in seconds -- which is the documented
+        # way to express one -- so a 600 s budget could spend thousands.
+        deepest_reached = result.depth_reached or screen.name
+        constrained_allowance = _runs_allowed(
+            cost_model,
+            deepest_reached,
+            universe,
+            budget_seconds=confirm_budget_seconds,
+            max_runs=confirm_max_runs,
+        )
         best, found, _ = best_set_including(
             change_ids,
             chained_evaluate(evaluators),
@@ -788,17 +1003,16 @@ def analyze_tiered(
             conflicts=conflicts,
             weight=weight_of_id,
             depends_on=analysis.stacks,
-            max_evaluations=confirm_max_runs,
+            max_evaluations=constrained_allowance,
         )
         result.best_including = best
         conflicts = _minimal(list(conflicts) + list(found))
         analysis.conflicts = _minimal(list(analysis.conflicts) + list(found))
         for tier_name in names:
-            if tier_name in result.spent:
-                result.spent[tier_name] = _sync_costs(
-                    cost_model, logs[tier_name], tier_name
-                )
-                result.runs[tier_name] = len(logs[tier_name])
+            result.spent[tier_name] = _sync_costs(
+                cost_model, logs[tier_name], tier_name, ingested
+            )
+            result.runs[tier_name] = len(logs[tier_name])
         kept = ", ".join(sorted(result.must_include))
         if best is None:
             analysis.notes.append(
@@ -843,6 +1057,53 @@ def _tier_evaluator(
     )
 
 
+def _why(evaluation: Evaluation) -> str:
+    """The most specific thing that can be said about why an evaluation failed.
+
+    "exit code 1 and nothing else" is exactly the case where a bare verdict
+    leaves the reader nowhere to look, so name the failing tests when the runner
+    named some, and fall back to what it printed.
+    """
+    validation = evaluation.validation
+    if validation is not None:
+        if validation.failing_tests:
+            return "; ".join(validation.failing_tests[:3])
+        tail = (validation.stdout_tail or "").strip().splitlines()
+        if tail:
+            return f"exit {validation.returncode}: " + " / ".join(tail[-2:])
+        return f"the command exited {validation.returncode} and printed nothing"
+    if evaluation.merge is not None and not evaluation.merge.ok:
+        return evaluation.merge.detail or "the merge failed"
+    return evaluation.note or "no detail was reported"
+
+
+def _grow_within(
+    candidate: ChangeSet,
+    universe: ChangeSet,
+    conflicts: Sequence[ChangeSet],
+    parents: Mapping[ChangeId, ChangeId],
+) -> ChangeSet:
+    """Add back anything no *known* conflict forbids, keeping the set closed.
+
+    Costs no evaluations: it consults only conflicts already found. A change is
+    added together with its ancestors, because a set holding a child must hold
+    what the child is built on.
+    """
+    grown = set(candidate)
+    for extra in sorted(universe - candidate):
+        trial = set(grown) | {extra}
+        parent = parents.get(extra)
+        seen = set()
+        while parent is not None and parent in universe and parent not in seen:
+            seen.add(parent)
+            trial.add(parent)
+            parent = parents.get(parent)
+        if any(conflict <= trial for conflict in conflicts):
+            continue
+        grown = trial
+    return frozenset(grown)
+
+
 def _minimal(conflicts: Sequence[ChangeSet]) -> List[ChangeSet]:
     """Keep only minimal conflicts; a superset of a conflict says nothing new."""
     unique = {frozenset(c) for c in conflicts if c}
@@ -882,17 +1143,33 @@ def _record_what_may_be_claimed(
     # untiered path for the same validator -- that would report NOT VERIFIED on
     # every merge-only run. It only ever applies to the screen: every deeper tier
     # here is searched globally, so an exact PASS genuinely exists or does not.
-    trusted = analysis.components_combined and deepest == result.tiers[0].name
+    trusted = (
+        analysis.components_combined
+        and deepest == result.tiers[0].name
+        and deepest == names[-1]
+    )
     analysis.unverified_sets = (
         []
         if trusted
         else [s for s in analysis.maximal_sets if result.verified_tier(s) != deepest]
     )
     chain = " -> ".join(names)
-    if deepest == names[-1]:
+    if deepest == names[-1] and not analysis.unverified_sets:
         analysis.notes.append(
             f"Validation was tiered ({chain}); every set below was confirmed at "
             f"the deepest tier, `{deepest}`."
+        )
+    elif deepest == names[-1]:
+        # The deepest tier was entered but confirmed nothing -- a budget that
+        # admitted no runs, or a tier that refuted everything the screen had
+        # accepted. Saying "confirmed at the deepest tier" here would contradict
+        # the NOT VERIFIED list three lines below, and the prose is what a
+        # reader believes.
+        analysis.notes.append(
+            f"Validation was tiered ({chain}) and reached `{deepest}`, but not "
+            f"every set below was confirmed there. `{deepest}` refuted or did "
+            "not run on the sets marked NOT VERIFIED; they hold only at the "
+            "tier that did accept them."
         )
     else:
         missing = ", ".join(f"`{n}`" for n in names[names.index(deepest) + 1 :])
