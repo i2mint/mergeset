@@ -12,6 +12,7 @@
    module_docs/mergeset/log
    module_docs/mergeset/oracle
    module_docs/mergeset/report
+   module_docs/mergeset/skills
    module_docs/mergeset/solve
    module_docs/mergeset/sources
    module_docs/mergeset/stacks
