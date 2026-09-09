@@ -193,7 +193,11 @@ def test_evaluation_log_makes_a_second_run_free(repo, tmp_path):
     second = analyze(
         repo, changes, base="main", validate=merge_only_validation(), log_path=log_path
     )
-    assert second.evaluations == 0, "the log should have answered everything"
+    assert second.evaluations_this_run == 0, "the log should have answered everything"
     assert {tuple(sorted(s)) for s in first.maximal_sets} == {
         tuple(sorted(s)) for s in second.maximal_sets
     }
+    # ...and the *reported* cost is the same both times. It describes the work
+    # the answer rests on, not the work this process happened to redo, so a
+    # regenerated report cannot understate it to zero.
+    assert second.evaluations == first.evaluations > 0
