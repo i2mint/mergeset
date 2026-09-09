@@ -24,11 +24,36 @@ Evaluating a subset means merging it and running a test suite. That is minutes, 
 
 **Ask the cheap oracles first.** Nothing expensive runs until everything free has had its say: a change whose own CI is red is a conflict of size one; `git merge-tree --write-tree` finds textual conflicts in milliseconds without ever creating a working tree; and changes touching disjoint files form independent subproblems that are solved separately and combined.
 
-**Never evaluate the same set twice.** Every evaluation is appended to `.mergeset/evaluations.jsonl`, which is the single source of truth. Re-running is nearly free, a crashed run resumes, and reports regenerate without re-running anything. The log also propagates monotonicity: a passing set marks all its subsets good, a failing set marks all its supersets bad.
+**Never evaluate the same set twice.** Every evaluation is appended to `~/.local/share/mergeset/evaluations/<repo>.jsonl`, which is the single source of truth. Re-running is nearly free, a crashed run resumes, and reports regenerate without re-running anything. The log also propagates monotonicity: a passing set marks all its subsets good, a failing set marks all its supersets bad.
 
 **Search like a SAT solver, not like a loop.** A failure is shrunk to a minimal conflict by QuickXplain (`O(k log n)` evaluations instead of `O(n)`), and the next candidate to try is the complement of the cheapest minimal hitting set of all conflicts found so far — Reiter's hitting-set duality, which says exactly that complements of maximal good sets *are* the minimal hitting sets of the conflicts.
 
 **Weights mean "cost of dropping this".** When something has to go, the tool drops the cheapest work, not the first thing it thought of.
+
+## Where the output goes
+
+Reports, evaluation logs, raw validation output and captured fixtures all land in an **artifact store**, never in a repository:
+
+```
+~/.local/share/mergeset/       # $MERGESET_DATA_DIR overrides the root
+    reports/<repo>/            # REPORT.md, report.html
+    evaluations/<repo>.jsonl   # the append-only log — the source of truth
+    logs/                      # raw build/test/lint output
+    fixtures/                  # captured failures kept as regression tests
+```
+
+This is not tidiness. Everything `mergeset` produces is **captured from the repository it analysed** — source paths, symbol names, stack traces with verbatim code, branch names, PR metadata. Written into that repository (or into `mergeset`'s own), one `git add .` publishes it. This project has already published a private repository's internals to a public one exactly that way, so the default is now a location no `git add` can reach.
+
+Each kind is a plain `MutableMapping[str, str]`, so the backend is one keyword argument:
+
+```python
+from mergeset import artifact_store
+
+reports = artifact_store("reports")                       # local files
+reports = artifact_store("reports", store_factory=my_s3)  # ...or S3. No caller changes.
+```
+
+`--report-dir` still writes wherever you point it — an explicit choice, not a default.
 
 ## Progressive disclosure
 
@@ -37,6 +62,7 @@ The call above takes no configuration and works. Every piece of it is one keywor
 | you want to change | keyword |
 |---|---|
 | where changes come from | `mergeset.sources` — `branch_changes`, `pr_changes`, `commit_changes`, or any iterable of `Change` |
+| where artifacts are kept | `mergeset.storage` — `artifact_store(kind, store_factory=...)`; local files by default, S3 by passing a different factory |
 | what counts as "works" | `validate=` — `pytest_validation()`, `command_validation('make test')`, `js_validation(...)`, `staged_validation([...])`, `act_validation()`, `callable_validation(my_func)` |
 | how much it may spend | `max_evaluations=`, `max_seconds=`, `max_sets=` — partial results are always returned and labelled partial |
 | what dropping a change costs | `weight=` — any `Change -> float` |

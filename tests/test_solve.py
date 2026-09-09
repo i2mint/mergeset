@@ -82,7 +82,9 @@ def test_single_pairwise_conflict_yields_two_maximal_sets():
 
 
 def test_triple_conflict_is_found_and_only_it():
-    state = find_maximal_good_sets(list("abcd"), oracle_from_conflicts([{"a", "b", "c"}]))
+    state = find_maximal_good_sets(
+        list("abcd"), oracle_from_conflicts([{"a", "b", "c"}])
+    )
     assert [set_key(c) for c in state.conflicts] == [("a", "b", "c")]
     assert [set_key(s) for s in state.maximal_good_sets] == [
         ("a", "b", "d"),
@@ -93,7 +95,8 @@ def test_triple_conflict_is_found_and_only_it():
 
 def test_known_conflicts_cost_no_evaluations():
     with_free = find_maximal_good_sets(
-        list("abc"), oracle_from_conflicts([{"a", "c"}]),
+        list("abc"),
+        oracle_from_conflicts([{"a", "c"}]),
         known_conflicts=[frozenset({"a", "c"})],
     )
     without = find_maximal_good_sets(list("abc"), oracle_from_conflicts([{"a", "c"}]))
@@ -103,7 +106,8 @@ def test_known_conflicts_cost_no_evaluations():
 
 def test_budget_stops_the_search_and_says_so():
     state = find_maximal_good_sets(
-        list("abcdef"), oracle_from_conflicts([{"a", "b"}, {"c", "d"}, {"e", "f"}]),
+        list("abcdef"),
+        oracle_from_conflicts([{"a", "b"}, {"c", "d"}, {"e", "f"}]),
         max_evaluations=1,
     )
     assert not state.exhausted
@@ -148,9 +152,7 @@ def test_independent_components_split_disjoint_file_sets():
 
 
 def test_components_combine_into_global_maximal_sets():
-    combined = combine_components(
-        [[frozenset("ab"), frozenset("b")], [frozenset("c")]]
-    )
+    combined = combine_components([[frozenset("ab"), frozenset("b")], [frozenset("c")]])
     assert [set_key(s) for s in combined] == [("a", "b", "c")]
 
 

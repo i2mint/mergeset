@@ -20,6 +20,7 @@ from mergeset.gitops import create_integration_branch
 from mergeset.oracle import claude_code_resolver
 from mergeset.log import EvaluationLog
 from mergeset.report import html_report, markdown_report
+from mergeset.storage import artifact_store, evaluation_log_path, slugify
 from mergeset.sources import (
     branch_changes,
     fetch_pull_requests,
@@ -151,19 +152,42 @@ def _persistent_worktree(repo: str, base: Optional[str], path: str) -> str:
     )
 
 
-def _emit_reports(analysis, report_dir: Optional[str], title: str) -> list:
-    written = []
-    if not report_dir:
-        return written
-    os.makedirs(report_dir, exist_ok=True)
-    md_path = os.path.join(report_dir, "REPORT.md")
-    html_path = os.path.join(report_dir, "report.html")
-    with open(md_path, "w", encoding="utf-8") as f:
-        f.write(markdown_report(analysis, title=title))
-    with open(html_path, "w", encoding="utf-8") as f:
-        f.write(html_report(analysis, title=title))
-    written += [md_path, html_path]
-    return written
+def _emit_reports(
+    analysis, report_dir: Optional[str], title: str, *, run_name: Optional[str] = None
+) -> list:
+    """Write the two reports and return where they went.
+
+    ``report_dir`` is an explicit override — an escape hatch for "put it right
+    here". With no override the reports go to the artifact store's ``reports``
+    sub-store, under a per-run key, which is outside any repository by
+    construction.
+    """
+    rendered = {
+        "REPORT.md": markdown_report(analysis, title=title),
+        "report.html": html_report(analysis, title=title),
+    }
+    if report_dir:
+        store, prefix = _dir_store(report_dir), ""
+    else:
+        store = artifact_store("reports")
+        prefix = f"{run_name or slugify(analysis.repo)}/"
+    for name, text in rendered.items():
+        store[prefix + name] = text
+    return [_where(store, prefix + name) for name in rendered]
+
+
+def _dir_store(directory: str):
+    """A ``str``-valued store rooted at an explicit directory."""
+    from dol import TextFiles, mk_dirs_if_missing
+
+    os.makedirs(directory, exist_ok=True)
+    return mk_dirs_if_missing(TextFiles(directory))
+
+
+def _where(store, key: str) -> str:
+    """A human-facing location for ``key`` — a real path when there is one."""
+    rootdir = getattr(store, "rootdir", None) or getattr(store, "_prefix", None)
+    return os.path.join(rootdir, key) if isinstance(rootdir, str) else key
 
 
 def branches(
@@ -217,7 +241,10 @@ def branches(
         max_seconds: Stop after this much wall time.
         max_sets: Stop after finding this many maximal sets.
         log_path: Evaluation log (JSONL). Default ``<repo>/.mergeset/evaluations.jsonl``.
-        report_dir: Write ``REPORT.md`` and ``report.html`` here.
+        report_dir: Write ``REPORT.md`` and ``report.html`` into this
+            directory. By default they go to the artifact store
+            (``<artifact root>/reports/<repo-slug>/``), never into the
+            analysed repository — see :mod:`mergeset.storage`.
         integration_branches: Create a local ``integration/*`` branch per maximal set.
         reuse_worktree: Absolute path to one git worktree to check every
             candidate merge out into, instead of a fresh one per evaluation.
@@ -432,7 +459,7 @@ def _integration_branches(analysis) -> list:
     return out
 
 
-def show_log(*, log_path: str = ".mergeset/evaluations.jsonl") -> str:
+def show_log(*, log_path: Optional[str] = None, repo: str = ".") -> str:
     """Print what the evaluation log already knows, without evaluating anything.
 
     Use this to answer questions about a finished run: the log is the single
@@ -441,6 +468,7 @@ def show_log(*, log_path: str = ".mergeset/evaluations.jsonl") -> str:
     well as the log, so it is a library call — ``markdown_report(analysis)`` —
     not a command that could pretend the log alone is enough.)
     """
+    log_path = log_path or evaluation_log_path(repo)
     log = EvaluationLog(log_path)
     lines = [f"{len(log)} evaluations in {log_path}", ""]
     for e in log:

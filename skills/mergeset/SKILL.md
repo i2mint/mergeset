@@ -20,7 +20,7 @@ python -m mergeset prs OWNER/REPO --repo . --author USER --updated-within-hours 
 
 # 3. only now, with the project's real command and a budget
 python -m mergeset prs OWNER/REPO --repo . --validate-command 'pnpm run test' \
-    --max-seconds 3600 --report-dir reports/$(date +%F) --integration-branches
+    --max-seconds 3600 --integration-branches
 
 # ...or, when validation is a sequence rather than one command (it usually is)
 python -m mergeset prs OWNER/REPO --repo . \
@@ -69,7 +69,6 @@ analysis = analyze(
     base="origin/main",
     validate=validate,
     reuse_worktree="/tmp/mergeset-wt",  # install paid once, not per evaluation
-    log_path="reports/evaluations.jsonl",
     max_seconds=3600,
 )
 print(markdown_report(analysis))
@@ -81,6 +80,15 @@ print(markdown_report(analysis))
 
 Merge into a default branch, push to an existing branch, force-push, or delete a remote ref. `mergeset` only ever creates *new local* branches; keep it that way. Hand back the plan and let a human land it.
 
+**And never commit a run's output to a repository.** Reports, evaluation logs, raw build/test output and captured fixtures all go to the artifact store by default — `~/.local/share/mergeset/{reports,evaluations,logs,fixtures}/` — and they belong there.
+
+Everything `mergeset` produces is captured from the repository it analysed: source paths, symbol names, stack traces printing verbatim code, branch names, PR titles, commit SHAs. So before you `git add` any of it, ask two questions in this order:
+
+1. **Is the destination repository public?** `gh repo view <owner>/<repo> --json visibility -q .visibility`
+2. **Is the analysed repository private?** `gh repo view <owner>/<analysed> --json visibility -q .visibility`
+
+Public destination + private source → it does not go in the repo. Cite it by store path instead. This is not hypothetical: `i2mint/mergeset` published 39 files of a private repo's internals this way — to GitHub *and* to four PyPI sdists — and every step along the way looked like good practice ("the report is the deliverable", "the logs are the evidence", "the fixtures are the tests"). Removing them from HEAD did not unpublish them.
+
 ## Stop and say so when
 
 - The report says **ABORTED**, or a note says an evaluation could not be performed — the run did not fail, it did not happen. Usually a bad `reuse_worktree` path or a wrong validation command.
@@ -89,10 +97,10 @@ Merge into a default branch, push to an existing branch, force-push, or delete a
 
 ## Read, do not re-run
 
-The evaluation log is the single source of truth and everything regenerates from it.
+The evaluation log is the single source of truth and everything regenerates from it. It lives at `~/.local/share/mergeset/evaluations/<repo-slug>.jsonl`.
 
 ```bash
-python -m mergeset show-log --log-path reports/evaluations.jsonl
+python -m mergeset show-log --repo .
 ```
 
 Answer questions about an existing analysis from the log. A second run over the same sets costs nothing, but re-deriving what the log already says costs a reader's trust.
