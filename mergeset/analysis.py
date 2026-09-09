@@ -91,7 +91,7 @@ class Analysis:
     #: global search had to verify them. See ``analyze(component_local=...)``.
     components_combined: bool = False
     #: Sets reported without ever having been evaluated as a whole. Empty is the
-    #: normal case. See :meth:`merge_plan`'s ``verified`` and D22.
+    #: normal case. See :meth:`merge_plan`'s ``verified`` and ADR 0025.
     unverified_sets: List[ChangeSet] = field(default_factory=list)
     log: Optional[EvaluationLog] = None
     searches: List[SearchState] = field(default_factory=list)
