@@ -1,5 +1,14 @@
 # Decisions
 
+> **A note on the trial run.** These decisions were made while analysing a real
+> repository with 15 open pull requests. That repository is **private**, so its
+> pull requests appear here as `PR-01`…`PR-17` and its identifiers are described
+> rather than named. The reasoning is unchanged; only the labels are. Derived
+> artifacts from that run — reports, logs, fixtures — are not in this repository
+> at all, and must not be: see the `app-data-lifecycle` skill, "provenance
+> outranks everything".
+
+
 Every non-obvious choice, with the reason. Entries are append-only; when a decision is reversed, the old entry stays and the new one says what changed.
 
 ## D1 — The name is `mergeset`
@@ -85,7 +94,7 @@ Shrinking must respect the closure too. QuickXplain proposes arbitrary subsets, 
 
 ## D16 — A forge's CI verdict is only trusted when the bases agree (found by TEST)
 
-GitHub reported PR #602 as `MERGEABLE` / `CLEAN` while it would not merge onto `main` at all — because GitHub was evaluating it against its own base branch, which had moved on. `analyze` compares each change's `base_ref` against the base being merged onto and ignores the forge's signal when they differ, saying so in the report. TEST rates this the single highest-value cheap check in the run: it excluded one change and its whole cone before any test.
+GitHub reported PR-07 as `MERGEABLE` / `CLEAN` while it would not merge onto `main` at all — because GitHub was evaluating it against its own base branch, which had moved on. `analyze` compares each change's `base_ref` against the base being merged onto and ignores the forge's signal when they differ, saying so in the report. TEST rates this the single highest-value cheap check in the run: it excluded one change and its whole cone before any test.
 
 ## D17 — "Could not run the experiment" is not "the experiment failed" (found by TEST)
 
@@ -103,7 +112,7 @@ One evaluation of the empty set, on base alone. If the base does not validate, e
 
 ## D19 — File-overlap components are a search strategy, not a soundness claim (found by TEST)
 
-The original version combined per-component results and presented the combination as an answer. TEST produced the counterexample: `{#579, #631}` is a real conflict spanning two components — #631's drift test asserts that committed schema artifacts match TypeScript sources, and #579 edits those sources while touching none of #631's files. No evaluated subset had ever contained both, so the tool recommended a 13-change plan that fails.
+The original version combined per-component results and presented the combination as an answer. TEST produced the counterexample: `{PR-04, PR-12}` is a real conflict spanning two components — PR-12's drift test asserts that committed schema artifacts match TypeScript sources, and PR-04 edits those sources while touching none of PR-12's files. No evaluated subset had ever contained both, so the tool recommended a 13-change plan that fails.
 
 Decomposition is sound for *textual* conflicts and unsound for anything a whole-repo run can see: generated artifacts, barrel exports, snapshots, type checks, project-wide lint. It is kept, because finding a conflict inside a small component is finding it cheaply — but it now only *seeds*. The components are searched first, and then a global search runs with every conflict they found already known, so it starts nearly finished. A validator may opt out by declaring `validate.component_local = True` (as `merge_only_validation` does), and the "combine freely" claim was removed from the report unless that declaration is present.
 
@@ -111,7 +120,7 @@ Decomposition is sound for *textual* conflicts and unsound for anything a whole-
 
 `mergeset/attribution.py` mines a failure for the changes it implicates, using three signals in increasing order of strength: every path in the failure block (source frames included, not just the failing test's file); the changes that touched those paths; and — decisively — the identifiers the output names, matched against each candidate's *added* diff lines.
 
-The third signal is not a refinement. In TEST's `{#579, #631}` case the failing test lives in a file #631 added, while the culprit #579 shares no file with it, so file-level attribution accuses the innocent change; only matching `pointColorHopDirection` / `pointColorHopSeeds` / `TraversalDirectionType` against the diffs finds #579. In the `{#577, #587}` case four suites fail to *collect*, so there are no test ids at all — just a stack trace whose actionable frame is a source file. Both fixtures live in the local artifact store (`fixtures/` sub-store, see `docs/DECISIONS.md` D-storage) and are the tests. They are *not* committed: they are captured output from a private repository, and this repository is public.
+The third signal is not a refinement. In TEST's `{PR-04, PR-12}` case the failing test lives in a file PR-12 added, while the culprit PR-04 shares no file with it, so file-level attribution accuses the innocent change; only matching the three configuration identifiers PR-04 added against the diffs finds PR-04. In the `{PR-03, PR-06}` case four suites fail to *collect*, so there are no test ids at all — just a stack trace whose actionable frame is a source file. Both fixtures live in the local artifact store (`fixtures/` sub-store, see `docs/DECISIONS.md` D-storage) and are the tests. They are *not* committed: they are captured output from a private repository, and this repository is public.
 
 Attribution is only ever a *hint*: it narrows the shrink, and a wrong hint costs one wasted check before falling back to unguided halving. It never decides a verdict.
 
@@ -138,7 +147,7 @@ A change that will not merge onto the base at all was listed under "will not mer
 
 ## D25 — Nothing is recommended that was never evaluated as a whole
 
-The defect TEST found first was that a combined plan could be recommended without ever having been run: the tool splits candidates into components that share no changed file, solves each, and combines the answers. `{#579, #631}` sit in different components, so no evaluated subset ever contained both, and the emitted "merge 13 of 15" was a set the tool had never seen. It fails. File-overlap decomposition is sound for *textual* conflicts and unsound for anything a whole-repo test run can see — a drift test in one component reads generated artifacts derived from sources another component edits, with no file in common.
+The defect TEST found first was that a combined plan could be recommended without ever having been run: the tool splits candidates into components that share no changed file, solves each, and combines the answers. `{PR-04, PR-12}` sit in different components, so no evaluated subset ever contained both, and the emitted "merge 13 of 15" was a set the tool had never seen. It fails. File-overlap decomposition is sound for *textual* conflicts and unsound for anything a whole-repo test run can see — a drift test in one component reads generated artifacts derived from sources another component edits, with no file in common.
 
 The guard for that is a global search seeded with every conflict the components found cheaply, so the answer is established rather than composed. That guard has been in place since v1, and `test_components_are_not_assumed_to_combine_for_a_whole_repo_validator` gates it.
 

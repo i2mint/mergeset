@@ -77,7 +77,12 @@ instance/
 
 # Sphinx documentation
 docs/_build/
-docs/*
+# NOT `docs/*` — this repository's `docs/` holds hand-written reference material
+# (DECISIONS.md, RESEARCH.md), and ignoring the whole directory silently
+# untracked them the moment they were moved in.
+# The original commissioning prompt stays out: it is agent scratch, and it names
+# the private repository the trial ran against.
+docs/PROMPT.md
 
 # PyBuilder
 target/
@@ -127,4 +132,9 @@ venv.bak/
 
 # Agent scratch: handoffs and prepared one-off scripts. Never committed —
 # they rot, and they accumulate private detail (see the provenance rule above).
+/.claude/handoffs/
+
+# Agent scratch: handoffs and prepared one-off scripts. Never committed — they
+# rot, and they accumulate exactly the private detail that must not be published
+# from a public repository.
 /.claude/handoffs/

@@ -138,4 +138,4 @@ The fingerprinted stage runs only when its inputs actually change, and `reuse_wo
 
 ## Reading further
 
-`DECISIONS.md` records every non-obvious design choice and why. `RESEARCH.md` covers the MUS/MSS literature this is built on, the merge-queue prior art, and what was deliberately not depended on.
+[`docs/DECISIONS.md`](docs/DECISIONS.md) records every non-obvious design choice and why. [`docs/RESEARCH.md`](docs/RESEARCH.md) covers the MUS/MSS literature this is built on, the merge-queue prior art, and what was deliberately not depended on.

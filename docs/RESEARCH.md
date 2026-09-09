@@ -1,5 +1,14 @@
 # Research: what "which branches merge together" already is, and what to borrow
 
+> **A note on the trial run.** These decisions were made while analysing a real
+> repository with 15 open pull requests. That repository is **private**, so its
+> pull requests appear here as `PR-01`…`PR-17` and its identifiers are described
+> rather than named. The reasoning is unchanged; only the labels are. Derived
+> artifacts from that run — reports, logs, fixtures — are not in this repository
+> at all, and must not be: see the `app-data-lifecycle` skill, "provenance
+> outranks everything".
+
+
 This document exists so the next person does not re-derive the theory. The problem `mergeset` solves has been solved twice already in other fields — once in constraint solving, once in merge-queue engineering — and the useful work is knowing which parts to lift and which parts not to depend on.
 
 ## 1. The problem is an independence system, and the objects have names
@@ -72,7 +81,7 @@ A related trap, same family: a forge's `mergeable`/CI verdict is computed agains
 
 **Monotonicity is a prior, not a law.** It fails in two ways. Benignly: a change contains the fix that makes another change work, so a superset of a bad set passes. Malignly: a flaky test makes the same set pass and fail. Since the whole search rests on propagating good/bad verdicts through the subset lattice, a violation invalidates conclusions silently unless it is looked for. `mergeset` records every evaluation in an append-only log and checks it for contradictions (`EvaluationLog.monotonicity_violations`), reporting them loudly rather than smoothing them over; `flake_tolerant(validate, retries=n)` is the cheap mitigation and pinning changes as always-included is the escape hatch.
 
-**The oracle should return a record, not a bit.** A failure that names the failing tests lets us map tests → files → the changes that touched those files, and aim conflict-shrinking at the suspects instead of halving blindly. This is not theoretical: in the cosmograph trial both semantic conflicts (a schema-drift test failing because a sibling PR added config without regenerating; four test files failing to load because a barrel-export refactor left an enum undefined at module evaluation time) were identified directly from the failing test identities, where blind halving would have cost several more runs at ~45 s each.
+**The oracle should return a record, not a bit.** A failure that names the failing tests lets us map tests → files → the changes that touched those files, and aim conflict-shrinking at the suspects instead of halving blindly. This is not theoretical: in the trial run both semantic conflicts (a schema-drift test failing because a sibling PR added config without regenerating; four test files failing to load because a barrel-export refactor left an enum undefined at module evaluation time) were identified directly from the failing test identities, where blind halving would have cost several more runs at ~45 s each.
 
 ## What we use, and why
 
