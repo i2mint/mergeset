@@ -1,4 +1,4 @@
-# Why the bridge symlink is pruned, and why omitting this ships NOTHING.
+# Why the bridge symlink is pruned, and why the sdist is empty without this.
 #
 # Hatchling walks the tree with `followlinks=True` and skips any directory whose
 # (st_dev, st_ino) it has already seen. `.claude/skills/mergeset` is a committed
@@ -10,8 +10,15 @@
 # Pruning the symlink before it is followed is the fix; `skip-excluded-dirs`
 # is what makes an exclusion prune rather than merely filter.
 #
-# This is what shipped four skill-less releases, and it is why reading this file
-# proves nothing: `tests/test_skills.py` builds both artifacts and looks inside.
+# This is the sdist's failure, not the wheel's. The wheel target below sets
+# `packages`, which hatchling turns into `only-include`, so that walk starts
+# *inside* `mergeset/` and never meets `.claude` at all — the wheel used to be
+# empty for the duller reason that the skill lived outside the package. It still
+# matters for the wheel that ships: `uv build` builds the sdist and then the
+# wheel from it, so an sdist missing the skill publishes a wheel missing it too.
+#
+# Reading this file proves none of that: `tests/test_skills.py` builds both
+# artifacts and looks inside.
 [tool.hatch.build]
 skip-excluded-dirs = true
 exclude = [
@@ -42,7 +49,9 @@ packages = ["mergeset"]
 
 [build-system]
 requires = [
-    "hatchling",
+    # `skip-excluded-dirs` above is load-bearing and older hatchlings ignore it
+    # silently. 1.6 is the oldest release verified to honour it for this tree.
+    "hatchling>=1.6",
 ]
 build-backend = "hatchling.build"
 
@@ -67,9 +76,6 @@ text = "mit"
 [project.scripts]
 mergeset = "mergeset.cli:main"
 
-# So skill-pack indexers find the bundled skill without it being linked first.
-[project.entry-points."skill.skill_packs"]
-mergeset = "mergeset:skills_dir"
 
 [project.urls]
 Homepage = "https://github.com/i2mint/mergeset"
@@ -87,7 +93,7 @@ dev = [
     # tests/test_skills.py builds the wheel and the sdist and looks inside them.
     # Without these it skips, and the skill can silently stop shipping again.
     "build>=1.0",
-    "hatchling",
+    "hatchling>=1.6",
 ]
 docs = [
     "sphinx>=6.0",

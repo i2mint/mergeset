@@ -14,8 +14,8 @@ directory. :func:`install_skills` bridges the two:
 
 .. code-block:: bash
 
-    mergeset install-skills                      # -> ~/.claude/skills/mergeset
-    mergeset install-skills ~/.agents/skills     # any host's directory
+    mergeset install-skills                            # -> ~/.claude/skills
+    mergeset install-skills --target ~/.agents/skills  # any host's directory
 
 The default is a symlink, so ``pip install -U mergeset`` updates the installed
 skill too. Every part is one keyword argument away from being replaced: where
@@ -28,15 +28,14 @@ import shutil
 from pathlib import Path
 from typing import Iterator, List, Optional
 
+from mergeset.base import MergesetError
+
 #: Where an agent host looks by default. Overridden per call, or per host.
 DEFAULT_TARGET = "~/.claude/skills"
 
 
 def skills_dir() -> Path:
     """The directory of skills bundled inside the installed package.
-
-    This is also the entry point registered under ``skill.skill_packs``, so
-    tooling that indexes skill packs finds mergeset's without installing it.
 
     >>> skills_dir().name
     'skills'
@@ -47,10 +46,15 @@ def skills_dir() -> Path:
 def bundled_skills(skills_root: Optional[str] = None) -> Iterator[Path]:
     """Yield the directory of every bundled skill (each holding a ``SKILL.md``).
 
+    ``skills_root`` is resolved, so a relative one still yields links that work
+    from anywhere.
+
     >>> [p.name for p in bundled_skills()]
     ['mergeset']
     """
-    root = Path(skills_root).expanduser() if skills_root else skills_dir()
+    root = Path(skills_root).expanduser().resolve() if skills_root else skills_dir()
+    if not root.is_dir():
+        raise MergesetError(f"No such skills directory: {root}")
     yield from sorted(p for p in root.iterdir() if (p / "SKILL.md").is_file())
 
 
@@ -63,9 +67,13 @@ def install_skills(
 ) -> List[str]:
     """Put the bundled skills where an agent host will find them.
 
-    Returns the destination path of every skill installed. An existing
-    destination is left alone unless ``overwrite`` is set, so re-running is
-    safe and never silently replaces a skill someone edited.
+    Returns the destination path of every skill installed. A destination that
+    already holds a skill is left alone, so re-running is safe and an edited
+    skill is never silently replaced — and anything *else* sitting in the way
+    (a file, a stale broken link) raises rather than being reported as fine.
+
+    ``overwrite=True`` is the escape hatch, and it is not gentle: it deletes
+    whatever is at the destination, including a directory someone kept notes in.
 
     >>> import tempfile
     >>> dest = tempfile.mkdtemp()
@@ -77,14 +85,21 @@ def install_skills(
     >>> install_skills(dest)          # already there, nothing to do
     []
     """
-    target_dir = Path(os.path.expanduser(target))
+    target_dir = Path(target).expanduser()
     target_dir.mkdir(parents=True, exist_ok=True)
     installed = []
     for source in bundled_skills(skills_root):
         destination = target_dir / source.name
-        if destination.exists() or destination.is_symlink():
+        if _holds_a_skill(destination):
             if not overwrite:
                 continue
+        elif destination.exists() or destination.is_symlink():
+            if not overwrite:
+                raise MergesetError(
+                    f"{destination} is in the way and is not a skill. "
+                    f"Move it, or pass overwrite=True (--overwrite) to replace it."
+                )
+        if destination.exists() or destination.is_symlink():
             _remove(destination)
         if link:
             destination.symlink_to(source, target_is_directory=True)
@@ -94,9 +109,19 @@ def install_skills(
     return installed
 
 
+def _holds_a_skill(path: Path) -> bool:
+    """Is there already a usable skill at this destination?"""
+    return (path / "SKILL.md").is_file()
+
+
 def _remove(path: Path) -> None:
-    """Delete a skill destination, whether it is a symlink or a real tree."""
-    if path.is_symlink() or path.is_file():
+    """Delete a skill destination, whether symlink, file or real tree."""
+    if path.is_symlink():
+        try:
+            path.unlink()
+        except OSError:  # a directory symlink on Windows needs rmdir, not unlink
+            os.rmdir(path)
+    elif path.is_file():
         path.unlink()
     else:
         shutil.rmtree(path)
