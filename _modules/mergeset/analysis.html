@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>mergeset.analysis &mdash; mergeset 0.0.12 documentation</title>
+  <title>mergeset.analysis &mdash; mergeset 0.0.13 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=3bbcec59"></script>
+      <script src="../../_static/documentation_options.js?v=9fc46840"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -197,7 +197,38 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">evaluations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""How many expensive evaluations this run actually spent."""</span>
+<span class="w">        </span><span class="sd">"""How many expensive evaluations this analysis rests on.</span>
+
+<span class="sd">        Counted from the **log**, which is the source of truth, not from the</span>
+<span class="sd">        search state, which only knows what *this process* ran. Regenerating a</span>
+<span class="sd">        report from a complete log spends nothing, and the search-state number</span>
+<span class="sd">        then reads 0 — so the better the cache worked, the more the archived</span>
+<span class="sd">        report understated the work. A real 18-candidate run that cost 9</span>
+<span class="sd">        evaluations and 344 s reported "0 expensive evaluations spent".</span>
+
+<span class="sd">        Rows are counted when they decided something about this candidate set:</span>
+<span class="sd">        a recorded PASS or FAIL (an ERROR established nothing) over a subset of</span>
+<span class="sd">        the changes in play (so an older run's rows for a different candidate</span>
+<span class="sd">        set in the same log are not claimed as this analysis's work). The base</span>
+<span class="sd">        check counts — it is an evaluation, and on a real project it is one of</span>
+<span class="sd">        the slowest.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluations_this_run</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">changes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">in</span> <span class="p">(</span><span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">,</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">)</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">subset</span> <span class="o">&lt;=</span> <span class="n">ids</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluations_this_run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""How many expensive evaluations *this process* spent.</span>
+
+<span class="sd">        The number a progress display wants — 0 on a re-run is correct here and</span>
+<span class="sd">        misleading in a report. See :attr:`evaluations`.</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">evaluations</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">searches</span><span class="p">)</span>
 
     <span class="nd">@property</span>
