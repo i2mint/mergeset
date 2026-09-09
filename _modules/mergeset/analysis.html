@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>mergeset.analysis &mdash; mergeset 0.0.6 documentation</title>
+  <title>mergeset.analysis &mdash; mergeset 0.0.7 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=1fd71caa"></script>
+      <script src="../../_static/documentation_options.js?v=bbaf98b3"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -182,6 +182,9 @@
     <span class="c1">#: Whether the per-component answers were trusted to combine, or whether a</span>
     <span class="c1">#: global search had to verify them. See ``analyze(component_local=...)``.</span>
     <span class="n">components_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="c1">#: Sets reported without ever having been evaluated as a whole. Empty is the</span>
+    <span class="c1">#: normal case. See :meth:`merge_plan`'s ``verified`` and D22.</span>
+    <span class="n">unverified_sets</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">log</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">EvaluationLog</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">searches</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">SearchState</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">notes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
@@ -210,13 +213,13 @@
 <span class="sd">        """</span>
         <span class="n">all_ids</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">changes</span><span class="p">)</span>
         <span class="n">by_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">by_id</span>
+        <span class="n">unverified</span> <span class="o">=</span> <span class="p">{</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">unverified_sets</span><span class="p">}</span>
         <span class="n">plans</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">rank</span><span class="p">,</span> <span class="n">subset</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maximal_sets</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">subset</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">maximal_sets</span><span class="p">:</span>
             <span class="n">dropped</span> <span class="o">=</span> <span class="n">all_ids</span> <span class="o">-</span> <span class="n">subset</span>
             <span class="n">merge_these</span> <span class="o">=</span> <span class="n">tips</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stacks</span><span class="p">)</span>
             <span class="n">plans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="p">{</span>
-                    <span class="s2">"rank"</span><span class="p">:</span> <span class="n">rank</span><span class="p">,</span>
                     <span class="s2">"changes"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">merge_order</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">by_id</span><span class="p">)),</span>
                     <span class="c1"># Merging a stack's tip brings its ancestors along, so these</span>
                     <span class="c1"># are the merges you actually perform.</span>
@@ -229,9 +232,21 @@
                         <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">subset</span><span class="p">),</span> <span class="mi">3</span>
                     <span class="p">),</span>
                     <span class="s2">"size"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">subset</span><span class="p">),</span>
+                    <span class="c1"># False means: this exact set was never merged and validated</span>
+                    <span class="c1"># as a whole. It is a *combination* of answers, and a</span>
+                    <span class="c1"># whole-repo validator can object to a combination it has</span>
+                    <span class="c1"># never seen. Do not present such a plan as a result.</span>
+                    <span class="s2">"verified"</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">unverified</span><span class="p">,</span>
                 <span class="p">}</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">plans</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s2">"dropped_weight"</span><span class="p">],</span> <span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="s2">"size"</span><span class="p">]))</span></div>
+        <span class="c1"># Unverified plans rank last however cheap they look: a plan nobody ran</span>
+        <span class="c1"># is not a better answer than a smaller one somebody did.</span>
+        <span class="n">plans</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="p">(</span><span class="ow">not</span> <span class="n">p</span><span class="p">[</span><span class="s2">"verified"</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="s2">"dropped_weight"</span><span class="p">],</span> <span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="s2">"size"</span><span class="p">]))</span>
+        <span class="c1"># Rank is assigned *after* ordering, so "Plan 1" is the first plan the</span>
+        <span class="c1"># reader sees. Numbering before the sort made the two disagree.</span>
+        <span class="k">for</span> <span class="n">rank</span><span class="p">,</span> <span class="n">plan</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">plans</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">plan</span><span class="p">[</span><span class="s2">"rank"</span><span class="p">]</span> <span class="o">=</span> <span class="n">rank</span>
+        <span class="k">return</span> <span class="n">plans</span></div>
 </div>
 
 
@@ -532,7 +547,9 @@
         <span class="n">analysis</span><span class="o">.</span><span class="n">conflicts</span> <span class="o">=</span> <span class="n">_dedupe_conflicts</span><span class="p">(</span>
             <span class="n">analysis</span><span class="o">.</span><span class="n">conflicts</span> <span class="o">+</span> <span class="n">global_state</span><span class="o">.</span><span class="n">conflicts</span>
         <span class="p">)</span>
-        <span class="n">analysis</span><span class="o">.</span><span class="n">maximal_sets</span> <span class="o">=</span> <span class="n">global_state</span><span class="o">.</span><span class="n">maximal_good_sets</span> <span class="ow">or</span> <span class="n">combined</span>
+        <span class="n">analysis</span><span class="o">.</span><span class="n">maximal_sets</span> <span class="o">=</span> <span class="n">global_state</span><span class="o">.</span><span class="n">maximal_good_sets</span> <span class="ow">or</span> <span class="n">_fallback_sets</span><span class="p">(</span>
+            <span class="n">combined</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">analysis</span>
+        <span class="p">)</span>
 
     <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">searches</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
@@ -540,6 +557,8 @@
                 <span class="sa">f</span><span class="s2">"ABORTED: </span><span class="si">{</span><span class="n">state</span><span class="o">.</span><span class="n">error</span><span class="si">}</span><span class="s2">. The sets below are whatever had been "</span>
                 <span class="s2">"established before that point; they are not an answer."</span>
             <span class="p">)</span>
+    <span class="n">_mark_unverified</span><span class="p">(</span><span class="n">analysis</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">trusted</span><span class="o">=</span><span class="n">component_local</span><span class="p">)</span>
+
     <span class="n">violations</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">monotonicity_violations</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">good</span><span class="p">,</span> <span class="n">bad</span> <span class="ow">in</span> <span class="n">violations</span><span class="p">:</span>
         <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -549,6 +568,78 @@
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">analysis</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_fallback_sets</span><span class="p">(</span>
+    <span class="n">combined</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">],</span> <span class="n">log</span><span class="p">:</span> <span class="n">EvaluationLog</span><span class="p">,</span> <span class="n">analysis</span><span class="p">:</span> <span class="s2">"Analysis"</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Combined sets to fall back on when the global search produced nothing.</span>
+
+<span class="sd">    The global search runs out of budget (or aborts) before finding a single</span>
+<span class="sd">    passing set, and the only other answer in hand is the cartesian combination</span>
+<span class="sd">    of the per-component answers. That combination has never been evaluated as a</span>
+<span class="sd">    whole — and a whole-repo validator can fail on changes that share no file,</span>
+<span class="sd">    which is the entire reason the global search exists.</span>
+
+<span class="sd">    So: never hand back a set the log already refutes, and let whatever is left</span>
+<span class="sd">    through only as *unverified*. Recommending a set recorded as failing is the</span>
+<span class="sd">    original defect this whole path was written to prevent.</span>
+<span class="sd">    """</span>
+    <span class="n">refuted</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">combined</span> <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">known</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">refuted</span><span class="p">:</span>
+        <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Dropped the combined set </span><span class="si">{</span><span class="n">set_key</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="si">}</span><span class="s2">: the log records it as "</span>
+            <span class="s2">"failing. Component answers do not combine freely for a validator "</span>
+            <span class="s2">"that sees the whole repository."</span>
+        <span class="p">)</span>
+    <span class="n">surviving</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">combined</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">refuted</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">surviving</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">surviving</span>
+    <span class="c1"># Nothing combinable survives. Rather than report nothing, report what was</span>
+    <span class="c1"># actually established: the largest sets the log records as passing. They</span>
+    <span class="c1"># are smaller than the answer, and they are true, which is the right trade.</span>
+    <span class="n">established</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">maximal_passing_sets</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">established</span><span class="p">:</span>
+        <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="s2">"Every combined set was refuted, so the sets below are the largest "</span>
+            <span class="s2">"the log records as *passing*. They are what was established within "</span>
+            <span class="s2">"the budget, not the maximal answer — re-run with a larger budget."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">established</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_mark_unverified</span><span class="p">(</span>
+    <span class="n">analysis</span><span class="p">:</span> <span class="s2">"Analysis"</span><span class="p">,</span> <span class="n">log</span><span class="p">:</span> <span class="n">EvaluationLog</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">trusted</span><span class="p">:</span> <span class="nb">bool</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Flag every reported set that was never evaluated as a whole.</span>
+
+<span class="sd">    The log is the source of truth: a set is verified iff it has an exact</span>
+<span class="sd">    recorded PASS. Inference across the monotone closure does not count here —</span>
+<span class="sd">    a passing *superset* is what makes a set good by inference, and if such a</span>
+<span class="sd">    superset existed it would be the answer instead.</span>
+
+<span class="sd">    ``trusted`` (the validator declared itself component-local) means combining</span>
+<span class="sd">    is sound by contract, so nothing is flagged.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">trusted</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">analysis</span><span class="o">.</span><span class="n">unverified_sets</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">s</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">maximal_sets</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">exact</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="ow">and</span> <span class="n">log</span><span class="o">.</span><span class="n">exact</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">analysis</span><span class="o">.</span><span class="n">unverified_sets</span><span class="p">:</span>
+        <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="s2">"NOT VERIFIED: "</span>
+            <span class="o">+</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">set_key</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">set_key</span><span class="p">(</span><span class="n">s</span><span class="p">))</span> <span class="ow">or</span> <span class="s2">"(base alone)"</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">unverified_sets</span>
+            <span class="p">)</span>
+            <span class="o">+</span> <span class="s2">" — reported without ever being merged and validated as a whole. "</span>
+            <span class="s2">"These are combinations of per-component answers, and a whole-repo "</span>
+            <span class="s2">"validator can object to a combination it has never seen. Re-run "</span>
+            <span class="s2">"with a larger budget before acting on them."</span>
+        <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_common_base</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">changes</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Change</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
