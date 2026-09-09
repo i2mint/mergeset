@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>mergeset.report &mdash; mergeset 0.0.9 documentation</title>
+  <title>mergeset.report &mdash; mergeset 0.0.10 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f7cdbf68"></script>
+      <script src="../../_static/documentation_options.js?v=a83ce22a"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -101,10 +101,11 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">html</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">MutableMapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">Analysis</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChangeSet</span><span class="p">,</span> <span class="n">set_key</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">CapabilityError</span><span class="p">,</span> <span class="n">ChangeSet</span><span class="p">,</span> <span class="n">set_key</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_fmt_set</span><span class="p">(</span><span class="n">subset</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -491,6 +492,112 @@
 <span class="s2">  }).join('');</span>
 <span class="s2">&lt;/script&gt;</span>
 <span class="s2">"""</span>
+
+
+<span class="c1"># -- PDF, and writing a whole run's reports through the artifact store -------</span>
+
+<span class="c1">#: What ``write_reports`` can produce: format name -&gt; (key suffix, is it bytes).</span>
+<span class="n">REPORT_FORMATS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"markdown"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"REPORT.md"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+    <span class="s2">"html"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"report.html"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+    <span class="s2">"pdf"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"report.pdf"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="pdf_report">
+<a class="viewcode-back" href="../../module_docs/mergeset/report.html#mergeset.pdf_report">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pdf_report</span><span class="p">(</span><span class="n">analysis</span><span class="p">:</span> <span class="n">Analysis</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"mergeset report"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render the analysis as a PDF, for the reader who wants one file to keep.</span>
+
+<span class="sd">    Rendered from the **Markdown**, not the HTML. The HTML report draws its</span>
+<span class="sd">    conflict graph and tables from an embedded JSON blob at load time, so a</span>
+<span class="sd">    print pipeline that does not execute JavaScript would render a blank page —</span>
+<span class="sd">    a PDF that looks fine until someone opens it. The Markdown is static, so</span>
+<span class="sd">    what is printed is what the report says.</span>
+
+<span class="sd">    Needs ``pdfdol``; ``pip install 'mergeset[pdf]'``. The error says so rather</span>
+<span class="sd">    than surfacing an ImportError from three frames down.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">pdfdol</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_pdf</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover - exercised by hand, not in CI</span>
+        <span class="k">raise</span> <span class="n">CapabilityError</span><span class="p">(</span>
+            <span class="s2">"PDF output needs the 'pdfdol' package, which is not installed. "</span>
+            <span class="s2">"Install it with:  pip install 'mergeset[pdf]'  (or: pip install pdfdol). "</span>
+            <span class="s2">"Markdown and HTML reports need nothing extra."</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+    <span class="c1"># `encoding: UTF-8` is not optional: without it wkhtmltopdf reads the page</span>
+    <span class="c1"># as latin-1 and every non-ASCII character in the report — the `·`</span>
+    <span class="c1"># separators, the em dashes — comes out as mojibake in a PDF that otherwise</span>
+    <span class="c1"># looks fine. Verified by extracting the text back out, not by eye.</span>
+    <span class="k">return</span> <span class="n">get_pdf</span><span class="p">(</span>
+        <span class="n">markdown_report</span><span class="p">(</span><span class="n">analysis</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">),</span>
+        <span class="n">src_kind</span><span class="o">=</span><span class="s2">"markdown"</span><span class="p">,</span>
+        <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">"encoding"</span><span class="p">:</span> <span class="s2">"UTF-8"</span><span class="p">},</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="write_reports">
+<a class="viewcode-back" href="../../module_docs/mergeset/report.html#mergeset.write_reports">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_reports</span><span class="p">(</span>
+    <span class="n">analysis</span><span class="p">:</span> <span class="n">Analysis</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"mergeset report"</span><span class="p">,</span>
+    <span class="n">formats</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"markdown"</span><span class="p">,</span> <span class="s2">"html"</span><span class="p">),</span>
+    <span class="n">key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">reports</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">binary_reports</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">rootdir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render a run's reports into the artifact store; return ``{format: key}``.</span>
+
+<span class="sd">    The single place that knows how a run's reports are named and where they</span>
+<span class="sd">    go, so the CLI, the library and any future surface cannot drift apart on it.</span>
+
+<span class="sd">    ``key`` defaults to ``&lt;repo-slug&gt;/&lt;timestamp&gt;`` — per run, so re-analysing a</span>
+<span class="sd">    repository never overwrites the answer you are comparing against. Nothing is</span>
+<span class="sd">    written into the analysed repository, ever: see :mod:`mergeset.storage`.</span>
+
+<span class="sd">    &gt;&gt;&gt; from mergeset.analysis import Analysis</span>
+<span class="sd">    &gt;&gt;&gt; a = Analysis(repo='/x/y/proj', base='main', base_sha='0'*40, changes=[])</span>
+<span class="sd">    &gt;&gt;&gt; text, binary = {}, {}</span>
+<span class="sd">    &gt;&gt;&gt; written = write_reports(a, key='run-1', reports=text, binary_reports=binary)</span>
+<span class="sd">    &gt;&gt;&gt; sorted(written)</span>
+<span class="sd">    ['html', 'markdown']</span>
+<span class="sd">    &gt;&gt;&gt; sorted(text)</span>
+<span class="sd">    ['run-1/REPORT.md', 'run-1/report.html']</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">artifact_store</span><span class="p">,</span> <span class="n">run_key</span>
+
+    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">formats</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">REPORT_FORMATS</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Unknown report format(s): </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">. "</span>
+            <span class="sa">f</span><span class="s2">"Known: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">REPORT_FORMATS</span><span class="p">))</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+    <span class="c1"># `is not None`, not truthiness: `key=""` means "no prefix, write straight</span>
+    <span class="c1"># into the store", which an explicit --report-dir asks for. `key or ...`</span>
+    <span class="c1"># silently turned that into a fresh per-run subdirectory.</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">key</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">run_key</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">repo</span><span class="p">)</span>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">/"</span> <span class="k">if</span> <span class="n">key</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="n">renderers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"markdown"</span><span class="p">:</span> <span class="n">markdown_report</span><span class="p">,</span> <span class="s2">"html"</span><span class="p">:</span> <span class="n">html_report</span><span class="p">,</span> <span class="s2">"pdf"</span><span class="p">:</span> <span class="n">pdf_report</span><span class="p">}</span>
+
+    <span class="n">written</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">fmt</span> <span class="ow">in</span> <span class="n">formats</span><span class="p">:</span>
+        <span class="n">name</span><span class="p">,</span> <span class="n">is_binary</span> <span class="o">=</span> <span class="n">REPORT_FORMATS</span><span class="p">[</span><span class="n">fmt</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">is_binary</span><span class="p">:</span>
+            <span class="n">store</span> <span class="o">=</span> <span class="n">binary_reports</span>
+            <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">store</span> <span class="o">=</span> <span class="n">artifact_store</span><span class="p">(</span><span class="s2">"reports"</span><span class="p">,</span> <span class="n">rootdir</span><span class="o">=</span><span class="n">rootdir</span><span class="p">,</span> <span class="n">binary</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">store</span> <span class="o">=</span> <span class="n">reports</span>
+            <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">store</span> <span class="o">=</span> <span class="n">artifact_store</span><span class="p">(</span><span class="s2">"reports"</span><span class="p">,</span> <span class="n">rootdir</span><span class="o">=</span><span class="n">rootdir</span><span class="p">)</span>
+        <span class="n">store</span><span class="p">[</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">renderers</span><span class="p">[</span><span class="n">fmt</span><span class="p">](</span><span class="n">analysis</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">written</span><span class="p">[</span><span class="n">fmt</span><span class="p">]</span> <span class="o">=</span> <span class="n">prefix</span> <span class="o">+</span> <span class="n">name</span>
+    <span class="k">return</span> <span class="n">written</span></div>
+
 </pre></div>
 
            </div>

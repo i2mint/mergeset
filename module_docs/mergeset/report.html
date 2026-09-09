@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>mergeset.report &mdash; mergeset 0.0.9 documentation</title>
+  <title>mergeset.report &mdash; mergeset 0.0.10 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f7cdbf68"></script>
+      <script src="../../_static/documentation_options.js?v=a83ce22a"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -59,8 +59,11 @@
 <li class="toctree-l1"><a class="reference internal" href="log.html">mergeset.log</a></li>
 <li class="toctree-l1"><a class="reference internal" href="oracle.html">mergeset.oracle</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">mergeset.report</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.report.REPORT_FORMATS"><code class="docutils literal notranslate"><span class="pre">REPORT_FORMATS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#mergeset.report.html_report"><code class="docutils literal notranslate"><span class="pre">html_report()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#mergeset.report.markdown_report"><code class="docutils literal notranslate"><span class="pre">markdown_report()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.report.pdf_report"><code class="docutils literal notranslate"><span class="pre">pdf_report()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.report.write_reports"><code class="docutils literal notranslate"><span class="pre">write_reports()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="solve.html">mergeset.solve</a></li>
@@ -102,6 +105,17 @@ and a single self-contained HTML file (no build step, no CDN) meant to be opened
 and poked at. Both are pure functions of the analysis, which is itself derived
 from the evaluation log — so a report can always be regenerated without
 re-running anything expensive.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="mergeset.report.REPORT_FORMATS">
+<span class="sig-prename descclassname"><span class="pre">mergeset.report.</span></span><span class="sig-name descname"><span class="pre">REPORT_FORMATS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'html':</span> <span class="pre">('report.html',</span> <span class="pre">False),</span> <span class="pre">'markdown':</span> <span class="pre">('REPORT.md',</span> <span class="pre">False),</span> <span class="pre">'pdf':</span> <span class="pre">('report.pdf',</span> <span class="pre">True)}</span></span><a class="headerlink" href="#mergeset.report.REPORT_FORMATS" title="Link to this definition"></a></dt>
+<dd><p>format name -&gt; (key suffix, is it bytes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>What <code class="docutils literal notranslate"><span class="pre">write_reports</span></code> can produce</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="mergeset.report.html_report">
 <span class="sig-prename descclassname"><span class="pre">mergeset.report.</span></span><span class="sig-name descname"><span class="pre">html_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">analysis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="analysis.html#mergeset.analysis.Analysis" title="mergeset.analysis.Analysis"><span class="pre">Analysis</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mergeset'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/mergeset/report.html#html_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.report.html_report" title="Link to this definition"></a></dt>
@@ -118,6 +132,40 @@ and the evaluation timeline.</p>
 <dd><p>Render the analysis as Markdown.</p>
 <p>Sections, in the order a reader actually wants them: what to merge, what
 stops the rest, and only then the evidence.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.report.pdf_report">
+<span class="sig-prename descclassname"><span class="pre">mergeset.report.</span></span><span class="sig-name descname"><span class="pre">pdf_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">analysis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="analysis.html#mergeset.analysis.Analysis" title="mergeset.analysis.Analysis"><span class="pre">Analysis</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mergeset</span> <span class="pre">report'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="reference internal" href="../../_modules/mergeset/report.html#pdf_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.report.pdf_report" title="Link to this definition"></a></dt>
+<dd><p>Render the analysis as a PDF, for the reader who wants one file to keep.</p>
+<p>Rendered from the <strong>Markdown</strong>, not the HTML. The HTML report draws its
+conflict graph and tables from an embedded JSON blob at load time, so a
+print pipeline that does not execute JavaScript would render a blank page —
+a PDF that looks fine until someone opens it. The Markdown is static, so
+what is printed is what the report says.</p>
+<p>Needs <code class="docutils literal notranslate"><span class="pre">pdfdol</span></code>; <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'mergeset[pdf]'</span></code>. The error says so rather
+than surfacing an ImportError from three frames down.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.report.write_reports">
+<span class="sig-prename descclassname"><span class="pre">mergeset.report.</span></span><span class="sig-name descname"><span class="pre">write_reports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">analysis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="analysis.html#mergeset.analysis.Analysis" title="mergeset.analysis.Analysis"><span class="pre">Analysis</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mergeset</span> <span class="pre">report'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">formats</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('markdown',</span> <span class="pre">'html')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reports</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MutableMapping</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary_reports</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MutableMapping</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rootdir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/mergeset/report.html#write_reports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.report.write_reports" title="Link to this definition"></a></dt>
+<dd><p>Render a run’s reports into the artifact store; return <code class="docutils literal notranslate"><span class="pre">{format:</span> <span class="pre">key}</span></code>.</p>
+<p>The single place that knows how a run’s reports are named and where they
+go, so the CLI, the library and any future surface cannot drift apart on it.</p>
+<p><code class="docutils literal notranslate"><span class="pre">key</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">&lt;repo-slug&gt;/&lt;timestamp&gt;</span></code> — per run, so re-analysing a
+repository never overwrites the answer you are comparing against. Nothing is
+written into the analysed repository, ever: see <a class="reference internal" href="storage.html#module-mergeset.storage" title="mergeset.storage"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mergeset.storage</span></code></a>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">Analysis</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Analysis</span><span class="p">(</span><span class="n">repo</span><span class="o">=</span><span class="s1">'/x/y/proj'</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="s1">'main'</span><span class="p">,</span> <span class="n">base_sha</span><span class="o">=</span><span class="s1">'0'</span><span class="o">*</span><span class="mi">40</span><span class="p">,</span> <span class="n">changes</span><span class="o">=</span><span class="p">[])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">text</span><span class="p">,</span> <span class="n">binary</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">written</span> <span class="o">=</span> <span class="n">write_reports</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">'run-1'</span><span class="p">,</span> <span class="n">reports</span><span class="o">=</span><span class="n">text</span><span class="p">,</span> <span class="n">binary_reports</span><span class="o">=</span><span class="n">binary</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">written</span><span class="p">)</span>
+<span class="go">['html', 'markdown']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<span class="go">['run-1/REPORT.md', 'run-1/report.html']</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>mergeset.storage &mdash; mergeset 0.0.9 documentation</title>
+  <title>mergeset.storage &mdash; mergeset 0.0.10 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f7cdbf68"></script>
+      <script src="../../_static/documentation_options.js?v=a83ce22a"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -126,7 +126,9 @@
 <span class="sd">code at S3 is a one-line change and no caller notices::</span>
 
 <span class="sd">    from s3dol import S3Store</span>
-<span class="sd">    mall = artifact_mall(store_factory=lambda kind, root: S3Store(bucket, prefix=kind))</span>
+<span class="sd">    mall = artifact_mall(</span>
+<span class="sd">        store_factory=lambda kind, root, binary=False: S3Store(bucket, prefix=kind)</span>
+<span class="sd">    )</span>
 
 <span class="sd">A factory is handed the **kind and the root separately**, never a joined</span>
 <span class="sd">filesystem path — a backend that has no filesystem must not have to parse one</span>
@@ -150,9 +152,12 @@
 <span class="c1">#: the root itself, so a fifth kind costs no migration.</span>
 <span class="n">ARTIFACT_KINDS</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"reports"</span><span class="p">,</span> <span class="s2">"evaluations"</span><span class="p">,</span> <span class="s2">"logs"</span><span class="p">,</span> <span class="s2">"fixtures"</span><span class="p">)</span>
 
-<span class="c1">#: What a ``store_factory`` must be: ``(kind, rootdir) -&gt; str``-valued store.</span>
-<span class="c1">#: The two are passed separately on purpose — see the module docstring.</span>
-<span class="n">StoreFactory</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">MutableMapping</span><span class="p">]</span>
+<span class="c1">#: What a ``store_factory`` must be: ``(kind, rootdir, *, binary) -&gt; store``.</span>
+<span class="c1">#: Kind and root are passed separately on purpose — see the module docstring.</span>
+<span class="c1">#: ``binary`` says whether the values are ``bytes`` (a PDF) or ``str`` (a report,</span>
+<span class="c1">#: a log, a JSONL line). A backend has to know which; it is not a detail the</span>
+<span class="c1">#: caller can paper over.</span>
+<span class="n">StoreFactory</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_platform_data_home</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -234,21 +239,24 @@
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_text_files_factory</span><span class="p">(</span><span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rootdir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MutableMapping</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""The default backend: ``dol.TextFiles`` over ``&lt;rootdir&gt;/&lt;kind&gt;/``.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_files_factory</span><span class="p">(</span><span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rootdir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">binary</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MutableMapping</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The default backend: ``dol`` files under ``&lt;rootdir&gt;/&lt;kind&gt;/``.</span>
 
 <span class="sd">    ``dol`` is the strongest local backend already in this ecosystem: no</span>
 <span class="sd">    dependencies of its own, and relative-path keys, nested keys and the full</span>
-<span class="sd">    ``MutableMapping`` surface for free.</span>
+<span class="sd">    ``MutableMapping`` surface for free. ``Files`` for bytes, ``TextFiles`` for</span>
+<span class="sd">    text — the same directory either way, so a run's PDF sits beside its</span>
+<span class="sd">    Markdown.</span>
 <span class="sd">    """</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">dol</span><span class="w"> </span><span class="kn">import</span> <span class="n">TextFiles</span><span class="p">,</span> <span class="n">mk_dirs_if_missing</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">dol</span><span class="w"> </span><span class="kn">import</span> <span class="n">Files</span><span class="p">,</span> <span class="n">TextFiles</span><span class="p">,</span> <span class="n">mk_dirs_if_missing</span>
 
     <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rootdir</span><span class="p">,</span> <span class="n">kind</span><span class="p">)</span>
     <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="c1"># ``mk_dirs_if_missing`` is what makes a nested key such as</span>
     <span class="c1"># ``'&lt;run&gt;/REPORT.md'`` just work — without it the write fails on the</span>
     <span class="c1"># missing intermediate directory.</span>
-    <span class="k">return</span> <span class="n">slash_separated_keys</span><span class="p">(</span><span class="n">mk_dirs_if_missing</span><span class="p">(</span><span class="n">TextFiles</span><span class="p">(</span><span class="n">directory</span><span class="p">)))</span>
+    <span class="bp">cls</span> <span class="o">=</span> <span class="n">Files</span> <span class="k">if</span> <span class="n">binary</span> <span class="k">else</span> <span class="n">TextFiles</span>
+    <span class="k">return</span> <span class="n">slash_separated_keys</span><span class="p">(</span><span class="n">mk_dirs_if_missing</span><span class="p">(</span><span class="bp">cls</span><span class="p">(</span><span class="n">directory</span><span class="p">)))</span>
 
 
 <div class="viewcode-block" id="artifact_store">
@@ -259,16 +267,20 @@
     <span class="n">rootdir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">store_factory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StoreFactory</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_APP_NAME</span><span class="p">,</span>
+    <span class="n">binary</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MutableMapping</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""A ``str -&gt; str`` store for one kind of artifact.</span>
+<span class="w">    </span><span class="sd">"""A store for one kind of artifact — ``str`` values, or ``bytes``.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        kind: One of :data:`ARTIFACT_KINDS` (any name works; the tuple is the</span>
 <span class="sd">            set mergeset itself uses).</span>
 <span class="sd">        rootdir: Artifact root. Defaults to :func:`app_data_rootdir`.</span>
-<span class="sd">        store_factory: The backend seam — ``(kind, rootdir) -&gt; MutableMapping``.</span>
-<span class="sd">            Defaults to ``dol.TextFiles`` under ``&lt;rootdir&gt;/&lt;kind&gt;/``. Swap it</span>
-<span class="sd">            for S3, a database, or a dict without touching a single caller.</span>
+<span class="sd">        store_factory: The backend seam —</span>
+<span class="sd">            ``(kind, rootdir, *, binary) -&gt; MutableMapping``, defaulting to</span>
+<span class="sd">            ``dol`` files under ``&lt;rootdir&gt;/&lt;kind&gt;/``. Swap it for S3, a</span>
+<span class="sd">            database, or a dict without touching a single caller.</span>
+<span class="sd">        binary: Values are ``bytes`` rather than ``str``. A run's PDF and its</span>
+<span class="sd">            Markdown share one directory and differ only in this flag.</span>
 
 <span class="sd">    &gt;&gt;&gt; import tempfile</span>
 <span class="sd">    &gt;&gt;&gt; store = artifact_store('logs', rootdir=tempfile.mkdtemp())</span>
@@ -277,8 +289,8 @@
 <span class="sd">    'all green'</span>
 <span class="sd">    """</span>
     <span class="n">rootdir</span> <span class="o">=</span> <span class="n">rootdir</span> <span class="ow">or</span> <span class="n">app_data_rootdir</span><span class="p">(</span><span class="n">app_name</span><span class="o">=</span><span class="n">app_name</span><span class="p">)</span>
-    <span class="n">factory</span> <span class="o">=</span> <span class="n">store_factory</span> <span class="ow">or</span> <span class="n">_text_files_factory</span>
-    <span class="k">return</span> <span class="n">factory</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">rootdir</span><span class="p">)</span></div>
+    <span class="n">factory</span> <span class="o">=</span> <span class="n">store_factory</span> <span class="ow">or</span> <span class="n">_files_factory</span>
+    <span class="k">return</span> <span class="n">factory</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">rootdir</span><span class="p">,</span> <span class="n">binary</span><span class="o">=</span><span class="n">binary</span><span class="p">)</span></div>
 
 
 
@@ -290,6 +302,7 @@
     <span class="n">store_factory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StoreFactory</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">kinds</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">ARTIFACT_KINDS</span><span class="p">,</span>
     <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_APP_NAME</span><span class="p">,</span>
+    <span class="n">binary</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""All the artifact stores, keyed by kind — a *mall*, in ``dol`` terms.</span>
 
@@ -307,6 +320,7 @@
         <span class="n">rootdir</span><span class="o">=</span><span class="n">rootdir</span><span class="p">,</span>
         <span class="n">store_factory</span><span class="o">=</span><span class="n">store_factory</span><span class="p">,</span>
         <span class="n">app_name</span><span class="o">=</span><span class="n">app_name</span><span class="p">,</span>
+        <span class="n">binary</span><span class="o">=</span><span class="n">binary</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
@@ -314,11 +328,12 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">_LazyMall</span><span class="p">(</span><span class="n">Mapping</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""A ``Mapping`` of kind -&gt; store that builds each store on first access."""</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">kinds</span><span class="p">,</span> <span class="n">rootdir</span><span class="p">,</span> <span class="n">store_factory</span><span class="p">,</span> <span class="n">app_name</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">kinds</span><span class="p">,</span> <span class="n">rootdir</span><span class="p">,</span> <span class="n">store_factory</span><span class="p">,</span> <span class="n">app_name</span><span class="p">,</span> <span class="n">binary</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_kinds</span> <span class="o">=</span> <span class="n">kinds</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rootdir</span> <span class="o">=</span> <span class="n">rootdir</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_store_factory</span> <span class="o">=</span> <span class="n">store_factory</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_app_name</span> <span class="o">=</span> <span class="n">app_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_binary</span> <span class="o">=</span> <span class="n">binary</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
@@ -333,6 +348,7 @@
                 <span class="n">rootdir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_rootdir</span><span class="p">,</span>
                 <span class="n">store_factory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_store_factory</span><span class="p">,</span>
                 <span class="n">app_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_name</span><span class="p">,</span>
+                <span class="n">binary</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_binary</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">kind</span><span class="p">]</span>
 
