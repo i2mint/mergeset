@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>mergeset.attribution &mdash; mergeset 0.0.7 documentation</title>
+  <title>mergeset.attribution &mdash; mergeset 0.0.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=bbaf98b3"></script>
+      <script src="../../_static/documentation_options.js?v=53b53b71"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -136,8 +136,8 @@ then it falls back to unguided shrinking; it never decides a verdict.</p>
 <dt class="sig sig-object py" id="mergeset.attribution.identifiers_in">
 <span class="sig-prename descclassname"><span class="pre">mergeset.attribution.</span></span><span class="sig-name descname"><span class="pre">identifiers_in</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/attribution.html#identifiers_in"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.attribution.identifiers_in" title="Link to this definition"></a></dt>
 <dd><p>Camel/Pascal-case identifiers named in the failure output.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">identifiers_in</span><span class="p">(</span><span class="s1">'+ "pointColorRedacted": { "$ref": "AxisDirectionType" }'</span><span class="p">)</span>
-<span class="go">['pointColorRedacted', 'AxisDirectionType']</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">identifiers_in</span><span class="p">(</span><span class="s1">'+ "pointColorSeeds": { "$ref": "AxisDirectionType" }'</span><span class="p">)</span>
+<span class="go">['pointColorSeeds', 'AxisDirectionType']</span>
 </pre></div>
 </div>
 </dd></dl>

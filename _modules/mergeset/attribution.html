@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>mergeset.attribution &mdash; mergeset 0.0.7 documentation</title>
+  <title>mergeset.attribution &mdash; mergeset 0.0.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=bbaf98b3"></script>
+      <script src="../../_static/documentation_options.js?v=53b53b71"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -158,8 +158,8 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">identifiers_in</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Camel/Pascal-case identifiers named in the failure output.</span>
 
-<span class="sd">    &gt;&gt;&gt; identifiers_in('+ "pointColorRedacted": { "$ref": "AxisDirectionType" }')</span>
-<span class="sd">    ['pointColorRedacted', 'AxisDirectionType']</span>
+<span class="sd">    &gt;&gt;&gt; identifiers_in('+ "pointColorSeeds": { "$ref": "AxisDirectionType" }')</span>
+<span class="sd">    ['pointColorSeeds', 'AxisDirectionType']</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">_IDENTIFIER</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">text</span><span class="p">)))</span></div>
 
