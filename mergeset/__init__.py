@@ -101,12 +101,16 @@ from mergeset.storage import (
     run_key,
     slash_separated_keys,
 )
+from mergeset.skills import bundled_skills, install_skills, skills_dir
 from mergeset.oracle import claude_code_resolver, git_oracle, merge_order
 from mergeset.analysis import Analysis, analyze
 from mergeset.report import html_report, markdown_report
 
 __all__ = [
     "analyze",
+    "skills_dir",
+    "install_skills",
+    "bundled_skills",
     "Analysis",
     "Change",
     "ChangeSet",
