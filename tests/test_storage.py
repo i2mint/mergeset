@@ -380,3 +380,17 @@ def _stub_analysis(repo="/x/y/proj"):
     from mergeset.analysis import Analysis
 
     return Analysis(repo=repo, base="main", base_sha="0" * 40, changes=[])
+
+
+def test_the_suite_cannot_reach_the_real_artifact_store():
+    """The guard in conftest, asserted rather than assumed.
+
+    A test suite writing outside its own tmpdir is a bug in any package; in one
+    whose subject is where derived data may go, it is also an embarrassment.
+    """
+    root = app_data_rootdir()
+    home = os.path.expanduser("~")
+    real = os.path.join(home, ".local", "share", "mergeset")
+    assert root != real
+    assert os.environ.get("MERGESET_DATA_DIR"), "conftest must pin the data root"
+    assert root == os.environ["MERGESET_DATA_DIR"]
