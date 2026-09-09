@@ -28,7 +28,9 @@ def test_a_checkout_error_is_not_a_conflict(repo, tmp_path):
     """A bad reuse_worktree once produced "merge 0 of 15 ... complete"."""
     changes = list(branch_changes(repo, ["feat-a", "feat-b"], base="main"))
     analysis = analyze(
-        repo, changes, base="main",
+        repo,
+        changes,
+        base="main",
         validate=merge_only_validation(),
         log=EvaluationLog(MemoryLines()),
         reuse_worktree=str(tmp_path / "does-not-exist"),
@@ -65,7 +67,9 @@ def test_a_broken_base_is_a_refusal_not_a_finding(repo):
     changes = list(branch_changes(repo, ["feat-a", "feat-b"], base="main"))
     with pytest.raises(MergesetError) as excinfo:
         analyze(
-            repo, changes, base="main",
+            repo,
+            changes,
+            base="main",
             validate=command_validation("exit 1"),
             log=EvaluationLog(MemoryLines()),
         )
@@ -97,10 +101,12 @@ def test_detect_runner_still_finds_python_projects(tmp_path):
 
 
 def test_staged_validation_says_which_stage_failed(tmp_path):
-    validate = staged_validation([
-        ValidationStage("build", "exit 3"),
-        ValidationStage("test", "exit 0"),
-    ])
+    validate = staged_validation(
+        [
+            ValidationStage("build", "exit 3"),
+            ValidationStage("test", "exit 0"),
+        ]
+    )
     outcome = validate(str(tmp_path))
     assert not outcome.ok
     assert outcome.failing_tests == ["build: <build failed>"]
@@ -109,33 +115,39 @@ def test_staged_validation_says_which_stage_failed(tmp_path):
 
 def test_a_required_stage_failing_stops_the_sequence(tmp_path):
     marker = tmp_path / "ran"
-    validate = staged_validation([
-        ValidationStage("build", "exit 1"),
-        ValidationStage(
-            "test",
-            py_command(tmp_path, "mark", f"open(r{str(marker)!r}, 'w').close()"),
-        ),
-    ])
+    validate = staged_validation(
+        [
+            ValidationStage("build", "exit 1"),
+            ValidationStage(
+                "test",
+                py_command(tmp_path, "mark", f"open(r{str(marker)!r}, 'w').close()"),
+            ),
+        ]
+    )
     validate(str(tmp_path))
     assert not marker.exists(), "tests must not run when the build failed"
 
 
 def test_a_non_required_stage_is_recorded_but_does_not_veto(tmp_path):
     """An advisory lint pass must not exclude every change set."""
-    validate = staged_validation([
-        ValidationStage("test", "exit 0"),
-        ValidationStage("lint", "exit 1", required=False),
-    ])
+    validate = staged_validation(
+        [
+            ValidationStage("test", "exit 0"),
+            ValidationStage("lint", "exit 1", required=False),
+        ]
+    )
     outcome = validate(str(tmp_path))
     assert outcome.ok, "an advisory stage vetoed the set"
     assert any(f.startswith("lint:") for f in outcome.failing_tests), "not recorded"
 
 
 def test_a_required_stage_after_an_advisory_one_still_vetoes(tmp_path):
-    validate = staged_validation([
-        ValidationStage("lint", "exit 1", required=False),
-        ValidationStage("test", "exit 1"),
-    ])
+    validate = staged_validation(
+        [
+            ValidationStage("lint", "exit 1", required=False),
+            ValidationStage("test", "exit 1"),
+        ]
+    )
     outcome = validate(str(tmp_path))
     assert not outcome.ok
     assert [f.split(":")[0] for f in outcome.failing_tests] == ["lint", "test"]
@@ -149,13 +161,13 @@ def test_a_fingerprinted_stage_reruns_only_when_its_input_changes(tmp_path):
     lock = worktree / "lock.txt"
     lock.write_text("v1")
     counter = worktree / "count"
-    bump = py_command(
-        tmp_path, "bump", f"open(r{str(counter)!r}, 'a').write('x\\n')"
+    bump = py_command(tmp_path, "bump", f"open(r{str(counter)!r}, 'a').write('x\\n')")
+    validate = staged_validation(
+        [
+            ValidationStage("setup", bump, fingerprint=file_fingerprint("lock.txt")),
+            ValidationStage("test", "exit 0"),
+        ]
     )
-    validate = staged_validation([
-        ValidationStage("setup", bump, fingerprint=file_fingerprint("lock.txt")),
-        ValidationStage("test", "exit 0"),
-    ])
     validate(str(worktree))
     validate(str(worktree))
     assert len(counter.read_text().split()) == 1, "setup ran twice for one lockfile"
@@ -173,12 +185,16 @@ def test_components_are_not_assumed_to_combine_for_a_whole_repo_validator(repo):
     """
     changes = list(branch_changes(repo, ["feat-b", "feat-d"], base="main"))
     analysis = analyze(
-        repo, changes, base="main",
+        repo,
+        changes,
+        base="main",
         validate=callable_validation(
-            lambda worktree: not (
-                os.path.exists(os.path.join(worktree, "new-d.txt"))
-                and "changed by b"
-                in open(os.path.join(worktree, "other.txt")).read()
+            lambda worktree: (
+                not (
+                    os.path.exists(os.path.join(worktree, "new-d.txt"))
+                    and "changed by b"
+                    in open(os.path.join(worktree, "other.txt")).read()
+                )
             )
         ),
         log=EvaluationLog(MemoryLines()),
@@ -192,7 +208,9 @@ def test_components_are_not_assumed_to_combine_for_a_whole_repo_validator(repo):
 def test_a_component_local_validator_is_taken_at_its_word(repo):
     changes = list(branch_changes(repo, ["feat-a", "feat-b", "feat-d"], base="main"))
     analysis = analyze(
-        repo, changes, base="main",
+        repo,
+        changes,
+        base="main",
         validate=merge_only_validation(),  # declares component_local = True
         log=EvaluationLog(MemoryLines()),
     )
@@ -251,7 +269,10 @@ def test_cli_staged_flags_build_the_validator_the_project_needs(tmp_path):
     counter = tmp_path / "count"
     bump = py_command(tmp_path, "bump2", f"open(r{str(counter)!r}, 'a').write('x\\n')")
     validate = _validator(
-        merge_only=False, validate_command=None, timeout=None, retries=0,
+        merge_only=False,
+        validate_command=None,
+        timeout=None,
+        retries=0,
         validate_stage=[
             f"setup:{bump}",
             "build:exit 0",
@@ -284,9 +305,16 @@ def test_cli_staged_flags_say_what_is_wrong_with_a_bad_spec():
     ]:
         with pytest.raises(ValueError) as excinfo:
             _validator(
-                merge_only=False, validate_command=None, timeout=None, retries=0,
-                **{"validate_stage": (), "validate_fingerprint": (),
-                   "validate_optional": (), **kwargs},
+                merge_only=False,
+                validate_command=None,
+                timeout=None,
+                retries=0,
+                **{
+                    "validate_stage": (),
+                    "validate_fingerprint": (),
+                    "validate_optional": (),
+                    **kwargs,
+                },
             )
         assert expected in str(excinfo.value)
 
@@ -303,7 +331,10 @@ def test_a_change_that_never_merged_is_not_reported_as_a_test_failure(repo):
 
     changes = list(branch_changes(repo, ["feat-a", "feat-b"], base="main"))
     analysis = analyze(
-        repo, changes, base="main", validate=merge_only_validation(),
+        repo,
+        changes,
+        base="main",
+        validate=merge_only_validation(),
         log=EvaluationLog(MemoryLines()),
     )
     assert "feat-a" in analysis.singleton_conflicts
@@ -331,7 +362,8 @@ def test_cache_hits_are_marked_in_the_progress_stream():
     cached_evaluate = log.caching(evaluate)
     find_maximal_good_sets("abc", cached_evaluate)
     find_maximal_good_sets(
-        "abc", cached_evaluate,
+        "abc",
+        cached_evaluate,
         on_event=lambda name, payload: events.append((name, payload)),
     )
     evaluated = [p for name, p in events if name == "evaluated"]

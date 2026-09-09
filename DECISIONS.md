@@ -18,7 +18,7 @@ The spec asked for `argh`. `argh` is LGPL-3.0-or-later and is being removed flee
 
 ## D4 — The evaluation log is the single source of truth, and it is append-only JSONL
 
-`.mergeset/evaluations.jsonl`, one JSON object per evaluated set. Everything else — the conflict set, the known-good/known-bad closure, the merge plan, both reports — is *derived* and re-derivable, so a report can be regenerated without re-running anything and a crashed run resumes for free.
+`~/.local/share/mergeset/evaluations/<repo>.jsonl` (see D-storage), one JSON object per evaluated set. Everything else — the conflict set, the known-good/known-bad closure, the merge plan, both reports — is *derived* and re-derivable, so a report can be regenerated without re-running anything and a crashed run resumes for free.
 
 Two consequences worth naming:
 
