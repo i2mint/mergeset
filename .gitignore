@@ -118,3 +118,9 @@ venv.bak/
 
 # PyCharm
 .idea
+
+# Derived artifacts never belong in the repo — they go to the artifact store
+# (~/.local/share/mergeset/<kind>/, see mergeset.storage). Anything captured from
+# a *private* repository must never be committed here: this repository is PUBLIC.
+/reports/
+/notes/fixtures/
