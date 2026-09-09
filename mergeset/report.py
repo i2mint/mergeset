@@ -11,10 +11,11 @@ from __future__ import annotations
 
 import html
 import json
+from collections.abc import MutableMapping
 from typing import Iterable, Iterator, List, Optional
 
 from mergeset.analysis import Analysis
-from mergeset.base import ChangeSet, set_key
+from mergeset.base import CapabilityError, ChangeSet, set_key
 
 
 def _fmt_set(subset: Iterable[str]) -> str:
@@ -395,3 +396,103 @@ document.getElementById('log').innerHTML =
   }).join('');
 </script>
 """
+
+
+# -- PDF, and writing a whole run's reports through the artifact store -------
+
+#: What ``write_reports`` can produce: format name -> (key suffix, is it bytes).
+REPORT_FORMATS = {
+    "markdown": ("REPORT.md", False),
+    "html": ("report.html", False),
+    "pdf": ("report.pdf", True),
+}
+
+
+def pdf_report(analysis: Analysis, *, title: str = "mergeset report") -> bytes:
+    """Render the analysis as a PDF, for the reader who wants one file to keep.
+
+    Rendered from the **Markdown**, not the HTML. The HTML report draws its
+    conflict graph and tables from an embedded JSON blob at load time, so a
+    print pipeline that does not execute JavaScript would render a blank page —
+    a PDF that looks fine until someone opens it. The Markdown is static, so
+    what is printed is what the report says.
+
+    Needs ``pdfdol``; ``pip install 'mergeset[pdf]'``. The error says so rather
+    than surfacing an ImportError from three frames down.
+    """
+    try:
+        from pdfdol import get_pdf
+    except ImportError as e:  # pragma: no cover - exercised by hand, not in CI
+        raise CapabilityError(
+            "PDF output needs the 'pdfdol' package, which is not installed. "
+            "Install it with:  pip install 'mergeset[pdf]'  (or: pip install pdfdol). "
+            "Markdown and HTML reports need nothing extra."
+        ) from e
+    # `encoding: UTF-8` is not optional: without it wkhtmltopdf reads the page
+    # as latin-1 and every non-ASCII character in the report — the `·`
+    # separators, the em dashes — comes out as mojibake in a PDF that otherwise
+    # looks fine. Verified by extracting the text back out, not by eye.
+    return get_pdf(
+        markdown_report(analysis, title=title),
+        src_kind="markdown",
+        options={"encoding": "UTF-8"},
+    )
+
+
+def write_reports(
+    analysis: Analysis,
+    *,
+    title: str = "mergeset report",
+    formats: Iterable[str] = ("markdown", "html"),
+    key: Optional[str] = None,
+    reports: Optional[MutableMapping] = None,
+    binary_reports: Optional[MutableMapping] = None,
+    rootdir: Optional[str] = None,
+) -> dict:
+    """Render a run's reports into the artifact store; return ``{format: key}``.
+
+    The single place that knows how a run's reports are named and where they
+    go, so the CLI, the library and any future surface cannot drift apart on it.
+
+    ``key`` defaults to ``<repo-slug>/<timestamp>`` — per run, so re-analysing a
+    repository never overwrites the answer you are comparing against. Nothing is
+    written into the analysed repository, ever: see :mod:`mergeset.storage`.
+
+    >>> from mergeset.analysis import Analysis
+    >>> a = Analysis(repo='/x/y/proj', base='main', base_sha='0'*40, changes=[])
+    >>> text, binary = {}, {}
+    >>> written = write_reports(a, key='run-1', reports=text, binary_reports=binary)
+    >>> sorted(written)
+    ['html', 'markdown']
+    >>> sorted(text)
+    ['run-1/REPORT.md', 'run-1/report.html']
+    """
+    from mergeset.storage import artifact_store, run_key
+
+    unknown = sorted(set(formats) - set(REPORT_FORMATS))
+    if unknown:
+        raise ValueError(
+            f"Unknown report format(s): {', '.join(unknown)}. "
+            f"Known: {', '.join(sorted(REPORT_FORMATS))}."
+        )
+    # `is not None`, not truthiness: `key=""` means "no prefix, write straight
+    # into the store", which an explicit --report-dir asks for. `key or ...`
+    # silently turned that into a fresh per-run subdirectory.
+    key = key if key is not None else run_key(analysis.repo)
+    prefix = f"{key}/" if key else ""
+    renderers = {"markdown": markdown_report, "html": html_report, "pdf": pdf_report}
+
+    written = {}
+    for fmt in formats:
+        name, is_binary = REPORT_FORMATS[fmt]
+        if is_binary:
+            store = binary_reports
+            if store is None:
+                store = artifact_store("reports", rootdir=rootdir, binary=True)
+        else:
+            store = reports
+            if store is None:
+                store = artifact_store("reports", rootdir=rootdir)
+        store[prefix + name] = renderers[fmt](analysis, title=title)
+        written[fmt] = prefix + name
+    return written

@@ -36,7 +36,9 @@ The backend is one keyword argument (``store_factory``), so pointing the same
 code at S3 is a one-line change and no caller notices::
 
     from s3dol import S3Store
-    mall = artifact_mall(store_factory=lambda kind, root: S3Store(bucket, prefix=kind))
+    mall = artifact_mall(
+        store_factory=lambda kind, root, binary=False: S3Store(bucket, prefix=kind)
+    )
 
 A factory is handed the **kind and the root separately**, never a joined
 filesystem path — a backend that has no filesystem must not have to parse one
@@ -60,9 +62,12 @@ ROOTDIR_ENVVAR = "MERGESET_DATA_DIR"
 #: the root itself, so a fifth kind costs no migration.
 ARTIFACT_KINDS: Tuple[str, ...] = ("reports", "evaluations", "logs", "fixtures")
 
-#: What a ``store_factory`` must be: ``(kind, rootdir) -> str``-valued store.
-#: The two are passed separately on purpose — see the module docstring.
-StoreFactory = Callable[[str, str], MutableMapping]
+#: What a ``store_factory`` must be: ``(kind, rootdir, *, binary) -> store``.
+#: Kind and root are passed separately on purpose — see the module docstring.
+#: ``binary`` says whether the values are ``bytes`` (a PDF) or ``str`` (a report,
+#: a log, a JSONL line). A backend has to know which; it is not a detail the
+#: caller can paper over.
+StoreFactory = Callable[..., MutableMapping]
 
 
 def _platform_data_home() -> str:
@@ -138,21 +143,24 @@ def slash_separated_keys(store: MutableMapping, *, sep: str = os.sep) -> Mutable
     )
 
 
-def _text_files_factory(kind: str, rootdir: str) -> MutableMapping:
-    """The default backend: ``dol.TextFiles`` over ``<rootdir>/<kind>/``.
+def _files_factory(kind: str, rootdir: str, *, binary: bool = False) -> MutableMapping:
+    """The default backend: ``dol`` files under ``<rootdir>/<kind>/``.
 
     ``dol`` is the strongest local backend already in this ecosystem: no
     dependencies of its own, and relative-path keys, nested keys and the full
-    ``MutableMapping`` surface for free.
+    ``MutableMapping`` surface for free. ``Files`` for bytes, ``TextFiles`` for
+    text — the same directory either way, so a run's PDF sits beside its
+    Markdown.
     """
-    from dol import TextFiles, mk_dirs_if_missing
+    from dol import Files, TextFiles, mk_dirs_if_missing
 
     directory = os.path.join(rootdir, kind)
     os.makedirs(directory, exist_ok=True)
     # ``mk_dirs_if_missing`` is what makes a nested key such as
     # ``'<run>/REPORT.md'`` just work — without it the write fails on the
     # missing intermediate directory.
-    return slash_separated_keys(mk_dirs_if_missing(TextFiles(directory)))
+    cls = Files if binary else TextFiles
+    return slash_separated_keys(mk_dirs_if_missing(cls(directory)))
 
 
 def artifact_store(
@@ -161,16 +169,20 @@ def artifact_store(
     rootdir: Optional[str] = None,
     store_factory: Optional[StoreFactory] = None,
     app_name: str = DEFAULT_APP_NAME,
+    binary: bool = False,
 ) -> MutableMapping:
-    """A ``str -> str`` store for one kind of artifact.
+    """A store for one kind of artifact — ``str`` values, or ``bytes``.
 
     Args:
         kind: One of :data:`ARTIFACT_KINDS` (any name works; the tuple is the
             set mergeset itself uses).
         rootdir: Artifact root. Defaults to :func:`app_data_rootdir`.
-        store_factory: The backend seam — ``(kind, rootdir) -> MutableMapping``.
-            Defaults to ``dol.TextFiles`` under ``<rootdir>/<kind>/``. Swap it
-            for S3, a database, or a dict without touching a single caller.
+        store_factory: The backend seam —
+            ``(kind, rootdir, *, binary) -> MutableMapping``, defaulting to
+            ``dol`` files under ``<rootdir>/<kind>/``. Swap it for S3, a
+            database, or a dict without touching a single caller.
+        binary: Values are ``bytes`` rather than ``str``. A run's PDF and its
+            Markdown share one directory and differ only in this flag.
 
     >>> import tempfile
     >>> store = artifact_store('logs', rootdir=tempfile.mkdtemp())
@@ -179,8 +191,8 @@ def artifact_store(
     'all green'
     """
     rootdir = rootdir or app_data_rootdir(app_name=app_name)
-    factory = store_factory or _text_files_factory
-    return factory(kind, rootdir)
+    factory = store_factory or _files_factory
+    return factory(kind, rootdir, binary=binary)
 
 
 def artifact_mall(
@@ -189,6 +201,7 @@ def artifact_mall(
     store_factory: Optional[StoreFactory] = None,
     kinds: Tuple[str, ...] = ARTIFACT_KINDS,
     app_name: str = DEFAULT_APP_NAME,
+    binary: bool = False,
 ) -> Mapping[str, MutableMapping]:
     """All the artifact stores, keyed by kind — a *mall*, in ``dol`` terms.
 
@@ -206,17 +219,19 @@ def artifact_mall(
         rootdir=rootdir,
         store_factory=store_factory,
         app_name=app_name,
+        binary=binary,
     )
 
 
 class _LazyMall(Mapping):
     """A ``Mapping`` of kind -> store that builds each store on first access."""
 
-    def __init__(self, *, kinds, rootdir, store_factory, app_name):
+    def __init__(self, *, kinds, rootdir, store_factory, app_name, binary=False):
         self._kinds = kinds
         self._rootdir = rootdir
         self._store_factory = store_factory
         self._app_name = app_name
+        self._binary = binary
         self._cache: dict = {}
 
     def __getitem__(self, kind):
@@ -231,6 +246,7 @@ class _LazyMall(Mapping):
                 rootdir=self._rootdir,
                 store_factory=self._store_factory,
                 app_name=self._app_name,
+                binary=self._binary,
             )
         return self._cache[kind]
 
