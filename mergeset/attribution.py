@@ -63,8 +63,8 @@ def paths_in(text: str) -> List[str]:
 def identifiers_in(text: str) -> List[str]:
     """Camel/Pascal-case identifiers named in the failure output.
 
-    >>> identifiers_in('+ "pointColorRedacted": { "$ref": "AxisDirectionType" }')
-    ['pointColorRedacted', 'AxisDirectionType']
+    >>> identifiers_in('+ "pointColorSeeds": { "$ref": "AxisDirectionType" }')
+    ['pointColorSeeds', 'AxisDirectionType']
     """
     return list(dict.fromkeys(_IDENTIFIER.findall(text)))
 

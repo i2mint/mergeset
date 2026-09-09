@@ -10,8 +10,9 @@
 include = [
     "mergeset/**",
     "tests/**",
-    "docs",
-    "skills",
+    "docs/**",
+    "skills/**",
+    ".claude/agents/**",
     "README.md",
     "LICENSE",
     "pyproject.toml",

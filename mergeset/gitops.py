@@ -133,7 +133,7 @@ def textual_conflict(
     branches were cut at different times — and then it reports base's own
     commits as conflicts. On a real 15-PR set that mistake produced 13
     "conflicting" pairs where only 2 were real (measured by TEST on
-    trial-repo). So we merge A onto base first, in the object database, and ask
+    a real trial). So we merge A onto base first, in the object database, and ask
     whether B then conflicts with *that*.
 
     Returns:

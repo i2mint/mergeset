@@ -1,5 +1,14 @@
 # Decisions
 
+> **A note on the trial run.** These decisions were made while analysing a real
+> repository with 15 open pull requests. That repository is **private**, so its
+> pull requests appear here as `PR-01`…`PR-17` and its identifiers are described
+> rather than named. The reasoning is unchanged; only the labels are. Derived
+> artifacts from that run — reports, logs, fixtures — are not in this repository
+> at all, and must not be: see the `app-data-lifecycle` skill, "provenance
+> outranks everything".
+
+
 Every non-obvious choice, with the reason. Entries are append-only; when a decision is reversed, the old entry stays and the new one says what changed.
 
 ## D1 — The name is `mergeset`
@@ -85,7 +94,7 @@ Shrinking must respect the closure too. QuickXplain proposes arbitrary subsets, 
 
 ## D16 — A forge's CI verdict is only trusted when the bases agree (found by TEST)
 
-GitHub reported PR PR-07 as `MERGEABLE` / `CLEAN` while it would not merge onto `main` at all — because GitHub was evaluating it against its own base branch, which had moved on. `analyze` compares each change's `base_ref` against the base being merged onto and ignores the forge's signal when they differ, saying so in the report. TEST rates this the single highest-value cheap check in the run: it excluded one change and its whole cone before any test.
+GitHub reported PR-07 as `MERGEABLE` / `CLEAN` while it would not merge onto `main` at all — because GitHub was evaluating it against its own base branch, which had moved on. `analyze` compares each change's `base_ref` against the base being merged onto and ignores the forge's signal when they differ, saying so in the report. TEST rates this the single highest-value cheap check in the run: it excluded one change and its whole cone before any test.
 
 ## D17 — "Could not run the experiment" is not "the experiment failed" (found by TEST)
 
@@ -111,7 +120,7 @@ Decomposition is sound for *textual* conflicts and unsound for anything a whole-
 
 `mergeset/attribution.py` mines a failure for the changes it implicates, using three signals in increasing order of strength: every path in the failure block (source frames included, not just the failing test's file); the changes that touched those paths; and — decisively — the identifiers the output names, matched against each candidate's *added* diff lines.
 
-The third signal is not a refinement. In TEST's `{PR-04, PR-12}` case the failing test lives in a file PR-12 added, while the culprit PR-04 shares no file with it, so file-level attribution accuses the innocent change; only matching `pointColorRedacted` / `pointColorRedacted` / `AxisDirectionType` against the diffs finds PR-04. In the `{PR-03, PR-06}` case four suites fail to *collect*, so there are no test ids at all — just a stack trace whose actionable frame is a source file. Both fixtures live in the local artifact store (`fixtures/` sub-store, see `docs/DECISIONS.md` D-storage) and are the tests. They are *not* committed: they are captured output from a private repository, and this repository is public.
+The third signal is not a refinement. In TEST's `{PR-04, PR-12}` case the failing test lives in a file PR-12 added, while the culprit PR-04 shares no file with it, so file-level attribution accuses the innocent change; only matching the three configuration identifiers PR-04 added against the diffs finds PR-04. In the `{PR-03, PR-06}` case four suites fail to *collect*, so there are no test ids at all — just a stack trace whose actionable frame is a source file. Both fixtures live in the local artifact store (`fixtures/` sub-store, see `docs/DECISIONS.md` D-storage) and are the tests. They are *not* committed: they are captured output from a private repository, and this repository is public.
 
 Attribution is only ever a *hint*: it narrows the shrink, and a wrong hint costs one wasted check before falling back to unguided halving. It never decides a verdict.
 

@@ -17,7 +17,7 @@ from mergeset.stacks import (
     tips,
 )
 
-# The shape TEST found on trial-repo: stacks are trees, not chains.
+# The shape TEST found in the trial run: stacks are trees, not chains.
 #   a -> b -> c
 #          -> d       (c and d are siblings on b)
 #   e -> f

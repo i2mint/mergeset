@@ -39,8 +39,8 @@ def test_paths_finds_the_source_frame_not_only_the_test():
 
 
 def test_identifiers_picks_up_camel_and_pascal_case():
-    found = identifiers_in('+ "pointColorRedacted": {"$ref": "AxisDirectionType"}')
-    assert "pointColorRedacted" in found and "AxisDirectionType" in found
+    found = identifiers_in('+ "pointColorSeeds": {"$ref": "AxisDirectionType"}')
+    assert "pointColorSeeds" in found and "AxisDirectionType" in found
 
 
 def test_collection_failure_attributes_via_the_source_file():
@@ -76,8 +76,8 @@ def test_drift_failure_needs_symbols_because_files_point_at_the_wrong_change():
     diffs = {
         "pr-04": (
             "+++ b/packages/config/point-color.ts\n"
-            "+  pointColorRedacted?: AxisDirectionType\n"
-            "+  pointColorRedacted?: number[]\n"
+            "+  pointColorDirection?: AxisDirectionType\n"
+            "+  pointColorSeeds?: number[]\n"
         ),
         "pr-12": (
             "+++ b/tests/unit/params-generated.test.ts\n"
