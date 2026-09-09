@@ -67,7 +67,7 @@ acc = base
 for each head:  tree = merge-tree --write-tree acc head ;  acc = commit-tree tree -p acc -p head
 ```
 
-*n* merge-tree calls, still milliseconds each, still no working tree — and the result is a real commit, so a worktree is only ever created for a set that actually merged and actually wants testing. `mergeset.gitops.merge_sequence` is this loop, and every other git operation in the package goes through it. (Found by the TEST workstream; see `DECISIONS.md`.)
+*n* merge-tree calls, still milliseconds each, still no working tree — and the result is a real commit, so a worktree is only ever created for a set that actually merged and actually wants testing. `mergeset.gitops.merge_sequence` is this loop, and every other git operation in the package goes through it. (Found by the TEST workstream; see `docs/adr/0013-*`.)
 
 **Worktrees versus temp clones.** `git worktree add --detach <dir> <commit>` shares the object database with the origin repository, so it costs a checkout rather than a clone, and several can exist at once for parallel evaluation. Temp clones are only preferable when the validation step might corrupt the repository or needs its own remote configuration. The one real cost of worktrees is per-tree *setup* — `npm install`, virtualenvs, build caches — which is why `mergeset` supports reusing a single worktree across evaluations and fingerprinting the setup stage on its inputs (`file_fingerprint('pnpm-lock.yaml')`), so a 33-second install is paid when the lockfile moves rather than on every candidate.
 
