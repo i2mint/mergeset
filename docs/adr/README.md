@@ -42,6 +42,10 @@ One decision per file. The `decision:` field in each file's front matter carries
 | [0023](0023-a-refusal-is-a-result-not-a-traceback.md) | `D23` | A refusal is a result, not a traceback |
 | [0024](0024-nothing-is-reported-twice-under-two-explanations.md) | `D24` | Nothing is reported twice under two explanations *(found by TEST)* |
 | [0025](0025-nothing-is-recommended-that-was-never-evaluated-as-a-whole.md) | `D25` | Nothing is recommended that was never evaluated as a whole |
+| [0026](0026-cost-aware-tiered-validation.md) | — | Validation is not uniform cost: tiered oracles, a measured cost model, and an anytime search |
 
-25 records. Append-only: when a decision is reversed, the old record stays
+26 records. Append-only: when a decision is reversed, the old record stays
 and the new one says what changed.
+
+Records from 0026 on have no `was` identifier: they were written after the split
+and never had a `D<n>` to resolve against.
