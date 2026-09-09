@@ -39,14 +39,14 @@ def test_paths_finds_the_source_frame_not_only_the_test():
 
 
 def test_identifiers_picks_up_camel_and_pascal_case():
-    found = identifiers_in('+ "pointColorHopSeeds": {"$ref": "TraversalDirectionType"}')
-    assert "pointColorHopSeeds" in found and "TraversalDirectionType" in found
+    found = identifiers_in('+ "pointColorSeeds": {"$ref": "AxisDirectionType"}')
+    assert "pointColorSeeds" in found and "AxisDirectionType" in found
 
 
 def test_collection_failure_attributes_via_the_source_file():
-    """#577/#587: four suites fail to load, so there are no test ids at all.
+    """PR-03/PR-06: four suites fail to load, so there are no test ids at all.
 
-    The only actionable path is a *source* file, added by #577.
+    The only actionable path is a *source* file, added by PR-03.
     """
     text = fixture("vitest-577-587-import-crash.txt")
     files = {
@@ -60,9 +60,9 @@ def test_collection_failure_attributes_via_the_source_file():
 
 
 def test_drift_failure_needs_symbols_because_files_point_at_the_wrong_change():
-    """#579/#631: the failing test is in a file #631 added; #579 is the culprit.
+    """PR-04/PR-12: the failing test is in a file PR-12 added; PR-04 is the culprit.
 
-    #579 shares no file with the failing test, so file-level attribution alone
+    PR-04 shares no file with the failing test, so file-level attribution alone
     accuses the innocent change. Matching the identifiers in the assertion diff
     against each candidate's *added* lines is what gets it right.
     """
@@ -76,8 +76,8 @@ def test_drift_failure_needs_symbols_because_files_point_at_the_wrong_change():
     diffs = {
         "pr579": (
             "+++ b/packages/config/point-color.ts\n"
-            "+  pointColorHopDirection?: TraversalDirectionType\n"
-            "+  pointColorHopSeeds?: number[]\n"
+            "+  pointColorDirection?: AxisDirectionType\n"
+            "+  pointColorSeeds?: number[]\n"
         ),
         "pr631": (
             "+++ b/tests/unit/params-ssot.test.ts\n"

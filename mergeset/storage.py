@@ -268,7 +268,7 @@ def artifact_path(
 def slugify(text: str, *, maxlen: int = 48) -> str:
     """A filesystem-safe key naming a run after its repository.
 
-    Two path components, not one, so ``c/cosmograph`` and ``py/cosmograph`` do
+    Two path components, not one, so ``js/widget`` and ``py/widget`` do
     not collide. Two components are still not unique — ``/a/b/proj`` and
     ``/c/b/proj`` both read as ``b-proj`` — and two repos sharing one evaluation
     log would mix their change ids into one monotone closure, which is a wrong

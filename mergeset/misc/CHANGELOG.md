@@ -17,4 +17,4 @@ Built in one session alongside a TEST workstream running the tool on a live 15-P
 - `detect_runner` ranks manifests above directory names; it previously called a TypeScript repository pytest.
 - An empty `EvaluationLog` is no longer falsy, so `log or EvaluationLog(...)` stops discarding a caller's log.
 
-**Shipped alongside:** a Claude Code subagent (`.claude/agents/mergeset-analyst.md`) and skill (`skills/mergeset/`), `DECISIONS.md` (21 decisions), `RESEARCH.md` (the MUS/MSS and merge-queue literature, and what was deliberately not depended on).
+**Shipped alongside:** a Claude Code subagent (`.claude/agents/mergeset-analyst.md`) and skill (`skills/mergeset/`), `docs/DECISIONS.md` (21 decisions), `docs/RESEARCH.md` (the MUS/MSS and merge-queue literature, and what was deliberately not depended on).
