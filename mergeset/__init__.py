@@ -104,6 +104,17 @@ from mergeset.storage import (
 from mergeset.skills import bundled_skills, install_skills, skills_dir
 from mergeset.oracle import claude_code_resolver, git_oracle, merge_order
 from mergeset.analysis import Analysis, analyze
+from mergeset.cost import CostModel, MeasuredCost, cost_from_log, set_cost
+from mergeset.tiers import (
+    AnytimeAnswer,
+    Tier,
+    TieredAnalysis,
+    analyze_tiered,
+    anytime_answer,
+    best_set_including,
+    chained_evaluate,
+    tier_lines,
+)
 from mergeset.report import html_report, markdown_report
 
 __all__ = [
@@ -111,7 +122,19 @@ __all__ = [
     "skills_dir",
     "install_skills",
     "bundled_skills",
+    "analyze_tiered",
     "Analysis",
+    "TieredAnalysis",
+    "Tier",
+    "AnytimeAnswer",
+    "anytime_answer",
+    "best_set_including",
+    "chained_evaluate",
+    "tier_lines",
+    "CostModel",
+    "MeasuredCost",
+    "cost_from_log",
+    "set_cost",
     "Change",
     "ChangeSet",
     "Evaluation",
