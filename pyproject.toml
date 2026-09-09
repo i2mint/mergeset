@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mergeset"
-version = "0.0.5"
+version = "0.0.6"
 description = "Find which branches/PRs can be merged together: maximal conflict-free, test-passing subsets of changes."
 readme = "README.md"
 requires-python = ">=3.10"
