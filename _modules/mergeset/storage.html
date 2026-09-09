@@ -1,0 +1,551 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.storage &mdash; mergeset 0.0.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1fd71caa"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/storage.html">mergeset.storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mergeset.storage</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mergeset.storage</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Where mergeset's artifacts live, and how code reaches them.</span>
+
+<span class="sd">Everything mergeset produces — reports, evaluation logs, raw validation output,</span>
+<span class="sd">captured failure fixtures — is *derived data*. It has a different lifecycle from</span>
+<span class="sd">code and, crucially, a different **provenance**: it is captured from whatever</span>
+<span class="sd">repository was analysed, which is very often private. So none of it belongs in a</span>
+<span class="sd">repository, and the default location makes sure it never lands in one by</span>
+<span class="sd">accident::</span>
+
+<span class="sd">    ~/.local/share/mergeset/&lt;kind&gt;/          (%LOCALAPPDATA% on Windows)</span>
+
+<span class="sd">Four kinds, four sub-stores:</span>
+
+<span class="sd">===============  ==========================================================</span>
+<span class="sd">``reports``      Rendered analyses — ``&lt;name&gt;/REPORT.md``, ``&lt;name&gt;/report.html``</span>
+<span class="sd">``evaluations``  The append-only JSONL evaluation logs (the source of truth)</span>
+<span class="sd">``logs``         Raw build/test/lint output captured during validation</span>
+<span class="sd">``fixtures``     Captured failure output kept as regression tests</span>
+<span class="sd">===============  ==========================================================</span>
+
+<span class="sd">Each store is a plain :class:`~collections.abc.MutableMapping` of ``str -&gt; str``,</span>
+<span class="sd">so business logic never learns where the bytes physically are::</span>
+
+<span class="sd">    &gt;&gt;&gt; import tempfile</span>
+<span class="sd">    &gt;&gt;&gt; mall = artifact_mall(rootdir=tempfile.mkdtemp())</span>
+<span class="sd">    &gt;&gt;&gt; sorted(mall)</span>
+<span class="sd">    ['evaluations', 'fixtures', 'logs', 'reports']</span>
+<span class="sd">    &gt;&gt;&gt; reports = mall['reports']</span>
+<span class="sd">    &gt;&gt;&gt; reports['demo/REPORT.md'] = '# hello'</span>
+<span class="sd">    &gt;&gt;&gt; reports['demo/REPORT.md']</span>
+<span class="sd">    '# hello'</span>
+<span class="sd">    &gt;&gt;&gt; list(reports)</span>
+<span class="sd">    ['demo/REPORT.md']</span>
+
+<span class="sd">The backend is one keyword argument (``store_factory``), so pointing the same</span>
+<span class="sd">code at S3 is a one-line change and no caller notices::</span>
+
+<span class="sd">    from s3dol import S3Store</span>
+<span class="sd">    mall = artifact_mall(store_factory=lambda kind, root: S3Store(bucket, prefix=kind))</span>
+
+<span class="sd">A factory is handed the **kind and the root separately**, never a joined</span>
+<span class="sd">filesystem path — a backend that has no filesystem must not have to parse one</span>
+<span class="sd">out, and on Windows a joined path would put backslashes in S3 keys.</span>
+
+<span class="sd">The root is overridden by one environment variable, ``MERGESET_DATA_DIR`` — one</span>
+<span class="sd">knob for the root, never one per kind.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">MutableMapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="n">DEFAULT_APP_NAME</span> <span class="o">=</span> <span class="s2">"mergeset"</span>
+<span class="n">ROOTDIR_ENVVAR</span> <span class="o">=</span> <span class="s2">"MERGESET_DATA_DIR"</span>
+
+<span class="c1">#: The kinds of artifact mergeset produces. One sub-store each; never write to</span>
+<span class="c1">#: the root itself, so a fifth kind costs no migration.</span>
+<span class="n">ARTIFACT_KINDS</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"reports"</span><span class="p">,</span> <span class="s2">"evaluations"</span><span class="p">,</span> <span class="s2">"logs"</span><span class="p">,</span> <span class="s2">"fixtures"</span><span class="p">)</span>
+
+<span class="c1">#: What a ``store_factory`` must be: ``(kind, rootdir) -&gt; str``-valued store.</span>
+<span class="c1">#: The two are passed separately on purpose — see the module docstring.</span>
+<span class="n">StoreFactory</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">MutableMapping</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_platform_data_home</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The OS's per-user data directory, without importing anything optional."""</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"nt"</span><span class="p">:</span>  <span class="c1"># Windows</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"LOCALAPPDATA"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"APPDATA"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">base</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">base</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s2">"~"</span><span class="p">),</span> <span class="s2">"AppData"</span><span class="p">,</span> <span class="s2">"Local"</span><span class="p">)</span>
+    <span class="n">xdg</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"XDG_DATA_HOME"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">xdg</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">xdg</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s2">"~"</span><span class="p">),</span> <span class="s2">".local"</span><span class="p">,</span> <span class="s2">"share"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="app_data_rootdir">
+<a class="viewcode-back" href="../../module_docs/mergeset/storage.html#mergeset.app_data_rootdir">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">app_data_rootdir</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_APP_NAME</span><span class="p">,</span> <span class="n">envvar</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">ROOTDIR_ENVVAR</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The artifact root for ``app_name``, honouring ``$MERGESET_DATA_DIR``.</span>
+
+<span class="sd">    It is a *root*, not a leaf: artifacts always go in a per-kind subfolder of</span>
+<span class="sd">    it (see :func:`artifact_store`), so a new kind never needs a migration.</span>
+
+<span class="sd">    &gt;&gt;&gt; import os, tempfile</span>
+<span class="sd">    &gt;&gt;&gt; d = tempfile.mkdtemp()</span>
+<span class="sd">    &gt;&gt;&gt; os.environ['MERGESET_DATA_DIR'] = d</span>
+<span class="sd">    &gt;&gt;&gt; app_data_rootdir() == d</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; del os.environ['MERGESET_DATA_DIR']</span>
+<span class="sd">    &gt;&gt;&gt; app_data_rootdir().endswith('mergeset')</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">override</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">envvar</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">override</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">override</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_platform_data_home</span><span class="p">(),</span> <span class="n">app_name</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="slash_separated_keys">
+<a class="viewcode-back" href="../../module_docs/mergeset/storage.html#mergeset.slash_separated_keys">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">slash_separated_keys</span><span class="p">(</span><span class="n">store</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sep</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MutableMapping</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Make ``/`` the key separator whatever the platform's is.</span>
+
+<span class="sd">    Keys are a store's public namespace, so they must not change shape with the</span>
+<span class="sd">    operating system: a report written under ``'run-a/REPORT.md'`` has to read</span>
+<span class="sd">    back under that key on Windows too, and an S3 backend uses ``/`` regardless.</span>
+<span class="sd">    Without this the same key is two different keys on two machines — the</span>
+<span class="sd">    filesystem leaking through the abstraction the store exists to provide.</span>
+
+<span class="sd">    A no-op where the separator is already ``/``.</span>
+
+<span class="sd">    &gt;&gt;&gt; store = slash_separated_keys({}, sep='/')</span>
+<span class="sd">    &gt;&gt;&gt; store['a/b'] = 1; dict(store)</span>
+<span class="sd">    {'a/b': 1}</span>
+
+<span class="sd">    On a backslash platform the *backing* store sees native separators while</span>
+<span class="sd">    callers keep using ``/``:</span>
+
+<span class="sd">    &gt;&gt;&gt; backing = {}</span>
+<span class="sd">    &gt;&gt;&gt; store = slash_separated_keys(backing, sep='\\')</span>
+<span class="sd">    &gt;&gt;&gt; store['a/b'] = 1</span>
+<span class="sd">    &gt;&gt;&gt; list(backing)</span>
+<span class="sd">    ['a\\b']</span>
+<span class="sd">    &gt;&gt;&gt; list(store), store['a/b']</span>
+<span class="sd">    (['a/b'], 1)</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">sep</span> <span class="o">==</span> <span class="s2">"/"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">store</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">dol</span><span class="w"> </span><span class="kn">import</span> <span class="n">wrap_kvs</span>
+
+    <span class="k">return</span> <span class="n">wrap_kvs</span><span class="p">(</span>
+        <span class="n">store</span><span class="p">,</span>
+        <span class="n">id_of_key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">k</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="n">sep</span><span class="p">),</span>
+        <span class="n">key_of_id</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">k</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">sep</span><span class="p">,</span> <span class="s2">"/"</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_text_files_factory</span><span class="p">(</span><span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rootdir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MutableMapping</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The default backend: ``dol.TextFiles`` over ``&lt;rootdir&gt;/&lt;kind&gt;/``.</span>
+
+<span class="sd">    ``dol`` is the strongest local backend already in this ecosystem: no</span>
+<span class="sd">    dependencies of its own, and relative-path keys, nested keys and the full</span>
+<span class="sd">    ``MutableMapping`` surface for free.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">dol</span><span class="w"> </span><span class="kn">import</span> <span class="n">TextFiles</span><span class="p">,</span> <span class="n">mk_dirs_if_missing</span>
+
+    <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rootdir</span><span class="p">,</span> <span class="n">kind</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># ``mk_dirs_if_missing`` is what makes a nested key such as</span>
+    <span class="c1"># ``'&lt;run&gt;/REPORT.md'`` just work — without it the write fails on the</span>
+    <span class="c1"># missing intermediate directory.</span>
+    <span class="k">return</span> <span class="n">slash_separated_keys</span><span class="p">(</span><span class="n">mk_dirs_if_missing</span><span class="p">(</span><span class="n">TextFiles</span><span class="p">(</span><span class="n">directory</span><span class="p">)))</span>
+
+
+<div class="viewcode-block" id="artifact_store">
+<a class="viewcode-back" href="../../module_docs/mergeset/storage.html#mergeset.artifact_store">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">artifact_store</span><span class="p">(</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">rootdir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">store_factory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StoreFactory</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_APP_NAME</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MutableMapping</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A ``str -&gt; str`` store for one kind of artifact.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        kind: One of :data:`ARTIFACT_KINDS` (any name works; the tuple is the</span>
+<span class="sd">            set mergeset itself uses).</span>
+<span class="sd">        rootdir: Artifact root. Defaults to :func:`app_data_rootdir`.</span>
+<span class="sd">        store_factory: The backend seam — ``(kind, rootdir) -&gt; MutableMapping``.</span>
+<span class="sd">            Defaults to ``dol.TextFiles`` under ``&lt;rootdir&gt;/&lt;kind&gt;/``. Swap it</span>
+<span class="sd">            for S3, a database, or a dict without touching a single caller.</span>
+
+<span class="sd">    &gt;&gt;&gt; import tempfile</span>
+<span class="sd">    &gt;&gt;&gt; store = artifact_store('logs', rootdir=tempfile.mkdtemp())</span>
+<span class="sd">    &gt;&gt;&gt; store['run-1.log'] = 'all green'</span>
+<span class="sd">    &gt;&gt;&gt; store['run-1.log']</span>
+<span class="sd">    'all green'</span>
+<span class="sd">    """</span>
+    <span class="n">rootdir</span> <span class="o">=</span> <span class="n">rootdir</span> <span class="ow">or</span> <span class="n">app_data_rootdir</span><span class="p">(</span><span class="n">app_name</span><span class="o">=</span><span class="n">app_name</span><span class="p">)</span>
+    <span class="n">factory</span> <span class="o">=</span> <span class="n">store_factory</span> <span class="ow">or</span> <span class="n">_text_files_factory</span>
+    <span class="k">return</span> <span class="n">factory</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">rootdir</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="artifact_mall">
+<a class="viewcode-back" href="../../module_docs/mergeset/storage.html#mergeset.artifact_mall">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">artifact_mall</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">rootdir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">store_factory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StoreFactory</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">kinds</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">ARTIFACT_KINDS</span><span class="p">,</span>
+    <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_APP_NAME</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""All the artifact stores, keyed by kind — a *mall*, in ``dol`` terms.</span>
+
+<span class="sd">    Stores are built lazily, so asking for the mall never creates a directory</span>
+<span class="sd">    for a kind you do not use.</span>
+
+<span class="sd">    &gt;&gt;&gt; import tempfile</span>
+<span class="sd">    &gt;&gt;&gt; mall = artifact_mall(rootdir=tempfile.mkdtemp())</span>
+<span class="sd">    &gt;&gt;&gt; mall['evaluations']['a.jsonl'] = '{}\\n'</span>
+<span class="sd">    &gt;&gt;&gt; list(mall['evaluations'])</span>
+<span class="sd">    ['a.jsonl']</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_LazyMall</span><span class="p">(</span>
+        <span class="n">kinds</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">kinds</span><span class="p">),</span>
+        <span class="n">rootdir</span><span class="o">=</span><span class="n">rootdir</span><span class="p">,</span>
+        <span class="n">store_factory</span><span class="o">=</span><span class="n">store_factory</span><span class="p">,</span>
+        <span class="n">app_name</span><span class="o">=</span><span class="n">app_name</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_LazyMall</span><span class="p">(</span><span class="n">Mapping</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A ``Mapping`` of kind -&gt; store that builds each store on first access."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">kinds</span><span class="p">,</span> <span class="n">rootdir</span><span class="p">,</span> <span class="n">store_factory</span><span class="p">,</span> <span class="n">app_name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kinds</span> <span class="o">=</span> <span class="n">kinds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rootdir</span> <span class="o">=</span> <span class="n">rootdir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_store_factory</span> <span class="o">=</span> <span class="n">store_factory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_app_name</span> <span class="o">=</span> <span class="n">app_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kinds</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">kind</span><span class="si">!r}</span><span class="s2"> is not a mergeset artifact kind. "</span>
+                <span class="sa">f</span><span class="s2">"Known kinds: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kinds</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">kind</span><span class="p">]</span> <span class="o">=</span> <span class="n">artifact_store</span><span class="p">(</span>
+                <span class="n">kind</span><span class="p">,</span>
+                <span class="n">rootdir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_rootdir</span><span class="p">,</span>
+                <span class="n">store_factory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_store_factory</span><span class="p">,</span>
+                <span class="n">app_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_name</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">kind</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kinds</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kinds</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="artifact_path">
+<a class="viewcode-back" href="../../module_docs/mergeset/storage.html#mergeset.artifact_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">artifact_path</span><span class="p">(</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">rootdir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_APP_NAME</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Filesystem path for ``kind``/``key`` under the *local* artifact root.</span>
+
+<span class="sd">    The escape hatch for the things that genuinely need a path rather than a</span>
+<span class="sd">    store — the append-only evaluation log, and a subprocess told where to write</span>
+<span class="sd">    its own output. Everything else should go through :func:`artifact_store`,</span>
+<span class="sd">    because a path is exactly the coupling the store exists to remove.</span>
+
+<span class="sd">    &gt;&gt;&gt; import tempfile</span>
+<span class="sd">    &gt;&gt;&gt; root = tempfile.mkdtemp()</span>
+<span class="sd">    &gt;&gt;&gt; artifact_path('evaluations', 'x.jsonl', rootdir=root) == \\</span>
+<span class="sd">    ...     __import__('os').path.join(root, 'evaluations', 'x.jsonl')</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">rootdir</span> <span class="o">=</span> <span class="n">rootdir</span> <span class="ow">or</span> <span class="n">app_data_rootdir</span><span class="p">(</span><span class="n">app_name</span><span class="o">=</span><span class="n">app_name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rootdir</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">if</span> <span class="n">key</span> <span class="k">else</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rootdir</span><span class="p">,</span> <span class="n">kind</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="slugify">
+<a class="viewcode-back" href="../../module_docs/mergeset/storage.html#mergeset.slugify">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">slugify</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">maxlen</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">48</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A filesystem-safe key naming a run after its repository.</span>
+
+<span class="sd">    Two path components, not one, so ``c/trial-repo`` and ``py/trial-repo`` do</span>
+<span class="sd">    not collide. Two components are still not unique — ``/a/b/proj`` and</span>
+<span class="sd">    ``/c/b/proj`` both read as ``b-proj`` — and two repos sharing one evaluation</span>
+<span class="sd">    log would mix their change ids into one monotone closure, which is a wrong</span>
+<span class="sd">    answer rather than an untidy one. So a short digest of the *full* input is</span>
+<span class="sd">    appended whenever the readable part is not the whole story.</span>
+
+<span class="sd">    The digest also survives truncation: a long parent directory used to eat the</span>
+<span class="sd">    only component that distinguished anything.</span>
+
+<span class="sd">    &gt;&gt;&gt; slugify('/Users/me/proj/i/mergeset')</span>
+<span class="sd">    'i-mergeset-ed5b44'</span>
+<span class="sd">    &gt;&gt;&gt; slugify('git@github.com:i2mint/mergeset.git')</span>
+<span class="sd">    'i2mint-mergeset-b35f45'</span>
+<span class="sd">    &gt;&gt;&gt; slugify('.')</span>
+<span class="sd">    'repo-cdb4ee'</span>
+
+<span class="sd">    Different repositories that read alike still get different keys:</span>
+
+<span class="sd">    &gt;&gt;&gt; slugify('/a/b/proj') != slugify('/c/b/proj')</span>
+<span class="sd">    True</span>
+
+<span class="sd">    And a long parent no longer swallows the name:</span>
+
+<span class="sd">    &gt;&gt;&gt; slugify('/x/' + 'a' * 80 + '/repo').startswith('a')</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; 'repo' in slugify('/x/' + 'a' * 80 + '/repo')</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+
+    <span class="n">original</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".git"</span><span class="p">):</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="p">[:</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="s2">".git"</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="s2">":"</span> <span class="ow">in</span> <span class="n">text</span> <span class="ow">and</span> <span class="s2">"/"</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">":"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>  <span class="c1"># scp-style remote or URL</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">":"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"</span><span class="se">\\</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"/"</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">and</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"."</span><span class="p">,</span> <span class="s2">".."</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">digest</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">original</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">6</span><span class="p">]</span>
+    <span class="n">readable</span> <span class="o">=</span> <span class="n">_safe</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">parts</span> <span class="k">else</span> <span class="s2">"repo"</span><span class="p">)</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">_safe</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="c1"># Budget the readable half so the digest is never what gets truncated.</span>
+    <span class="n">room</span> <span class="o">=</span> <span class="n">maxlen</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">digest</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">parent</span><span class="p">:</span>
+        <span class="n">readable</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">parent</span><span class="p">[:</span><span class="w"> </span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">room</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">readable</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)]</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">readable</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">readable</span><span class="p">[:</span><span class="n">room</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'repo'</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">digest</span><span class="si">}</span><span class="s2">"</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_safe</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Keep only characters every filesystem and object store agrees on."""</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span> <span class="k">if</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">isalnum</span><span class="p">()</span> <span class="ow">or</span> <span class="n">c</span> <span class="ow">in</span> <span class="s2">"-_."</span><span class="p">)</span> <span class="k">else</span> <span class="s2">"-"</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">text</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"-"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">safe</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"-"</span><span class="p">)))</span>
+
+
+<div class="viewcode-block" id="evaluation_log_path">
+<a class="viewcode-back" href="../../module_docs/mergeset/storage.html#mergeset.evaluation_log_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">evaluation_log_path</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">rootdir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_APP_NAME</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Default evaluation-log path for ``repo`` — in the artifact store.</span>
+
+<span class="sd">    Deliberately **not** ``&lt;repo&gt;/.mergeset/evaluations.jsonl``: that writes a</span>
+<span class="sd">    file capturing one repository's internals into that same repository, which</span>
+<span class="sd">    is how derived data ends up committed.</span>
+
+<span class="sd">    ``repo`` is resolved to an absolute path first, so ``'.'`` names the current</span>
+<span class="sd">    directory rather than collapsing every project into one ``repo.jsonl``.</span>
+
+<span class="sd">    &gt;&gt;&gt; import tempfile, os</span>
+<span class="sd">    &gt;&gt;&gt; p = evaluation_log_path('/x/proj/widget', rootdir=tempfile.mkdtemp())</span>
+<span class="sd">    &gt;&gt;&gt; os.path.basename(p).startswith('proj-widget-')</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; os.path.basename(p).endswith('.jsonl')</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">repo</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">repo</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">artifact_path</span><span class="p">(</span>
+        <span class="s2">"evaluations"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">slugify</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span><span class="si">}</span><span class="s2">.jsonl"</span><span class="p">,</span> <span class="n">rootdir</span><span class="o">=</span><span class="n">rootdir</span><span class="p">,</span> <span class="n">app_name</span><span class="o">=</span><span class="n">app_name</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="run_key">
+<a class="viewcode-back" href="../../module_docs/mergeset/storage.html#mergeset.run_key">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_key</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">at</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A key naming one run of one repository: ``&lt;repo-slug&gt;/&lt;timestamp&gt;``.</span>
+
+<span class="sd">    Reports are keyed by run, not by repository, so a second analysis of the</span>
+<span class="sd">    same repo does not overwrite the first. The 18-PR re-run of an earlier</span>
+<span class="sd">    analysis is exactly the case that made this necessary: the interesting thing</span>
+<span class="sd">    about it is the *diff* against the previous run, and there is no diff if the</span>
+<span class="sd">    previous run was clobbered.</span>
+
+<span class="sd">    &gt;&gt;&gt; key = run_key('/x/proj/widget', at='2026-09-09T14-00-00Z')</span>
+<span class="sd">    &gt;&gt;&gt; key.endswith('/2026-09-09T14-00-00Z')</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; key.startswith('proj-widget-')</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">at</span> <span class="o">=</span> <span class="n">at</span> <span class="ow">or</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">T%H-%M-%SZ"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">slugify</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">repo</span><span class="p">))))</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">at</span><span class="si">}</span><span class="s2">"</span></div>
+
+
+
+<div class="viewcode-block" id="evaluation_lines">
+<a class="viewcode-back" href="../../module_docs/mergeset/storage.html#mergeset.evaluation_lines">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">evaluation_lines</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">store</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">rootdir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_APP_NAME</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The append-only lines object backing this repo's evaluation log.</span>
+
+<span class="sd">    With no ``store``, the local filesystem backend is used directly, because</span>
+<span class="sd">    ``open(path, 'a')`` is a *true* append and re-writing a growing log on every</span>
+<span class="sd">    evaluation is not. With a ``store`` (S3, a database, a dict), the log goes</span>
+<span class="sd">    through it like every other artifact — the source of truth is not allowed to</span>
+<span class="sd">    be the one thing that cannot leave the filesystem.</span>
+
+<span class="sd">    &gt;&gt;&gt; import tempfile</span>
+<span class="sd">    &gt;&gt;&gt; lines = evaluation_lines('/x/proj/widget', rootdir=tempfile.mkdtemp())</span>
+<span class="sd">    &gt;&gt;&gt; lines.append({'a': 1}); [d['a'] for d in lines]</span>
+<span class="sd">    [1]</span>
+
+<span class="sd">    &gt;&gt;&gt; backing = {}</span>
+<span class="sd">    &gt;&gt;&gt; lines = evaluation_lines('/x/proj/widget', store=backing)</span>
+<span class="sd">    &gt;&gt;&gt; lines.append({'a': 1}); list(backing)[0].endswith('.jsonl')</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">JsonlLines</span><span class="p">,</span> <span class="n">StoreLines</span>
+
+    <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">slugify</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">repo</span><span class="p">))))</span><span class="si">}</span><span class="s2">.jsonl"</span>
+    <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">JsonlLines</span><span class="p">(</span><span class="n">evaluation_log_path</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">rootdir</span><span class="o">=</span><span class="n">rootdir</span><span class="p">,</span> <span class="n">app_name</span><span class="o">=</span><span class="n">app_name</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">StoreLines</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

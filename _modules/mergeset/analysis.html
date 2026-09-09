@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>mergeset.analysis &mdash; mergeset 0.0.5 documentation</title>
+  <title>mergeset.analysis &mdash; mergeset 0.0.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=282f96c0"></script>
+      <script src="../../_static/documentation_options.js?v=1fd71caa"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -59,6 +59,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/solve.html">mergeset.solve</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/sources.html">mergeset.sources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/storage.html">mergeset.storage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/validation.html">mergeset.validation</a></li>
 </ul>
 
@@ -106,6 +107,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">MutableMapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">Callable</span><span class="p">,</span>
     <span class="n">Dict</span><span class="p">,</span>
@@ -143,6 +145,7 @@
     <span class="n">independent_components</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">detect_stacks</span><span class="p">,</span> <span class="n">size_weight</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">evaluation_lines</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.stacks</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">close_up</span><span class="p">,</span>
     <span class="n">cone_weights</span><span class="p">,</span>
@@ -244,6 +247,7 @@
     <span class="n">resolver</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Resolver</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">log</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">EvaluationLog</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">log_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">artifacts</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">weight</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Change</span><span class="p">],</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">pairwise_preoracle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">decompose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -267,7 +271,13 @@
 <span class="sd">        validate: ``worktree -&gt; ValidationOutcome``; default is a fail-fast</span>
 <span class="sd">            pytest run. Pass ``merge_only_validation()`` for a free first pass.</span>
 <span class="sd">        resolver: Optional AI-assisted conflict resolver (results are flagged).</span>
-<span class="sd">        log / log_path: The evaluation log — the single source of truth. Reusing</span>
+<span class="sd">        artifacts: The artifact stores, as a ``{kind: MutableMapping}`` mall (see</span>
+<span class="sd">            :func:`mergeset.storage.artifact_mall`). This is the storage seam:</span>
+<span class="sd">            pass a mall over S3 and the evaluation log goes to S3 with no other</span>
+<span class="sd">            change. Default: local files under ``~/.local/share/mergeset/``.</span>
+<span class="sd">        log / log_path: The evaluation log — the single source of truth. Defaults</span>
+<span class="sd">            to ``&lt;artifact root&gt;/evaluations/&lt;repo-slug&gt;.jsonl`` (see</span>
+<span class="sd">            :mod:`mergeset.storage`), *outside* the analysed repository. Reusing</span>
 <span class="sd">            an existing one makes a re-run nearly free.</span>
 <span class="sd">        weight: ``Change -&gt; cost of dropping it``; default is size-based.</span>
 <span class="sd">        pairwise_preoracle: Use ``git merge-tree`` to find textual conflicts for</span>
@@ -312,8 +322,14 @@
     <span class="n">base</span> <span class="o">=</span> <span class="n">base</span> <span class="ow">or</span> <span class="n">_common_base</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">changes</span><span class="p">)</span>
     <span class="n">base_sha</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">log</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Default to the artifact store, never inside the repository being</span>
+        <span class="c1"># analysed: the log captures that repository's internals, and a repo is</span>
+        <span class="c1"># the one place derived data must not accumulate (mergeset.storage).</span>
         <span class="n">log</span> <span class="o">=</span> <span class="n">EvaluationLog</span><span class="p">(</span>
-            <span class="n">log_path</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">".mergeset"</span><span class="p">,</span> <span class="s2">"evaluations.jsonl"</span><span class="p">)</span>
+            <span class="n">log_path</span>
+            <span class="ow">or</span> <span class="n">evaluation_lines</span><span class="p">(</span>
+                <span class="n">repo</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">artifacts</span><span class="p">[</span><span class="s2">"evaluations"</span><span class="p">]</span> <span class="k">if</span> <span class="n">artifacts</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">)</span>
         <span class="p">)</span>
 
     <span class="c1"># A validator may declare that it cannot see across components (the</span>

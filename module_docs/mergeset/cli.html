@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>mergeset.cli &mdash; mergeset 0.0.5 documentation</title>
+  <title>mergeset.cli &mdash; mergeset 0.0.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=282f96c0"></script>
+      <script src="../../_static/documentation_options.js?v=1fd71caa"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -68,6 +68,7 @@
 <li class="toctree-l1"><a class="reference internal" href="solve.html">mergeset.solve</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sources.html">mergeset.sources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storage.html">mergeset.storage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="validation.html">mergeset.validation</a></li>
 </ul>
 
@@ -134,8 +135,13 @@ advisory.</p></li>
 <li><p><strong>max_evaluations</strong> – Stop after this many expensive evaluations.</p></li>
 <li><p><strong>max_seconds</strong> – Stop after this much wall time.</p></li>
 <li><p><strong>max_sets</strong> – Stop after finding this many maximal sets.</p></li>
-<li><p><strong>log_path</strong> – Evaluation log (JSONL). Default <code class="docutils literal notranslate"><span class="pre">&lt;repo&gt;/.mergeset/evaluations.jsonl</span></code>.</p></li>
-<li><p><strong>report_dir</strong> – Write <code class="docutils literal notranslate"><span class="pre">REPORT.md</span></code> and <code class="docutils literal notranslate"><span class="pre">report.html</span></code> here.</p></li>
+<li><p><strong>log_path</strong> – Evaluation log (JSONL). Default:
+<code class="docutils literal notranslate"><span class="pre">~/.local/share/mergeset/evaluations/&lt;repo-slug&gt;.jsonl</span></code> —
+outside the analysed repository, always.</p></li>
+<li><p><strong>report_dir</strong> – Write <code class="docutils literal notranslate"><span class="pre">REPORT.md</span></code> and <code class="docutils literal notranslate"><span class="pre">report.html</span></code> into this
+directory. By default they go to the artifact store
+(<code class="docutils literal notranslate"><span class="pre">&lt;artifact</span> <span class="pre">root&gt;/reports/&lt;repo-slug&gt;/</span></code>), never into the
+analysed repository — see <a class="reference internal" href="storage.html#module-mergeset.storage" title="mergeset.storage"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mergeset.storage</span></code></a>.</p></li>
 <li><p><strong>integration_branches</strong> – Create a local <code class="docutils literal notranslate"><span class="pre">integration/*</span></code> branch per maximal set.</p></li>
 <li><p><strong>reuse_worktree</strong> – Absolute path to one git worktree to check every
 candidate merge out into, instead of a fresh one per evaluation.
@@ -177,6 +183,13 @@ reported as a clean merge.</p></li>
 <li><p><strong>validate_fingerprint</strong> – <code class="docutils literal notranslate"><span class="pre">'stage:path'</span></code>, repeatable — skip a stage unless
 that file changed (a lockfile, typically).</p></li>
 <li><p><strong>validate_optional</strong> – Stage name, repeatable — recorded, but not a veto.</p></li>
+<li><p><strong>log_path</strong> – Evaluation log (JSONL). Default:
+<code class="docutils literal notranslate"><span class="pre">~/.local/share/mergeset/evaluations/&lt;repo-slug&gt;.jsonl</span></code> — outside
+the analysed repository, always.</p></li>
+<li><p><strong>report_dir</strong> – Write <code class="docutils literal notranslate"><span class="pre">REPORT.md</span></code> and <code class="docutils literal notranslate"><span class="pre">report.html</span></code> into this directory.
+By default they go to the artifact store, under
+<code class="docutils literal notranslate"><span class="pre">reports/&lt;repo-slug&gt;/&lt;timestamp&gt;/</span></code>, so a re-run never overwrites
+the run before it.</p></li>
 </ul>
 </dd>
 </dl>
@@ -184,7 +197,7 @@ that file changed (a lockfile, typically).</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mergeset.cli.show_log">
-<span class="sig-prename descclassname"><span class="pre">mergeset.cli.</span></span><span class="sig-name descname"><span class="pre">show_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.mergeset/evaluations.jsonl'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/mergeset/cli.html#show_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.cli.show_log" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">mergeset.cli.</span></span><span class="sig-name descname"><span class="pre">show_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/mergeset/cli.html#show_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.cli.show_log" title="Link to this definition"></a></dt>
 <dd><p>Print what the evaluation log already knows, without evaluating anything.</p>
 <p>Use this to answer questions about a finished run: the log is the single
 source of truth, so re-deriving what it already says costs a reader’s trust.

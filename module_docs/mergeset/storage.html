@@ -1,0 +1,410 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mergeset.storage &mdash; mergeset 0.0.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1fd71caa"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="mergeset.validation" href="validation.html" />
+    <link rel="prev" title="mergeset.stacks" href="stacks.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mergeset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../mergeset.html">mergeset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">mergeset.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">mergeset.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">mergeset.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="log.html">mergeset.log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="report.html">mergeset.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solve.html">mergeset.solve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sources.html">mergeset.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">mergeset.storage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.storage.ARTIFACT_KINDS"><code class="docutils literal notranslate"><span class="pre">ARTIFACT_KINDS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.storage.StoreFactory"><code class="docutils literal notranslate"><span class="pre">StoreFactory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.storage.app_data_rootdir"><code class="docutils literal notranslate"><span class="pre">app_data_rootdir()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.storage.artifact_mall"><code class="docutils literal notranslate"><span class="pre">artifact_mall()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.storage.artifact_path"><code class="docutils literal notranslate"><span class="pre">artifact_path()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.storage.artifact_store"><code class="docutils literal notranslate"><span class="pre">artifact_store()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.storage.evaluation_lines"><code class="docutils literal notranslate"><span class="pre">evaluation_lines()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.storage.evaluation_log_path"><code class="docutils literal notranslate"><span class="pre">evaluation_log_path()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.storage.run_key"><code class="docutils literal notranslate"><span class="pre">run_key()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.storage.slash_separated_keys"><code class="docutils literal notranslate"><span class="pre">slash_separated_keys()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.storage.slugify"><code class="docutils literal notranslate"><span class="pre">slugify()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">mergeset.validation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mergeset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">mergeset.storage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/mergeset/storage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mergeset.storage">
+<span id="mergeset-storage"></span><h1>mergeset.storage<a class="headerlink" href="#module-mergeset.storage" title="Link to this heading"></a></h1>
+<p>Where mergeset’s artifacts live, and how code reaches them.</p>
+<p>Everything mergeset produces — reports, evaluation logs, raw validation output,
+captured failure fixtures — is <em>derived data</em>. It has a different lifecycle from
+code and, crucially, a different <strong>provenance</strong>: it is captured from whatever
+repository was analysed, which is very often private. So none of it belongs in a
+repository, and the default location makes sure it never lands in one by
+accident:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">~/.</span><span class="n">local</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">mergeset</span><span class="o">/&lt;</span><span class="n">kind</span><span class="o">&gt;/</span>          <span class="p">(</span><span class="o">%</span><span class="n">LOCALAPPDATA</span><span class="o">%</span> <span class="n">on</span> <span class="n">Windows</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Four kinds, four sub-stores:</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reports</span></code></p></td>
+<td><p>Rendered analyses — <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;/REPORT.md</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;/report.html</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">evaluations</span></code></p></td>
+<td><p>The append-only JSONL evaluation logs (the source of truth)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">logs</span></code></p></td>
+<td><p>Raw build/test/lint output captured during validation</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fixtures</span></code></p></td>
+<td><p>Captured failure output kept as regression tests</p></td>
+</tr>
+</tbody>
+</table>
+<p>Each store is a plain <code class="xref py py-class docutils literal notranslate"><span class="pre">MutableMapping</span></code> of <code class="docutils literal notranslate"><span class="pre">str</span> <span class="pre">-&gt;</span> <span class="pre">str</span></code>,
+so business logic never learns where the bytes physically are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mall</span> <span class="o">=</span> <span class="n">artifact_mall</span><span class="p">(</span><span class="n">rootdir</span><span class="o">=</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">mall</span><span class="p">)</span>
+<span class="go">['evaluations', 'fixtures', 'logs', 'reports']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reports</span> <span class="o">=</span> <span class="n">mall</span><span class="p">[</span><span class="s1">'reports'</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reports</span><span class="p">[</span><span class="s1">'demo/REPORT.md'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'# hello'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reports</span><span class="p">[</span><span class="s1">'demo/REPORT.md'</span><span class="p">]</span>
+<span class="go">'# hello'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">reports</span><span class="p">)</span>
+<span class="go">['demo/REPORT.md']</span>
+</pre></div>
+</div>
+<p>The backend is one keyword argument (<code class="docutils literal notranslate"><span class="pre">store_factory</span></code>), so pointing the same
+code at S3 is a one-line change and no caller notices:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">s3dol</span><span class="w"> </span><span class="kn">import</span> <span class="n">S3Store</span>
+<span class="n">mall</span> <span class="o">=</span> <span class="n">artifact_mall</span><span class="p">(</span><span class="n">store_factory</span><span class="o">=</span><span class="k">lambda</span> <span class="n">kind</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="n">S3Store</span><span class="p">(</span><span class="n">bucket</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">kind</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>A factory is handed the <strong>kind and the root separately</strong>, never a joined
+filesystem path — a backend that has no filesystem must not have to parse one
+out, and on Windows a joined path would put backslashes in S3 keys.</p>
+<p>The root is overridden by one environment variable, <code class="docutils literal notranslate"><span class="pre">MERGESET_DATA_DIR</span></code> — one
+knob for the root, never one per kind.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="mergeset.storage.ARTIFACT_KINDS">
+<span class="sig-prename descclassname"><span class="pre">mergeset.storage.</span></span><span class="sig-name descname"><span class="pre">ARTIFACT_KINDS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('reports',</span> <span class="pre">'evaluations',</span> <span class="pre">'logs',</span> <span class="pre">'fixtures')</span></span><a class="headerlink" href="#mergeset.storage.ARTIFACT_KINDS" title="Link to this definition"></a></dt>
+<dd><p>The kinds of artifact mergeset produces. One sub-store each; never write to
+the root itself, so a fifth kind costs no migration.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mergeset.storage.StoreFactory">
+<span class="sig-prename descclassname"><span class="pre">mergeset.storage.</span></span><span class="sig-name descname"><span class="pre">StoreFactory</span></span><a class="headerlink" href="#mergeset.storage.StoreFactory" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(kind,</span> <span class="pre">rootdir)</span> <span class="pre">-&gt;</span> <span class="pre">str</span></code>-valued store.
+The two are passed separately on purpose — see the module docstring.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>What a <code class="docutils literal notranslate"><span class="pre">store_factory</span></code> must be</p>
+</dd>
+</dl>
+<p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">MutableMapping</span></code>]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.storage.app_data_rootdir">
+<span class="sig-prename descclassname"><span class="pre">mergeset.storage.</span></span><span class="sig-name descname"><span class="pre">app_data_rootdir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mergeset'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">envvar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'MERGESET_DATA_DIR'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/mergeset/storage.html#app_data_rootdir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.storage.app_data_rootdir" title="Link to this definition"></a></dt>
+<dd><p>The artifact root for <code class="docutils literal notranslate"><span class="pre">app_name</span></code>, honouring <code class="docutils literal notranslate"><span class="pre">$MERGESET_DATA_DIR</span></code>.</p>
+<p>It is a <em>root</em>, not a leaf: artifacts always go in a per-kind subfolder of
+it (see <a class="reference internal" href="#mergeset.storage.artifact_store" title="mergeset.storage.artifact_store"><code class="xref py py-func docutils literal notranslate"><span class="pre">artifact_store()</span></code></a>), so a new kind never needs a migration.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">'MERGESET_DATA_DIR'</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">app_data_rootdir</span><span class="p">()</span> <span class="o">==</span> <span class="n">d</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">'MERGESET_DATA_DIR'</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">app_data_rootdir</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'mergeset'</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.storage.artifact_mall">
+<span class="sig-prename descclassname"><span class="pre">mergeset.storage.</span></span><span class="sig-name descname"><span class="pre">artifact_mall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">rootdir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store_factory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MutableMapping</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kinds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('reports',</span> <span class="pre">'evaluations',</span> <span class="pre">'logs',</span> <span class="pre">'fixtures')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mergeset'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MutableMapping</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/mergeset/storage.html#artifact_mall"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.storage.artifact_mall" title="Link to this definition"></a></dt>
+<dd><p>All the artifact stores, keyed by kind — a <em>mall</em>, in <code class="docutils literal notranslate"><span class="pre">dol</span></code> terms.</p>
+<p>Stores are built lazily, so asking for the mall never creates a directory
+for a kind you do not use.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mall</span> <span class="o">=</span> <span class="n">artifact_mall</span><span class="p">(</span><span class="n">rootdir</span><span class="o">=</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mall</span><span class="p">[</span><span class="s1">'evaluations'</span><span class="p">][</span><span class="s1">'a.jsonl'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'</span><span class="si">{}</span><span class="se">\n</span><span class="s1">'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">mall</span><span class="p">[</span><span class="s1">'evaluations'</span><span class="p">])</span>
+<span class="go">['a.jsonl']</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.storage.artifact_path">
+<span class="sig-prename descclassname"><span class="pre">mergeset.storage.</span></span><span class="sig-name descname"><span class="pre">artifact_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">rootdir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mergeset'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/mergeset/storage.html#artifact_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.storage.artifact_path" title="Link to this definition"></a></dt>
+<dd><p>Filesystem path for <code class="docutils literal notranslate"><span class="pre">kind</span></code>/<code class="docutils literal notranslate"><span class="pre">key</span></code> under the <em>local</em> artifact root.</p>
+<p>The escape hatch for the things that genuinely need a path rather than a
+store — the append-only evaluation log, and a subprocess told where to write
+its own output. Everything else should go through <a class="reference internal" href="#mergeset.storage.artifact_store" title="mergeset.storage.artifact_store"><code class="xref py py-func docutils literal notranslate"><span class="pre">artifact_store()</span></code></a>,
+because a path is exactly the coupling the store exists to remove.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">root</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">artifact_path</span><span class="p">(</span><span class="s1">'evaluations'</span><span class="p">,</span> <span class="s1">'x.jsonl'</span><span class="p">,</span> <span class="n">rootdir</span><span class="o">=</span><span class="n">root</span><span class="p">)</span> <span class="o">==</span> \
+<span class="gp">... </span>    <span class="nb">__import__</span><span class="p">(</span><span class="s1">'os'</span><span class="p">)</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="s1">'evaluations'</span><span class="p">,</span> <span class="s1">'x.jsonl'</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.storage.artifact_store">
+<span class="sig-prename descclassname"><span class="pre">mergeset.storage.</span></span><span class="sig-name descname"><span class="pre">artifact_store</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">rootdir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store_factory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MutableMapping</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mergeset'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">MutableMapping</span></span></span><a class="reference internal" href="../../_modules/mergeset/storage.html#artifact_store"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.storage.artifact_store" title="Link to this definition"></a></dt>
+<dd><p>A <code class="docutils literal notranslate"><span class="pre">str</span> <span class="pre">-&gt;</span> <span class="pre">str</span></code> store for one kind of artifact.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kind</strong> – One of <a class="reference internal" href="#mergeset.storage.ARTIFACT_KINDS" title="mergeset.storage.ARTIFACT_KINDS"><code class="xref py py-data docutils literal notranslate"><span class="pre">ARTIFACT_KINDS</span></code></a> (any name works; the tuple is the
+set mergeset itself uses).</p></li>
+<li><p><strong>rootdir</strong> – Artifact root. Defaults to <a class="reference internal" href="#mergeset.storage.app_data_rootdir" title="mergeset.storage.app_data_rootdir"><code class="xref py py-func docutils literal notranslate"><span class="pre">app_data_rootdir()</span></code></a>.</p></li>
+<li><p><strong>store_factory</strong> – The backend seam — <code class="docutils literal notranslate"><span class="pre">(kind,</span> <span class="pre">rootdir)</span> <span class="pre">-&gt;</span> <span class="pre">MutableMapping</span></code>.
+Defaults to <code class="docutils literal notranslate"><span class="pre">dol.TextFiles</span></code> under <code class="docutils literal notranslate"><span class="pre">&lt;rootdir&gt;/&lt;kind&gt;/</span></code>. Swap it
+for S3, a database, or a dict without touching a single caller.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">store</span> <span class="o">=</span> <span class="n">artifact_store</span><span class="p">(</span><span class="s1">'logs'</span><span class="p">,</span> <span class="n">rootdir</span><span class="o">=</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">store</span><span class="p">[</span><span class="s1">'run-1.log'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'all green'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">store</span><span class="p">[</span><span class="s1">'run-1.log'</span><span class="p">]</span>
+<span class="go">'all green'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.storage.evaluation_lines">
+<span class="sig-prename descclassname"><span class="pre">mergeset.storage.</span></span><span class="sig-name descname"><span class="pre">evaluation_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MutableMapping</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rootdir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mergeset'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mergeset/storage.html#evaluation_lines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.storage.evaluation_lines" title="Link to this definition"></a></dt>
+<dd><p>The append-only lines object backing this repo’s evaluation log.</p>
+<p>With no <code class="docutils literal notranslate"><span class="pre">store</span></code>, the local filesystem backend is used directly, because
+<code class="docutils literal notranslate"><span class="pre">open(path,</span> <span class="pre">'a')</span></code> is a <em>true</em> append and re-writing a growing log on every
+evaluation is not. With a <code class="docutils literal notranslate"><span class="pre">store</span></code> (S3, a database, a dict), the log goes
+through it like every other artifact — the source of truth is not allowed to
+be the one thing that cannot leave the filesystem.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lines</span> <span class="o">=</span> <span class="n">evaluation_lines</span><span class="p">(</span><span class="s1">'/x/proj/widget'</span><span class="p">,</span> <span class="n">rootdir</span><span class="o">=</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">'a'</span><span class="p">:</span> <span class="mi">1</span><span class="p">});</span> <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s1">'a'</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]</span>
+<span class="go">[1]</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">backing</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lines</span> <span class="o">=</span> <span class="n">evaluation_lines</span><span class="p">(</span><span class="s1">'/x/proj/widget'</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">backing</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">'a'</span><span class="p">:</span> <span class="mi">1</span><span class="p">});</span> <span class="nb">list</span><span class="p">(</span><span class="n">backing</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'.jsonl'</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.storage.evaluation_log_path">
+<span class="sig-prename descclassname"><span class="pre">mergeset.storage.</span></span><span class="sig-name descname"><span class="pre">evaluation_log_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">rootdir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mergeset'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/mergeset/storage.html#evaluation_log_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.storage.evaluation_log_path" title="Link to this definition"></a></dt>
+<dd><p>Default evaluation-log path for <code class="docutils literal notranslate"><span class="pre">repo</span></code> — in the artifact store.</p>
+<p>Deliberately <strong>not</strong> <code class="docutils literal notranslate"><span class="pre">&lt;repo&gt;/.mergeset/evaluations.jsonl</span></code>: that writes a
+file capturing one repository’s internals into that same repository, which
+is how derived data ends up committed.</p>
+<p><code class="docutils literal notranslate"><span class="pre">repo</span></code> is resolved to an absolute path first, so <code class="docutils literal notranslate"><span class="pre">'.'</span></code> names the current
+directory rather than collapsing every project into one <code class="docutils literal notranslate"><span class="pre">repo.jsonl</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">evaluation_log_path</span><span class="p">(</span><span class="s1">'/x/proj/widget'</span><span class="p">,</span> <span class="n">rootdir</span><span class="o">=</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'proj-widget-'</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'.jsonl'</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.storage.run_key">
+<span class="sig-prename descclassname"><span class="pre">mergeset.storage.</span></span><span class="sig-name descname"><span class="pre">run_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/mergeset/storage.html#run_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.storage.run_key" title="Link to this definition"></a></dt>
+<dd><p>A key naming one run of one repository: <code class="docutils literal notranslate"><span class="pre">&lt;repo-slug&gt;/&lt;timestamp&gt;</span></code>.</p>
+<p>Reports are keyed by run, not by repository, so a second analysis of the
+same repo does not overwrite the first. The 18-PR re-run of an earlier
+analysis is exactly the case that made this necessary: the interesting thing
+about it is the <em>diff</em> against the previous run, and there is no diff if the
+previous run was clobbered.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">key</span> <span class="o">=</span> <span class="n">run_key</span><span class="p">(</span><span class="s1">'/x/proj/widget'</span><span class="p">,</span> <span class="n">at</span><span class="o">=</span><span class="s1">'2026-09-09T14-00-00Z'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'/2026-09-09T14-00-00Z'</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'proj-widget-'</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.storage.slash_separated_keys">
+<span class="sig-prename descclassname"><span class="pre">mergeset.storage.</span></span><span class="sig-name descname"><span class="pre">slash_separated_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MutableMapping</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'/'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">MutableMapping</span></span></span><a class="reference internal" href="../../_modules/mergeset/storage.html#slash_separated_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.storage.slash_separated_keys" title="Link to this definition"></a></dt>
+<dd><p>Make <code class="docutils literal notranslate"><span class="pre">/</span></code> the key separator whatever the platform’s is.</p>
+<p>Keys are a store’s public namespace, so they must not change shape with the
+operating system: a report written under <code class="docutils literal notranslate"><span class="pre">'run-a/REPORT.md'</span></code> has to read
+back under that key on Windows too, and an S3 backend uses <code class="docutils literal notranslate"><span class="pre">/</span></code> regardless.
+Without this the same key is two different keys on two machines — the
+filesystem leaking through the abstraction the store exists to provide.</p>
+<p>A no-op where the separator is already <code class="docutils literal notranslate"><span class="pre">/</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">store</span> <span class="o">=</span> <span class="n">slash_separated_keys</span><span class="p">({},</span> <span class="n">sep</span><span class="o">=</span><span class="s1">'/'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">store</span><span class="p">[</span><span class="s1">'a/b'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="nb">dict</span><span class="p">(</span><span class="n">store</span><span class="p">)</span>
+<span class="go">{'a/b': 1}</span>
+</pre></div>
+</div>
+<p>On a backslash platform the <em>backing</em> store sees native separators while
+callers keep using <code class="docutils literal notranslate"><span class="pre">/</span></code>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">backing</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">store</span> <span class="o">=</span> <span class="n">slash_separated_keys</span><span class="p">(</span><span class="n">backing</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">'</span><span class="se">\\</span><span class="s1">'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">store</span><span class="p">[</span><span class="s1">'a/b'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">backing</span><span class="p">)</span>
+<span class="go">['a\\b']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">store</span><span class="p">),</span> <span class="n">store</span><span class="p">[</span><span class="s1">'a/b'</span><span class="p">]</span>
+<span class="go">(['a/b'], 1)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.storage.slugify">
+<span class="sig-prename descclassname"><span class="pre">mergeset.storage.</span></span><span class="sig-name descname"><span class="pre">slugify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxlen</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">48</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/mergeset/storage.html#slugify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.storage.slugify" title="Link to this definition"></a></dt>
+<dd><p>A filesystem-safe key naming a run after its repository.</p>
+<p>Two path components, not one, so <code class="docutils literal notranslate"><span class="pre">c/trial-repo</span></code> and <code class="docutils literal notranslate"><span class="pre">py/trial-repo</span></code> do
+not collide. Two components are still not unique — <code class="docutils literal notranslate"><span class="pre">/a/b/proj</span></code> and
+<code class="docutils literal notranslate"><span class="pre">/c/b/proj</span></code> both read as <code class="docutils literal notranslate"><span class="pre">b-proj</span></code> — and two repos sharing one evaluation
+log would mix their change ids into one monotone closure, which is a wrong
+answer rather than an untidy one. So a short digest of the <em>full</em> input is
+appended whenever the readable part is not the whole story.</p>
+<p>The digest also survives truncation: a long parent directory used to eat the
+only component that distinguished anything.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">slugify</span><span class="p">(</span><span class="s1">'/Users/me/proj/i/mergeset'</span><span class="p">)</span>
+<span class="go">'i-mergeset-ed5b44'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">slugify</span><span class="p">(</span><span class="s1">'git@github.com:i2mint/mergeset.git'</span><span class="p">)</span>
+<span class="go">'i2mint-mergeset-b35f45'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">slugify</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)</span>
+<span class="go">'repo-cdb4ee'</span>
+</pre></div>
+</div>
+<p>Different repositories that read alike still get different keys:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">slugify</span><span class="p">(</span><span class="s1">'/a/b/proj'</span><span class="p">)</span> <span class="o">!=</span> <span class="n">slugify</span><span class="p">(</span><span class="s1">'/c/b/proj'</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>And a long parent no longer swallows the name:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">slugify</span><span class="p">(</span><span class="s1">'/x/'</span> <span class="o">+</span> <span class="s1">'a'</span> <span class="o">*</span> <span class="mi">80</span> <span class="o">+</span> <span class="s1">'/repo'</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'a'</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">'repo'</span> <span class="ow">in</span> <span class="n">slugify</span><span class="p">(</span><span class="s1">'/x/'</span> <span class="o">+</span> <span class="s1">'a'</span> <span class="o">*</span> <span class="mi">80</span> <span class="o">+</span> <span class="s1">'/repo'</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="stacks.html" class="btn btn-neutral float-left" title="mergeset.stacks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="validation.html" class="btn btn-neutral float-right" title="mergeset.validation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

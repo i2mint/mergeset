@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>mergeset.log &mdash; mergeset 0.0.5 documentation</title>
+  <title>mergeset.log &mdash; mergeset 0.0.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=282f96c0"></script>
+      <script src="../../_static/documentation_options.js?v=1fd71caa"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -82,6 +82,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#mergeset.log.MemoryLines.append"><code class="docutils literal notranslate"><span class="pre">MemoryLines.append()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#mergeset.log.StoreLines"><code class="docutils literal notranslate"><span class="pre">StoreLines</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mergeset.log.StoreLines.append"><code class="docutils literal notranslate"><span class="pre">StoreLines.append()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#mergeset.log.sets_evaluated"><code class="docutils literal notranslate"><span class="pre">sets_evaluated()</span></code></a></li>
 </ul>
 </li>
@@ -90,6 +94,7 @@
 <li class="toctree-l1"><a class="reference internal" href="solve.html">mergeset.solve</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sources.html">mergeset.sources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storage.html">mergeset.storage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="validation.html">mergeset.validation</a></li>
 </ul>
 
@@ -135,8 +140,11 @@ being silently trusted.</p>
 <dd><p>Append-only record of evaluations, plus the monotone closure over it.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>store</strong> – Persistence seam; a path (str/PathLike) is wrapped in
-<a class="reference internal" href="#mergeset.log.JsonlLines" title="mergeset.log.JsonlLines"><code class="xref py py-class docutils literal notranslate"><span class="pre">JsonlLines</span></code></a>. Pass <a class="reference internal" href="#mergeset.log.MemoryLines" title="mergeset.log.MemoryLines"><code class="xref py py-class docutils literal notranslate"><span class="pre">MemoryLines</span></code></a> for an ephemeral log.</p>
+<dd class="field-odd"><p><strong>store</strong> – Persistence seam. A path (str/PathLike) is wrapped in
+<a class="reference internal" href="#mergeset.log.JsonlLines" title="mergeset.log.JsonlLines"><code class="xref py py-class docutils literal notranslate"><span class="pre">JsonlLines</span></code></a>; pass <a class="reference internal" href="#mergeset.log.StoreLines" title="mergeset.log.StoreLines"><code class="xref py py-class docutils literal notranslate"><span class="pre">StoreLines</span></code></a> to put the log in an
+artifact store (S3 and friends), or <a class="reference internal" href="#mergeset.log.MemoryLines" title="mergeset.log.MemoryLines"><code class="xref py py-class docutils literal notranslate"><span class="pre">MemoryLines</span></code></a> for an
+ephemeral log. With no argument at all the log goes to the artifact
+store’s <code class="docutils literal notranslate"><span class="pre">evaluations/adhoc.jsonl</span></code> — never the working directory.</p>
 </dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="n">EvaluationLog</span><span class="p">(</span><span class="n">MemoryLines</span><span class="p">())</span>
@@ -269,6 +277,35 @@ in-memory list, a <code class="docutils literal notranslate"><span class="pre">d
 <dt class="sig sig-object py" id="mergeset.log.MemoryLines.append">
 <span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jdict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/mergeset/log.html#MemoryLines.append"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.log.MemoryLines.append" title="Link to this definition"></a></dt>
 <dd><p>Append object to the end of the list.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.log.StoreLines">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.log.</span></span><span class="sig-name descname"><span class="pre">StoreLines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">store</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mergeset/log.html#StoreLines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.log.StoreLines" title="Link to this definition"></a></dt>
+<dd><p>Lines backed by one key of a <code class="docutils literal notranslate"><span class="pre">MutableMapping</span></code> — the non-file backend.</p>
+<p><a class="reference internal" href="#mergeset.log.JsonlLines" title="mergeset.log.JsonlLines"><code class="xref py py-class docutils literal notranslate"><span class="pre">JsonlLines</span></code></a> is the right thing over a filesystem: <code class="docutils literal notranslate"><span class="pre">open(...,</span> <span class="pre">'a')</span></code>
+is a true append. An object store has no append, so this reads, concatenates
+and writes back. That is honest about the cost rather than pretending, and it
+is what lets the evaluation log — the source of truth — reach S3 through the
+same seam as everything else.</p>
+<p>A missing key reads as empty rather than raising, so a first run works.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">backing</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lines</span> <span class="o">=</span> <span class="n">StoreLines</span><span class="p">(</span><span class="n">backing</span><span class="p">,</span> <span class="s1">'run.jsonl'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+<span class="go">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">'a'</span><span class="p">:</span> <span class="mi">1</span><span class="p">});</span> <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">'a'</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s1">'a'</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]</span>
+<span class="go">[1, 2]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">backing</span><span class="p">[</span><span class="s1">'run.jsonl'</span><span class="p">]</span>
+<span class="go">'{"a": 1}\n{"a": 2}\n'</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.log.StoreLines.append">
+<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jdict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/mergeset/log.html#StoreLines.append"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.log.StoreLines.append" title="Link to this definition"></a></dt>
+<dd><p>Append one record by rewriting the value (no append primitive here).</p>
 </dd></dl>
 
 </dd></dl>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>mergeset.log &mdash; mergeset 0.0.5 documentation</title>
+  <title>mergeset.log &mdash; mergeset 0.0.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=282f96c0"></script>
+      <script src="../../_static/documentation_options.js?v=1fd71caa"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -59,6 +59,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/solve.html">mergeset.solve</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/sources.html">mergeset.sources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/storage.html">mergeset.storage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/mergeset/validation.html">mergeset.validation</a></li>
 </ul>
 
@@ -158,6 +159,57 @@
 
 
 
+<div class="viewcode-block" id="StoreLines">
+<a class="viewcode-back" href="../../module_docs/mergeset/log.html#mergeset.StoreLines">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">StoreLines</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Lines backed by one key of a ``MutableMapping`` — the non-file backend.</span>
+
+<span class="sd">    :class:`JsonlLines` is the right thing over a filesystem: ``open(..., 'a')``</span>
+<span class="sd">    is a true append. An object store has no append, so this reads, concatenates</span>
+<span class="sd">    and writes back. That is honest about the cost rather than pretending, and it</span>
+<span class="sd">    is what lets the evaluation log — the source of truth — reach S3 through the</span>
+<span class="sd">    same seam as everything else.</span>
+
+<span class="sd">    A missing key reads as empty rather than raising, so a first run works.</span>
+
+<span class="sd">    &gt;&gt;&gt; backing = {}</span>
+<span class="sd">    &gt;&gt;&gt; lines = StoreLines(backing, 'run.jsonl')</span>
+<span class="sd">    &gt;&gt;&gt; list(lines)</span>
+<span class="sd">    []</span>
+<span class="sd">    &gt;&gt;&gt; lines.append({'a': 1}); lines.append({'a': 2})</span>
+<span class="sd">    &gt;&gt;&gt; [d['a'] for d in lines]</span>
+<span class="sd">    [1, 2]</span>
+<span class="sd">    &gt;&gt;&gt; backing['run.jsonl']</span>
+<span class="sd">    '{"a": 1}\n{"a": 2}\n'</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">store</span> <span class="o">=</span> <span class="n">store</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_text</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">""</span>
+
+<div class="viewcode-block" id="StoreLines.append">
+<a class="viewcode-back" href="../../module_docs/mergeset/log.html#mergeset.StoreLines.append">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jdict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Append one record by rewriting the value (no append primitive here)."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_text</span><span class="p">()</span> <span class="o">+</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">jdict</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="MemoryLines">
 <a class="viewcode-back" href="../../module_docs/mergeset/log.html#mergeset.MemoryLines">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MemoryLines</span><span class="p">(</span><span class="nb">list</span><span class="p">):</span>
@@ -194,8 +246,11 @@
 <span class="w">    </span><span class="sd">"""Append-only record of evaluations, plus the monotone closure over it.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        store: Persistence seam; a path (str/PathLike) is wrapped in</span>
-<span class="sd">            :class:`JsonlLines`. Pass :class:`MemoryLines` for an ephemeral log.</span>
+<span class="sd">        store: Persistence seam. A path (str/PathLike) is wrapped in</span>
+<span class="sd">            :class:`JsonlLines`; pass :class:`StoreLines` to put the log in an</span>
+<span class="sd">            artifact store (S3 and friends), or :class:`MemoryLines` for an</span>
+<span class="sd">            ephemeral log. With no argument at all the log goes to the artifact</span>
+<span class="sd">            store's ``evaluations/adhoc.jsonl`` — never the working directory.</span>
 
 <span class="sd">    &gt;&gt;&gt; log = EvaluationLog(MemoryLines())</span>
 <span class="sd">    &gt;&gt;&gt; from mergeset.base import Evaluation, Verdict</span>
@@ -212,8 +267,15 @@
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">)):</span>
-            <span class="n">store</span> <span class="o">=</span> <span class="n">JsonlLines</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">store</span> <span class="ow">or</span> <span class="s2">"evaluations.jsonl"</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Never ``./evaluations.jsonl``: that writes derived data into</span>
+            <span class="c1"># whatever repository the caller happens to be standing in, which is</span>
+            <span class="c1"># the default this package exists to have removed.</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">artifact_path</span>
+
+            <span class="n">store</span> <span class="o">=</span> <span class="n">JsonlLines</span><span class="p">(</span><span class="n">artifact_path</span><span class="p">(</span><span class="s2">"evaluations"</span><span class="p">,</span> <span class="s2">"adhoc.jsonl"</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">)):</span>
+            <span class="n">store</span> <span class="o">=</span> <span class="n">JsonlLines</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">store</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">store</span> <span class="o">=</span> <span class="n">store</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_evaluations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">Evaluation</span><span class="o">.</span><span class="n">from_jdict</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span>

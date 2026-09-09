@@ -15,4 +15,5 @@
    module_docs/mergeset/solve
    module_docs/mergeset/sources
    module_docs/mergeset/stacks
+   module_docs/mergeset/storage
    module_docs/mergeset/validation

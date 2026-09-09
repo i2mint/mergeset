@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; mergeset 0.0.5 documentation</title>
+  <title>Index &mdash; mergeset 0.0.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=282f96c0"></script>
+      <script src="_static/documentation_options.js?v=1fd71caa"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -59,6 +59,7 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/solve.html">mergeset.solve</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/sources.html">mergeset.sources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/storage.html">mergeset.storage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/validation.html">mergeset.validation</a></li>
 </ul>
 
@@ -135,12 +136,16 @@
         <li><a href="module_docs/mergeset/analysis.html#mergeset.analysis.analyze">(in module mergeset.analysis)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset.html#mergeset.ancestors">ancestors() (in module mergeset)</a>
 
       <ul>
         <li><a href="module_docs/mergeset/stacks.html#mergeset.stacks.ancestors">(in module mergeset.stacks)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.app_data_rootdir">app_data_rootdir() (in module mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/storage.html#mergeset.storage.app_data_rootdir">(in module mergeset.storage)</a>
 </li>
       </ul></li>
       <li><a href="module_docs/mergeset.html#mergeset.JsonlLines.append">append() (mergeset.JsonlLines method)</a>
@@ -150,7 +155,33 @@
 </li>
         <li><a href="module_docs/mergeset/log.html#mergeset.log.MemoryLines.append">(mergeset.log.MemoryLines method)</a>
 </li>
+        <li><a href="module_docs/mergeset/log.html#mergeset.log.StoreLines.append">(mergeset.log.StoreLines method)</a>
+</li>
         <li><a href="module_docs/mergeset.html#mergeset.MemoryLines.append">(mergeset.MemoryLines method)</a>
+</li>
+        <li><a href="module_docs/mergeset.html#mergeset.StoreLines.append">(mergeset.StoreLines method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/mergeset/storage.html#mergeset.storage.ARTIFACT_KINDS">ARTIFACT_KINDS (in module mergeset.storage)</a>
+</li>
+      <li><a href="module_docs/mergeset.html#mergeset.artifact_mall">artifact_mall() (in module mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/storage.html#mergeset.storage.artifact_mall">(in module mergeset.storage)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.artifact_path">artifact_path() (in module mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/storage.html#mergeset.storage.artifact_path">(in module mergeset.storage)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.artifact_store">artifact_store() (in module mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/storage.html#mergeset.storage.artifact_store">(in module mergeset.storage)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -331,20 +362,32 @@
         <li><a href="module_docs/mergeset/base.html#mergeset.base.Evaluation">(class in mergeset.base)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.evaluation_lines">evaluation_lines() (in module mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/storage.html#mergeset.storage.evaluation_lines">(in module mergeset.storage)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset.html#mergeset.evaluation_log_path">evaluation_log_path() (in module mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/storage.html#mergeset.storage.evaluation_log_path">(in module mergeset.storage)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/mergeset.html#mergeset.EvaluationLog">EvaluationLog (class in mergeset)</a>
 
       <ul>
         <li><a href="module_docs/mergeset/log.html#mergeset.log.EvaluationLog">(class in mergeset.log)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset.html#mergeset.Analysis.evaluations">evaluations (mergeset.Analysis property)</a>
 
       <ul>
         <li><a href="module_docs/mergeset/analysis.html#mergeset.analysis.Analysis.evaluations">(mergeset.analysis.Analysis property)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset/base.html#mergeset.base.Evaluator">Evaluator (class in mergeset.base)</a>
 </li>
       <li><a href="module_docs/mergeset/log.html#mergeset.log.Known.exact">exact (mergeset.log.Known attribute)</a>
@@ -632,8 +675,6 @@
         <li><a href="module_docs/mergeset/log.html#module-mergeset.log">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     mergeset.oracle
 
@@ -641,6 +682,8 @@
         <li><a href="module_docs/mergeset/oracle.html#module-mergeset.oracle">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     mergeset.report
 
@@ -667,6 +710,13 @@
 
       <ul>
         <li><a href="module_docs/mergeset/stacks.html#module-mergeset.stacks">module</a>
+</li>
+      </ul></li>
+      <li>
+    mergeset.storage
+
+      <ul>
+        <li><a href="module_docs/mergeset/storage.html#module-mergeset.storage">module</a>
 </li>
       </ul></li>
       <li>
@@ -719,6 +769,8 @@
         <li><a href="module_docs/mergeset/sources.html#module-mergeset.sources">mergeset.sources</a>
 </li>
         <li><a href="module_docs/mergeset/stacks.html#module-mergeset.stacks">mergeset.stacks</a>
+</li>
+        <li><a href="module_docs/mergeset/storage.html#module-mergeset.storage">mergeset.storage</a>
 </li>
         <li><a href="module_docs/mergeset/validation.html#module-mergeset.validation">mergeset.validation</a>
 </li>
@@ -833,6 +885,12 @@
 </li>
       <li><a href="module_docs/mergeset/oracle.html#mergeset.oracle.Resolver">Resolver (in module mergeset.oracle)</a>
 </li>
+      <li><a href="module_docs/mergeset.html#mergeset.run_key">run_key() (in module mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/storage.html#mergeset.storage.run_key">(in module mergeset.storage)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -861,15 +919,23 @@
         <li><a href="module_docs/mergeset/analysis.html#mergeset.analysis.Analysis.singleton_conflicts">(mergeset.analysis.Analysis attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset.html#mergeset.singleton_textual_conflicts">singleton_textual_conflicts() (in module mergeset)</a>
 
       <ul>
         <li><a href="module_docs/mergeset/gitops.html#mergeset.gitops.singleton_textual_conflicts">(in module mergeset.gitops)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/mergeset/sources.html#mergeset.sources.size_weight">size_weight() (in module mergeset.sources)</a>
+</li>
+      <li><a href="module_docs/mergeset.html#mergeset.slash_separated_keys">slash_separated_keys() (in module mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/storage.html#mergeset.storage.slash_separated_keys">(in module mergeset.storage)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset/storage.html#mergeset.storage.slugify">slugify() (in module mergeset.storage)</a>
 </li>
       <li><a href="module_docs/mergeset/stacks.html#mergeset.stacks.stack_roots">stack_roots() (in module mergeset.stacks)</a>
 </li>
@@ -879,6 +945,14 @@
 
       <ul>
         <li><a href="module_docs/mergeset/validation.html#mergeset.validation.staged_validation">(in module mergeset.validation)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/mergeset/storage.html#mergeset.storage.StoreFactory">StoreFactory (in module mergeset.storage)</a>
+</li>
+      <li><a href="module_docs/mergeset.html#mergeset.StoreLines">StoreLines (class in mergeset)</a>
+
+      <ul>
+        <li><a href="module_docs/mergeset/log.html#mergeset.log.StoreLines">(class in mergeset.log)</a>
 </li>
       </ul></li>
       <li><a href="module_docs/mergeset/attribution.html#mergeset.attribution.suspects">suspects() (in module mergeset.attribution)</a>
