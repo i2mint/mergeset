@@ -239,7 +239,7 @@ def analyze(
     trust_unpinned: Optional[bool] = None,
     artifacts: Optional[Mapping[str, MutableMapping]] = None,
     weight: Optional[Callable[[Change], float]] = None,
-    pairwise_preoracle: bool = True,
+    pairwise_preoracle: Optional[bool] = None,
     decompose: bool = True,
     component_local: Optional[bool] = None,
     use_ci_status: bool = True,
@@ -277,8 +277,10 @@ def analyze(
             validator have changed since those rows were written.
         weight: ``Change -> cost of dropping it``; default is size-based.
         pairwise_preoracle: Use ``git merge-tree`` to find textual conflicts for
-            free before spending any evaluation. Ignored (with a note) when a
-            ``resolver`` is given: those conflicts are what it is for.
+            free before spending any evaluation, and exclude them. ``None`` (the
+            default) means on, unless a ``resolver`` is given: those conflicts
+            are what it is for, so it is offered them instead (ADR 0034). Pass
+            ``True`` to exclude them even then.
         decompose: Use file-overlap components to find conflicts cheaply. The
             components are always searched first, because a conflict found
             inside a small component is a conflict found for a fraction of the
@@ -431,7 +433,7 @@ def analyze(
 
     # The cheapest oracle of all: does each change even merge onto base alone?
     heads_by_id = dict(head_shas)
-    if pairwise_preoracle and resolver is not None:
+    if pairwise_preoracle is None and resolver is not None:
         # A textual conflict is what a resolver exists for. Seeded as a known
         # failure it would be excluded before the resolver was ever offered it,
         # and `resolver=` would do nothing (#44). So the merge itself decides.
@@ -441,6 +443,7 @@ def analyze(
             "resolver, a textual conflict is offered to it rather than excluded "
             "up front."
         )
+    pairwise_preoracle = pairwise_preoracle is not False
     if pairwise_preoracle:
         for change_id, files in singleton_textual_conflicts(
             repo, base_sha, heads_by_id

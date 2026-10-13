@@ -799,7 +799,7 @@ def _run(
                 if reuse_worktree
                 else None
             ),
-            pairwise_preoracle=not no_pairwise,
+            pairwise_preoracle=False if no_pairwise else None,
             decompose=not no_decompose,
             max_evaluations=max_evaluations,
             max_seconds=max_seconds,

@@ -16,6 +16,7 @@ from typing import Dict, Iterable, Iterator, List, Optional
 
 from mergeset.analysis import Analysis
 from mergeset.base import (
+    NO_RESOLVER,
     CapabilityError,
     ChangeSet,
     Evaluation,
@@ -156,16 +157,38 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
     # the pre-oracle, or a conflict a resolver declined (#44) -- did not "merge
     # cleanly", and must not be listed as though it had.
     unmerged = _merge_failures(analysis)
-    semantic = [c for c in unexplained if c not in unmerged]
+    assisted = _assisted_failures(analysis)
     did_not_merge = [c for c in unexplained if c in unmerged]
+    resolved_then_failed = [
+        c for c in unexplained if c not in unmerged and c in assisted
+    ]
+    semantic = [c for c in unexplained if c not in unmerged and c not in assisted]
     if did_not_merge:
-        yield "**Did not merge** (found by merging; any resolver declined):"
+        declined = any(
+            r not in (None, NO_RESOLVER) for c in did_not_merge for r in unmerged[c][1]
+        )
+        why = "found by merging; the resolver declined" if declined else (
+            "found by merging"
+        )
+        yield f"**Did not merge** ({why}):"
         yield ""
         for conflict in sorted(did_not_merge, key=lambda s: (len(s), set_key(s))):
-            files = unmerged[conflict]
+            files = unmerged[conflict][0]
             shown = ", ".join(f"`{f}`" for f in files[:5]) or "_(unattributed)_"
             more = f" (+{len(files) - 5} more)" if len(files) > 5 else ""
             yield f"- {_fmt_set(conflict)} — {shown}{more}"
+        yield ""
+    if resolved_then_failed:
+        yield (
+            "**Merged only with an assisted resolution, then failed validation** "
+            "(the resolution may be the cause):"
+        )
+        yield ""
+        for conflict in sorted(
+            resolved_then_failed, key=lambda s: (len(s), set_key(s))
+        ):
+            evidence = _failure_evidence(analysis, conflict)
+            yield f"- {_fmt_set(conflict)}{evidence}"
         yield ""
     if semantic:
         yield "**Conflicts found by validation** (merged cleanly, still failed):"
@@ -282,14 +305,32 @@ def _in_parens(text: str) -> str:
     return f" ({text})" if text else ""
 
 
-def _merge_failures(analysis: Analysis) -> Dict[ChangeSet, List[str]]:
-    """Each set whose FAIL came from the merge, not the validator -> its files."""
+def _fail_rows(analysis: Analysis) -> Iterator[Evaluation]:
+    """Every FAIL row the analysis rests on, across tiers."""
     logs = list(analysis.tier_logs.values()) or [analysis.log or []]
+    return (r for log in logs for r in log if r.verdict is Verdict.FAIL)
+
+
+def _merge_failures(analysis: Analysis) -> Dict[ChangeSet, tuple]:
+    """Each set whose FAIL came from the merge -> (its files, resolvers recorded)."""
+    out: Dict[ChangeSet, tuple] = {}
+    for record in _fail_rows(analysis):
+        if record.stage == Stage.MERGE:
+            files, resolvers = out.get(record.subset, ([], set()))
+            merge_files = record.merge.conflicting_files if record.merge else ()
+            out[record.subset] = (
+                files or list(merge_files),
+                resolvers | {record.resolver},
+            )
+    return out
+
+
+def _assisted_failures(analysis: Analysis) -> set:
+    """Sets that merged only with an assisted resolution, then failed validation."""
     return {
-        record.subset: list(record.merge.conflicting_files if record.merge else ())
-        for log in logs
-        for record in log
-        if record.verdict is Verdict.FAIL and record.stage == Stage.MERGE
+        record.subset
+        for record in _fail_rows(analysis)
+        if record.stage == Stage.VALIDATE and record.merge and record.merge.assisted
     }
 
 
@@ -331,6 +372,13 @@ def _analysis_jdict(analysis: Analysis) -> dict:
     """The whole analysis as JSON, which is what the HTML page renders."""
     textual_pairs = {frozenset({a, b}) for a, b, _ in analysis.textual_conflicts}
     unmerged = _merge_failures(analysis)
+    assisted = _assisted_failures(analysis)
+
+    def kind(c: ChangeSet) -> str:
+        if c in unmerged:
+            return "textual"
+        return "assisted" if c in assisted else "validation"
+
     return {
         "base": analysis.base,
         "base_sha": analysis.base_sha,
@@ -356,8 +404,8 @@ def _analysis_jdict(analysis: Analysis) -> dict:
             {
                 "a": sorted(c)[0],
                 "b": sorted(c)[1],
-                "kind": "textual" if c in unmerged else "validation",
-                "files": unmerged.get(c, []),
+                "kind": kind(c),
+                "files": unmerged[c][0] if c in unmerged else [],
             }
             for c in analysis.conflicts
             if len(c) == 2 and c not in textual_pairs
@@ -410,6 +458,7 @@ _HTML_TEMPLATE = r"""<!doctype html>
   .node { cursor: default; }
   .edge-textual { stroke: var(--bad); stroke-width: 2; }
   .edge-validation { stroke: var(--warn); stroke-width: 2; stroke-dasharray: 5 4; }
+  .edge-assisted { stroke: var(--warn); stroke-width: 2; stroke-dasharray: 1 4; }
   .legend { color: var(--muted); font-size: 12px; margin-top: 8px; }
   ol { margin: 6px 0 0 20px; padding: 0; }
 </style>
@@ -419,7 +468,7 @@ _HTML_TEMPLATE = r"""<!doctype html>
   <h2>Conflict graph</h2>
   <div class="card"><div id="graph"></div>
     <div class="legend">Solid red = textual conflict (found by <code>git merge-tree</code> or by merging; no test run).
-      Dashed amber = found by validation. Node size = weight. Colour = component.</div>
+      Dashed amber = found by validation. Dotted amber = merged only with an assisted resolution, then failed validation. Node size = weight. Colour = component.</div>
   </div>
   <h2>Merge plans</h2><div id="plans"></div>
   <h2>Candidates</h2><div class="card scroll"><table id="changes"></table></div>

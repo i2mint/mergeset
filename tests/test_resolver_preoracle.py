@@ -19,10 +19,9 @@ def _analyze(repo, tmp_path, names, **kwargs):
         repo,
         [Change(id=n, head=n, base="main") for n in names],
         base="main",
-        validate=merge_only_validation(),
         use_ci_status=False,
         log=EvaluationLog(str(tmp_path / "eval.jsonl")),
-        **kwargs,
+        **{"validate": merge_only_validation(), **kwargs},
     )
 
 
@@ -62,3 +61,46 @@ def test_a_declined_conflict_is_reported_as_unmerged_not_as_validation(repo, tmp
     assert "Conflicts found by validation" not in report
     [edge] = _analysis_jdict(analysis)["edges"]
     assert edge["kind"] == "textual" and edge["files"] == ["shared.txt"]
+
+
+def test_an_explicit_preoracle_still_excludes_with_a_resolver(repo, tmp_path):
+    calls = []
+    analysis = _analyze(
+        repo,
+        tmp_path,
+        ["feat-a", "feat-c"],
+        resolver=_scripted_resolver(calls),
+        pairwise_preoracle=True,
+    )
+    assert not calls
+    assert len(analysis.maximal_sets) == 2
+
+
+def test_without_a_resolver_did_not_merge_does_not_blame_one(repo, tmp_path):
+    analysis = _analyze(
+        repo, tmp_path, ["feat-a", "feat-c"], pairwise_preoracle=False
+    )
+    report = markdown_report(analysis)
+    assert "**Did not merge** (found by merging):" in report
+    assert "declined" not in report
+
+
+def test_a_resolved_set_that_fails_validation_is_not_a_clean_merge(repo, tmp_path):
+    from conftest import py_command
+    from mergeset.validation import command_validation
+    from test_resolution import _NEEDS_D
+
+    calls = []
+    analysis = _analyze(
+        repo,
+        tmp_path,
+        ["feat-a", "feat-c"],
+        resolver=_scripted_resolver(calls),
+        validate=command_validation(py_command(tmp_path, "needs-d", _NEEDS_D)),
+    )
+    assert analysis.conflicts == [frozenset({"feat-a", "feat-c"})]
+    report = markdown_report(analysis)
+    assert "Merged only with an assisted resolution" in report
+    assert "merged cleanly" not in report
+    [edge] = _analysis_jdict(analysis)["edges"]
+    assert edge["kind"] == "assisted"
