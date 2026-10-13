@@ -275,22 +275,55 @@ class TieredAnalysis:
         return lines
 
     def verified_tier(self, subset: ChangeSet) -> Optional[str]:
-        """The deepest tier that recorded an exact PASS for ``subset``.
+        """The deepest tier that ran ``subset`` and passed it, every cheaper one agreeing.
 
-        Inference across the monotone closure deliberately does not count. A
-        passing *superset* is what makes a subset good by inference, and if such
-        a superset existed it would be the answer instead — so for the purpose
-        of "was this claim actually run", only an exact recorded PASS counts.
-        D25's rule, applied per tier.
+        At the claimed tier, inference across the monotone closure deliberately
+        does not count. A passing *superset* is what makes a subset good by
+        inference, and if such a superset existed it would be the answer
+        instead — so for the purpose of "was this claim actually run", only an
+        exact recorded PASS counts. D25's rule, applied per tier.
+
+        The cheaper tiers need only *know* the set passes, exactly or by
+        inference (i2mint/mergeset#31). A deep tier is reached only through the
+        chain, which asks every cheaper tier first and stops at the first that
+        does not pass; so a deep exact PASS was preceded by a PASS at each
+        cheaper tier, and the screen often gave it by inference from a passing
+        superset the deep tier went on to refute. Requiring an exact screen PASS
+        there reported a plan run at every tier as NOT VERIFIED. A cheaper tier
+        that does not know the set passes (refuted it since, or never saw it)
+        still blocks the claim: then the deep row cannot have come through it.
+
+        >>> from mergeset.log import MemoryLines
+        >>> from mergeset.validation import merge_only_validation
+        >>> tiers = [Tier(n, merge_only_validation()) for n in ('screen', 'deep')]
+        >>> logs = {t.name: EvaluationLog(MemoryLines()) for t in tiers}
+        >>> ab, abd = frozenset('ab'), frozenset('abd')
+        >>> _ = logs['screen'].record(Evaluation(abd, Verdict.PASS))
+        >>> _ = logs['deep'].record(Evaluation(abd, Verdict.FAIL))
+        >>> _ = logs['deep'].record(Evaluation(ab, Verdict.PASS))
+        >>> result = TieredAnalysis(tiers, analysis=None, logs=logs, cost_model=None)
+        >>> result.verified_tier(ab), result.verified_tier(abd)
+        ('deep', 'screen')
+        >>> result.verified_tier(frozenset('a')) is None   # only ever inferred
+        True
         """
-        deepest = None
-        for tier in self.tiers:
+        subset = frozenset(subset)
+
+        def passes(tier: Tier, *, exactly: bool) -> bool:
             log = self.logs.get(tier.name)
-            exact = log.exact(frozenset(subset)) if log else None
-            if exact is None or exact.verdict is not Verdict.PASS:
-                return deepest
-            deepest = tier.name
-        return deepest
+            if log is None:
+                return False
+            if exactly:
+                exact = log.exact(subset)
+                return exact is not None and exact.verdict is Verdict.PASS
+            return log.known(subset).verdict is Verdict.PASS
+
+        for depth in range(len(self.tiers) - 1, -1, -1):
+            if passes(self.tiers[depth], exactly=True) and all(
+                passes(cheaper, exactly=False) for cheaper in self.tiers[:depth]
+            ):
+                return self.tiers[depth].name
+        return None
 
 
 # --------------------------------------------------------------------------

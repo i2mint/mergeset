@@ -797,3 +797,36 @@ def test_tier_logs_default_outside_any_repository(tmp_path):
     lines = tier_lines(str(tmp_path), "unit")
     assert os.environ["MERGESET_DATA_DIR"] in os.path.abspath(lines.path)
     assert str(tmp_path) not in os.path.dirname(os.path.abspath(lines.path))
+
+
+def test_a_deep_exact_pass_verifies_a_set_the_screen_only_inferred(repo, tmp_path):
+    """i2mint/mergeset#31: three branches, one of which fails only the deep tier.
+
+    The screen passes ``{a, b, d}`` as a whole, so ``{a, b}`` is good at the
+    screen only by inference. The deep tier refutes the triple and passes
+    ``{a, b}`` exactly -- reached through the chain, so the screen did pass it.
+    That plan was run at every tier and must not be reported NOT VERIFIED.
+    """
+    screen = _stage_validator(tmp_path, "screen", "raise SystemExit(0)\n")
+    deep = _stage_validator(
+        tmp_path,
+        "deep",
+        "import os, sys\nsys.exit(1 if os.path.exists('new-d.txt') else 0)\n",
+    )
+    result = analyze_tiered(
+        repo,
+        _changes(repo, ["feat-a", "feat-b", "feat-d"]),
+        base="main",
+        tiers=[Tier("screen", screen), Tier("deep", deep)],
+        pairwise_preoracle=False,
+        decompose=False,
+        use_ci_status=False,
+    )
+    pair = frozenset({"feat-a", "feat-b"})
+    assert result.maximal_sets == [pair]
+    assert result.logs["screen"].exact(pair) is None, "the shape the issue needs"
+    assert result.logs["deep"].exact(pair).verdict is Verdict.PASS
+    assert result.verified_tier(pair) == "deep"
+    assert not result.analysis.unverified_sets
+    assert "nothing validated yet" not in result.answer.summary()
+    assert any("confirmed at the deepest tier" in n for n in result.analysis.notes)
