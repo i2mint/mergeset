@@ -325,6 +325,7 @@ def find_maximal_good_sets(
                 except _Aborted:
                     # `candidate` itself passed: keep it in the partial answer.
                     state.maximal_good_sets.append(candidate)
+                    emit("maximal_good_set", {"subset": set_key(candidate)})
                     raise
                 if grown_passes:
                     candidate = grown

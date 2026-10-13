@@ -440,3 +440,65 @@ def test_an_error_inside_conflict_shrinking_stops_the_search():
     assert state.error == "resolver timed out"
     assert state.conflicts == []
     assert len(seen) == 2
+
+
+def test_after_an_abort_the_report_does_not_recommend_a_set_the_log_refutes(
+    repo, tmp_path
+):
+    """Review of #52, round 2: the abort branch skipped the refuted-set filter."""
+    from conftest import run
+    from mergeset.analysis import analyze
+    from mergeset.log import EvaluationLog, MemoryLines
+
+    def commit(branch, edits, start="main"):
+        run(repo, "checkout", "-q", "-B", branch, start)
+        for name, text in edits.items():
+            with open(os.path.join(repo, name), "w") as f:
+                f.write(text)
+        run(repo, "add", "-A")
+        run(repo, "commit", "-qm", branch)
+        run(repo, "checkout", "-q", "main")
+
+    lines = "".join(f"line {i}\n" for i in range(1, 11))
+    commit("main", {"long1.txt": lines, "long2.txt": lines})
+    # Components, in the order they are searched (largest first, then by name):
+    # two that only the whole-repo validator ties together, then the one whose
+    # resolver raises. The abort must come after the others were searched, or
+    # there is nothing to combine.
+    top, bottom = lines.replace("line 1\n", "one\n"), lines.replace(
+        "line 10\n", "ten\n"
+    )
+    commit("b1", {"long1.txt": top, "b1.txt": "x"})
+    commit("b2", {"long1.txt": bottom, "b2.txt": "x"})
+    commit("d1", {"long2.txt": top, "d1.txt": "x"})
+    commit("d2", {"long2.txt": bottom, "d2.txt": "x"})
+    for branch, text in [("zz-1", "ONE"), ("zz-2", "TWO")]:
+        commit(branch, {"shared.txt": f"line one\n{text}\nline three\n"})
+
+    cross = (
+        "import os, sys\n"
+        "sys.exit(1 if os.path.exists('b1.txt') and os.path.exists('d1.txt') else 0)\n"
+    )
+    log = EvaluationLog(MemoryLines())
+
+    def run_with(names, resolver=None):
+        return analyze(
+            repo,
+            _changes(names),
+            base="main",
+            validate=command_validation(py_command(tmp_path, "cross", cross)),
+            resolver=resolver,
+            log=log,
+            pairwise_preoracle=False,
+            decompose=True,
+            use_ci_status=False,
+        )
+
+    run_with(["b1", "b2", "d1", "d2"])  # records that b1 and d1 do not go together
+    refuted = frozenset({"b1", "b2", "d1", "d2"})
+    assert log.known(refuted).verdict is Verdict.FAIL
+
+    again = run_with(["b1", "b2", "d1", "d2", "zz-1", "zz-2"], resolver=_raising([]))
+    assert any(s.error for s in again.searches)
+    assert refuted not in again.maximal_sets, again.maximal_sets
+    assert any(log.known(s).verdict is Verdict.PASS for s in again.maximal_sets)

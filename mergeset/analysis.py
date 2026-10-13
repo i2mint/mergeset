@@ -563,7 +563,7 @@ def analyze(
         )
         if any(state.error for state in analysis.searches):
             # Verifying globally would ask the same failing question again.
-            analysis.maximal_sets = combined
+            analysis.maximal_sets = _fallback_sets(combined, log, analysis)
         else:
             global_state = find_maximal_good_sets(
                 [c.id for c in changes],
