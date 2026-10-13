@@ -11,7 +11,7 @@ import pytest
 
 import mergeset.cli as cli
 from mergeset.analysis import analyze
-from mergeset.base import Change, Verdict
+from mergeset.base import Change, Evaluation, Verdict
 from mergeset.report import html_report, markdown_report
 from mergeset.validation import command_validation
 from conftest import py_command
@@ -156,5 +156,85 @@ def test_a_deep_tier_abort_does_not_disown_the_screens_answer(
     # The aborted tier is not "reached", and its partial sets are not the answer.
     assert result.depth_reached == "screen"
     assert analysis.maximal_sets == [frozenset({"feat-b", "feat-d"})]
-    assert any("only reached `screen`" in n for n in analysis.notes)
+    assert any("so only `screen` is claimed" in n for n in analysis.notes)
     assert not any("confirmed at the deepest tier" in n for n in analysis.notes)
+
+
+def _search_erroring(monkeypatch, error_when):
+    """Wrap the confirm tiers' search: an ERROR where ``error_when(subset, seen)``."""
+    import mergeset.tiers as tiers_module
+
+    real = tiers_module.find_maximal_good_sets
+
+    def search(change_ids, evaluate, **kwargs):
+        seen = {}
+
+        def wrapped(subset):
+            subset = frozenset(subset)
+            if error_when(subset, seen):
+                return Evaluation(subset, Verdict.ERROR, note="boom")
+            result = evaluate(subset)
+            seen[subset] = result.verdict
+            return result
+
+        return real(change_ids, wrapped, **kwargs)
+
+    monkeypatch.setattr(tiers_module, "find_maximal_good_sets", search)
+
+
+def _tiered_names(repo, tmp_path, names, deep_code):
+    from mergeset.tiers import Tier, analyze_tiered
+    from mergeset.validation import merge_only_validation
+
+    return analyze_tiered(
+        repo,
+        [Change(id=n, head=n, base="main") for n in names],
+        base="main",
+        tiers=[
+            Tier("screen", merge_only_validation()),
+            Tier("deep", command_validation(py_command(tmp_path, "deep", deep_code))),
+        ],
+        pairwise_preoracle=False,
+        use_ci_status=False,
+        decompose=False,
+    )
+
+
+def test_a_set_the_aborted_tier_refuted_stays_not_verified(repo, tmp_path, monkeypatch):
+    """Review of #58: with the depth at 'screen', a refuted plan lost its flag."""
+    _search_erroring(
+        monkeypatch,
+        lambda s, seen: s == frozenset({"feat-b"})
+        and seen.get(frozenset({"feat-d"})) is Verdict.FAIL,
+    )
+    deep_fails_on_d = (
+        "import os, sys\nsys.exit(1 if os.path.exists('new-d.txt') else 0)\n"
+    )
+    result = _tiered_names(repo, tmp_path, ["feat-b", "feat-d"], deep_fails_on_d)
+    analysis = result.analysis
+    assert result.depth_reached == "screen" and analysis.aborted_tier == "deep"
+    assert frozenset({"feat-d"}) in analysis.conflicts
+    for plan_set in analysis.maximal_sets:
+        if frozenset({"feat-d"}) <= plan_set:
+            assert plan_set in [frozenset(u) for u in analysis.unverified_sets]
+    assert any("`deep` aborted" in n for n in analysis.notes)
+    assert not any("a tier that did not run" in n for n in analysis.notes)
+
+
+def test_a_set_the_aborted_tier_confirmed_is_not_flagged_unverified(
+    repo, tmp_path, monkeypatch
+):
+    _search_erroring(
+        monkeypatch,
+        lambda s, seen: len(s) == 3
+        and any(v is Verdict.PASS and len(k) == 3 and k != s for k, v in seen.items()),
+    )
+    result = _tiered_names(
+        repo, tmp_path, ["feat-a", "feat-b", "feat-c", "feat-d"], _PASS
+    )
+    analysis = result.analysis
+    assert analysis.aborted_tier == "deep"
+    unverified = {frozenset(u) for u in analysis.unverified_sets}
+    for plan_set in analysis.maximal_sets:
+        confirmed = result.verified_tier(plan_set) == "deep"
+        assert (plan_set in unverified) != confirmed, plan_set
