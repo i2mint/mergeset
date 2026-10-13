@@ -934,6 +934,7 @@ def analyze_tiered(
         )
         analysis.notes.extend(unmatched_log_notes(logs[tier.name], label=tier.name))
     ingested: Dict[str, int] = {}
+
     # Every tier's log, not just the screen's. Budget admission for a deep tier
     # happens before that tier has run anything in *this* process, so pricing it
     # from `declared` while a log full of real timings sat on disk is how a
