@@ -292,6 +292,7 @@ def test_another_validators_timings_do_not_price_the_tier():
     view = log.pinned(base="B", heads={"a": "A"}, validator="cmd:new")
     model = Recorder()
     _sync_costs(model, view, "deep", {})
+    # The row recording no validator (written before #32) still prices it.
     assert sorted(model.seen) == [7.0, 600.0]
 
 
@@ -301,3 +302,24 @@ def test_show_log_counts_rows_recording_no_validator_as_a_mix(repo, tmp_path):
     _without_validator(path)
     _analyze(repo, EvaluationLog(path), merge_only_validation())
     assert "2 validators" in cli.show_log(log_path=path)
+
+
+def test_a_log_pinned_without_a_validator_does_not_write_legacy_looking_rows():
+    """Review of #33, round 2: such rows were adopted by ``trust_unpinned``."""
+    log = EvaluationLog(MemoryLines())
+    view = log.pinned(base="B", heads={"a": "A"})  # library use: no validator
+    row = view.record(Evaluation(frozenset("a"), Verdict.PASS))
+    assert row.validator == "unknown"
+    strict = log.pinned(
+        base="B", heads={"a": "A"}, validator="cmd:1", trust_unpinned=True
+    )
+    assert len(strict) == 0 and strict.stale == [row]
+
+
+def test_a_blank_fingerprint_is_no_fingerprint():
+    def check(worktree):
+        return True
+
+    check.validator_fingerprint = ""
+    assert fingerprint_of(check) is None
+    assert fingerprint_of(flake_tolerant(check)) is None

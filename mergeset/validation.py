@@ -35,7 +35,12 @@ import time
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
-from mergeset.base import CapabilityError, StageRun, ValidationOutcome
+from mergeset.base import (
+    UNKNOWN_FINGERPRINT,
+    CapabilityError,
+    StageRun,
+    ValidationOutcome,
+)
 
 #: Fail-fast by default: the answer we need is a bit, and the first failure has it.
 DEFAULT_PYTEST_ARGS = ("-x", "-q", "--tb=short", "-p", "no:cacheprovider")
@@ -57,11 +62,6 @@ _RUNNER_EVIDENCE = (
 #: The attribute a validator carries to say what it runs (i2mint/mergeset#32).
 FINGERPRINT_ATTR = "validator_fingerprint"
 
-#: What a row records when its validator had no fingerprint. Not ``None``: that
-#: is what rows written before fingerprints existed read back as, and the
-#: migration switch (``trust_unpinned``) must not adopt today's rows from an
-#: unknown validator as if they were old rows from this one.
-UNKNOWN_FINGERPRINT = "unknown"
 
 
 def fingerprint_of(validate: Optional[Callable]) -> Optional[str]:
@@ -85,7 +85,9 @@ def fingerprint_of(validate: Optional[Callable]) -> Optional[str]:
     True
     """
     value = getattr(validate, FINGERPRINT_ATTR, None)
-    return None if value is None else str(value)
+    # A blank fingerprint says nothing either, and must not become a real one
+    # when wrapped (``flake_tolerant`` digests what it wraps).
+    return str(value) if value not in (None, "") else None
 
 
 def recorded_fingerprint(validate: Optional[Callable]) -> str:

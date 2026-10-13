@@ -256,6 +256,13 @@ class ValidationOutcome:
         )
 
 
+#: What a row records when its validator had no fingerprint. Not ``None``: that
+#: is what rows written before fingerprints existed read back as, and the
+#: migration switch (``trust_unpinned``) must not adopt today's rows from an
+#: unknown validator as if they were old rows from a known one (#32).
+UNKNOWN_FINGERPRINT = "unknown"
+
+
 @dataclass(frozen=True)
 class Evaluation:
     """One row of the evaluation log — the single source of truth.

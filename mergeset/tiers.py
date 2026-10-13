@@ -418,12 +418,19 @@ def _sync_costs(
     cleared the model's observation list instead, which worked for
     :class:`~mergeset.cost.MeasuredCost` and silently double-counted into every
     other :class:`~mergeset.cost.CostModel`: the seam publishes a protocol with
-    no ``reset``, so the facade must not require one.
+    no ``reset``, so the facade must not require one. The count assumes the
+    log's pins do not change between calls, which is how ``analyze_tiered``
+    uses it: rows are filtered by validator, and a filter that changed would
+    shift the count.
     """
     # Every row, pinned to these commits or not: what an evaluation cost is a
     # fact about the tier, and a rewritten branch does not make it untrue. Not
     # rows judged by another validator, though: an edited command is a new
-    # price, and a 2 s check's timings must not admit a 600 s one (#32).
+    # price, and a 2 s check's timings must not admit a 600 s one (#32). Rows
+    # recording no validator (written before #32) still price it: they are most
+    # often from the same command, and leaving them out would price every tier
+    # from the default on the first run after an upgrade -- the over-admission
+    # this function exists to prevent.
     other = {id(e) for e in log.other_validator}
     durations = [
         (e.subset, e.duration)

@@ -39,7 +39,14 @@ from typing import (
     Tuple,
 )
 
-from mergeset.base import ChangeId, ChangeSet, Evaluation, Verdict, set_key
+from mergeset.base import (
+    UNKNOWN_FINGERPRINT,
+    ChangeId,
+    ChangeSet,
+    Evaluation,
+    Verdict,
+    set_key,
+)
 
 
 def _now() -> str:
@@ -224,12 +231,19 @@ class Pins:
         return self.complete(evaluation) and not self.refutes(evaluation)
 
     def stamp(self, evaluation: Evaluation) -> Evaluation:
-        """``evaluation`` pinned to these commits and validator, where it is not."""
+        """``evaluation`` pinned to these commits and validator, where it is not.
+
+        Pins naming no validator stamp :data:`~mergeset.base.UNKNOWN_FINGERPRINT`,
+        never nothing: a row recording no validator reads as written before
+        validators were recorded, and ``trust_unpinned`` would adopt it.
+        """
         if not evaluation.pinned:
             heads = {c: self.heads[c] for c in evaluation.subset if c in self.heads}
             evaluation = replace(evaluation, base_sha=self.base, heads=heads)
-        if evaluation.validator is None and self.validator is not None:
-            evaluation = replace(evaluation, validator=self.validator)
+        if evaluation.validator is None:
+            evaluation = replace(
+                evaluation, validator=self.validator or UNKNOWN_FINGERPRINT
+            )
         return evaluation
 
 

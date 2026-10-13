@@ -572,8 +572,10 @@ def unmatched_log_notes(log: EvaluationLog, *, label: str = "") -> List[str]:
     if log.stale:
         by_validator = len(log.other_validator)
         why = (
-            f" {by_validator} of them were judged by a different validator "
-            "(its command, stages, timeout or environment changed)."
+            f" {by_validator} of them {'was' if by_validator == 1 else 'were'} "
+            "judged by a different validator (its command, stages, timeout or "
+            "environment changed, or a validator that cannot say what it runs "
+            "took the place of one that can, or the reverse)."
             if by_validator
             else ""
         )
