@@ -1,4 +1,4 @@
-> built 2026-10-13 09:10 UTC from a75d6c4 (main) · mergeset 0.0.22. Details: build_info.json
+> built 2026-10-13 09:21 UTC from 79931e5 (main) · mergeset 0.0.23. Details: build_info.json
 
 # index.html.md
 
@@ -210,7 +210,7 @@ The order of operations is the whole point, because it is the order of *cost*:
 | [`Analysis`](_autosummary/mergeset.analysis.html.md#mergeset.analysis.Analysis)(repo, base, base_sha, changes[, ...])   | Everything a run learned.   |
 |---------------------------------------------------------------------------------------------------|-----------------------------|
 
-### *class* mergeset.analysis.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, unverified_sets=<factory>, log=None, searches=<factory>, notes=<factory>)
+### *class* mergeset.analysis.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, unverified_sets=<factory>, log=None, tier_logs=<factory>, searches=<factory>, notes=<factory>)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -229,6 +229,9 @@ global search had to verify them. See `analyze(component_local=...)`.
 
 How many expensive evaluations this analysis rests on.
 
+In a tiered run, those of the first tier (`log`); every tier’s count
+is [`evaluations_by_tier`](_autosummary/mergeset.analysis.html.md#mergeset.analysis.Analysis.evaluations_by_tier), which is what the reports show.
+
 Counted from the **log**, which is the source of truth, not from the
 search state, which only knows what *this process* ran. Regenerating a
 report from a complete log spends nothing, and the search-state number
@@ -242,6 +245,10 @@ the changes in play (so an older run’s rows for a different candidate
 set in the same log are not claimed as this analysis’s work). The base
 check counts — it is an evaluation, and on a real project it is one of
 the slowest.
+
+#### *property* evaluations_by_tier *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [int](https://docs.python.org/3/builtins/functions.html#int)]*
+
+[`evaluations`](_autosummary/mergeset.analysis.html.md#mergeset.analysis.Analysis.evaluations), per tier, cheapest first; empty when untiered.
 
 #### *property* evaluations_this_run *: [int](https://docs.python.org/3/builtins/functions.html#int)*
 
@@ -289,6 +296,13 @@ a row pinned to the old ones; merging the resolved shas rules that out.
 #### singleton_conflicts *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [List](https://docs.python.org/3/library/typing.html#typing.List)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]]*
 
 Changes that will not even merge onto base alone -> conflicting files.
+
+#### tier_logs *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [EvaluationLog](_autosummary/mergeset.log.html.md#mergeset.log.EvaluationLog)]*
+
+Each tier’s log, cheapest first, when validation was tiered
+([`mergeset.analyze_tiered()`](_autosummary/mergeset.html.md#mergeset.analyze_tiered)); `log` is then the first of them.
+Empty otherwise. What reports read to show every tier’s work, not only
+the screen’s (i2mint/mergeset#29).
 
 #### unverified_sets *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[frozenset](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]*
 
@@ -1699,7 +1713,7 @@ changes.
 |------------------------------------------------------------------|----------------------------------------------------------------------------|
 | [`CapabilityError`](_autosummary/mergeset.html.md#mergeset.CapabilityError) | A required external capability is missing; the message says how to fix it. |
 
-### *class* mergeset.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, unverified_sets=<factory>, log=None, searches=<factory>, notes=<factory>)
+### *class* mergeset.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, unverified_sets=<factory>, log=None, tier_logs=<factory>, searches=<factory>, notes=<factory>)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -1718,6 +1732,9 @@ global search had to verify them. See `analyze(component_local=...)`.
 
 How many expensive evaluations this analysis rests on.
 
+In a tiered run, those of the first tier (`log`); every tier’s count
+is [`evaluations_by_tier`](_autosummary/mergeset.html.md#mergeset.Analysis.evaluations_by_tier), which is what the reports show.
+
 Counted from the **log**, which is the source of truth, not from the
 search state, which only knows what *this process* ran. Regenerating a
 report from a complete log spends nothing, and the search-state number
@@ -1731,6 +1748,10 @@ the changes in play (so an older run’s rows for a different candidate
 set in the same log are not claimed as this analysis’s work). The base
 check counts — it is an evaluation, and on a real project it is one of
 the slowest.
+
+#### *property* evaluations_by_tier *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [int](https://docs.python.org/3/builtins/functions.html#int)]*
+
+[`evaluations`](_autosummary/mergeset.html.md#mergeset.Analysis.evaluations), per tier, cheapest first; empty when untiered.
 
 #### *property* evaluations_this_run *: [int](https://docs.python.org/3/builtins/functions.html#int)*
 
@@ -1778,6 +1799,13 @@ a row pinned to the old ones; merging the resolved shas rules that out.
 #### singleton_conflicts *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [List](https://docs.python.org/3/library/typing.html#typing.List)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]]*
 
 Changes that will not even merge onto base alone -> conflicting files.
+
+#### tier_logs *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [EvaluationLog](_autosummary/mergeset.log.html.md#mergeset.log.EvaluationLog)]*
+
+Each tier’s log, cheapest first, when validation was tiered
+([`mergeset.analyze_tiered()`](_autosummary/mergeset.html.md#mergeset.analyze_tiered)); `log` is then the first of them.
+Empty otherwise. What reports read to show every tier’s work, not only
+the screen’s (i2mint/mergeset#29).
 
 #### unverified_sets *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[frozenset](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]*
 
@@ -6166,18 +6194,18 @@ log distinguishes `build: ...` from `test: tests/x.ts::y`.
 
 # About this build
 
-This documentation was built on **2026-10-13 09:10 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/a75d6c4bba7dd61805c0e9157a392d5138064712"><code>a75d6c4</code></a> on branch <code>main</code>, for **mergeset 0.0.22** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 09:21 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/79931e5b946f1e9dbe3b46ee84cc885372bf1ac6"><code>79931e5</code></a> on branch <code>main</code>, for **mergeset 0.0.23** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.22) is behind the latest release on PyPI (0.0.23): `pip install mergeset` gives newer code than these docs describe.
+- The documented version (0.0.23) is behind the latest release on PyPI (0.0.24): `pip install mergeset` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/mergeset/commit/a75d6c4bba7dd61805c0e9157a392d5138064712"><code>a75d6c4bba7dd61805c0e9157a392d5138064712</code></a> |
+| Commit              | <a href="https://github.com/i2mint/mergeset/commit/79931e5b946f1e9dbe3b46ee84cc885372bf1ac6"><code>79931e5b946f1e9dbe3b46ee84cc885372bf1ac6</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -6188,9 +6216,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/mergeset</code>                                                               |
-| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38374225605">38374225605</a>      |
+| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38375550751">38375550751</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>a75d6c4bba7dd61805c0e9157a392d5138064712</code> (in the history of the built commit) |
+| Event commit | <code>79931e5b946f1e9dbe3b46ee84cc885372bf1ac6</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6215,13 +6243,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/mergeset/0.0.23/">0.0.23</a>, newer than the documented version (0.0.22).
+Latest release: <a href="https://pypi.org/project/mergeset/0.0.24/">0.0.24</a>, newer than the documented version (0.0.23).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/mergeset && cd mergeset
-git checkout a75d6c4bba7dd61805c0e9157a392d5138064712
+git checkout 79931e5b946f1e9dbe3b46ee84cc885372bf1ac6
 pip install "epythet==0.2.15"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

@@ -127,7 +127,7 @@ changes.
 |------------------------------------------------------------------|----------------------------------------------------------------------------|
 | [`CapabilityError`](#mergeset.CapabilityError) | A required external capability is missing; the message says how to fix it. |
 
-### *class* mergeset.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, unverified_sets=<factory>, log=None, searches=<factory>, notes=<factory>)
+### *class* mergeset.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, unverified_sets=<factory>, log=None, tier_logs=<factory>, searches=<factory>, notes=<factory>)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -146,6 +146,9 @@ global search had to verify them. See `analyze(component_local=...)`.
 
 How many expensive evaluations this analysis rests on.
 
+In a tiered run, those of the first tier (`log`); every tier’s count
+is [`evaluations_by_tier`](#mergeset.Analysis.evaluations_by_tier), which is what the reports show.
+
 Counted from the **log**, which is the source of truth, not from the
 search state, which only knows what *this process* ran. Regenerating a
 report from a complete log spends nothing, and the search-state number
@@ -159,6 +162,10 @@ the changes in play (so an older run’s rows for a different candidate
 set in the same log are not claimed as this analysis’s work). The base
 check counts — it is an evaluation, and on a real project it is one of
 the slowest.
+
+#### *property* evaluations_by_tier *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [int](https://docs.python.org/3/builtins/functions.html#int)]*
+
+[`evaluations`](#mergeset.Analysis.evaluations), per tier, cheapest first; empty when untiered.
 
 #### *property* evaluations_this_run *: [int](https://docs.python.org/3/builtins/functions.html#int)*
 
@@ -206,6 +213,13 @@ a row pinned to the old ones; merging the resolved shas rules that out.
 #### singleton_conflicts *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [List](https://docs.python.org/3/library/typing.html#typing.List)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]]*
 
 Changes that will not even merge onto base alone -> conflicting files.
+
+#### tier_logs *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [EvaluationLog](mergeset.log.html.md#mergeset.log.EvaluationLog)]*
+
+Each tier’s log, cheapest first, when validation was tiered
+([`mergeset.analyze_tiered()`](#mergeset.analyze_tiered)); `log` is then the first of them.
+Empty otherwise. What reports read to show every tier’s work, not only
+the screen’s (i2mint/mergeset#29).
 
 #### unverified_sets *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[frozenset](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]*
 

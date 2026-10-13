@@ -1,32 +1,32 @@
 {
   "schema_version": 1,
-  "built_at": "2026-10-13T09:10:14Z",
+  "built_at": "2026-10-13T09:21:26Z",
   "package": {
     "name": "mergeset",
-    "version": "0.0.22",
+    "version": "0.0.23",
     "display_name": "mergeset",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "a75d6c4bba7dd61805c0e9157a392d5138064712",
-    "short_commit": "a75d6c4",
+    "commit": "79931e5b946f1e9dbe3b46ee84cc885372bf1ac6",
+    "short_commit": "79931e5",
     "branch": "main",
     "tags": [],
     "dirty": false,
     "remote_url": "https://github.com/i2mint/mergeset",
-    "commit_url": "https://github.com/i2mint/mergeset/commit/a75d6c4bba7dd61805c0e9157a392d5138064712",
+    "commit_url": "https://github.com/i2mint/mergeset/commit/79931e5b946f1e9dbe3b46ee84cc885372bf1ac6",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "i2mint/mergeset",
-    "sha": "a75d6c4bba7dd61805c0e9157a392d5138064712",
+    "sha": "79931e5b946f1e9dbe3b46ee84cc885372bf1ac6",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "38374225605",
-    "run_url": "https://github.com/i2mint/mergeset/actions/runs/38374225605",
+    "run_id": "38375550751",
+    "run_url": "https://github.com/i2mint/mergeset/actions/runs/38375550751",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -56,20 +56,20 @@
   },
   "site": {
     "modules_documented": 17,
-    "objects_documented": 395
+    "objects_documented": 399
   },
   "pypi": {
     "checked": true,
-    "latest": "0.0.23",
+    "latest": "0.0.24",
     "relation": "behind",
     "error": null
   },
-  "reproduce": "git clone https://github.com/i2mint/mergeset && cd mergeset\ngit checkout a75d6c4bba7dd61805c0e9157a392d5138064712\npip install \"epythet==0.2.15\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/i2mint/mergeset && cd mergeset\ngit checkout 79931e5b946f1e9dbe3b46ee84cc885372bf1ac6\npip install \"epythet==0.2.15\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": false,
     "notes": [
-      "The documented version (0.0.22) is behind the latest release on PyPI (0.0.23): `pip install mergeset` gives newer code than these docs describe."
+      "The documented version (0.0.23) is behind the latest release on PyPI (0.0.24): `pip install mergeset` gives newer code than these docs describe."
     ]
   }
 }
