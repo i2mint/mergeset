@@ -12,10 +12,17 @@ from __future__ import annotations
 import html
 import json
 from collections.abc import MutableMapping
-from typing import Iterable, Iterator, List, Optional
+from typing import Dict, Iterable, Iterator, List, Optional
 
 from mergeset.analysis import Analysis
-from mergeset.base import CapabilityError, ChangeSet, Evaluation, Verdict, set_key
+from mergeset.base import (
+    CapabilityError,
+    ChangeSet,
+    Evaluation,
+    Stage,
+    Verdict,
+    set_key,
+)
 
 
 def stage_breakdown(record: Evaluation) -> str:
@@ -140,11 +147,26 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
     # as though validation had had an opinion about it. Nothing was ever run on it.
     explained = {frozenset({a, b}) for a, b, _ in analysis.textual_conflicts}
     explained |= {frozenset({cid}) for cid in analysis.singleton_conflicts}
-    semantic = [
+    unexplained = [
         c
         for c in analysis.conflicts
         if c not in explained and not any(known <= c for known in explained)
     ]
+    # A set that failed at the merge itself -- found by merging rather than by
+    # the pre-oracle, or a conflict a resolver declined (#44) -- did not "merge
+    # cleanly", and must not be listed as though it had.
+    unmerged = _merge_failures(analysis)
+    semantic = [c for c in unexplained if c not in unmerged]
+    did_not_merge = [c for c in unexplained if c in unmerged]
+    if did_not_merge:
+        yield "**Did not merge** (found by merging; any resolver declined):"
+        yield ""
+        for conflict in sorted(did_not_merge, key=lambda s: (len(s), set_key(s))):
+            files = unmerged[conflict]
+            shown = ", ".join(f"`{f}`" for f in files[:5]) or "_(unattributed)_"
+            more = f" (+{len(files) - 5} more)" if len(files) > 5 else ""
+            yield f"- {_fmt_set(conflict)} — {shown}{more}"
+        yield ""
     if semantic:
         yield "**Conflicts found by validation** (merged cleanly, still failed):"
         yield ""
@@ -154,7 +176,7 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
         yield ""
     if (
         not analysis.textual_conflicts
-        and not semantic
+        and not unexplained
         and not analysis.singleton_conflicts
     ):
         yield "_Nothing. Every candidate merges and validates together._"
@@ -260,6 +282,17 @@ def _in_parens(text: str) -> str:
     return f" ({text})" if text else ""
 
 
+def _merge_failures(analysis: Analysis) -> Dict[ChangeSet, List[str]]:
+    """Each set whose FAIL came from the merge, not the validator -> its files."""
+    logs = list(analysis.tier_logs.values()) or [analysis.log or []]
+    return {
+        record.subset: list(record.merge.conflicting_files if record.merge else ())
+        for log in logs
+        for record in log
+        if record.verdict is Verdict.FAIL and record.stage == Stage.MERGE
+    }
+
+
 def _failure_evidence(analysis: Analysis, conflict: ChangeSet) -> str:
     """Which tests, if we know — the difference between a report and an oracle."""
     logs = list(analysis.tier_logs.values()) or [analysis.log or []]
@@ -297,6 +330,7 @@ def html_report(analysis: Analysis, *, title: str = "mergeset") -> str:
 def _analysis_jdict(analysis: Analysis) -> dict:
     """The whole analysis as JSON, which is what the HTML page renders."""
     textual_pairs = {frozenset({a, b}) for a, b, _ in analysis.textual_conflicts}
+    unmerged = _merge_failures(analysis)
     return {
         "base": analysis.base,
         "base_sha": analysis.base_sha,
@@ -319,7 +353,12 @@ def _analysis_jdict(analysis: Analysis) -> dict:
             for a, b, files in analysis.textual_conflicts
         ]
         + [
-            {"a": sorted(c)[0], "b": sorted(c)[1], "kind": "validation", "files": []}
+            {
+                "a": sorted(c)[0],
+                "b": sorted(c)[1],
+                "kind": "textual" if c in unmerged else "validation",
+                "files": unmerged.get(c, []),
+            }
             for c in analysis.conflicts
             if len(c) == 2 and c not in textual_pairs
         ],
@@ -379,7 +418,7 @@ _HTML_TEMPLATE = r"""<!doctype html>
   <div class="sub" id="summary"></div>
   <h2>Conflict graph</h2>
   <div class="card"><div id="graph"></div>
-    <div class="legend">Solid red = textual conflict (<code>git merge-tree</code>, no test run).
+    <div class="legend">Solid red = textual conflict (found by <code>git merge-tree</code> or by merging; no test run).
       Dashed amber = found by validation. Node size = weight. Colour = component.</div>
   </div>
   <h2>Merge plans</h2><div id="plans"></div>

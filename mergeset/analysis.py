@@ -277,7 +277,8 @@ def analyze(
             validator have changed since those rows were written.
         weight: ``Change -> cost of dropping it``; default is size-based.
         pairwise_preoracle: Use ``git merge-tree`` to find textual conflicts for
-            free before spending any evaluation.
+            free before spending any evaluation. Ignored (with a note) when a
+            ``resolver`` is given: those conflicts are what it is for.
         decompose: Use file-overlap components to find conflicts cheaply. The
             components are always searched first, because a conflict found
             inside a small component is a conflict found for a fraction of the
@@ -430,6 +431,16 @@ def analyze(
 
     # The cheapest oracle of all: does each change even merge onto base alone?
     heads_by_id = dict(head_shas)
+    if pairwise_preoracle and resolver is not None:
+        # A textual conflict is what a resolver exists for. Seeded as a known
+        # failure it would be excluded before the resolver was ever offered it,
+        # and `resolver=` would do nothing (#44). So the merge itself decides.
+        pairwise_preoracle = False
+        analysis.notes.append(
+            "The `git merge-tree` pre-oracle was skipped: with a conflict "
+            "resolver, a textual conflict is offered to it rather than excluded "
+            "up front."
+        )
     if pairwise_preoracle:
         for change_id, files in singleton_textual_conflicts(
             repo, base_sha, heads_by_id

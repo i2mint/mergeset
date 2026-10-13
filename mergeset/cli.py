@@ -495,7 +495,8 @@ def branches(
             subagent attempt *mechanical* conflict resolutions. Anything it
             resolves is flagged as assisted and its diff kept — never
             reported as a clean merge.
-        no_pairwise: Skip the `git merge-tree` pre-oracle.
+        no_pairwise: Skip the `git merge-tree` pre-oracle (skipped anyway with a
+            resolver, which is offered those conflicts instead).
         no_decompose: Do not split into independent file-overlap components.
         quiet: Suppress progress output.
     """
