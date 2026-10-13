@@ -691,9 +691,9 @@ def anytime_answer(
 # --------------------------------------------------------------------------
 
 
-#: The name an abort during ``--must-include`` is reported under, in the slot a
-#: confirm tier's name takes (``Analysis.aborted_tier``).
-MUST_INCLUDE_PHASE = "must-include"
+#: The name an abort during ``--must-include`` is reported under
+#: (``Analysis.aborted_phase``): a phase after the tiers, not a tier.
+MUST_INCLUDE_PHASE = "--must-include"
 
 
 def best_set_including(
@@ -806,9 +806,15 @@ def best_set_including(
             # the bug it documents. Growing costs no evaluations of its own: it
             # only consults conflicts already known.
             grown = _grow_within(candidate, universe, known, parents)
-            if grown != candidate and counted(grown).verdict is Verdict.PASS:
-                return grown, known, spent
-            return candidate, known, spent
+            try:
+                grown_passes = (
+                    grown != candidate and counted(grown).verdict is Verdict.PASS
+                )
+            except EvaluationAborted as stop:
+                # `candidate` itself passed: do not lose it (as in solve.py).
+                stop.best_so_far = candidate
+                raise
+            return (grown if grown_passes else candidate), known, spent
         if result.verdict is not Verdict.FAIL:
             return None, known, spent
         conflict = shrink(counted, sorted(candidate))
@@ -1170,13 +1176,25 @@ def analyze_tiered(
             failed.error = stop.why
             failed.stopped_because = f"aborted: {stop.why}"
             analysis.searches.append(failed)
-            analysis.aborted_tier = MUST_INCLUDE_PHASE
+            analysis.aborted_phase = MUST_INCLUDE_PHASE
+            emit("aborted", {"subset": [], "error": stop.why})
+            conflicts = _minimal(list(conflicts) + stop.conflicts)
             analysis.conflicts = _minimal(list(analysis.conflicts) + stop.conflicts)
-            analysis.notes.append(
-                f"--must-include was not answered: {stop.why}. The maximal sets "
-                "above stand; the constrained question has no answer yet."
-            )
-            result.best_including = None
+            kept = ", ".join(sorted(result.must_include))
+            if stop.best_so_far is not None:
+                result.best_including = stop.best_so_far
+                analysis.notes.append(
+                    f"--must-include was not fully answered: {stop.why}. A "
+                    f"validated set that keeps {kept} is "
+                    f"{', '.join(set_key(stop.best_so_far))}, but a heavier one "
+                    "may exist: the search aborted before it could look."
+                )
+            else:
+                result.best_including = None
+                analysis.notes.append(
+                    f"--must-include was not answered: {stop.why}. The maximal "
+                    "sets above stand; the constrained question has no answer yet."
+                )
         else:
             result.best_including = best
             conflicts = _minimal(list(conflicts) + list(found))
@@ -1375,7 +1393,7 @@ def _record_what_may_be_claimed(
     # though it is not "reached": a set is judged against the deepest tier that
     # was entered, so a set the aborted tier refuted stays NOT VERIFIED and one
     # it confirmed is not (#55, review).
-    entered = analysis.aborted_tier if analysis.aborted_tier in names else deepest
+    entered = analysis.aborted_tier or deepest
     analysis.unverified_sets = (
         []
         if trusted
@@ -1399,7 +1417,7 @@ def _record_what_may_be_claimed(
             "not run on the sets marked NOT VERIFIED; they hold only at the "
             "tier that did accept them."
         )
-    elif analysis.aborted_tier in names:
+    elif analysis.aborted_tier:
         analysis.notes.append(
             f"Validation was tiered ({chain}) but `{analysis.aborted_tier}` "
             f"aborted, so only `{deepest}` is claimed. A set marked NOT VERIFIED "

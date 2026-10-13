@@ -879,7 +879,7 @@ def _run(
         analysis, report_dir, title, formats=report_format or ("markdown", "html")
     ):
         lines.append(f"\nWrote {path}")
-    if integration_branches and analysis.aborted:
+    if integration_branches and analysis.aborted and not analysis.aborted_phase:
         lines.append("\n## Integration branches\n\nNot created: the run aborted.")
     elif integration_branches:
         lines.append("\n## Integration branches\n")

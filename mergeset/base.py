@@ -452,10 +452,13 @@ class EvaluationAborted(MergesetError):
     before it.
     """
 
-    def __init__(self, why: str, conflicts=()):
+    def __init__(self, why: str, conflicts=(), best_so_far=None):
         super().__init__(why)
         self.why = why
         self.conflicts = list(conflicts)
+        #: A set that was validated before the abort (and keeps what was asked),
+        #: not proven the heaviest; ``None`` when there is none.
+        self.best_so_far = best_so_far
 
 
 class CapabilityError(MergesetError):

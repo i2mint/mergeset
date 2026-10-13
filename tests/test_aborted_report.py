@@ -288,8 +288,35 @@ def test_an_error_inside_must_include_is_an_abort_not_a_finding(
         decompose=False,
     )
     analysis = result.analysis
-    assert analysis.aborted == "boom" and analysis.aborted_tier == "must-include"
+    assert analysis.aborted == "boom"
+    assert analysis.aborted_phase == "--must-include" and analysis.aborted_tier is None
     assert result.best_including is None
     assert not any("No validated set keeps" in n for n in analysis.notes)
     assert any("--must-include was not answered: boom" in n for n in analysis.notes)
-    assert "ABORTED at tier `must-include`" in markdown_report(analysis)
+    text = markdown_report(analysis)
+    # A phase after the tiers: the plans were confirmed, and the report says so.
+    assert "ABORTED during --must-include" in text.splitlines()[2]
+    assert "the plans below stand" in text and "not** confirmed" not in text
+    assert "confirmed at the deepest tier" in "\n".join(analysis.notes)
+
+
+def test_a_set_validated_before_the_abort_is_not_lost(monkeypatch):
+    """Review of #59: the grow step's ERROR threw away the passing candidate."""
+    import mergeset.tiers as tiers_module
+    from mergeset.base import EvaluationAborted
+    from mergeset.tiers import best_set_including
+
+    def oracle(subset):
+        # 'c' is only ever added by the grow step, and it cannot be evaluated.
+        if "c" in subset:
+            return Evaluation(subset, Verdict.ERROR, note="resolver timed out")
+        return Evaluation(subset, Verdict.PASS)
+
+    monkeypatch.setattr(
+        tiers_module,
+        "_grow_within",
+        lambda candidate, universe, known, parents: candidate | {"c"},
+    )
+    with pytest.raises(EvaluationAborted) as stop:
+        best_set_including("abh", oracle, must_include=["h"], conflicts=[])
+    assert stop.value.best_so_far == frozenset("abh")

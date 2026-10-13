@@ -103,6 +103,9 @@ class Analysis:
     #: The confirm tier whose search aborted, when one did after the screen
     #: finished (``None``: the screen itself aborted, or nothing did).
     aborted_tier: Optional[str] = None
+    #: A phase after the tiers that aborted (``"--must-include"``): the tiers'
+    #: results are complete, only that phase's answer is missing.
+    aborted_phase: Optional[str] = None
     #: Sets reported without ever having been evaluated as a whole. Empty is the
     #: normal case. See :meth:`merge_plan`'s ``verified`` and ADR 0025.
     unverified_sets: List[ChangeSet] = field(default_factory=list)
