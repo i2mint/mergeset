@@ -54,13 +54,16 @@ def test_the_issues_log_names_the_resolvers_not_a_violation(tmp_path):
     out = _show(tmp_path, _assisted(), _conflict())
     assert "2 conflict resolvers" in out
     assert "monotonicity violation" not in out
-    assert "different conflict resolvers (none vs claude-code:1)" in out
+    assert (
+        "failed with no conflict resolver, passed with resolver claude-code:1" in out
+    )
+    assert out.count("bad but") == 1
 
 
 def test_a_conflict_inside_a_set_another_resolver_merged(tmp_path):
     out = _show(tmp_path, _conflict(), _assisted(frozenset({"a", "c", "d"})))
     assert "monotonicity violation" not in out
-    assert "different conflict resolvers" in out
+    assert "answer different questions" in out
 
 
 def test_the_same_resolver_declining_and_merging_is_still_a_violation(tmp_path):
@@ -87,6 +90,34 @@ def test_clean_rows_under_different_resolvers_are_not_a_mix(tmp_path):
     assert "conflict resolvers" not in out
 
 
-def test_a_row_recording_no_resolver_counts_as_one_more(tmp_path):
+def test_an_old_conflict_is_counted_as_no_resolver_not_as_a_mix(tmp_path):
     out = _show(tmp_path, _conflict(resolver=None), _conflict(frozenset("b")))
+    assert "conflict resolvers" not in out
+
+
+def test_an_old_assisted_row_counts_as_one_more(tmp_path):
+    out = _show(tmp_path, _assisted(resolver=None), _conflict(frozenset("b")))
     assert "2 conflict resolvers" in out
+
+
+def test_an_old_row_explains_no_violation(tmp_path):
+    out = _show(tmp_path, _assisted(), _conflict(resolver=None))
+    assert "! monotonicity violation" in out
+
+
+def test_a_resolution_that_failed_validation_under_another_resolver(tmp_path):
+    failed = Evaluation(
+        _PAIR,
+        Verdict.FAIL,
+        stage=Stage.VALIDATE,
+        merge=MergeOutcome(True, assisted=True),
+        resolver="claude-code:2",
+    )
+    out = _show(tmp_path, _assisted(), failed)
+    assert "monotonicity violation" not in out
+    assert "failed with resolver claude-code:2" in out
+
+
+def test_each_pair_is_printed_once(tmp_path):
+    out = _show(tmp_path, _assisted(), _assisted(), _conflict(), _conflict())
+    assert out.count("bad but") == 1

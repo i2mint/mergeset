@@ -17,7 +17,7 @@ import sys
 from typing import Optional, Sequence
 
 from mergeset.analysis import analyze as _analyze
-from mergeset.base import CapabilityError, MergesetError, Verdict
+from mergeset.base import NO_RESOLVER, CapabilityError, MergesetError, Verdict
 from mergeset.gitops import create_integration_branch, git
 from mergeset.oracle import claude_code_resolver
 from mergeset.log import EvaluationLog
@@ -916,19 +916,19 @@ def show_log(*, log_path: Optional[str] = None, repo: str = ".") -> str:
             + "; ".join(moved)
             + "), so the sets mix answers to different questions. A run of "
             "`branches`/`prs` pins the log to the current heads and uses only "
-            "the rows that match them.",
+            "the rows that match them, its validator and its resolver.",
         ]
     lines += ["", "Maximal passing sets:"]
     lines += [f"  {', '.join(sorted(s))}" for s in log.maximal_passing_sets()]
     lines += ["Minimal failing sets (conflicts):"]
     lines += [f"  {', '.join(sorted(s))}" for s in log.minimal_failing_sets()]
-    for good, bad in log.monotonicity_violations():
+    # One line per pair: the log lists a pair once per row on each side.
+    for good, bad in dict.fromkeys(log.monotonicity_violations()):
         apart = _resolved_apart(log, good, bad)
         if apart:
             lines.append(
-                f"  ~ {sorted(bad)} bad but {sorted(good)} good: merged with "
-                f"different conflict resolvers ({apart}), so the rows answer "
-                "different questions"
+                f"  ~ {sorted(bad)} bad but {sorted(good)} good: {apart}, so the "
+                "rows answer different questions"
             )
         else:
             lines.append(
@@ -938,30 +938,33 @@ def show_log(*, log_path: Optional[str] = None, repo: str = ".") -> str:
 
 
 def _resolved_apart(log, good, bad) -> str:
-    """``'x vs y'`` when ``bad`` failed and ``good`` passed only by how conflicts
-    were resolved, by different resolvers; ``''`` for a real violation.
+    """How ``bad`` failed and ``good`` passed under different conflict
+    resolvers, or ``''`` for a violation the rows do not explain.
 
-    The bad set's FAILs must all be conflicts left standing, and the good set's
-    PASSes all assisted merges, with no resolver in common (ADR 0033): a set
-    one resolver declined and another merged says nothing about monotonicity.
+    Every row on both sides must be one whose outcome a resolver decided
+    (ADR 0033: a conflict left standing, an assisted merge), each recording its
+    resolver, with none in common: a set one resolver merged and another did
+    not says nothing about monotonicity. A row recording no resolver (written
+    before #34) may be either side's, so it explains nothing.
     """
     fails = [e for e in log if e.subset == bad and e.verdict is Verdict.FAIL]
     passes = [e for e in log if e.subset == good and e.verdict is Verdict.PASS]
-    if not fails or not passes:
+    rows = fails + passes
+    if not fails or not passes or not all(e.merge_dependent for e in rows):
         return ""
-    if not all(e.unresolved_conflict for e in fails):
+    failed_with = {e.resolver for e in fails}
+    passed_with = {e.resolver for e in passes}
+    if None in failed_with | passed_with or failed_with & passed_with:
         return ""
-    if not all(e.merge is not None and e.merge.assisted for e in passes):
-        return ""
-    declined = {e.resolver for e in fails}
-    merged = {e.resolver for e in passes}
-    if declined & merged:
-        return ""
-    return f"{_names(declined)} vs {_names(merged)}"
+    return f"failed with {_names(failed_with)}, passed with {_names(passed_with)}"
 
 
 def _names(resolvers) -> str:
-    return "/".join(sorted(r or "unrecorded" for r in resolvers))
+    """``'none'`` reads as "no resolvers"; say what it means."""
+    return " or ".join(
+        "no conflict resolver" if r == NO_RESOLVER else f"resolver {r}"
+        for r in sorted(resolvers)
+    )
 
 
 def _moved_commits(log) -> list:
@@ -984,8 +987,14 @@ def _moved_commits(log) -> list:
         out.append(f"{len(validators)} validators")
     # Only rows whose outcome a resolver decided are about one (ADR 0033): a
     # clean merge is the same tree whatever resolves conflicts. A row recording
-    # none (written before #34) counts as one more, as for validators.
-    resolvers = {e.resolver for e in log if e.merge_dependent}
+    # none (written before #34) counts as one more, as for validators -- except
+    # an old conflict left standing, which answers a run without a resolver
+    # exactly like a `none` row.
+    resolvers = {
+        NO_RESOLVER if e.resolver is None and e.unresolved_conflict else e.resolver
+        for e in log
+        if e.merge_dependent
+    }
     if len(resolvers) > 1:
         out.append(f"{len(resolvers)} conflict resolvers")
     unpinned = sum(1 for e in log if not e.pinned)
