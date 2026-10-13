@@ -63,7 +63,6 @@ _RUNNER_EVIDENCE = (
 FINGERPRINT_ATTR = "validator_fingerprint"
 
 
-
 def fingerprint_of(validate: Optional[Callable]) -> Optional[str]:
     """What ``validate`` runs, as a short string -- or ``None`` when it cannot say.
 

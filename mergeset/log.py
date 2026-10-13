@@ -445,9 +445,7 @@ class EvaluationLog:
         if self.pins is None:
             return []
         return [
-            e
-            for e in self._rows
-            if not self.pins.refutes(e) and not self._counts(e)
+            e for e in self._rows if not self.pins.refutes(e) and not self._counts(e)
         ]
 
     # -- reading -----------------------------------------------------------
