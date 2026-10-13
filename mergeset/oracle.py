@@ -226,7 +226,9 @@ def git_oracle(
             note=(
                 "assisted resolution"
                 if outcome.assisted
-                else "base alone" if not subset else ""
+                else "base alone"
+                if not subset
+                else ""
             ),
         )
 
