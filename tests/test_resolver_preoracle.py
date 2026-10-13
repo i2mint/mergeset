@@ -104,3 +104,28 @@ def test_a_resolved_set_that_fails_validation_is_not_a_clean_merge(repo, tmp_pat
     assert "merged cleanly" not in report
     [edge] = _analysis_jdict(analysis)["edges"]
     assert edge["kind"] == "assisted"
+
+
+def test_an_earlier_runs_decline_is_not_blamed_on_this_run(repo, tmp_path):
+    def declines(worktree, files):
+        return False, "no"
+
+    _analyze(repo, tmp_path, ["feat-a", "feat-c"], resolver=declines)
+    later = _analyze(repo, tmp_path, ["feat-a", "feat-c"], pairwise_preoracle=False)
+    report = markdown_report(later)
+    assert "**Did not merge** (found by merging):" in report
+    assert "declined" not in report
+
+
+def test_a_budget_stop_is_not_reported_as_nothing_conflicting(repo, tmp_path):
+    analysis = _analyze(
+        repo,
+        tmp_path,
+        ["feat-a", "feat-c"],
+        resolver=_scripted_resolver([]),
+        max_evaluations=0,
+        check_base=False,
+    )
+    assert not analysis.exhausted
+    report = markdown_report(analysis)
+    assert "Every candidate merges and validates together" not in report

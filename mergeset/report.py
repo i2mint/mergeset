@@ -164,8 +164,12 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
     ]
     semantic = [c for c in unexplained if c not in unmerged and c not in assisted]
     if did_not_merge:
-        declined = any(
-            r not in (None, NO_RESOLVER) for c in did_not_merge for r in unmerged[c][1]
+        # Only this run's resolver can have declined for this run: a row an
+        # earlier run's resolver declined also answers a run with none.
+        pins = getattr(analysis.log, "pins", None)
+        ours = getattr(pins, "resolver", None)
+        declined = ours not in (None, NO_RESOLVER) and any(
+            ours in unmerged[c][1] for c in did_not_merge
         )
         why = "found by merging; the resolver declined" if declined else (
             "found by merging"
@@ -202,7 +206,13 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
         and not unexplained
         and not analysis.singleton_conflicts
     ):
-        yield "_Nothing. Every candidate merges and validates together._"
+        if analysis.exhausted or not analysis.searches:
+            yield "_Nothing. Every candidate merges and validates together._"
+        else:
+            yield (
+                "_Nothing found yet: the search stopped (budget) before any "
+                "conflict was found, so this is not a finding._"
+            )
         yield ""
 
     yield "## Candidates"
