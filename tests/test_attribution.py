@@ -69,10 +69,7 @@ def test_drift_failure_needs_symbols_because_files_point_at_the_wrong_change():
     text = fixture("vitest-579-631-drift.txt")
     files = {
         "pr-04": ["packages/config/point-color.ts"],  # touches no test file
-        "pr-12": [
-            "tests/unit/params-generated.test.ts",
-            "ai/schemas/config.schema.json",
-        ],
+        "pr-12": ["tests/unit/params-generated.test.ts", "ai/schemas/config.schema.json"],
         "pr-11": ["docs/readme.md"],  # uninvolved bystander
         "pr-13": ["packages/ui/toolbar.tsx"],  # uninvolved bystander
     }
@@ -95,9 +92,9 @@ def test_drift_failure_needs_symbols_because_files_point_at_the_wrong_change():
         files_by_change=files,
         within=files,
     )
-    assert by_file_only == frozenset(
-        {"pr-12"}
-    ), "file-level alone accuses the wrong one"
+    assert by_file_only == frozenset({"pr-12"}), (
+        "file-level alone accuses the wrong one"
+    )
 
     with_symbols = suspects(
         outcome(text, failing_tests=["tests/unit/params-generated.test.ts > x"]),

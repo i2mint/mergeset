@@ -163,9 +163,9 @@ def test_slugified_names_stay_inside_the_store(tmp_path):
         assert key, f"{repo!r} produced an empty key"
         assert "/" not in key and "\\" not in key, key
         resolved = os.path.normpath(os.path.join(root, key))
-        assert os.path.dirname(resolved) == os.path.normpath(
-            root
-        ), f"{repo!r} -> {key!r} escapes the store"
+        assert os.path.dirname(resolved) == os.path.normpath(root), (
+            f"{repo!r} -> {key!r} escapes the store"
+        )
 
 
 # -- the regression this whole module exists for ---------------------------
@@ -301,9 +301,9 @@ def test_analyze_writes_its_log_through_a_caller_supplied_store(tmp_path):
     (key,) = backing["evaluations"]
     assert key.endswith(".jsonl")
     assert backing["evaluations"][key].strip(), "the log must actually be written"
-    assert not os.path.exists(
-        str(tmp_path / "unused")
-    ), "a non-filesystem backend must not create directories"
+    assert not os.path.exists(str(tmp_path / "unused")), (
+        "a non-filesystem backend must not create directories"
+    )
 
 
 def test_a_bare_evaluation_log_does_not_write_to_the_working_directory(

@@ -102,9 +102,9 @@ def test_skill_md_is_physically_present_in_the_built_artifact(target, tmp_path):
     )
     (artifact,) = tmp_path.glob("*.whl" if target == "wheel" else "*.tar.gz")
     names = _archive_names(artifact)
-    assert any(
-        n.endswith("mergeset/data/skills/mergeset/SKILL.md") for n in names
-    ), f"SKILL.md missing from the {target}: {sorted(names)[:20]}"
+    assert any(n.endswith("mergeset/data/skills/mergeset/SKILL.md") for n in names), (
+        f"SKILL.md missing from the {target}: {sorted(names)[:20]}"
+    )
 
 
 def _archive_names(artifact: Path):
