@@ -457,17 +457,27 @@ def _run(
         returncode = -1
         output += f"\n[mergeset] timed out after {timeout}s"
     except FileNotFoundError as e:
-        # A program that is not installed is a refusal with a fix, not a
+        # A program that cannot be started is a refusal with a fix, not a
         # traceback (ADR 0023) -- and not a FAIL: it says nothing about the
-        # changes (ADR 0017). A vanished worktree is a different error.
-        if not shell and shutil.which(cmd[0], path=full_env.get("PATH")) is None:
-            raise CapabilityError(
-                f"`{cmd[0]}` is not on PATH, so the validator cannot run. "
-                f"Install it in the environment mergeset runs in (for the default "
-                f"validator: `pip install {cmd[0]}`), or pass a different "
-                "validator (e.g. `--validate-command 'make test'`)."
-            ) from e
-        raise
+        # changes (ADR 0017). CPython names the directory when it is the
+        # `chdir` that failed (a vanished worktree, a different error), and
+        # the program when the `exec` did.
+        if shell or e.filename == cwd:
+            raise
+        found = shutil.which(cmd[0], path=full_env.get("PATH"))
+        if found is None:
+            fix = (
+                f"Install it in the environment mergeset runs in"
+                f"{' (`pip install pytest`)' if cmd[0] == 'pytest' else ''}"
+            )
+            why = f"`{cmd[0]}` is not on PATH, so the validator cannot run."
+        else:
+            fix = "Reinstall it, or fix its `#!` interpreter (a rebuilt virtual environment)"
+            why = f"`{found}` was found but could not be started."
+        raise CapabilityError(
+            f"{why} {fix}, or pass a different validator "
+            "(e.g. `--validate-command 'make test'`)."
+        ) from e
     failing = _failing_test_ids(output)
     return ValidationOutcome(
         ok=returncode == 0,

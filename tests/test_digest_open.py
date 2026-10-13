@@ -96,3 +96,22 @@ def test_two_bare_tiers_are_refused_before_a_validator_is_built(repo, monkeypatc
     out = cli.branches(["feat-a"], repo=repo, base="main", tier=["unit", "e2e"])
     assert "Only one --tier can be a bare name" in str(out)
     assert built == []
+
+
+def test_an_installed_program_with_a_dead_interpreter_is_a_refusal(tmp_path):
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    script = bin_dir / "pytest"
+    script.write_text("#!/gone/venv/bin/python\n")
+    script.chmod(0o755)
+    validate = pytest_validation(env={"PATH": str(bin_dir)})
+    with pytest.raises(CapabilityError, match="found but could not be started"):
+        validate(str(tmp_path))
+
+
+def test_the_pip_hint_is_only_for_pytest(tmp_path):
+    with pytest.raises(CapabilityError) as caught:
+        validation._run(
+            ["act", "-j", "x"], str(tmp_path), timeout=None, env={"PATH": str(tmp_path)}
+        )
+    assert "pip install" not in str(caught.value)
