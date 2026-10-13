@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import os
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Callable, Dict, Iterable, Optional, Sequence, Tuple
 
 from mergeset.base import (
@@ -31,9 +31,13 @@ from mergeset.base import (
     Verdict,
     set_key,
 )
-from mergeset.gitops import git, merged_worktree
+from mergeset.gitops import git, is_ancestor, merged_worktree, resolve
 from mergeset.stacks import Dependencies, tips
 from mergeset.validation import pytest_validation
+
+#: Where a resolved merge commit is kept reachable (``<prefix><sha>``), so a
+#: log that outlives ``git gc``'s grace period can still be confirmed.
+RESOLVED_REF_PREFIX = "refs/mergeset/resolved/"
 
 #: A resolver: ``(worktree, conflicting_files) -> (resolved?, diff)``.
 Resolver = Callable[[str, Sequence[str]], Tuple[bool, str]]
@@ -69,6 +73,7 @@ def git_oracle(
     *,
     validate: Optional[Callable[[str], ValidationOutcome]] = None,
     resolver: Optional[Resolver] = None,
+    resolution: Optional[Callable[[ChangeSet], Optional[MergeOutcome]]] = None,
     depends_on: Optional[Dependencies] = None,
     reuse_worktree: Optional[str] = None,
     worktree_root: Optional[str] = None,
@@ -84,8 +89,17 @@ def git_oracle(
         validate: ``worktree -> ValidationOutcome``. Defaults to a fail-fast
             pytest run; see :mod:`mergeset.validation` for the alternatives.
         resolver: Optional AI-assisted conflict resolver. When given, a textual
-            conflict is offered to it once; a success is recorded with
-            ``merge.assisted = True`` and the diff kept.
+            conflict is offered to it; a success is recorded with
+            ``merge.assisted = True``, the diff kept, and the resolved merge
+            commit kept as ``merge.resolved_commit``.
+        resolution: ``subset -> MergeOutcome`` of an earlier assisted
+            resolution of that set, or ``None`` -- the alternative to
+            ``resolver`` for a deeper tier (i2mint/mergeset#30). A conflicting
+            set is then not resolved again: the recorded commit is checked out,
+            once it is shown to hold the base and every head, so every tier
+            validates the very tree the first one did and the resolver is paid
+            once. A conflict with no usable recorded resolution is an
+            ``ERROR``, never a guess.
         depends_on: ``child -> parent`` for stacked changes. Only the *tips* of
             a set are merged, because merging a tip already brings its
             ancestors; merging them explicitly is wasted work and perturbs the
@@ -102,6 +116,11 @@ def git_oracle(
         ``evaluate(subset) -> Evaluation``. Wrap it in
         ``EvaluationLog.caching`` before handing it to the solver.
     """
+    if resolver is not None and resolution is not None:
+        raise ValueError(
+            "Pass `resolver` (resolve conflicts now) or `resolution` (reuse "
+            "resolutions recorded earlier), not both."
+        )
     by_id = {c.id: c for c in changes}
     parents = dict(depends_on or {})
     validate = validate or pytest_validation()
@@ -127,10 +146,25 @@ def git_oracle(
             keep=keep_worktrees,
             reuse=reuse_worktree,
         ) as (worktree, outcome):
-            if worktree is None and resolver is not None and outcome.conflicting_files:
-                worktree, outcome = _try_assisted(
-                    repo, base, heads, outcome, resolver, worktree_root, emit
-                )
+            assisted_tree = None
+            if worktree is None and outcome.conflicting_files:
+                if resolver is not None:
+                    worktree, outcome = _try_assisted(
+                        repo, base, heads, outcome, resolver, worktree_root, emit
+                    )
+                elif resolution is not None:
+                    worktree, outcome = _reuse_resolution(
+                        repo,
+                        base,
+                        heads,
+                        outcome,
+                        resolution(subset),
+                        worktree_root=worktree_root,
+                        reuse=reuse_worktree,
+                    )
+                # Ours to remove: `merged_worktree` only cleans up its own.
+                if worktree is not None and worktree != reuse_worktree:
+                    assisted_tree = worktree
             if worktree is None:
                 failed = outcome.reason == "conflict"
                 return Evaluation(
@@ -146,7 +180,11 @@ def git_oracle(
                     ),
                 )
             emit("validating", {"subset": set_key(subset)})
-            validation = validate(worktree)
+            try:
+                validation = validate(worktree)
+            finally:
+                if assisted_tree is not None and not keep_worktrees:
+                    _remove_worktree(repo, assisted_tree)
         return Evaluation(
             subset=subset,
             verdict=Verdict.PASS if validation.ok else Verdict.FAIL,
@@ -167,57 +205,167 @@ def git_oracle(
 
 
 def _try_assisted(repo, base, heads, outcome, resolver, worktree_root, emit):
-    """Second attempt at a conflicted merge, this time offering it to ``resolver``."""
+    """Second attempt at a conflicted merge, offering each conflict to ``resolver``.
+
+    Every head is merged, in order, and each one that conflicts is offered to
+    the resolver in turn. An earlier version stopped at the first conflict and
+    handed that half-merged tree to the resolver: the heads after it were never
+    merged, yet the row claimed the whole set. The resolved merge commit is
+    kept, so a deeper tier can validate the same tree (#30).
+    """
     emit("assisted_merge", {"files": list(outcome.conflicting_files)})
-    keeper = merged_worktree(repo, base, heads, root=worktree_root, keep=True)
-    worktree, retry = keeper.__enter__()
-    try:
-        if worktree is not None:  # merged cleanly this time; nothing to resolve
-            return worktree, retry
-        # Re-run the merge without aborting so the resolver sees the conflict.
-        path = _worktree_with_conflict(repo, base, heads, worktree_root)
-        if path is None:
+    path = _new_worktree(repo, base, worktree_root)
+    if path is None:
+        return None, outcome
+    diffs = []
+    merged = [base]
+    for _, head in heads:
+        merged.append(head)
+        before = resolve(path, "HEAD")
+        if _merge_into(path, head):
+            continue
+        conflicted = git(path, "diff", "--name-only", "--diff-filter=U").stdout.split()
+        try:
+            resolved, diff = resolver(
+                path, conflicted or list(outcome.conflicting_files)
+            )
+        except Exception:  # noqa: BLE001 - a resolver that gives up (a timeout)
+            # is a resolver that declined: the conflict is real, and an ERROR
+            # would abort the whole search over one slow call.
+            resolved, diff = False, ""
+        if not (resolved and _vouches_for(path, before, head, merged, conflicted)):
+            _remove_worktree(repo, path)
             return None, outcome
-        resolved, diff = resolver(path, outcome.conflicting_files)
-        if not resolved:
-            return None, outcome
-        return path, MergeOutcome(
-            ok=True,
+        diffs.append(diff)
+    sha = resolve(path, "HEAD")
+    # Reachable from a ref, or `git gc` prunes it once the worktree is gone and
+    # every deep tier after that refuses the set. A new hidden ref, never a
+    # branch, and never one that existed before (D12, widened by ADR 0031).
+    git(repo, "update-ref", f"{RESOLVED_REF_PREFIX}{sha}", sha, "")
+    return path, MergeOutcome(
+        ok=True,
+        conflicting_files=outcome.conflicting_files,
+        assisted=True,
+        assist_diff="\n".join(diffs),
+        order=outcome.order,
+        detail="conflict resolved by assisted merge; review the diff",
+        resolved_commit=sha,
+    )
+
+
+def _vouches_for(path, before, head, merged, conflicted) -> bool:
+    """Whether the resolver's commit is a resolution of *this* conflict, and only that.
+
+    What gets validated must be exactly the commit that is recorded, holding
+    everything merged so far, and differing from git's own merge of ``head``
+    only in the files that conflicted. A resolver that took one side wholesale
+    (dropping earlier heads, or ``merge -s ours`` keeping a head's commit but
+    not its work) or left the merge unfinished has declined, whatever it says.
+    Files it left outside the commit (``__pycache__``, a build) are not a
+    decline -- they are removed, ignored ones too, so the tree validated here
+    is the one a deeper tier checks out.
+    """
+    unfinished = git(path, "rev-parse", "-q", "--verify", "MERGE_HEAD").ok
+    tracked = git(path, "status", "--porcelain", "--untracked-files=no").stdout
+    if unfinished or tracked.strip() or _missing(path, "HEAD", merged):
+        return False
+    auto = git(path, "merge-tree", "--write-tree", before, head).stdout.split()
+    if not auto:
+        return False
+    changed = git(path, "diff", "--name-only", auto[0], "HEAD").stdout.split()
+    if not set(changed) <= set(conflicted):
+        return False
+    git(path, "clean", "-fdxq")
+    return True
+
+
+def _missing(repo, commit, revs) -> list:
+    """The revisions in ``revs`` that ``commit`` does not hold."""
+    return [rev for rev in revs if not is_ancestor(repo, rev, commit)]
+
+
+def _reuse_resolution(repo, base, heads, outcome, recorded, *, worktree_root, reuse):
+    """Check out a recorded assisted resolution, once it is shown to still apply.
+
+    It applies when the commit still exists and holds the base and every head
+    being merged now: then it is the merge of exactly this set, conflicts
+    resolved the way the first tier's resolver resolved them. Anything else is
+    refused as an ``error`` -- a set that was never validated has told us
+    nothing, and resolving it again would validate a different tree.
+    """
+    sha = recorded.resolved_commit if recorded is not None else None
+
+    def refuse(why: str):
+        return None, MergeOutcome(
+            ok=False,
+            reason="error",
             conflicting_files=outcome.conflicting_files,
-            assisted=True,
-            assist_diff=diff,
             order=outcome.order,
-            detail="conflict resolved by assisted merge; review the diff",
+            detail=f"conflict, and {why}",
         )
-    finally:
-        keeper.__exit__(None, None, None)
+
+    if not sha:
+        return refuse(
+            "no assisted resolution of it was recorded to reuse (rows written "
+            "before resolutions were kept record none; re-run the first tier "
+            "with a fresh log)"
+        )
+    exists = git(repo, "cat-file", "-e", f"{sha}^{{commit}}").ok
+    if not exists:
+        return refuse(f"its recorded resolution {sha[:8]} no longer exists")
+    missing = _missing(repo, sha, [base, *(h for _, h in heads)])
+    if missing:
+        return refuse(
+            f"its recorded resolution {sha[:8]} no longer applies: it does not "
+            f"hold {', '.join(m[:8] for m in missing)}"
+        )
+    if reuse:
+        if not git(reuse, "checkout", "--force", "--detach", sha).ok:
+            return refuse(f"{sha[:8]} could not be checked out into {reuse}")
+        git(reuse, "clean", "-fd")
+        path = reuse
+    else:
+        path = _new_worktree(repo, sha, worktree_root)
+        if path is None:
+            return refuse(f"no worktree could be created at {sha[:8]}")
+    return path, replace(
+        recorded,
+        order=outcome.order,
+        detail=f"reused the assisted resolution {sha[:8]} recorded earlier",
+    )
 
 
-def _worktree_with_conflict(repo, base, heads, worktree_root) -> Optional[str]:
-    """Materialize the merge and *leave it conflicted* for a resolver to fix."""
+def _new_worktree(repo, commit, worktree_root) -> Optional[str]:
+    """A fresh detached worktree at ``commit``, under ``worktree_root``."""
     import tempfile
 
     root = worktree_root or tempfile.mkdtemp(prefix="mergeset-")
     os.makedirs(root, exist_ok=True)
     path = tempfile.mkdtemp(prefix="assist-", dir=root)
     os.rmdir(path)
-    if not git(repo, "worktree", "add", "--detach", path, base).ok:
+    if not git(repo, "worktree", "add", "--detach", path, commit).ok:
         return None
-    for _, head in heads:
-        res = git(
-            path,
-            "-c",
-            "user.email=mergeset@localhost",
-            "-c",
-            "user.name=mergeset",
-            "merge",
-            "--no-edit",
-            "--no-ff",
-            head,
-        )
-        if not res.ok:
-            return path  # left conflicted on purpose
     return path
+
+
+def _merge_into(path, head) -> bool:
+    """Merge ``head`` into the worktree at ``path``; False leaves it conflicted."""
+    return git(
+        path,
+        "-c",
+        "user.email=mergeset@localhost",
+        "-c",
+        "user.name=mergeset",
+        "merge",
+        "--no-edit",
+        "--no-ff",
+        head,
+    ).ok
+
+
+def _remove_worktree(repo, path) -> None:
+    git(repo, "worktree", "remove", "--force", path)
+    git(repo, "worktree", "prune")
 
 
 def claude_code_resolver(

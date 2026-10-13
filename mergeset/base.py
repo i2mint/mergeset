@@ -139,9 +139,15 @@ class MergeOutcome:
     assist_diff: Optional[str] = None
     order: Sequence[ChangeId] = ()
     detail: str = ""
+    #: The merge commit an assisted resolution produced: base plus every head,
+    #: conflicts resolved. A deeper tier checks this commit out instead of
+    #: asking the resolver again (i2mint/mergeset#30). Not in :meth:`to_jdict`:
+    #: :meth:`Evaluation.to_jdict` stores it beside ``merge``, because releases
+    #: before #30 build ``MergeOutcome(**merge)`` and would refuse the log.
+    resolved_commit: Optional[str] = None
 
     def to_jdict(self) -> dict:
-        """JSON-able view."""
+        """JSON-able view (without :attr:`resolved_commit`; see there)."""
         return {
             "ok": self.ok,
             "reason": self.reason,
@@ -316,6 +322,10 @@ class Evaluation:
             # Beside ``validation``, not inside it: releases before #17 build
             # ``ValidationOutcome(**validation)`` and would refuse the whole log
             # over one unknown key, while they ignore unknown top-level keys.
+            # Beside ``merge`` for the same reason (see MergeOutcome).
+            "merge_resolved_commit": (
+                self.merge.resolved_commit if self.merge else None
+            ),
             "validation_stages": (
                 [s.to_jdict() for s in self.validation.stages]
                 if self.validation
@@ -347,7 +357,11 @@ class Evaluation:
             subset=frozenset(d["subset"]),
             verdict=Verdict(d["verdict"]),
             stage=Stage(d["stage"]) if d.get("stage") else None,
-            merge=MergeOutcome(**merge) if merge else None,
+            merge=(
+                MergeOutcome(**merge, resolved_commit=d.get("merge_resolved_commit"))
+                if merge
+                else None
+            ),
             validation=ValidationOutcome.from_jdict(validation) if validation else None,
             duration=d.get("duration", 0.0),
             at=d.get("at"),
