@@ -880,3 +880,105 @@ def test_a_cheaper_tiers_inference_is_not_a_run(repo, tmp_path):
     # base check, which runs before the search.)
     deep_search = result.analysis.searches[-1]
     assert deep_search.evaluations == len(result.logs["deep"]) - 1
+
+
+def test_reports_cover_every_tier_not_only_the_screen(repo, tmp_path):
+    """i2mint/mergeset#29: the header and the log table read the screen only."""
+    from mergeset.report import _analysis_jdict, html_report, markdown_report
+
+    deep = _stage_validator(
+        tmp_path,
+        "deep",
+        "import os, sys\nsys.exit(1 if os.path.exists('new-d.txt') else 0)\n",
+    )
+    result = analyze_tiered(
+        repo,
+        _changes(repo, ["feat-b", "feat-d"]),
+        base="main",
+        tiers=[Tier("screen", merge_only_validation()), Tier("deep", deep)],
+        pairwise_preoracle=False,
+        use_ci_status=False,
+    )
+    analysis = result.analysis
+    by_tier = analysis.evaluations_by_tier
+    assert list(by_tier) == ["screen", "deep"] and by_tier["deep"] > 0
+    md = markdown_report(analysis)
+    header = md.splitlines()[2]
+    assert f"{sum(by_tier.values())} expensive evaluations spent" in header
+    assert f"`deep` {by_tier['deep']}" in header
+    deep_table = md.split("### Tier `deep`")[1]
+    assert "| `feat-b`, `feat-d` | fail |" in deep_table, "the refutation is shown"
+    assert md.index("### Tier `screen`") < md.index("### Tier `deep`")
+    data = _analysis_jdict(analysis)
+    assert [t["name"] for t in data["tier_logs"]] == ["screen", "deep"]
+    assert data["evaluations_by_tier"] == by_tier
+    assert 'id="logs"' in html_report(analysis)
+
+
+def test_an_untiered_report_is_unchanged(repo, tmp_path):
+    from mergeset import analyze
+    from mergeset.report import markdown_report
+
+    analysis = analyze(
+        repo,
+        _changes(repo, ["feat-b", "feat-d"]),
+        base="main",
+        validate=merge_only_validation(),
+        use_ci_status=False,
+    )
+    md = markdown_report(analysis)
+    assert "### Tier" not in md
+    assert f"{analysis.evaluations} expensive evaluations spent ·" in md
+
+
+def test_failure_evidence_comes_from_the_tier_that_failed(repo, tmp_path):
+    """Review of #40: a screen PASS listing an advisory stage's failure must not
+    stand in for the deep tier's real failing test."""
+    from mergeset.report import markdown_report
+
+    lint = "import os, sys\nsys.exit(1 if os.path.exists('new-d.txt') else 0)\n"
+    screen = staged_validation(
+        [ValidationStage("lint", py_command(tmp_path, "lint", lint), required=False)]
+    )
+    deep_code = (
+        "import os, sys\n"
+        "if os.path.exists('new-d.txt'):\n"
+        "    print('FAILED tests/test_x.py::test_real')\n"
+        "    sys.exit(1)\n"
+    )
+    result = analyze_tiered(
+        repo,
+        _changes(repo, ["feat-b", "feat-d"]),
+        base="main",
+        tiers=[
+            Tier("screen", screen),
+            Tier("deep", _stage_validator(tmp_path, "deep", deep_code)),
+        ],
+        pairwise_preoracle=False,
+        use_ci_status=False,
+    )
+    d = frozenset({"feat-d"})
+    screen_row = result.logs["screen"].exact(d)
+    assert screen_row.verdict is Verdict.PASS and screen_row.validation.failing_tests
+    assert result.logs["deep"].exact(d).verdict is Verdict.FAIL
+    md = markdown_report(result.analysis)
+    conflict_line = next(
+        line for line in md.splitlines() if line.startswith("- `feat-d` — failing")
+    )
+    assert "test_real" in conflict_line and "lint" not in conflict_line
+
+
+def test_a_name_holding_a_closing_script_tag_stays_data(repo, tmp_path):
+    from mergeset.report import html_report
+
+    result = analyze_tiered(
+        repo,
+        _changes(repo, ["feat-b"]),
+        base="main",
+        tiers=[Tier("x</script><b>", merge_only_validation())],
+        pairwise_preoracle=False,
+        use_ci_status=False,
+    )
+    page = html_report(result.analysis)
+    script = page.split("<script>", 1)[1]
+    assert script.count("</script>") == 1, "only the real closing tag"

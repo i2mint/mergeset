@@ -15,7 +15,7 @@ from collections.abc import MutableMapping
 from typing import Iterable, Iterator, List, Optional
 
 from mergeset.analysis import Analysis
-from mergeset.base import CapabilityError, ChangeSet, Evaluation, set_key
+from mergeset.base import CapabilityError, ChangeSet, Evaluation, Verdict, set_key
 
 
 def stage_breakdown(record: Evaluation) -> str:
@@ -71,7 +71,7 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
     yield (
         f"Base `{analysis.base}` (`{analysis.base_sha[:8]}`) · "
         f"{len(analysis.changes)} candidate changes · "
-        f"{analysis.evaluations} expensive evaluations spent · "
+        f"{_spend(analysis)} · "
         f"{'complete' if analysis.exhausted else 'partial (budget reached)'}"
     )
     yield ""
@@ -212,11 +212,34 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
 
     yield "## Evaluation log"
     yield ""
-    yield f"{len(analysis.log or [])} rows. Every row is re-usable: a re-run costs nothing for sets already decided."
+    if not analysis.tier_logs:
+        yield from _log_table(analysis.log or [])
+        return
+    # One table per tier: the deep tier's runs are where a screen-accepted set
+    # was refuted, and a table of the screen alone cannot show that (#29).
+    for name, log in analysis.tier_logs.items():
+        yield f"### Tier `{name}`"
+        yield ""
+        yield from _log_table(log)
+        yield ""
+
+
+def _spend(analysis: Analysis) -> str:
+    """The header's account of what the analysis cost, per tier when tiered."""
+    by_tier = analysis.evaluations_by_tier
+    if not by_tier:
+        return f"{analysis.evaluations} expensive evaluations spent"
+    per_tier = ", ".join(f"`{name}` {n}" for name, n in by_tier.items())
+    return f"{sum(by_tier.values())} expensive evaluations spent ({per_tier})"
+
+
+def _log_table(log: Iterable[Evaluation]) -> Iterator[str]:
+    rows = list(log)
+    yield f"{len(rows)} rows. Every row is re-usable: a re-run costs nothing for sets already decided."
     yield ""
     yield "| set | verdict | stage | seconds | detail |"
     yield "| --- | --- | --- | --- | --- |"
-    for record in analysis.log or []:
+    for record in rows:
         detail = ""
         if record.merge and not record.merge.ok:
             detail = "conflict: " + ", ".join(
@@ -239,8 +262,15 @@ def _in_parens(text: str) -> str:
 
 def _failure_evidence(analysis: Analysis, conflict: ChangeSet) -> str:
     """Which tests, if we know — the difference between a report and an oracle."""
-    for record in analysis.log or []:
-        if record.subset == conflict and record.validation:
+    logs = list(analysis.tier_logs.values()) or [analysis.log or []]
+    for record in (r for log in logs for r in log):
+        # A FAIL only: across tiers the same set can PASS the screen with an
+        # advisory stage's failures listed, and FAIL deeper for a real reason.
+        if (
+            record.subset == conflict
+            and record.verdict is Verdict.FAIL
+            and record.validation
+        ):
             tests = record.validation.failing_tests[:3]
             if tests:
                 return " — failing: " + ", ".join(f"`{t}`" for t in tests)
@@ -256,8 +286,11 @@ def html_report(analysis: Analysis, *, title: str = "mergeset") -> str:
     and the evaluation timeline.
     """
     data = _analysis_jdict(analysis)
+    # `</` escaped: a tier name, a note or a test id holding `</script>` would
+    # otherwise end the script and the rest of it would run as markup.
+    payload = json.dumps(data).replace("</", "<\\/")
     return _HTML_TEMPLATE.replace("__TITLE__", html.escape(title)).replace(
-        "__DATA__", json.dumps(data)
+        "__DATA__", payload
     )
 
 
@@ -297,6 +330,11 @@ def _analysis_jdict(analysis: Analysis) -> dict:
         "stacks": dict(analysis.stacks),
         "notes": analysis.notes,
         "log": [e.to_jdict() for e in (analysis.log or [])],
+        "evaluations_by_tier": analysis.evaluations_by_tier,
+        "tier_logs": [
+            {"name": name, "log": [e.to_jdict() for e in log]}
+            for name, log in analysis.tier_logs.items()
+        ],
     }
 
 
@@ -347,17 +385,24 @@ _HTML_TEMPLATE = r"""<!doctype html>
   <h2>Merge plans</h2><div id="plans"></div>
   <h2>Candidates</h2><div class="card scroll"><table id="changes"></table></div>
   <h2>Notes</h2><div class="card" id="notes"></div>
-  <h2>Evaluation log</h2><div class="card scroll"><table id="log"></table></div>
+  <h2>Evaluation log</h2><div id="logs"></div>
 </div>
 <script>
 const DATA = __DATA__;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function spend() {
+  const tiers = Object.entries(DATA.evaluations_by_tier || {});
+  if (!tiers.length) return `${DATA.evaluations} evaluations`;
+  const total = tiers.reduce((t, [, n]) => t + n, 0);
+  return `${total} evaluations (` +
+    tiers.map(([name, n]) => `<code>${esc(name)}</code> ${n}`).join(', ') + ')';
+}
 const COLORS = ['#3b5b9e','#2f7d4f','#8a6a1f','#7a3f8f','#b3452e','#2f7d7d'];
 
 document.getElementById('summary').innerHTML =
   `base <code>${esc(DATA.base)}</code> (<code>${esc(DATA.base_sha.slice(0,8))}</code>) · ` +
-  `${DATA.changes.length} changes · ${DATA.evaluations} evaluations · ` +
+  `${DATA.changes.length} changes · ${spend()} · ` +
   (DATA.exhausted ? '<span class="good">complete</span>'
                   : '<span class="warn">partial (budget reached)</span>');
 
@@ -430,9 +475,10 @@ function stages(e) {
   return ` <small>(${esc(parts.join(' · '))})</small>`;
 }
 
-document.getElementById('log').innerHTML =
+const logTable = rows =>
+  '<div class="card scroll"><table>' +
   '<tr><th>set</th><th>verdict</th><th>stage</th><th>s</th><th>detail</th></tr>' +
-  DATA.log.map(e => {
+  rows.map(e => {
     let detail = '';
     if (e.merge && !e.merge.ok) detail = 'conflict: ' + esc(e.merge.conflicting_files.slice(0,3).join(', '));
     else if (e.validation && !e.validation.ok) detail = esc(e.validation.failing_tests.slice(0,3).join(', '));
@@ -441,7 +487,14 @@ document.getElementById('log').innerHTML =
     return `<tr><td><code>${esc(e.subset.join(', '))}</code></td>` +
       `<td class="${cls}">${esc(e.verdict)}</td><td>${esc(e.stage || '')}</td>` +
       `<td>${(e.duration||0).toFixed(1)}${stages(e)}</td><td>${detail}</td></tr>`;
-  }).join('');
+  }).join('') + '</table></div>';
+
+// One table per tier when validation was tiered: a deep tier's refutations are
+// in its own log, and a table of the screen alone cannot show them.
+document.getElementById('logs').innerHTML = (DATA.tier_logs || []).length
+  ? DATA.tier_logs.map(t =>
+      `<h3>Tier <code>${esc(t.name)}</code></h3>` + logTable(t.log)).join('')
+  : logTable(DATA.log);
 </script>
 """
 
