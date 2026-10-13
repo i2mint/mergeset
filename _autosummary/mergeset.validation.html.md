@@ -33,9 +33,12 @@ gave (i2mint/mergeset#39).
 
 ### Module Attributes
 
-| [`DEFAULT_PYTEST_ARGS`](#mergeset.validation.DEFAULT_PYTEST_ARGS)   | the answer we need is a bit, and the first failure has it.                  |
-|------------------------------------------------------------------------|-----------------------------------------------------------------------------|
-| [`FINGERPRINT_ATTR`](#mergeset.validation.FINGERPRINT_ATTR)      | The attribute a validator carries to say what it runs (i2mint/mergeset#32). |
+| [`DEFAULT_PYTEST_ARGS`](#mergeset.validation.DEFAULT_PYTEST_ARGS)   | the answer we need is a bit, and the first failure has it.                                                                                                            |
+|------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`FINGERPRINT_ATTR`](#mergeset.validation.FINGERPRINT_ATTR)      | The attribute a validator carries to say what it runs (i2mint/mergeset#32).                                                                                           |
+| [`RACY_SECONDS`](#mergeset.validation.RACY_SECONDS)          | How old a file's last change must be before its stat may vouch for its contents.                                                                                      |
+| [`MAX_CACHED_DIGESTS`](#mergeset.validation.MAX_CACHED_DIGESTS)    | How many file digests [`FILE_DIGESTS`](#mergeset.validation.FILE_DIGESTS) holds before it starts over: about 110 MiB, room for a large virtual environment. |
+| [`FILE_DIGESTS`](#mergeset.validation.FILE_DIGESTS)          | Content digests of input files, keyed by the file's path and stat (#42).                                                                                              |
 
 ### Functions
 
@@ -48,7 +51,7 @@ gave (i2mint/mergeset#39).
 | [`file_fingerprint`](#mergeset.validation.file_fingerprint)(\*paths)                         | A fingerprint function over the contents of the given repo-relative files.                                                 |
 | [`fingerprint_of`](#mergeset.validation.fingerprint_of)(validate)                          | What `validate` runs, as a short string -- or `None` when it cannot say.                                                   |
 | [`flake_tolerant`](#mergeset.validation.flake_tolerant)(validate, \*[, retries])           | Re-run a failing validation `retries` times before believing it.                                                           |
-| [`inputs_digest`](#mergeset.validation.inputs_digest)(paths)                              | A digest of each path's current contents, keyed by its real path.                                                          |
+| [`inputs_digest`](#mergeset.validation.inputs_digest)(paths, \*[, cache])                 | A digest of each path's current contents, keyed by its real path.                                                          |
 | [`js_validation`](#mergeset.validation.js_validation)(\*[, install, build, test, ...])    | A staged validator shaped like a JavaScript project.                                                                       |
 | [`merge_only_validation`](#mergeset.validation.merge_only_validation)()                           | A validator that accepts anything that merged cleanly.                                                                     |
 | [`pytest_validation`](#mergeset.validation.pytest_validation)(\*[, args, timeout, env, ...])  | A validator that runs the project's pytest suite, fail-fast by default.                                                    |
@@ -67,9 +70,28 @@ the answer we need is a bit, and the first failure has it.
 * **Type:**
   Fail-fast by default
 
+### mergeset.validation.FILE_DIGESTS *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[tuple](https://docs.python.org/3/builtins/stdtypes.html#tuple), [str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= {}*
+
+Content digests of input files, keyed by the file’s path and stat (#42).
+Reading an 8.5 GB tree takes about a minute; stat-ing it, seconds. A run
+digests its inputs once per validator built and twice around every
+evaluation, so all but the first read come from here.
+
 ### mergeset.validation.FINGERPRINT_ATTR *= 'validator_fingerprint'*
 
 The attribute a validator carries to say what it runs (i2mint/mergeset#32).
+
+### mergeset.validation.MAX_CACHED_DIGESTS *= 250000*
+
+How many file digests [`FILE_DIGESTS`](#mergeset.validation.FILE_DIGESTS) holds before it starts over:
+about 110 MiB, room for a large virtual environment.
+
+### mergeset.validation.RACY_SECONDS *= 2.0*
+
+How old a file’s last change must be before its stat may vouch for its
+contents. An edit within one timestamp tick of a read leaves size and mtime
+as they were (git’s “racy clean” problem); 2 s covers the coarsest common
+filesystem timestamps (FAT). Younger files are always read.
 
 ### *class* mergeset.validation.ValidationStage(name, command, fingerprint=None, timeout=None, required=True)
 
@@ -199,7 +221,7 @@ breaks. This is the cheap defense; the honest one is
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](mergeset.base.html.md#mergeset.base.ValidationOutcome)]
 
-### mergeset.validation.inputs_digest(paths)
+### mergeset.validation.inputs_digest(paths, \*, cache=<object object>)
 
 A digest of each path’s current contents, keyed by its real path.
 
@@ -214,6 +236,20 @@ read as `'unreadable'`. Relative paths are resolved against the current
 directory, *not* the worktree: files inside the repository are already
 pinned by the commits. `paths` is a collection of paths: a lone string is
 refused, since it would be read one character at a time.
+
+A file whose path, inode, size, mtime and ctime match an earlier read is
+not read again: its digest comes from `cache` (default
+[`FILE_DIGESTS`](#mergeset.validation.FILE_DIGESTS)), but only once its last change (mtime or ctime,
+which no tool can set back) is [`RACY_SECONDS`](#mergeset.validation.RACY_SECONDS) older than that read.
+`cache=None` reads every file.
+
+Trusting a stat is what `make` and `git` do, with their blind spots: a
+second write through a shared `mmap` to an already-dirty page changes
+no timestamp, and a network filesystem may serve cached attributes (NFS,
+for up to a minute) or stamp times from a clock behind this one. For inputs
+edited that way, pass `cache=None`, or set
+`mergeset.validation.FILE_DIGESTS = None` to turn the cache off for every
+validator (ADR 0035).
 
 * **Return type:**
   [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]

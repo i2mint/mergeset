@@ -64,7 +64,7 @@ changes.
 | [`staged_validation`](#mergeset.staged_validation)(stages, \*[, env, inputs])        | Run an ordered list of [`ValidationStage`](#mergeset.ValidationStage) steps, reporting which one failed. |
 | [`js_validation`](#mergeset.js_validation)(\*[, install, build, test, ...])      | A staged validator shaped like a JavaScript project.                                                                       |
 | [`file_fingerprint`](#mergeset.file_fingerprint)(\*paths)                           | A fingerprint function over the contents of the given repo-relative files.                                                 |
-| [`inputs_digest`](#mergeset.inputs_digest)(paths)                                | A digest of each path's current contents, keyed by its real path.                                                          |
+| [`inputs_digest`](#mergeset.inputs_digest)(paths, \*[, cache])                   | A digest of each path's current contents, keyed by its real path.                                                          |
 | [`tips`](#mergeset.tips)(subset, parents)                               | The members of `subset` that nothing else in `subset` is stacked on.                                                       |
 | [`close_down`](#mergeset.close_down)(subset, parents)                         | Add every ancestor, so the set becomes a valid thing to ask for.                                                           |
 | [`close_up`](#mergeset.close_up)(subset, parents)                           | Add every descendant — what dropping these changes actually costs.                                                         |
@@ -1925,7 +1925,7 @@ turns one `2**n` search into several much smaller ones.
 [('a', 'b'), ('c',)]
 ```
 
-### mergeset.inputs_digest(paths)
+### mergeset.inputs_digest(paths, \*, cache=<object object>)
 
 A digest of each path’s current contents, keyed by its real path.
 
@@ -1940,6 +1940,20 @@ read as `'unreadable'`. Relative paths are resolved against the current
 directory, *not* the worktree: files inside the repository are already
 pinned by the commits. `paths` is a collection of paths: a lone string is
 refused, since it would be read one character at a time.
+
+A file whose path, inode, size, mtime and ctime match an earlier read is
+not read again: its digest comes from `cache` (default
+`FILE_DIGESTS`), but only once its last change (mtime or ctime,
+which no tool can set back) is `RACY_SECONDS` older than that read.
+`cache=None` reads every file.
+
+Trusting a stat is what `make` and `git` do, with their blind spots: a
+second write through a shared `mmap` to an already-dirty page changes
+no timestamp, and a network filesystem may serve cached attributes (NFS,
+for up to a minute) or stamp times from a clock behind this one. For inputs
+edited that way, pass `cache=None`, or set
+`mergeset.validation.FILE_DIGESTS = None` to turn the cache off for every
+validator (ADR 0035).
 
 * **Return type:**
   [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]

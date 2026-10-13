@@ -10,6 +10,9 @@ mergeset.validation
    
       DEFAULT_PYTEST_ARGS
       FINGERPRINT_ATTR
+      RACY_SECONDS
+      MAX_CACHED_DIGESTS
+      FILE_DIGESTS
    
    .. rubric:: Functions
 

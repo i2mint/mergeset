@@ -442,7 +442,7 @@ changes.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#mergeset.file_fingerprint" title="mergeset.file_fingerprint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">file_fingerprint</span></code></a>(*paths)</p></td>
 <td><p>A fingerprint function over the contents of the given repo-relative files.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.inputs_digest" title="mergeset.inputs_digest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">inputs_digest</span></code></a>(paths)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.inputs_digest" title="mergeset.inputs_digest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">inputs_digest</span></code></a>(paths, *[, cache])</p></td>
 <td><p>A digest of each path's current contents, keyed by its real path.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#mergeset.tips" title="mergeset.tips"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tips</span></code></a>(subset, parents)</p></td>
@@ -2807,7 +2807,7 @@ turns one <code class="docutils literal notranslate"><span class="pre">2**n</spa
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mergeset.inputs_digest">
-<span class="sig-prename descclassname"><span class="pre">mergeset.</span></span><span class="sig-name descname"><span class="pre">inputs_digest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/validation.html#inputs_digest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.inputs_digest" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">mergeset.</span></span><span class="sig-name descname"><span class="pre">inputs_digest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;object</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/validation.html#inputs_digest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.inputs_digest" title="Link to this definition">#</a></dt>
 <dd><p>A digest of each path’s current contents, keyed by its real path.</p>
 <p>These are the files a validator runs that its command text does not
 capture: a script outside the analysed repository, a config it reads. A
@@ -2820,6 +2820,18 @@ read as <code class="docutils literal notranslate"><span class="pre">'unreadable
 directory, <em>not</em> the worktree: files inside the repository are already
 pinned by the commits. <code class="docutils literal notranslate"><span class="pre">paths</span></code> is a collection of paths: a lone string is
 refused, since it would be read one character at a time.</p>
+<p>A file whose path, inode, size, mtime and ctime match an earlier read is
+not read again: its digest comes from <code class="docutils literal notranslate"><span class="pre">cache</span></code> (default
+<code class="xref py py-data docutils literal notranslate"><span class="pre">FILE_DIGESTS</span></code>), but only once its last change (mtime or ctime,
+which no tool can set back) is <code class="xref py py-data docutils literal notranslate"><span class="pre">RACY_SECONDS</span></code> older than that read.
+<code class="docutils literal notranslate"><span class="pre">cache=None</span></code> reads every file.</p>
+<p>Trusting a stat is what <code class="docutils literal notranslate"><span class="pre">make</span></code> and <code class="docutils literal notranslate"><span class="pre">git</span></code> do, with their blind spots: a
+second write through a shared <code class="docutils literal notranslate"><span class="pre">mmap</span></code> to an already-dirty page changes
+no timestamp, and a network filesystem may serve cached attributes (NFS,
+for up to a minute) or stamp times from a clock behind this one. For inputs
+edited that way, pass <code class="docutils literal notranslate"><span class="pre">cache=None</span></code>, or set
+<code class="docutils literal notranslate"><span class="pre">mergeset.validation.FILE_DIGESTS</span> <span class="pre">=</span> <span class="pre">None</span></code> to turn the cache off for every
+validator (ADR 0035).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
@@ -3427,7 +3439,7 @@ exists to prevent — so both halves of the key are slugified.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=cee5022b"></script>
+      <script src="../_static/documentation_options.js?v=26ffa1e9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

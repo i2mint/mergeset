@@ -1,4 +1,4 @@
-> built 2026-10-13 11:51 UTC from 51f56cb (main) · mergeset 0.0.27. Details: build_info.json
+> built 2026-10-13 12:09 UTC from 4134514 (main) · mergeset 0.0.28. Details: build_info.json
 
 # index.html.md
 
@@ -1704,7 +1704,7 @@ changes.
 | [`staged_validation`](_autosummary/mergeset.html.md#mergeset.staged_validation)(stages, \*[, env, inputs])        | Run an ordered list of [`ValidationStage`](_autosummary/mergeset.html.md#mergeset.ValidationStage) steps, reporting which one failed. |
 | [`js_validation`](_autosummary/mergeset.html.md#mergeset.js_validation)(\*[, install, build, test, ...])      | A staged validator shaped like a JavaScript project.                                                                       |
 | [`file_fingerprint`](_autosummary/mergeset.html.md#mergeset.file_fingerprint)(\*paths)                           | A fingerprint function over the contents of the given repo-relative files.                                                 |
-| [`inputs_digest`](_autosummary/mergeset.html.md#mergeset.inputs_digest)(paths)                                | A digest of each path's current contents, keyed by its real path.                                                          |
+| [`inputs_digest`](_autosummary/mergeset.html.md#mergeset.inputs_digest)(paths, \*[, cache])                   | A digest of each path's current contents, keyed by its real path.                                                          |
 | [`tips`](_autosummary/mergeset.html.md#mergeset.tips)(subset, parents)                               | The members of `subset` that nothing else in `subset` is stacked on.                                                       |
 | [`close_down`](_autosummary/mergeset.html.md#mergeset.close_down)(subset, parents)                         | Add every ancestor, so the set becomes a valid thing to ask for.                                                           |
 | [`close_up`](_autosummary/mergeset.html.md#mergeset.close_up)(subset, parents)                           | Add every descendant — what dropping these changes actually costs.                                                         |
@@ -3565,7 +3565,7 @@ turns one `2**n` search into several much smaller ones.
 [('a', 'b'), ('c',)]
 ```
 
-### mergeset.inputs_digest(paths)
+### mergeset.inputs_digest(paths, \*, cache=<object object>)
 
 A digest of each path’s current contents, keyed by its real path.
 
@@ -3580,6 +3580,20 @@ read as `'unreadable'`. Relative paths are resolved against the current
 directory, *not* the worktree: files inside the repository are already
 pinned by the commits. `paths` is a collection of paths: a lone string is
 refused, since it would be read one character at a time.
+
+A file whose path, inode, size, mtime and ctime match an earlier read is
+not read again: its digest comes from `cache` (default
+`FILE_DIGESTS`), but only once its last change (mtime or ctime,
+which no tool can set back) is `RACY_SECONDS` older than that read.
+`cache=None` reads every file.
+
+Trusting a stat is what `make` and `git` do, with their blind spots: a
+second write through a shared `mmap` to an already-dirty page changes
+no timestamp, and a network filesystem may serve cached attributes (NFS,
+for up to a minute) or stamp times from a clock behind this one. For inputs
+edited that way, pass `cache=None`, or set
+`mergeset.validation.FILE_DIGESTS = None` to turn the cache off for every
+validator (ADR 0035).
 
 * **Return type:**
   [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
@@ -6163,9 +6177,12 @@ gave (i2mint/mergeset#39).
 
 ### Module Attributes
 
-| [`DEFAULT_PYTEST_ARGS`](_autosummary/mergeset.validation.html.md#mergeset.validation.DEFAULT_PYTEST_ARGS)   | the answer we need is a bit, and the first failure has it.                  |
-|------------------------------------------------------------------------|-----------------------------------------------------------------------------|
-| [`FINGERPRINT_ATTR`](_autosummary/mergeset.validation.html.md#mergeset.validation.FINGERPRINT_ATTR)      | The attribute a validator carries to say what it runs (i2mint/mergeset#32). |
+| [`DEFAULT_PYTEST_ARGS`](_autosummary/mergeset.validation.html.md#mergeset.validation.DEFAULT_PYTEST_ARGS)   | the answer we need is a bit, and the first failure has it.                                                                                                            |
+|------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`FINGERPRINT_ATTR`](_autosummary/mergeset.validation.html.md#mergeset.validation.FINGERPRINT_ATTR)      | The attribute a validator carries to say what it runs (i2mint/mergeset#32).                                                                                           |
+| [`RACY_SECONDS`](_autosummary/mergeset.validation.html.md#mergeset.validation.RACY_SECONDS)          | How old a file's last change must be before its stat may vouch for its contents.                                                                                      |
+| [`MAX_CACHED_DIGESTS`](_autosummary/mergeset.validation.html.md#mergeset.validation.MAX_CACHED_DIGESTS)    | How many file digests [`FILE_DIGESTS`](_autosummary/mergeset.validation.html.md#mergeset.validation.FILE_DIGESTS) holds before it starts over: about 110 MiB, room for a large virtual environment. |
+| [`FILE_DIGESTS`](_autosummary/mergeset.validation.html.md#mergeset.validation.FILE_DIGESTS)          | Content digests of input files, keyed by the file's path and stat (#42).                                                                                              |
 
 ### Functions
 
@@ -6178,7 +6195,7 @@ gave (i2mint/mergeset#39).
 | [`file_fingerprint`](_autosummary/mergeset.validation.html.md#mergeset.validation.file_fingerprint)(\*paths)                         | A fingerprint function over the contents of the given repo-relative files.                                                 |
 | [`fingerprint_of`](_autosummary/mergeset.validation.html.md#mergeset.validation.fingerprint_of)(validate)                          | What `validate` runs, as a short string -- or `None` when it cannot say.                                                   |
 | [`flake_tolerant`](_autosummary/mergeset.validation.html.md#mergeset.validation.flake_tolerant)(validate, \*[, retries])           | Re-run a failing validation `retries` times before believing it.                                                           |
-| [`inputs_digest`](_autosummary/mergeset.validation.html.md#mergeset.validation.inputs_digest)(paths)                              | A digest of each path's current contents, keyed by its real path.                                                          |
+| [`inputs_digest`](_autosummary/mergeset.validation.html.md#mergeset.validation.inputs_digest)(paths, \*[, cache])                 | A digest of each path's current contents, keyed by its real path.                                                          |
 | [`js_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.js_validation)(\*[, install, build, test, ...])    | A staged validator shaped like a JavaScript project.                                                                       |
 | [`merge_only_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.merge_only_validation)()                           | A validator that accepts anything that merged cleanly.                                                                     |
 | [`pytest_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.pytest_validation)(\*[, args, timeout, env, ...])  | A validator that runs the project's pytest suite, fail-fast by default.                                                    |
@@ -6197,9 +6214,28 @@ the answer we need is a bit, and the first failure has it.
 * **Type:**
   Fail-fast by default
 
+### mergeset.validation.FILE_DIGESTS *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[tuple](https://docs.python.org/3/builtins/stdtypes.html#tuple), [str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= {}*
+
+Content digests of input files, keyed by the file’s path and stat (#42).
+Reading an 8.5 GB tree takes about a minute; stat-ing it, seconds. A run
+digests its inputs once per validator built and twice around every
+evaluation, so all but the first read come from here.
+
 ### mergeset.validation.FINGERPRINT_ATTR *= 'validator_fingerprint'*
 
 The attribute a validator carries to say what it runs (i2mint/mergeset#32).
+
+### mergeset.validation.MAX_CACHED_DIGESTS *= 250000*
+
+How many file digests [`FILE_DIGESTS`](_autosummary/mergeset.validation.html.md#mergeset.validation.FILE_DIGESTS) holds before it starts over:
+about 110 MiB, room for a large virtual environment.
+
+### mergeset.validation.RACY_SECONDS *= 2.0*
+
+How old a file’s last change must be before its stat may vouch for its
+contents. An edit within one timestamp tick of a read leaves size and mtime
+as they were (git’s “racy clean” problem); 2 s covers the coarsest common
+filesystem timestamps (FAT). Younger files are always read.
 
 ### *class* mergeset.validation.ValidationStage(name, command, fingerprint=None, timeout=None, required=True)
 
@@ -6329,7 +6365,7 @@ breaks. This is the cheap defense; the honest one is
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]
 
-### mergeset.validation.inputs_digest(paths)
+### mergeset.validation.inputs_digest(paths, \*, cache=<object object>)
 
 A digest of each path’s current contents, keyed by its real path.
 
@@ -6344,6 +6380,20 @@ read as `'unreadable'`. Relative paths are resolved against the current
 directory, *not* the worktree: files inside the repository are already
 pinned by the commits. `paths` is a collection of paths: a lone string is
 refused, since it would be read one character at a time.
+
+A file whose path, inode, size, mtime and ctime match an earlier read is
+not read again: its digest comes from `cache` (default
+[`FILE_DIGESTS`](_autosummary/mergeset.validation.html.md#mergeset.validation.FILE_DIGESTS)), but only once its last change (mtime or ctime,
+which no tool can set back) is [`RACY_SECONDS`](_autosummary/mergeset.validation.html.md#mergeset.validation.RACY_SECONDS) older than that read.
+`cache=None` reads every file.
+
+Trusting a stat is what `make` and `git` do, with their blind spots: a
+second write through a shared `mmap` to an already-dirty page changes
+no timestamp, and a network filesystem may serve cached attributes (NFS,
+for up to a minute) or stamp times from a clock behind this one. For inputs
+edited that way, pass `cache=None`, or set
+`mergeset.validation.FILE_DIGESTS = None` to turn the cache off for every
+validator (ADR 0035).
 
 * **Return type:**
   [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
@@ -6440,18 +6490,16 @@ contents join the fingerprint (see [`inputs_digest()`](_autosummary/mergeset.val
 
 # About this build
 
-This documentation was built on **2026-10-13 11:51 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/51f56cbca2f43292bc2f48335b90314de459c7a2"><code>51f56cb</code></a> on branch <code>main</code>, for **mergeset 0.0.27** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 12:09 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/41345140d1c6c731f538432fdfdc00aa9cba2140"><code>4134514</code></a> on branch <code>main</code>, for **mergeset 0.0.28** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.27) is behind the latest release on PyPI (0.0.28): `pip install mergeset` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/mergeset/commit/51f56cbca2f43292bc2f48335b90314de459c7a2"><code>51f56cbca2f43292bc2f48335b90314de459c7a2</code></a> |
+| Commit              | <a href="https://github.com/i2mint/mergeset/commit/41345140d1c6c731f538432fdfdc00aa9cba2140"><code>41345140d1c6c731f538432fdfdc00aa9cba2140</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -6462,9 +6510,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/mergeset</code>                                                               |
-| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38392889182">38392889182</a>      |
+| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38395022374">38395022374</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>51f56cbca2f43292bc2f48335b90314de459c7a2</code> (in the history of the built commit) |
+| Event commit | <code>41345140d1c6c731f538432fdfdc00aa9cba2140</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6489,13 +6537,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/mergeset/0.0.28/">0.0.28</a>, newer than the documented version (0.0.27).
+Latest release: <a href="https://pypi.org/project/mergeset/0.0.28/">0.0.28</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/mergeset && cd mergeset
-git checkout 51f56cbca2f43292bc2f48335b90314de459c7a2
+git checkout 41345140d1c6c731f538432fdfdc00aa9cba2140
 pip install "epythet==0.2.15"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
