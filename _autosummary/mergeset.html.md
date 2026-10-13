@@ -1925,7 +1925,7 @@ turns one `2**n` search into several much smaller ones.
 [('a', 'b'), ('c',)]
 ```
 
-### mergeset.inputs_digest(paths, \*, cache=<object object>)
+### mergeset.inputs_digest(paths, , cache=FILE_DIGESTS)
 
 A digest of each path’s current contents, keyed by its real path.
 

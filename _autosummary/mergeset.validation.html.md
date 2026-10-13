@@ -221,7 +221,7 @@ breaks. This is the cheap defense; the honest one is
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](mergeset.base.html.md#mergeset.base.ValidationOutcome)]
 
-### mergeset.validation.inputs_digest(paths, \*, cache=<object object>)
+### mergeset.validation.inputs_digest(paths, , cache=FILE_DIGESTS)
 
 A digest of each path’s current contents, keyed by its real path.
 

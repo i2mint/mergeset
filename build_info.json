@@ -1,32 +1,32 @@
 {
   "schema_version": 1,
-  "built_at": "2026-10-13T12:47:00Z",
+  "built_at": "2026-10-13T12:56:50Z",
   "package": {
     "name": "mergeset",
-    "version": "0.0.29",
+    "version": "0.0.30",
     "display_name": "mergeset",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "490b4ba329a0a68ab15847cd913c5d7e9c750242",
-    "short_commit": "490b4ba",
+    "commit": "faaf5792feacf8e4c66ef7ffd28ca5ffdc489984",
+    "short_commit": "faaf579",
     "branch": "main",
     "tags": [],
     "dirty": false,
     "remote_url": "https://github.com/i2mint/mergeset",
-    "commit_url": "https://github.com/i2mint/mergeset/commit/490b4ba329a0a68ab15847cd913c5d7e9c750242",
+    "commit_url": "https://github.com/i2mint/mergeset/commit/faaf5792feacf8e4c66ef7ffd28ca5ffdc489984",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "i2mint/mergeset",
-    "sha": "490b4ba329a0a68ab15847cd913c5d7e9c750242",
+    "sha": "faaf5792feacf8e4c66ef7ffd28ca5ffdc489984",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "38399675350",
-    "run_url": "https://github.com/i2mint/mergeset/actions/runs/38399675350",
+    "run_id": "38400915747",
+    "run_url": "https://github.com/i2mint/mergeset/actions/runs/38400915747",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -61,15 +61,13 @@
   "pypi": {
     "checked": true,
     "latest": "0.0.30",
-    "relation": "behind",
+    "relation": "same",
     "error": null
   },
-  "reproduce": "git clone https://github.com/i2mint/mergeset && cd mergeset\ngit checkout 490b4ba329a0a68ab15847cd913c5d7e9c750242\npip install \"epythet==0.2.15\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/i2mint/mergeset && cd mergeset\ngit checkout faaf5792feacf8e4c66ef7ffd28ca5ffdc489984\npip install \"epythet==0.2.15\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
-    "aligned": false,
-    "notes": [
-      "The documented version (0.0.29) is behind the latest release on PyPI (0.0.30): `pip install mergeset` gives newer code than these docs describe."
-    ]
+    "aligned": true,
+    "notes": []
   }
 }
