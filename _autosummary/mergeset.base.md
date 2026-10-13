@@ -89,7 +89,7 @@ A copy of this change carrying `weight`.
 * **Return type:**
   [`Change`](#mergeset.base.Change)
 
-### *class* mergeset.base.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', cached=False)
+### *class* mergeset.base.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, cached=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -97,6 +97,17 @@ One row of the evaluation log — the single source of truth.
 
 Everything else (conflict set, known-good/known-bad closure, merge plan,
 reports) is *derived* from a sequence of these and is re-derivable.
+
+A row is about the commits that were actually merged, not about the ids:
+`base_sha` and `heads` (change id -> head sha) pin it to them, so a row
+written before a branch was rewritten is never mistaken for an answer about
+the rewritten branch (i2mint/mergeset#23). Rows written before pinning
+existed carry neither and read back as *unpinned*; see
+[`mergeset.log.EvaluationLog`](mergeset.log.md#mergeset.log.EvaluationLog).
+
+#### base_sha *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+Full sha of the base the set was merged onto. `None` on unpinned rows.
 
 #### cached *: [bool](https://docs.python.org/3/builtins/functions.html#bool)* *= False*
 
@@ -110,9 +121,17 @@ Inverse of [`to_jdict()`](#mergeset.base.Evaluation.to_jdict).
 * **Return type:**
   [`Evaluation`](#mergeset.base.Evaluation)
 
+#### heads *: [Mapping](https://docs.python.org/3/library/typing.html#typing.Mapping)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
+
+Full head sha of each change in `subset` when it was evaluated.
+
 #### *property* ok *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
 
 True iff the set evaluated as good.
+
+#### *property* pinned *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
+
+True iff the row records which commits it was evaluated against.
 
 #### to_jdict()
 

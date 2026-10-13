@@ -157,7 +157,7 @@ data-aria-dark="Switch to auto color mode">
 <h2>Why it is not just “try every subset”<a class="headerlink" href="#why-it-is-not-just-try-every-subset" title="Link to this heading">#</a></h2>
 <p>Evaluating a subset means merging it and running a test suite. That is minutes, and there are <code class="docutils literal notranslate"><span class="pre">2**n</span></code> subsets. So <code class="docutils literal notranslate"><span class="pre">mergeset</span></code> spends its evaluations the way a person would if each one cost real money.</p>
 <p><strong>Ask the cheap oracles first.</strong> Nothing expensive runs until everything free has had its say: a change whose own CI is red is a conflict of size one; <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge-tree</span> <span class="pre">--write-tree</span></code> finds textual conflicts in milliseconds without ever creating a working tree; and changes touching disjoint files form independent subproblems that are solved separately and combined.</p>
-<p><strong>Never evaluate the same set twice.</strong> Every evaluation is appended to <code class="docutils literal notranslate"><span class="pre">~/.local/share/mergeset/evaluations/&lt;repo&gt;.jsonl</span></code>, which is the single source of truth. Re-running is nearly free, a crashed run resumes, and reports regenerate without re-running anything. The log also propagates monotonicity: a passing set marks all its subsets good, a failing set marks all its supersets bad.</p>
+<p><strong>Never evaluate the same set twice.</strong> Every evaluation is appended to <code class="docutils literal notranslate"><span class="pre">~/.local/share/mergeset/evaluations/&lt;repo&gt;.jsonl</span></code>, which is the single source of truth. Each row records the base and head shas it was merged at, and only rows about the current commits are reused, so rewriting a branch never answers from its old tree. Re-running is nearly free, a crashed run resumes, and reports regenerate without re-running anything. The log also propagates monotonicity: a passing set marks all its subsets good, a failing set marks all its supersets bad.</p>
 <p><strong>Search like a SAT solver, not like a loop.</strong> A failure is shrunk to a minimal conflict by QuickXplain (<code class="docutils literal notranslate"><span class="pre">O(k</span> <span class="pre">log</span> <span class="pre">n)</span></code> evaluations instead of <code class="docutils literal notranslate"><span class="pre">O(n)</span></code>), and the next candidate to try is the complement of the cheapest minimal hitting set of all conflicts found so far — Reiter’s hitting-set duality, which says exactly that complements of maximal good sets <em>are</em> the minimal hitting sets of the conflicts.</p>
 <p><strong>Weights mean “cost of dropping this”.</strong> When something has to go, the tool drops the cheapest work, not the first thing it thought of.</p>
 </section>
@@ -293,7 +293,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-13 03:03 UTC from <a href="https://github.com/i2mint/mergeset/commit/82137dfc9a7a0f43a1958b059e52a1d7dffb832d">82137df</a> (main) · mergeset 0.0.16 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-13 03:46 UTC from <a href="https://github.com/i2mint/mergeset/commit/d4f423c132e441c9220ad7db10533d01adb0b324">d4f423c</a> (main) · mergeset 0.0.17 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -328,7 +328,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=c7cdf6fe"></script>
+      <script src="_static/documentation_options.js?v=63b572e7"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

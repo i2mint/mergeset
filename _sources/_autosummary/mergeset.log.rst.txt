@@ -18,5 +18,6 @@ mergeset.log
       JsonlLines
       Known
       MemoryLines
+      Pins
       StoreLines
    

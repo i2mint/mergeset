@@ -114,7 +114,7 @@ changes.
 | [`Verdict`](#mergeset.Verdict)(\*values)                                 | Outcome of evaluating a change set.                                                                   |
 | [`MergeOutcome`](#mergeset.MergeOutcome)(ok[, reason, ...])                   | Result of merging a change set onto its base.                                                         |
 | [`ValidationOutcome`](#mergeset.ValidationOutcome)(ok[, failing_tests, ...])       | Result of validating a merged tree.                                                                   |
-| [`EvaluationLog`](#mergeset.EvaluationLog)([store])                            | Append-only record of evaluations, plus the monotone closure over it.                                 |
+| [`EvaluationLog`](#mergeset.EvaluationLog)([store, pins, trust_unpinned])      | Append-only record of evaluations, plus the monotone closure over it.                                 |
 | [`JsonlLines`](#mergeset.JsonlLines)(path)                                  | Append-only sequence of JSON objects backed by one file.                                              |
 | [`MemoryLines`](#mergeset.MemoryLines)([iterable])                           | In-memory stand-in for [`JsonlLines`](#mergeset.JsonlLines) (tests, dry runs). |
 | [`ValidationStage`](#mergeset.ValidationStage)(name, command[, ...])             | One step of a staged validation.                                                                      |
@@ -126,7 +126,7 @@ changes.
 |------------------------------------------------------------------|----------------------------------------------------------------------------|
 | [`CapabilityError`](#mergeset.CapabilityError) | A required external capability is missing; the message says how to fix it. |
 
-### *class* mergeset.Analysis(repo, base, base_sha, changes, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, unverified_sets=<factory>, log=None, searches=<factory>, notes=<factory>)
+### *class* mergeset.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, unverified_sets=<factory>, log=None, searches=<factory>, notes=<factory>)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -170,6 +170,11 @@ misleading in a report. See [`evaluations`](#mergeset.Analysis.evaluations).
 
 True iff every component’s search finished rather than hit a budget.
 
+#### head_shas *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
+
+Full head sha of each change, resolved once at the start. Everything that
+merges uses these, never the refs, so what is recorded is what was merged.
+
 #### merge_plan()
 
 One entry per maximal set: what to merge, in what order, what it drops.
@@ -179,9 +184,23 @@ This is the deliverable — “merge these, in this order, and you lose these”
 * **Return type:**
   [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
 
+#### merged_through *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
+
+The `stacks` edges whose child head really contains the parent’s head,
+so merging the child brings the parent along. Only these let the oracle
+merge a tip alone; any other parent is merged explicitly, or the row
+would name a parent head that was never in the tree (#23).
+
 #### own_weights *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [float](https://docs.python.org/3/builtins/functions.html#float)]*
 
 Cost of the change on its own, before the cone is accounted for.
+
+#### *property* pinned_changes *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Change](mergeset.base.html.md#mergeset.base.Change)]*
+
+The changes with `head` replaced by the sha it resolved to.
+
+A branch that moves mid-run must not have its new commits merged under
+a row pinned to the old ones; merging the resolved shas rules that out.
 
 #### singleton_conflicts *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [List](https://docs.python.org/3/library/typing.html#typing.List)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]]*
 
@@ -361,7 +380,7 @@ Upper estimate, in seconds. Used to *admit* work against a budget.
 * **Return type:**
   [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
-### *class* mergeset.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', cached=False)
+### *class* mergeset.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, cached=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -369,6 +388,17 @@ One row of the evaluation log — the single source of truth.
 
 Everything else (conflict set, known-good/known-bad closure, merge plan,
 reports) is *derived* from a sequence of these and is re-derivable.
+
+A row is about the commits that were actually merged, not about the ids:
+`base_sha` and `heads` (change id -> head sha) pin it to them, so a row
+written before a branch was rewritten is never mistaken for an answer about
+the rewritten branch (i2mint/mergeset#23). Rows written before pinning
+existed carry neither and read back as *unpinned*; see
+[`mergeset.log.EvaluationLog`](mergeset.log.html.md#mergeset.log.EvaluationLog).
+
+#### base_sha *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+Full sha of the base the set was merged onto. `None` on unpinned rows.
 
 #### cached *: [bool](https://docs.python.org/3/builtins/functions.html#bool)* *= False*
 
@@ -382,9 +412,17 @@ Inverse of [`to_jdict()`](#mergeset.Evaluation.to_jdict).
 * **Return type:**
   [`Evaluation`](mergeset.base.html.md#mergeset.base.Evaluation)
 
+#### heads *: [Mapping](https://docs.python.org/3/library/typing.html#typing.Mapping)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
+
+Full head sha of each change in `subset` when it was evaluated.
+
 #### *property* ok *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
 
 True iff the set evaluated as good.
+
+#### *property* pinned *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
+
+True iff the row records which commits it was evaluated against.
 
 #### to_jdict()
 
@@ -393,18 +431,27 @@ JSON-able view; `subset` becomes a sorted list.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### *class* mergeset.EvaluationLog(store=None)
+### *class* mergeset.EvaluationLog(store=None, , pins=None, trust_unpinned=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Append-only record of evaluations, plus the monotone closure over it.
 
 * **Parameters:**
-  **store** ([`Any`](https://docs.python.org/3/library/typing.html#typing.Any)) – Persistence seam. A path (str/PathLike) is wrapped in
-  [`JsonlLines`](#mergeset.JsonlLines); pass [`StoreLines`](#mergeset.StoreLines) to put the log in an
-  artifact store (S3 and friends), or [`MemoryLines`](#mergeset.MemoryLines) for an
-  ephemeral log. With no argument at all the log goes to the artifact
-  store’s `evaluations/adhoc.jsonl` — never the working directory.
+  * **store** ([`Any`](https://docs.python.org/3/library/typing.html#typing.Any)) – Persistence seam. A path (str/PathLike) is wrapped in
+    [`JsonlLines`](#mergeset.JsonlLines); pass [`StoreLines`](#mergeset.StoreLines) to put the log in an
+    artifact store (S3 and friends), or [`MemoryLines`](#mergeset.MemoryLines) for an
+    ephemeral log. With no argument at all the log goes to the artifact
+    store’s `evaluations/adhoc.jsonl` — never the working directory.
+  * **pins** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Pins`](mergeset.log.html.md#mergeset.log.Pins)]) – The commits the questions are about (see `Pins` and
+    [`pin()`](#mergeset.EvaluationLog.pin)). Unpinned, every row counts, as before pinning existed;
+    [`mergeset.analyze()`](#mergeset.analyze) always pins.
+  * **trust_unpinned** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Let rows that record no commits at all (written before
+    i2mint/mergeset#23, or by an unpinned log) count as matches once the
+    log is pinned. Off by default, because such a row may be about a head
+    that has since moved — which is the defect pinning exists to close.
+    Turn it on only when you know the heads have not moved since those
+    rows were written; it is the migration path for an old log.
 
 ```pycon
 >>> log = EvaluationLog(MemoryLines())
@@ -483,12 +530,84 @@ another. Reported, never silently smoothed over.
 
 Sets recorded as good, largest first.
 
+#### pin(, base, heads)
+
+Scope *this* log to `base` and these heads; returns `self`.
+
+[`pinned()`](#mergeset.EvaluationLog.pinned) is the same without changing this object.
+
+From here on, reading ([`known()`](#mergeset.EvaluationLog.known), [`exact()`](#mergeset.EvaluationLog.exact), the closure,
+iteration, `len`) sees only rows evaluated against these commits, and
+[`record()`](#mergeset.EvaluationLog.record) stamps new rows with them. Nothing is removed: the other
+rows stay in the store and in [`rows`](#mergeset.EvaluationLog.rows), and are reported by
+[`stale`](#mergeset.EvaluationLog.stale) and [`unpinned`](#mergeset.EvaluationLog.unpinned).
+
+* **Return type:**
+  [`EvaluationLog`](mergeset.log.html.md#mergeset.log.EvaluationLog)
+
+```pycon
+>>> from mergeset.base import Evaluation, Verdict
+>>> log = EvaluationLog(MemoryLines()).pin(base='B', heads={'a': 'A1'})
+>>> _ = log.record(Evaluation(frozenset('a'), Verdict.PASS))
+>>> log.known(frozenset('a')).verdict.value
+'pass'
+>>> _ = log.pin(base='B', heads={'a': 'A2'})   # branch a was rewritten
+>>> log.known(frozenset('a')).verdict is None, len(log.rows), len(log.stale)
+(True, 1, 1)
+```
+
+#### pinned(, base, heads, trust_unpinned=None)
+
+A view of this log scoped to `base` and these heads.
+
+Same store, same rows; this log itself is left as it was, so a caller
+that hands one log to two analyses keeps its own view of it.
+
+* **Return type:**
+  [`EvaluationLog`](mergeset.log.html.md#mergeset.log.EvaluationLog)
+
+```pycon
+>>> from mergeset.base import Evaluation, Verdict
+>>> log = EvaluationLog(MemoryLines())
+>>> view = log.pinned(base='B', heads={'a': 'A1'})
+>>> _ = view.record(Evaluation(frozenset('a'), Verdict.PASS))
+>>> log.pins is None, len(log), len(view)
+(True, 1, 1)
+>>> len(log.pinned(base='B', heads={'a': 'A2'}))
+0
+```
+
 #### record(evaluation)
 
-Append `evaluation` (stamping `at` if absent) and return it.
+Append `evaluation` and return it.
+
+`at` is stamped if absent, and so are the pinned commits: a row that
+does not say what it was run against cannot be told apart from one
+about a branch that has since been rewritten.
 
 * **Return type:**
   [`Evaluation`](mergeset.base.html.md#mergeset.base.Evaluation)
+
+#### *property* rows *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](mergeset.base.html.md#mergeset.base.Evaluation)]*
+
+Every row in the log, matching the pins or not, in log order.
+
+#### *property* stale *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](mergeset.base.html.md#mergeset.base.Evaluation)]*
+
+Rows evaluated against other commits than the pinned ones.
+
+Not wrong — about a different question — so kept, and not matched.
+
+#### *property* trust_unpinned *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
+
+Whether rows recording no commits count once the log is pinned.
+
+#### *property* unpinned *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](mergeset.base.html.md#mergeset.base.Evaluation)]*
+
+Rows recording no commits that a pinned log is not counting.
+
+All of them by default; with `trust_unpinned`, only those holding a
+change that is not in play. Empty when the log is unpinned.
 
 ### *class* mergeset.JsonlLines(path)
 
@@ -889,7 +1008,7 @@ A validator that runs the repository’s GitHub Actions locally with `act`.
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](mergeset.base.html.md#mergeset.base.ValidationOutcome)]
 
-### mergeset.analyze(repo, changes, , base=None, validate=None, resolver=None, log=None, log_path=None, artifacts=None, weight=None, pairwise_preoracle=True, decompose=True, component_local=None, use_ci_status=True, check_base=True, max_evaluations=None, max_seconds=None, max_sets=None, worktree_root=None, reuse_worktree=None, on_event=None)
+### mergeset.analyze(repo, changes, , base=None, validate=None, resolver=None, log=None, log_path=None, trust_unpinned=None, artifacts=None, weight=None, pairwise_preoracle=True, decompose=True, component_local=None, use_ci_status=True, check_base=True, max_evaluations=None, max_seconds=None, max_sets=None, worktree_root=None, reuse_worktree=None, on_event=None)
 
 Find the maximal sets of `changes` that merge and validate on `base`.
 
@@ -908,7 +1027,11 @@ Find the maximal sets of `changes` that merge and validate on `base`.
   * **log_path** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – The evaluation log — the single source of truth. Defaults
     to `<artifact root>/evaluations/<repo-slug>.jsonl` (see
     [`mergeset.storage`](mergeset.storage.html.md#module-mergeset.storage)), *outside* the analysed repository. Reusing
-    an existing one makes a re-run nearly free.
+    an existing one makes a re-run nearly free. Only rows evaluated
+    against the same base and heads are reused (see ADR 0028).
+  * **trust_unpinned** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool)]) – Reuse log rows written before rows recorded their
+    commits (an old log). Default: the log’s own setting, which is off.
+    Only when the heads have not moved since those rows were written.
   * **weight** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`Change`](mergeset.base.html.md#mergeset.base.Change)], [`float`](https://docs.python.org/3/builtins/functions.html#float)]]) – `Change -> cost of dropping it`; default is size-based.
   * **pairwise_preoracle** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Use `git merge-tree` to find textual conflicts for
     free before spending any evaluation.

@@ -24,6 +24,7 @@ Two very different costs live here, and keeping them apart is the point:
 | [`create_integration_branch`](#mergeset.gitops.create_integration_branch)(repo, name, base, ...) | Create a local branch holding `base` + all heads, for manual testing.    |
 | [`git`](#mergeset.gitops.git)(repo, \*args[, check, timeout])              | Run `git -C repo *args` and capture its output.                          |
 | [`git_version`](#mergeset.gitops.git_version)()                                    | The installed git version as a tuple, e.g. `(2, 50, 1)`.                 |
+| [`is_ancestor`](#mergeset.gitops.is_ancestor)(repo, ancestor, descendant)          | True iff `ancestor` is reachable from `descendant` (or equal to it).     |
 | [`merge_base`](#mergeset.gitops.merge_base)(repo, a, b)                           | Best common ancestor of `a` and `b`.                                     |
 | [`merge_sequence`](#mergeset.gitops.merge_sequence)(repo, base, heads)                | Merge every head onto `base`, one at a time, without any worktree.       |
 | [`merged_worktree`](#mergeset.gitops.merged_worktree)(repo, base, heads, \*[, ...])    | Materialize `base` plus every head in a worktree, ready for validation.  |
@@ -114,6 +115,13 @@ The installed git version as a tuple, e.g. `(2, 50, 1)`.
 
 * **Return type:**
   [`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis)]
+
+### mergeset.gitops.is_ancestor(repo, ancestor, descendant)
+
+True iff `ancestor` is reachable from `descendant` (or equal to it).
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### mergeset.gitops.merge_base(repo, a, b)
 

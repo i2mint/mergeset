@@ -18,13 +18,14 @@ The order of operations is the whole point, because it is the order of *cost*:
 
 | [`analyze`](#mergeset.analysis.analyze)(repo, changes, \*[, base, validate, ...])   | Find the maximal sets of `changes` that merge and validate on `base`.   |
 |------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| [`unmatched_log_notes`](#mergeset.analysis.unmatched_log_notes)(log, \*[, label])               | Say how many rows a pinned log is keeping but not using, and why.       |
 
 ### Classes
 
 | [`Analysis`](#mergeset.analysis.Analysis)(repo, base, base_sha, changes[, ...])   | Everything a run learned.   |
 |---------------------------------------------------------------------------------------------------|-----------------------------|
 
-### *class* mergeset.analysis.Analysis(repo, base, base_sha, changes, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, unverified_sets=<factory>, log=None, searches=<factory>, notes=<factory>)
+### *class* mergeset.analysis.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, unverified_sets=<factory>, log=None, searches=<factory>, notes=<factory>)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -68,6 +69,11 @@ misleading in a report. See [`evaluations`](#mergeset.analysis.Analysis.evaluati
 
 True iff every component’s search finished rather than hit a budget.
 
+#### head_shas *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
+
+Full head sha of each change, resolved once at the start. Everything that
+merges uses these, never the refs, so what is recorded is what was merged.
+
 #### merge_plan()
 
 One entry per maximal set: what to merge, in what order, what it drops.
@@ -77,9 +83,23 @@ This is the deliverable — “merge these, in this order, and you lose these”
 * **Return type:**
   [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
 
+#### merged_through *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
+
+The `stacks` edges whose child head really contains the parent’s head,
+so merging the child brings the parent along. Only these let the oracle
+merge a tip alone; any other parent is merged explicitly, or the row
+would name a parent head that was never in the tree (#23).
+
 #### own_weights *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [float](https://docs.python.org/3/builtins/functions.html#float)]*
 
 Cost of the change on its own, before the cone is accounted for.
+
+#### *property* pinned_changes *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Change](mergeset.base.html.md#mergeset.base.Change)]*
+
+The changes with `head` replaced by the sha it resolved to.
+
+A branch that moves mid-run must not have its new commits merged under
+a row pinned to the old ones; merging the resolved shas rules that out.
 
 #### singleton_conflicts *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [List](https://docs.python.org/3/library/typing.html#typing.List)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]]*
 
@@ -94,7 +114,7 @@ normal case. See [`merge_plan()`](#mergeset.analysis.Analysis.merge_plan)’s `v
 
 Cost of dropping each change *including its descendant cone*.
 
-### mergeset.analysis.analyze(repo, changes, , base=None, validate=None, resolver=None, log=None, log_path=None, artifacts=None, weight=None, pairwise_preoracle=True, decompose=True, component_local=None, use_ci_status=True, check_base=True, max_evaluations=None, max_seconds=None, max_sets=None, worktree_root=None, reuse_worktree=None, on_event=None)
+### mergeset.analysis.analyze(repo, changes, , base=None, validate=None, resolver=None, log=None, log_path=None, trust_unpinned=None, artifacts=None, weight=None, pairwise_preoracle=True, decompose=True, component_local=None, use_ci_status=True, check_base=True, max_evaluations=None, max_seconds=None, max_sets=None, worktree_root=None, reuse_worktree=None, on_event=None)
 
 Find the maximal sets of `changes` that merge and validate on `base`.
 
@@ -113,7 +133,11 @@ Find the maximal sets of `changes` that merge and validate on `base`.
   * **log_path** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – The evaluation log — the single source of truth. Defaults
     to `<artifact root>/evaluations/<repo-slug>.jsonl` (see
     [`mergeset.storage`](mergeset.storage.html.md#module-mergeset.storage)), *outside* the analysed repository. Reusing
-    an existing one makes a re-run nearly free.
+    an existing one makes a re-run nearly free. Only rows evaluated
+    against the same base and heads are reused (see ADR 0028).
+  * **trust_unpinned** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool)]) – Reuse log rows written before rows recorded their
+    commits (an old log). Default: the log’s own setting, which is off.
+    Only when the heads have not moved since those rows were written.
   * **weight** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`Change`](mergeset.base.html.md#mergeset.base.Change)], [`float`](https://docs.python.org/3/builtins/functions.html#float)]]) – `Change -> cost of dropping it`; default is size-based.
   * **pairwise_preoracle** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Use `git merge-tree` to find textual conflicts for
     free before spending any evaluation.
@@ -152,3 +176,13 @@ Find the maximal sets of `changes` that merge and validate on `base`.
   [`Analysis`](#mergeset.analysis.Analysis)
 * **Returns:**
   An [`Analysis`](#mergeset.analysis.Analysis).
+
+### mergeset.analysis.unmatched_log_notes(log, , label='')
+
+Say how many rows a pinned log is keeping but not using, and why.
+
+Rows about other commits are never dropped, and never silently ignored
+either: a re-run that is suddenly slow should say it is because heads moved.
+
+* **Return type:**
+  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]

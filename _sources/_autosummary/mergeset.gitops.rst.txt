@@ -19,6 +19,7 @@ mergeset.gitops
       create_integration_branch
       git
       git_version
+      is_ancestor
       merge_base
       merge_sequence
       merged_worktree

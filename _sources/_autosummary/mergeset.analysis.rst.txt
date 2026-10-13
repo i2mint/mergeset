@@ -9,6 +9,7 @@ mergeset.analysis
    .. autosummary::
    
       analyze
+      unmatched_log_notes
    
    .. rubric:: Classes
 

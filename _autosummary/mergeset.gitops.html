@@ -113,6 +113,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#mergeset.gitops.create_integration_branch"><code class="docutils literal notranslate"><span class="pre">create_integration_branch()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.gitops.git"><code class="docutils literal notranslate"><span class="pre">git()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.gitops.git_version"><code class="docutils literal notranslate"><span class="pre">git_version()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.gitops.is_ancestor"><code class="docutils literal notranslate"><span class="pre">is_ancestor()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.gitops.merge_base"><code class="docutils literal notranslate"><span class="pre">merge_base()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.gitops.merge_sequence"><code class="docutils literal notranslate"><span class="pre">merge_sequence()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.gitops.merged_worktree"><code class="docutils literal notranslate"><span class="pre">merged_worktree()</span></code></a></li>
@@ -200,28 +201,31 @@ throwaway worktree so a test suite can run on it.</p></li>
 <tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.gitops.git_version" title="mergeset.gitops.git_version"><code class="xref py py-obj docutils literal notranslate"><span class="pre">git_version</span></code></a>()</p></td>
 <td><p>The installed git version as a tuple, e.g. <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">50,</span> <span class="pre">1)</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.gitops.merge_base" title="mergeset.gitops.merge_base"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_base</span></code></a>(repo, a, b)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.gitops.is_ancestor" title="mergeset.gitops.is_ancestor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_ancestor</span></code></a>(repo, ancestor, descendant)</p></td>
+<td><p>True iff <code class="docutils literal notranslate"><span class="pre">ancestor</span></code> is reachable from <code class="docutils literal notranslate"><span class="pre">descendant</span></code> (or equal to it).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.gitops.merge_base" title="mergeset.gitops.merge_base"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_base</span></code></a>(repo, a, b)</p></td>
 <td><p>Best common ancestor of <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.gitops.merge_sequence" title="mergeset.gitops.merge_sequence"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_sequence</span></code></a>(repo, base, heads)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.gitops.merge_sequence" title="mergeset.gitops.merge_sequence"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_sequence</span></code></a>(repo, base, heads)</p></td>
 <td><p>Merge every head onto <code class="docutils literal notranslate"><span class="pre">base</span></code>, one at a time, without any worktree.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.gitops.merged_worktree" title="mergeset.gitops.merged_worktree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merged_worktree</span></code></a>(repo, base, heads, *[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.gitops.merged_worktree" title="mergeset.gitops.merged_worktree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merged_worktree</span></code></a>(repo, base, heads, *[, ...])</p></td>
 <td><p>Materialize <code class="docutils literal notranslate"><span class="pre">base</span></code> plus every head in a worktree, ready for validation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.gitops.pairwise_textual_conflicts" title="mergeset.gitops.pairwise_textual_conflicts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pairwise_textual_conflicts</span></code></a>(repo, base, heads)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.gitops.pairwise_textual_conflicts" title="mergeset.gitops.pairwise_textual_conflicts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pairwise_textual_conflicts</span></code></a>(repo, base, heads)</p></td>
 <td><p>Yield <code class="docutils literal notranslate"><span class="pre">(id_a,</span> <span class="pre">id_b,</span> <span class="pre">files)</span></code> for every pair that conflicts textually.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.gitops.persistent_worktree" title="mergeset.gitops.persistent_worktree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">persistent_worktree</span></code></a>(repo, base, path)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.gitops.persistent_worktree" title="mergeset.gitops.persistent_worktree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">persistent_worktree</span></code></a>(repo, base, path)</p></td>
 <td><p>Create (once) a worktree meant to be reused across many evaluations.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.gitops.resolve" title="mergeset.gitops.resolve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code></a>(repo, rev)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.gitops.resolve" title="mergeset.gitops.resolve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code></a>(repo, rev)</p></td>
 <td><p>Full sha of <code class="docutils literal notranslate"><span class="pre">rev</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.gitops.singleton_textual_conflicts" title="mergeset.gitops.singleton_textual_conflicts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">singleton_textual_conflicts</span></code></a>(repo, base, heads)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.gitops.singleton_textual_conflicts" title="mergeset.gitops.singleton_textual_conflicts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">singleton_textual_conflicts</span></code></a>(repo, base, heads)</p></td>
 <td><p>Yield <code class="docutils literal notranslate"><span class="pre">(id,</span> <span class="pre">files)</span></code> for every change that will not even merge onto base.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.gitops.textual_conflict" title="mergeset.gitops.textual_conflict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">textual_conflict</span></code></a>(repo, base, head_a, head_b)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.gitops.textual_conflict" title="mergeset.gitops.textual_conflict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">textual_conflict</span></code></a>(repo, base, head_a, head_b)</p></td>
 <td><p>Conflicting files if merging both heads onto <code class="docutils literal notranslate"><span class="pre">base</span></code> clashes textually.</p></td>
 </tr>
 </tbody>
@@ -344,6 +348,17 @@ unless <code class="docutils literal notranslate"><span class="pre">force</span>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#Ellipsis" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.gitops.is_ancestor">
+<span class="sig-prename descclassname"><span class="pre">mergeset.gitops.</span></span><span class="sig-name descname"><span class="pre">is_ancestor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ancestor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descendant</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/gitops.html#is_ancestor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.gitops.is_ancestor" title="Link to this definition">#</a></dt>
+<dd><p>True iff <code class="docutils literal notranslate"><span class="pre">ancestor</span></code> is reachable from <code class="docutils literal notranslate"><span class="pre">descendant</span></code> (or equal to it).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -529,7 +544,7 @@ whether B then conflicts with <em>that</em>.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=c7cdf6fe"></script>
+      <script src="../_static/documentation_options.js?v=63b572e7"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

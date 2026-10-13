@@ -19,7 +19,7 @@ decide that `--max-seconds` is a float rather than the string `"600"`.
 | [`prs`](#mergeset.cli.prs)(repo_spec, \*[, repo, author, ...])   | Find maximal mergeable sets among a repository's open pull requests.      |
 | [`show_log`](#mergeset.cli.show_log)(\*[, log_path, repo])            | Print what the evaluation log already knows, without evaluating anything. |
 
-### mergeset.cli.branches(branch, , repo='.', base='HEAD', validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, merge_only=False, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, log_path=None, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
+### mergeset.cli.branches(branch, , repo='.', base='HEAD', validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, merge_only=False, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
 
 Find maximal mergeable sets among the given branches.
 
@@ -50,6 +50,8 @@ Find maximal mergeable sets among the given branches.
   * **log_path** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Evaluation log (JSONL). Default:
     `~/.local/share/mergeset/evaluations/<repo-slug>.jsonl` —
     outside the analysed repository, always.
+  * **trust_unpinned_log** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Reuse rows of an old log that predate rows
+    recording their commits. Only when no head has moved since.
   * **report_dir** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Write `REPORT.md` and `report.html` into this
     directory. By default they go to the artifact store
     (`<artifact root>/reports/<repo-slug>/`), never into the
@@ -89,7 +91,7 @@ Entry point: project `_dispatch_funcs` onto a command line parser.
 * **Return type:**
   [`int`](https://docs.python.org/3/builtins/functions.html#int)
 
-### mergeset.cli.prs(repo_spec, , repo='.', author=None, updated_within_hours=None, base=None, include_drafts=False, validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, merge_only=False, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, log_path=None, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
+### mergeset.cli.prs(repo_spec, , repo='.', author=None, updated_within_hours=None, base=None, include_drafts=False, validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, merge_only=False, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
 
 Find maximal mergeable sets among a repository’s open pull requests.
 
@@ -108,6 +110,8 @@ Find maximal mergeable sets among a repository’s open pull requests.
   * **log_path** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Evaluation log (JSONL). Default:
     `~/.local/share/mergeset/evaluations/<repo-slug>.jsonl` — outside
     the analysed repository, always.
+  * **trust_unpinned_log** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Reuse rows of an old log that predate rows
+    recording their commits. Only when no head has moved since.
   * **report_dir** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Write `REPORT.md` and `report.html` into this directory.
     By default they go to the artifact store, under
     `reports/<repo-slug>/<timestamp>/`, so a re-run never overwrites

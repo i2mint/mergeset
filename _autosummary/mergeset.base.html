@@ -106,9 +106,12 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li><a class="reference internal" href="#mergeset.base.Evaluation"><code class="docutils literal notranslate"><span class="pre">Evaluation</span></code></a><ul>
+<li><a class="reference internal" href="#mergeset.base.Evaluation.base_sha"><code class="docutils literal notranslate"><span class="pre">Evaluation.base_sha</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.Evaluation.cached"><code class="docutils literal notranslate"><span class="pre">Evaluation.cached</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.Evaluation.from_jdict"><code class="docutils literal notranslate"><span class="pre">Evaluation.from_jdict()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.Evaluation.heads"><code class="docutils literal notranslate"><span class="pre">Evaluation.heads</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.Evaluation.ok"><code class="docutils literal notranslate"><span class="pre">Evaluation.ok</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.Evaluation.pinned"><code class="docutils literal notranslate"><span class="pre">Evaluation.pinned</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.Evaluation.to_jdict"><code class="docutils literal notranslate"><span class="pre">Evaluation.to_jdict()</span></code></a></li>
 </ul>
 </li>
@@ -312,13 +315,25 @@ changes it can when it must drop something, so a high weight means
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mergeset.base.Evaluation">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">Evaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Evaluation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.Evaluation" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">Evaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_sha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Evaluation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.Evaluation" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>One row of the evaluation log — the single source of truth.</p>
 <p>Everything else (conflict set, known-good/known-bad closure, merge plan,
 reports) is <em>derived</em> from a sequence of these and is re-derivable.</p>
+<p>A row is about the commits that were actually merged, not about the ids:
+<code class="docutils literal notranslate"><span class="pre">base_sha</span></code> and <code class="docutils literal notranslate"><span class="pre">heads</span></code> (change id -&gt; head sha) pin it to them, so a row
+written before a branch was rewritten is never mistaken for an answer about
+the rewritten branch (i2mint/mergeset#23). Rows written before pinning
+existed carry neither and read back as <em>unpinned</em>; see
+<a class="reference internal" href="mergeset.log.html#mergeset.log.EvaluationLog" title="mergeset.log.EvaluationLog"><code class="xref py py-class docutils literal notranslate"><span class="pre">mergeset.log.EvaluationLog</span></code></a>.</p>
 <dl class="field-list simple">
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.base.Evaluation.base_sha">
+<span class="sig-name descname"><span class="pre">base_sha</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.base.Evaluation.base_sha" title="Link to this definition">#</a></dt>
+<dd><p>Full sha of the base the set was merged onto. <code class="docutils literal notranslate"><span class="pre">None</span></code> on unpinned rows.</p>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mergeset.base.Evaluation.cached">
 <span class="sig-name descname"><span class="pre">cached</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#mergeset.base.Evaluation.cached" title="Link to this definition">#</a></dt>
@@ -337,10 +352,22 @@ serialized: it is a fact about <em>this</em> lookup, not about the evaluation.</
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.base.Evaluation.heads">
+<span class="sig-name descname"><span class="pre">heads</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Mapping" title="(in Python v3.15)"><span class="pre">Mapping</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#mergeset.base.Evaluation.heads" title="Link to this definition">#</a></dt>
+<dd><p>Full head sha of each change in <code class="docutils literal notranslate"><span class="pre">subset</span></code> when it was evaluated.</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="mergeset.base.Evaluation.ok">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ok</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><a class="headerlink" href="#mergeset.base.Evaluation.ok" title="Link to this definition">#</a></dt>
 <dd><p>True iff the set evaluated as good.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mergeset.base.Evaluation.pinned">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">pinned</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><a class="headerlink" href="#mergeset.base.Evaluation.pinned" title="Link to this definition">#</a></dt>
+<dd><p>True iff the row records which commits it was evaluated against.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -534,7 +561,7 @@ not be attempted: bad path, missing ref, unusable worktree).</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=c7cdf6fe"></script>
+      <script src="../_static/documentation_options.js?v=63b572e7"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

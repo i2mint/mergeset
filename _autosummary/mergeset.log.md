@@ -13,6 +13,12 @@ makes another change work, and flaky tests break it outright. Violations are
 detected and reported ([`EvaluationLog.monotonicity_violations()`](#mergeset.log.EvaluationLog.monotonicity_violations)) instead of
 being silently trusted.
 
+A row is an answer about *commits*, not about ids. Once the log is pinned
+([`EvaluationLog.pin()`](#mergeset.log.EvaluationLog.pin)) to the base and the head of each change in play,
+only rows evaluated against those same commits count — rows about an older head
+of a rewritten branch are kept on disk and in [`EvaluationLog.rows`](#mergeset.log.EvaluationLog.rows), and
+simply not matched (i2mint/mergeset#23).
+
 ### Functions
 
 | [`sets_evaluated`](#mergeset.log.sets_evaluated)(log)   | Yield `(sorted ids, verdict)` for every row — handy for reports.   |
@@ -20,25 +26,35 @@ being silently trusted.
 
 ### Classes
 
-| [`EvaluationLog`](#mergeset.log.EvaluationLog)([store])           | Append-only record of evaluations, plus the monotone closure over it.                                 |
-|-----------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-| [`JsonlLines`](#mergeset.log.JsonlLines)(path)                 | Append-only sequence of JSON objects backed by one file.                                              |
-| [`Known`](#mergeset.log.Known)(verdict[, exact, witness]) | What the log already knows about a set, without re-evaluating it.                                     |
-| [`MemoryLines`](#mergeset.log.MemoryLines)([iterable])          | In-memory stand-in for [`JsonlLines`](#mergeset.log.JsonlLines) (tests, dry runs). |
-| [`StoreLines`](#mergeset.log.StoreLines)(store, key)           | Lines backed by one key of a `MutableMapping` — the non-file backend.                                 |
+| [`EvaluationLog`](#mergeset.log.EvaluationLog)([store, pins, trust_unpinned])   | Append-only record of evaluations, plus the monotone closure over it.                                 |
+|-------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| [`JsonlLines`](#mergeset.log.JsonlLines)(path)                               | Append-only sequence of JSON objects backed by one file.                                              |
+| [`Known`](#mergeset.log.Known)(verdict[, exact, witness])               | What the log already knows about a set, without re-evaluating it.                                     |
+| [`MemoryLines`](#mergeset.log.MemoryLines)([iterable])                        | In-memory stand-in for [`JsonlLines`](#mergeset.log.JsonlLines) (tests, dry runs). |
+| [`Pins`](#mergeset.log.Pins)(base, heads)                              | The commits a question is about: the base, and each change's head sha.                                |
+| [`StoreLines`](#mergeset.log.StoreLines)(store, key)                         | Lines backed by one key of a `MutableMapping` — the non-file backend.                                 |
 
-### *class* mergeset.log.EvaluationLog(store=None)
+### *class* mergeset.log.EvaluationLog(store=None, , pins=None, trust_unpinned=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Append-only record of evaluations, plus the monotone closure over it.
 
 * **Parameters:**
-  **store** ([`Any`](https://docs.python.org/3/library/typing.html#typing.Any)) – Persistence seam. A path (str/PathLike) is wrapped in
-  [`JsonlLines`](#mergeset.log.JsonlLines); pass [`StoreLines`](#mergeset.log.StoreLines) to put the log in an
-  artifact store (S3 and friends), or [`MemoryLines`](#mergeset.log.MemoryLines) for an
-  ephemeral log. With no argument at all the log goes to the artifact
-  store’s `evaluations/adhoc.jsonl` — never the working directory.
+  * **store** ([`Any`](https://docs.python.org/3/library/typing.html#typing.Any)) – Persistence seam. A path (str/PathLike) is wrapped in
+    [`JsonlLines`](#mergeset.log.JsonlLines); pass [`StoreLines`](#mergeset.log.StoreLines) to put the log in an
+    artifact store (S3 and friends), or [`MemoryLines`](#mergeset.log.MemoryLines) for an
+    ephemeral log. With no argument at all the log goes to the artifact
+    store’s `evaluations/adhoc.jsonl` — never the working directory.
+  * **pins** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Pins`](#mergeset.log.Pins)]) – The commits the questions are about (see [`Pins`](#mergeset.log.Pins) and
+    [`pin()`](#mergeset.log.EvaluationLog.pin)). Unpinned, every row counts, as before pinning existed;
+    [`mergeset.analyze()`](mergeset.md#mergeset.analyze) always pins.
+  * **trust_unpinned** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Let rows that record no commits at all (written before
+    i2mint/mergeset#23, or by an unpinned log) count as matches once the
+    log is pinned. Off by default, because such a row may be about a head
+    that has since moved — which is the defect pinning exists to close.
+    Turn it on only when you know the heads have not moved since those
+    rows were written; it is the migration path for an old log.
 
 ```pycon
 >>> log = EvaluationLog(MemoryLines())
@@ -117,12 +133,84 @@ another. Reported, never silently smoothed over.
 
 Sets recorded as good, largest first.
 
+#### pin(, base, heads)
+
+Scope *this* log to `base` and these heads; returns `self`.
+
+[`pinned()`](#mergeset.log.EvaluationLog.pinned) is the same without changing this object.
+
+From here on, reading ([`known()`](#mergeset.log.EvaluationLog.known), [`exact()`](#mergeset.log.EvaluationLog.exact), the closure,
+iteration, `len`) sees only rows evaluated against these commits, and
+[`record()`](#mergeset.log.EvaluationLog.record) stamps new rows with them. Nothing is removed: the other
+rows stay in the store and in [`rows`](#mergeset.log.EvaluationLog.rows), and are reported by
+[`stale`](#mergeset.log.EvaluationLog.stale) and [`unpinned`](#mergeset.log.EvaluationLog.unpinned).
+
+* **Return type:**
+  [`EvaluationLog`](#mergeset.log.EvaluationLog)
+
+```pycon
+>>> from mergeset.base import Evaluation, Verdict
+>>> log = EvaluationLog(MemoryLines()).pin(base='B', heads={'a': 'A1'})
+>>> _ = log.record(Evaluation(frozenset('a'), Verdict.PASS))
+>>> log.known(frozenset('a')).verdict.value
+'pass'
+>>> _ = log.pin(base='B', heads={'a': 'A2'})   # branch a was rewritten
+>>> log.known(frozenset('a')).verdict is None, len(log.rows), len(log.stale)
+(True, 1, 1)
+```
+
+#### pinned(, base, heads, trust_unpinned=None)
+
+A view of this log scoped to `base` and these heads.
+
+Same store, same rows; this log itself is left as it was, so a caller
+that hands one log to two analyses keeps its own view of it.
+
+* **Return type:**
+  [`EvaluationLog`](#mergeset.log.EvaluationLog)
+
+```pycon
+>>> from mergeset.base import Evaluation, Verdict
+>>> log = EvaluationLog(MemoryLines())
+>>> view = log.pinned(base='B', heads={'a': 'A1'})
+>>> _ = view.record(Evaluation(frozenset('a'), Verdict.PASS))
+>>> log.pins is None, len(log), len(view)
+(True, 1, 1)
+>>> len(log.pinned(base='B', heads={'a': 'A2'}))
+0
+```
+
 #### record(evaluation)
 
-Append `evaluation` (stamping `at` if absent) and return it.
+Append `evaluation` and return it.
+
+`at` is stamped if absent, and so are the pinned commits: a row that
+does not say what it was run against cannot be told apart from one
+about a branch that has since been rewritten.
 
 * **Return type:**
   [`Evaluation`](mergeset.base.md#mergeset.base.Evaluation)
+
+#### *property* rows *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](mergeset.base.md#mergeset.base.Evaluation)]*
+
+Every row in the log, matching the pins or not, in log order.
+
+#### *property* stale *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](mergeset.base.md#mergeset.base.Evaluation)]*
+
+Rows evaluated against other commits than the pinned ones.
+
+Not wrong — about a different question — so kept, and not matched.
+
+#### *property* trust_unpinned *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
+
+Whether rows recording no commits count once the log is pinned.
+
+#### *property* unpinned *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](mergeset.base.md#mergeset.base.Evaluation)]*
+
+Rows recording no commits that a pinned log is not counting.
+
+All of them by default; with `trust_unpinned`, only those holding a
+change that is not in play. Empty when the log is unpinned.
 
 ### *class* mergeset.log.JsonlLines(path)
 
@@ -176,6 +264,47 @@ Append object to the end of the list.
 
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### *class* mergeset.log.Pins(base, heads)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The commits a question is about: the base, and each change’s head sha.
+
+A row *matches* when it was merged onto the same base and every change it
+holds is in play with the same head. A row holding a change that is not in
+play does not match: its head for that change is unchecked, and such a row
+would otherwise surface as an “established” set recommending a change
+nobody asked about, or as a monotonicity violation between two heads of it.
+
+```pycon
+>>> from mergeset.base import Evaluation, Verdict
+>>> pins = Pins('B', {'a': 'A1', 'b': 'B1'})
+>>> row = Evaluation(frozenset('ab'), Verdict.PASS,
+...                  base_sha='B', heads={'a': 'A1', 'b': 'B1'})
+>>> pins.matches(row)
+True
+>>> pins.matches(replace(row, heads={'a': 'A0', 'b': 'B1'}))  # a rewritten
+False
+>>> pins.matches(replace(row, base_sha='B0'))                 # base moved
+False
+>>> Pins('B', {'a': 'A1'}).matches(row)          # b is not in play
+False
+```
+
+#### matches(evaluation)
+
+True iff `evaluation` was run against these commits.
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+#### stamp(evaluation)
+
+`evaluation` pinned to these commits (unless it already is).
+
+* **Return type:**
+  [`Evaluation`](mergeset.base.md#mergeset.base.Evaluation)
 
 ### *class* mergeset.log.StoreLines(store, key)
 
