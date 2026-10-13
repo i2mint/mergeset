@@ -17,7 +17,9 @@ A row is an answer about *commits*, not about ids. Once the log is pinned
 ([`EvaluationLog.pin()`](#mergeset.log.EvaluationLog.pin)) to the base and the head of each change in play,
 only rows evaluated against those same commits count — rows about an older head
 of a rewritten branch are kept on disk and in [`EvaluationLog.rows`](#mergeset.log.EvaluationLog.rows), and
-simply not matched (i2mint/mergeset#23).
+simply not matched (i2mint/mergeset#23). The same holds for *what* was run:
+rows judged by another validator (another command, other stages) are kept and
+not matched (i2mint/mergeset#32).
 
 ### Functions
 
@@ -31,7 +33,7 @@ simply not matched (i2mint/mergeset#23).
 | [`JsonlLines`](#mergeset.log.JsonlLines)(path)                               | Append-only sequence of JSON objects backed by one file.                                              |
 | [`Known`](#mergeset.log.Known)(verdict[, exact, witness])               | What the log already knows about a set, without re-evaluating it.                                     |
 | [`MemoryLines`](#mergeset.log.MemoryLines)([iterable])                        | In-memory stand-in for [`JsonlLines`](#mergeset.log.JsonlLines) (tests, dry runs). |
-| [`Pins`](#mergeset.log.Pins)(base, heads)                              | The commits a question is about: the base, and each change's head sha.                                |
+| [`Pins`](#mergeset.log.Pins)(base, heads[, validator])                 | What a question is about: the base, each change's head sha, the validator.                            |
 | [`StoreLines`](#mergeset.log.StoreLines)(store, key)                         | Lines backed by one key of a `MutableMapping` — the non-file backend.                                 |
 
 ### *class* mergeset.log.EvaluationLog(store=None, , pins=None, trust_unpinned=False)
@@ -50,11 +52,14 @@ Append-only record of evaluations, plus the monotone closure over it.
     [`pin()`](#mergeset.log.EvaluationLog.pin)). Unpinned, every row counts, as before pinning existed;
     [`mergeset.analyze()`](mergeset.html.md#mergeset.analyze) always pins.
   * **trust_unpinned** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Let rows that record no commits at all (written before
-    i2mint/mergeset#23, or by an unpinned log) count as matches once the
-    log is pinned. Off by default, because such a row may be about a head
-    that has since moved — which is the defect pinning exists to close.
-    Turn it on only when you know the heads have not moved since those
-    rows were written; it is the migration path for an old log.
+    i2mint/mergeset#23, or by an unpinned log), or no validator while
+    the pins name one (written before i2mint/mergeset#32), count as
+    matches once the log is pinned. Off by default, because such a row
+    may be about a head that has since moved, or judged by a command
+    that has since changed — which is the defect pinning exists to
+    close. Turn it on only when you know neither has changed since those
+    rows were written; it is the migration path for an old log. A row
+    whose recorded commits or validator differ never counts.
 
 ```pycon
 >>> log = EvaluationLog(MemoryLines())
@@ -129,13 +134,23 @@ another. Reported, never silently smoothed over.
 * **Return type:**
   [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset), [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]]
 
+#### *property* other_validator *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](mergeset.base.html.md#mergeset.base.Evaluation)]*
+
+The [`stale`](#mergeset.log.EvaluationLog.stale) rows judged by a validator other than the pinned one.
+
+Usually a tier or `--validate-command` whose command was edited.
+
 #### *property* passing *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[frozenset](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]*
 
 Sets recorded as good, largest first.
 
-#### pin(, base, heads)
+#### pin(, base, heads, validator=None)
 
-Scope *this* log to `base` and these heads; returns `self`.
+Scope *this* log to `base`, these heads and `validator`; returns `self`.
+
+`validator` is the fingerprint of what the questions will be asked of
+([`mergeset.validation.fingerprint_of()`](mergeset.validation.html.md#mergeset.validation.fingerprint_of)); `None` matches rows on
+commits alone.
 
 [`pinned()`](#mergeset.log.EvaluationLog.pinned) is the same without changing this object.
 
@@ -159,9 +174,9 @@ rows stay in the store and in [`rows`](#mergeset.log.EvaluationLog.rows), and ar
 (True, 1, 1)
 ```
 
-#### pinned(, base, heads, trust_unpinned=None)
+#### pinned(, base, heads, validator=None, trust_unpinned=None)
 
-A view of this log scoped to `base` and these heads.
+A view of this log scoped to `base`, these heads and `validator`.
 
 Same store, same rows; this log itself is left as it was, so a caller
 that hands one log to two analyses keeps its own view of it.
@@ -197,7 +212,7 @@ Every row in the log, matching the pins or not, in log order.
 
 #### *property* stale *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](mergeset.base.html.md#mergeset.base.Evaluation)]*
 
-Rows evaluated against other commits than the pinned ones.
+Rows evaluated against other commits, or by another validator.
 
 Not wrong — about a different question — so kept, and not matched.
 
@@ -207,10 +222,12 @@ Whether rows recording no commits count once the log is pinned.
 
 #### *property* unpinned *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](mergeset.base.html.md#mergeset.base.Evaluation)]*
 
-Rows recording no commits that a pinned log is not counting.
+Rows recording too little to match that a pinned log is not counting.
 
-All of them by default; with `trust_unpinned`, only those holding a
-change that is not in play. Empty when the log is unpinned.
+No commits (written before #23), or no validator while the pins name
+one (written before #32). All of them by default; with
+`trust_unpinned`, only those holding a change that is not in play.
+Empty when the log is unpinned.
 
 ### *class* mergeset.log.JsonlLines(path)
 
@@ -265,11 +282,11 @@ Append object to the end of the list.
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-### *class* mergeset.log.Pins(base, heads)
+### *class* mergeset.log.Pins(base, heads, validator=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
-The commits a question is about: the base, and each change’s head sha.
+What a question is about: the base, each change’s head sha, the validator.
 
 A row *matches* when it was merged onto the same base and every change it
 holds is in play with the same head. A row holding a change that is not in
@@ -292,19 +309,59 @@ False
 False
 ```
 
+With a `validator` fingerprint, a row must also have been judged by that
+validator. A row recording none (written before i2mint/mergeset#32) is not
+refuted, only incomplete: see [`EvaluationLog.unpinned`](#mergeset.log.EvaluationLog.unpinned).
+
+```pycon
+>>> pins = Pins('B', {'a': 'A1', 'b': 'B1'}, validator='command:1')
+>>> pins.matches(replace(row, validator='command:1'))
+True
+>>> pins.refutes(replace(row, validator='command:2'))   # the command changed
+True
+>>> pins.matches(row), pins.refutes(row)                # recorded no validator
+(False, False)
+```
+
+#### complete(evaluation)
+
+True iff `evaluation` records everything these pins compare.
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
 #### matches(evaluation)
 
-True iff `evaluation` was run against these commits.
+True iff `evaluation` was run against these commits, by this validator.
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+#### refutes(evaluation)
+
+True iff what `evaluation` records shows it answers another question.
+
+Other commits, or another validator. A row that records too little to
+tell is not refuted – it is incomplete (see [`complete()`](#mergeset.log.Pins.complete)).
 
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 #### stamp(evaluation)
 
-`evaluation` pinned to these commits (unless it already is).
+`evaluation` pinned to these commits and validator, where it is not.
+
+Pins naming no validator stamp [`UNKNOWN_FINGERPRINT`](mergeset.base.html.md#mergeset.base.UNKNOWN_FINGERPRINT),
+never nothing: a row recording no validator reads as written before
+validators were recorded, and `trust_unpinned` would adopt it.
 
 * **Return type:**
   [`Evaluation`](mergeset.base.html.md#mergeset.base.Evaluation)
+
+#### validator *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+Fingerprint of the validator the question is asked of (`'unknown'`
+when it cannot say what it runs). `None` compares no validator at all.
 
 ### *class* mergeset.log.StoreLines(store, key)
 

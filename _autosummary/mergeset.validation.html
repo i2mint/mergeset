@@ -99,6 +99,7 @@ data-aria-dark="Switch to auto color mode">
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#mergeset.validation.DEFAULT_PYTEST_ARGS"><code class="docutils literal notranslate"><span class="pre">DEFAULT_PYTEST_ARGS</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.validation.FINGERPRINT_ATTR"><code class="docutils literal notranslate"><span class="pre">FINGERPRINT_ATTR</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.validation.ValidationStage"><code class="docutils literal notranslate"><span class="pre">ValidationStage</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.validation.act_validation"><code class="docutils literal notranslate"><span class="pre">act_validation()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.validation.callable_validation"><code class="docutils literal notranslate"><span class="pre">callable_validation()</span></code></a></li>
@@ -106,10 +107,12 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#mergeset.validation.command_validation"><code class="docutils literal notranslate"><span class="pre">command_validation()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.validation.detect_runner"><code class="docutils literal notranslate"><span class="pre">detect_runner()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.validation.file_fingerprint"><code class="docutils literal notranslate"><span class="pre">file_fingerprint()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.validation.fingerprint_of"><code class="docutils literal notranslate"><span class="pre">fingerprint_of()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.validation.flake_tolerant"><code class="docutils literal notranslate"><span class="pre">flake_tolerant()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.validation.js_validation"><code class="docutils literal notranslate"><span class="pre">js_validation()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.validation.merge_only_validation"><code class="docutils literal notranslate"><span class="pre">merge_only_validation()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.validation.pytest_validation"><code class="docutils literal notranslate"><span class="pre">pytest_validation()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.validation.recorded_fingerprint"><code class="docutils literal notranslate"><span class="pre">recorded_fingerprint()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.validation.staged_validation"><code class="docutils literal notranslate"><span class="pre">staged_validation()</span></code></a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
@@ -161,12 +164,25 @@ step than a test command.</p>
 which files they live in, how long it took. The solver uses that to aim its
 conflict shrinking at the changes actually implicated, rather than halving
 blindly.</p>
+<p>A validator may also say <em>what</em> it runs: a <code class="docutils literal notranslate"><span class="pre">validator_fingerprint</span></code> attribute,
+a short digest of its command, stages, timeout and environment. Every shipped
+validator carries one, and the evaluation log stamps it on each row, so a row
+recorded by <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-x</span></code> never answers a question asked of <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">e2e</span></code>
+(i2mint/mergeset#32). A user callable has none unless it sets one, since only its
+author knows what changes its verdicts:
+<code class="docutils literal notranslate"><span class="pre">my_validator.validator_fingerprint</span> <span class="pre">=</span> <span class="pre">'smoke-v2'</span></code>. Its rows are stamped
+<code class="xref py py-data docutils literal notranslate"><span class="pre">UNKNOWN_FINGERPRINT</span></code>, which matches only other such rows. A wrapper made
+with <code class="docutils literal notranslate"><span class="pre">functools.wraps</span></code> copies the wrapped validator’s fingerprint along with
+its <code class="docutils literal notranslate"><span class="pre">__dict__</span></code>; a wrapper that changes what is checked must set its own.</p>
 <p class="rubric">Module Attributes</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.validation.DEFAULT_PYTEST_ARGS" title="mergeset.validation.DEFAULT_PYTEST_ARGS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_PYTEST_ARGS</span></code></a></p></td>
 <td><p>the answer we need is a bit, and the first failure has it.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.validation.FINGERPRINT_ATTR" title="mergeset.validation.FINGERPRINT_ATTR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FINGERPRINT_ATTR</span></code></a></p></td>
+<td><p>The attribute a validator carries to say what it runs (i2mint/mergeset#32).</p></td>
 </tr>
 </tbody>
 </table>
@@ -193,17 +209,23 @@ blindly.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#mergeset.validation.file_fingerprint" title="mergeset.validation.file_fingerprint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">file_fingerprint</span></code></a>(*paths)</p></td>
 <td><p>A fingerprint function over the contents of the given repo-relative files.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.validation.flake_tolerant" title="mergeset.validation.flake_tolerant"><code class="xref py py-obj docutils literal notranslate"><span class="pre">flake_tolerant</span></code></a>(validate, *[, retries])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.validation.fingerprint_of" title="mergeset.validation.fingerprint_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fingerprint_of</span></code></a>(validate)</p></td>
+<td><p>What <code class="docutils literal notranslate"><span class="pre">validate</span></code> runs, as a short string -- or <code class="docutils literal notranslate"><span class="pre">None</span></code> when it cannot say.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.validation.flake_tolerant" title="mergeset.validation.flake_tolerant"><code class="xref py py-obj docutils literal notranslate"><span class="pre">flake_tolerant</span></code></a>(validate, *[, retries])</p></td>
 <td><p>Re-run a failing validation <code class="docutils literal notranslate"><span class="pre">retries</span></code> times before believing it.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.validation.js_validation" title="mergeset.validation.js_validation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">js_validation</span></code></a>(*[, install, build, test, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.validation.js_validation" title="mergeset.validation.js_validation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">js_validation</span></code></a>(*[, install, build, test, ...])</p></td>
 <td><p>A staged validator shaped like a JavaScript project.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.validation.merge_only_validation" title="mergeset.validation.merge_only_validation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_only_validation</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.validation.merge_only_validation" title="mergeset.validation.merge_only_validation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_only_validation</span></code></a>()</p></td>
 <td><p>A validator that accepts anything that merged cleanly.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.validation.pytest_validation" title="mergeset.validation.pytest_validation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pytest_validation</span></code></a>(*[, args, timeout, env, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.validation.pytest_validation" title="mergeset.validation.pytest_validation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pytest_validation</span></code></a>(*[, args, timeout, env, ...])</p></td>
 <td><p>A validator that runs the project's pytest suite, fail-fast by default.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.validation.recorded_fingerprint" title="mergeset.validation.recorded_fingerprint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">recorded_fingerprint</span></code></a>(validate)</p></td>
+<td><p>The fingerprint a log row records for <code class="docutils literal notranslate"><span class="pre">validate</span></code>: never <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.validation.staged_validation" title="mergeset.validation.staged_validation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">staged_validation</span></code></a>(stages, *[, env])</p></td>
 <td><p>Run an ordered list of <a class="reference internal" href="#mergeset.validation.ValidationStage" title="mergeset.validation.ValidationStage"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValidationStage</span></code></a> steps, reporting which one failed.</p></td>
@@ -230,6 +252,12 @@ blindly.</p>
 <dd class="field-odd"><p>Fail-fast by default</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mergeset.validation.FINGERPRINT_ATTR">
+<span class="sig-prename descclassname"><span class="pre">mergeset.validation.</span></span><span class="sig-name descname"><span class="pre">FINGERPRINT_ATTR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'validator_fingerprint'</span></span><a class="headerlink" href="#mergeset.validation.FINGERPRINT_ATTR" title="Link to this definition">#</a></dt>
+<dd><p>The attribute a validator carries to say what it runs (i2mint/mergeset#32).</p>
 </dd></dl>
 
 <dl class="py class">
@@ -341,6 +369,34 @@ directory is not evidence of a language.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="mergeset.validation.fingerprint_of">
+<span class="sig-prename descclassname"><span class="pre">mergeset.validation.</span></span><span class="sig-name descname"><span class="pre">fingerprint_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">validate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/validation.html#fingerprint_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.validation.fingerprint_of" title="Link to this definition">#</a></dt>
+<dd><p>What <code class="docutils literal notranslate"><span class="pre">validate</span></code> runs, as a short string – or <code class="docutils literal notranslate"><span class="pre">None</span></code> when it cannot say.</p>
+<p>Two validators with the same fingerprint give the same verdict on the same
+tree, so an evaluation log may answer one with the other’s rows. <code class="docutils literal notranslate"><span class="pre">None</span></code>
+means unknown: such a validator’s rows are recorded as
+<code class="xref py py-data docutils literal notranslate"><span class="pre">UNKNOWN_FINGERPRINT</span></code> (see <a class="reference internal" href="#mergeset.validation.recorded_fingerprint" title="mergeset.validation.recorded_fingerprint"><code class="xref py py-func docutils literal notranslate"><span class="pre">recorded_fingerprint()</span></code></a>), and answer
+only other validators that cannot say what they run either.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">fingerprint_of</span><span class="p">(</span><span class="n">command_validation</span><span class="p">(</span><span class="s1">'make test'</span><span class="p">))</span> <span class="o">==</span> <span class="n">fingerprint_of</span><span class="p">(</span>
+</span><span data-line="2"><span class="gp">... </span>    <span class="n">command_validation</span><span class="p">(</span><span class="s1">'make test'</span><span class="p">))</span>
+</span><span data-line="3"><span class="go">True</span>
+</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="n">fingerprint_of</span><span class="p">(</span><span class="n">command_validation</span><span class="p">(</span><span class="s1">'make test'</span><span class="p">))</span> <span class="o">==</span> <span class="n">fingerprint_of</span><span class="p">(</span>
+</span><span data-line="5"><span class="gp">... </span>    <span class="n">command_validation</span><span class="p">(</span><span class="s1">'make check'</span><span class="p">))</span>
+</span><span data-line="6"><span class="go">False</span>
+</span><span data-line="7"><span class="gp">&gt;&gt;&gt; </span><span class="n">fingerprint_of</span><span class="p">(</span><span class="n">command_validation</span><span class="p">(</span><span class="s1">'make test'</span><span class="p">))</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'command:'</span><span class="p">)</span>
+</span><span data-line="8"><span class="go">True</span>
+</span><span data-line="9"><span class="gp">&gt;&gt;&gt; </span><span class="n">fingerprint_of</span><span class="p">(</span><span class="k">lambda</span> <span class="n">worktree</span><span class="p">:</span> <span class="kc">True</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+</span><span data-line="10"><span class="go">True</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="mergeset.validation.flake_tolerant">
 <span class="sig-prename descclassname"><span class="pre">mergeset.validation.</span></span><span class="sig-name descname"><span class="pre">flake_tolerant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">validate</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/validation.html#flake_tolerant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.validation.flake_tolerant" title="Link to this definition">#</a></dt>
 <dd><p>Re-run a failing validation <code class="docutils literal notranslate"><span class="pre">retries</span></code> times before believing it.</p>
@@ -404,6 +460,21 @@ each evaluation gets dramatically cheaper. Default: run everything.</p></li>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="mergeset.validation.recorded_fingerprint">
+<span class="sig-prename descclassname"><span class="pre">mergeset.validation.</span></span><span class="sig-name descname"><span class="pre">recorded_fingerprint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">validate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/validation.html#recorded_fingerprint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.validation.recorded_fingerprint" title="Link to this definition">#</a></dt>
+<dd><p>The fingerprint a log row records for <code class="docutils literal notranslate"><span class="pre">validate</span></code>: never <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">recorded_fingerprint</span><span class="p">(</span><span class="k">lambda</span> <span class="n">worktree</span><span class="p">:</span> <span class="kc">True</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">'unknown'</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="mergeset.validation.staged_validation">
 <span class="sig-prename descclassname"><span class="pre">mergeset.validation.</span></span><span class="sig-name descname"><span class="pre">staged_validation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stages</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/validation.html#staged_validation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.validation.staged_validation" title="Link to this definition">#</a></dt>
 <dd><p>Run an ordered list of <a class="reference internal" href="#mergeset.validation.ValidationStage" title="mergeset.validation.ValidationStage"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValidationStage</span></code></a> steps, reporting which one failed.</p>
@@ -464,7 +535,7 @@ log distinguishes <code class="docutils literal notranslate"><span class="pre">b
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=2fd7553c"></script>
+      <script src="../_static/documentation_options.js?v=056c92e6"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

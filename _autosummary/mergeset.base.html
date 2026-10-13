@@ -113,6 +113,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#mergeset.base.Evaluation.ok"><code class="docutils literal notranslate"><span class="pre">Evaluation.ok</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.Evaluation.pinned"><code class="docutils literal notranslate"><span class="pre">Evaluation.pinned</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.Evaluation.to_jdict"><code class="docutils literal notranslate"><span class="pre">Evaluation.to_jdict()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.Evaluation.validator"><code class="docutils literal notranslate"><span class="pre">Evaluation.validator</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#mergeset.base.Evaluator"><code class="docutils literal notranslate"><span class="pre">Evaluator</span></code></a></li>
@@ -129,6 +130,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#mergeset.base.StageRun.to_jdict"><code class="docutils literal notranslate"><span class="pre">StageRun.to_jdict()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#mergeset.base.UNKNOWN_FINGERPRINT"><code class="docutils literal notranslate"><span class="pre">UNKNOWN_FINGERPRINT</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.ValidateFn"><code class="docutils literal notranslate"><span class="pre">ValidateFn</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.ValidationOutcome"><code class="docutils literal notranslate"><span class="pre">ValidationOutcome</span></code></a><ul>
 <li><a class="reference internal" href="#mergeset.base.ValidationOutcome.from_jdict"><code class="docutils literal notranslate"><span class="pre">ValidationOutcome.from_jdict()</span></code></a></li>
@@ -192,10 +194,13 @@ and diffable.</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.base.MergeFn" title="mergeset.base.MergeFn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MergeFn</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.base.UNKNOWN_FINGERPRINT" title="mergeset.base.UNKNOWN_FINGERPRINT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UNKNOWN_FINGERPRINT</span></code></a></p></td>
+<td><p>that is what rows written before fingerprints existed read back as, and the migration switch (<code class="docutils literal notranslate"><span class="pre">trust_unpinned</span></code>) must not adopt today's rows from an unknown validator as if they were old rows from a known one (#32).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.base.MergeFn" title="mergeset.base.MergeFn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MergeFn</span></code></a></p></td>
 <td><p>(changes to merge, in order) -&gt; outcome + a tree to validate.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.base.ValidateFn" title="mergeset.base.ValidateFn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ValidateFn</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.base.ValidateFn" title="mergeset.base.ValidateFn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ValidateFn</span></code></a></p></td>
 <td><p>(path to a merged worktree) -&gt; outcome.</p></td>
 </tr>
 </tbody>
@@ -326,7 +331,7 @@ changes it can when it must drop something, so a high weight means
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mergeset.base.Evaluation">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">Evaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_sha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Evaluation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.Evaluation" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">Evaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_sha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Evaluation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.Evaluation" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>One row of the evaluation log — the single source of truth.</p>
 <p>Everything else (conflict set, known-good/known-bad closure, merge plan,
@@ -336,7 +341,9 @@ reports) is <em>derived</em> from a sequence of these and is re-derivable.</p>
 written before a branch was rewritten is never mistaken for an answer about
 the rewritten branch (i2mint/mergeset#23). Rows written before pinning
 existed carry neither and read back as <em>unpinned</em>; see
-<a class="reference internal" href="mergeset.log.html#mergeset.log.EvaluationLog" title="mergeset.log.EvaluationLog"><code class="xref py py-class docutils literal notranslate"><span class="pre">mergeset.log.EvaluationLog</span></code></a>.</p>
+<a class="reference internal" href="mergeset.log.html#mergeset.log.EvaluationLog" title="mergeset.log.EvaluationLog"><code class="xref py py-class docutils literal notranslate"><span class="pre">mergeset.log.EvaluationLog</span></code></a>. <code class="docutils literal notranslate"><span class="pre">validator</span></code> pins it to what was run
+on that tree, the same way (i2mint/mergeset#32): the same commits under a
+different test command are a different question.</p>
 <dl class="field-list simple">
 </dl>
 <dl class="py attribute">
@@ -390,6 +397,14 @@ serialized: it is a fact about <em>this</em> lookup, not about the evaluation.</
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.base.Evaluation.validator">
+<span class="sig-name descname"><span class="pre">validator</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.base.Evaluation.validator" title="Link to this definition">#</a></dt>
+<dd><p>Fingerprint of the validator that judged the tree (see
+<a class="reference internal" href="mergeset.validation.html#mergeset.validation.fingerprint_of" title="mergeset.validation.fingerprint_of"><code class="xref py py-func docutils literal notranslate"><span class="pre">mergeset.validation.fingerprint_of()</span></code></a>). <code class="docutils literal notranslate"><span class="pre">None</span></code> on rows written
+before fingerprints, and on rows judged by a validator that has none.</p>
 </dd></dl>
 
 </dd></dl>
@@ -498,6 +513,20 @@ cannot show it cannot confirm it (i2mint/mergeset#17).</p>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mergeset.base.UNKNOWN_FINGERPRINT">
+<span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">UNKNOWN_FINGERPRINT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'unknown'</span></span><a class="headerlink" href="#mergeset.base.UNKNOWN_FINGERPRINT" title="Link to this definition">#</a></dt>
+<dd><p>that
+is what rows written before fingerprints existed read back as, and the
+migration switch (<code class="docutils literal notranslate"><span class="pre">trust_unpinned</span></code>) must not adopt today’s rows from an
+unknown validator as if they were old rows from a known one (#32).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>What a row records when its validator had no fingerprint. Not <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py data">
@@ -644,7 +673,7 @@ single-command one and on rows written before stages were recorded.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=2fd7553c"></script>
+      <script src="../_static/documentation_options.js?v=056c92e6"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

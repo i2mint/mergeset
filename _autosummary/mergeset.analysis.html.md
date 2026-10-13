@@ -134,10 +134,12 @@ Find the maximal sets of `changes` that merge and validate on `base`.
     to `<artifact root>/evaluations/<repo-slug>.jsonl` (see
     [`mergeset.storage`](mergeset.storage.html.md#module-mergeset.storage)), *outside* the analysed repository. Reusing
     an existing one makes a re-run nearly free. Only rows evaluated
-    against the same base and heads are reused (see ADR 0028).
+    against the same base and heads, by the same validator, are reused
+    (see ADR 0028 and [`mergeset.validation.fingerprint_of()`](mergeset.validation.html.md#mergeset.validation.fingerprint_of)).
   * **trust_unpinned** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool)]) – Reuse log rows written before rows recorded their
-    commits (an old log). Default: the log’s own setting, which is off.
-    Only when the heads have not moved since those rows were written.
+    commits or their validator (an old log). Default: the log’s own
+    setting, which is off. Only when neither the heads nor the
+    validator have changed since those rows were written.
   * **weight** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`Change`](mergeset.base.html.md#mergeset.base.Change)], [`float`](https://docs.python.org/3/builtins/functions.html#float)]]) – `Change -> cost of dropping it`; default is size-based.
   * **pairwise_preoracle** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Use `git merge-tree` to find textual conflicts for
     free before spending any evaluation.

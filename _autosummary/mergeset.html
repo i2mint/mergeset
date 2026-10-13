@@ -149,6 +149,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#mergeset.Evaluation.ok"><code class="docutils literal notranslate"><span class="pre">Evaluation.ok</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.Evaluation.pinned"><code class="docutils literal notranslate"><span class="pre">Evaluation.pinned</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.Evaluation.to_jdict"><code class="docutils literal notranslate"><span class="pre">Evaluation.to_jdict()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.Evaluation.validator"><code class="docutils literal notranslate"><span class="pre">Evaluation.validator</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#mergeset.EvaluationLog"><code class="docutils literal notranslate"><span class="pre">EvaluationLog</span></code></a><ul>
@@ -159,6 +160,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#mergeset.EvaluationLog.maximal_passing_sets"><code class="docutils literal notranslate"><span class="pre">EvaluationLog.maximal_passing_sets()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.EvaluationLog.minimal_failing_sets"><code class="docutils literal notranslate"><span class="pre">EvaluationLog.minimal_failing_sets()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.EvaluationLog.monotonicity_violations"><code class="docutils literal notranslate"><span class="pre">EvaluationLog.monotonicity_violations()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.EvaluationLog.other_validator"><code class="docutils literal notranslate"><span class="pre">EvaluationLog.other_validator</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.EvaluationLog.passing"><code class="docutils literal notranslate"><span class="pre">EvaluationLog.passing</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.EvaluationLog.pin"><code class="docutils literal notranslate"><span class="pre">EvaluationLog.pin()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.EvaluationLog.pinned"><code class="docutils literal notranslate"><span class="pre">EvaluationLog.pinned()</span></code></a></li>
@@ -949,7 +951,7 @@ provider’s historical timings.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mergeset.Evaluation">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.</span></span><span class="sig-name descname"><span class="pre">Evaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_sha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Evaluation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.Evaluation" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.</span></span><span class="sig-name descname"><span class="pre">Evaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_sha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Evaluation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.Evaluation" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>One row of the evaluation log — the single source of truth.</p>
 <p>Everything else (conflict set, known-good/known-bad closure, merge plan,
@@ -959,7 +961,9 @@ reports) is <em>derived</em> from a sequence of these and is re-derivable.</p>
 written before a branch was rewritten is never mistaken for an answer about
 the rewritten branch (i2mint/mergeset#23). Rows written before pinning
 existed carry neither and read back as <em>unpinned</em>; see
-<a class="reference internal" href="mergeset.log.html#mergeset.log.EvaluationLog" title="mergeset.log.EvaluationLog"><code class="xref py py-class docutils literal notranslate"><span class="pre">mergeset.log.EvaluationLog</span></code></a>.</p>
+<a class="reference internal" href="mergeset.log.html#mergeset.log.EvaluationLog" title="mergeset.log.EvaluationLog"><code class="xref py py-class docutils literal notranslate"><span class="pre">mergeset.log.EvaluationLog</span></code></a>. <code class="docutils literal notranslate"><span class="pre">validator</span></code> pins it to what was run
+on that tree, the same way (i2mint/mergeset#32): the same commits under a
+different test command are a different question.</p>
 <dl class="field-list simple">
 </dl>
 <dl class="py attribute">
@@ -1015,6 +1019,14 @@ serialized: it is a fact about <em>this</em> lookup, not about the evaluation.</
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.Evaluation.validator">
+<span class="sig-name descname"><span class="pre">validator</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.Evaluation.validator" title="Link to this definition">#</a></dt>
+<dd><p>Fingerprint of the validator that judged the tree (see
+<a class="reference internal" href="mergeset.validation.html#mergeset.validation.fingerprint_of" title="mergeset.validation.fingerprint_of"><code class="xref py py-func docutils literal notranslate"><span class="pre">mergeset.validation.fingerprint_of()</span></code></a>). <code class="docutils literal notranslate"><span class="pre">None</span></code> on rows written
+before fingerprints, and on rows judged by a validator that has none.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -1034,11 +1046,14 @@ store’s <code class="docutils literal notranslate"><span class="pre">evaluatio
 <a class="reference internal" href="#mergeset.EvaluationLog.pin" title="mergeset.EvaluationLog.pin"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pin()</span></code></a>). Unpinned, every row counts, as before pinning existed;
 <a class="reference internal" href="#mergeset.analyze" title="mergeset.analyze"><code class="xref py py-func docutils literal notranslate"><span class="pre">mergeset.analyze()</span></code></a> always pins.</p></li>
 <li><p><strong>trust_unpinned</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Let rows that record no commits at all (written before
-i2mint/mergeset#23, or by an unpinned log) count as matches once the
-log is pinned. Off by default, because such a row may be about a head
-that has since moved — which is the defect pinning exists to close.
-Turn it on only when you know the heads have not moved since those
-rows were written; it is the migration path for an old log.</p></li>
+i2mint/mergeset#23, or by an unpinned log), or no validator while
+the pins name one (written before i2mint/mergeset#32), count as
+matches once the log is pinned. Off by default, because such a row
+may be about a head that has since moved, or judged by a command
+that has since changed — which is the defect pinning exists to
+close. Turn it on only when you know neither has changed since those
+rows were written; it is the migration path for an old log. A row
+whose recorded commits or validator differ never counts.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1137,6 +1152,13 @@ another. Reported, never silently smoothed over.</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="mergeset.EvaluationLog.other_validator">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">other_validator</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="mergeset.base.html#mergeset.base.Evaluation" title="mergeset.base.Evaluation"><span class="pre">Evaluation</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#mergeset.EvaluationLog.other_validator" title="Link to this definition">#</a></dt>
+<dd><p>The <a class="reference internal" href="#mergeset.EvaluationLog.stale" title="mergeset.EvaluationLog.stale"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stale</span></code></a> rows judged by a validator other than the pinned one.</p>
+<p>Usually a tier or <code class="docutils literal notranslate"><span class="pre">--validate-command</span></code> whose command was edited.</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="mergeset.EvaluationLog.passing">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">passing</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#frozenset" title="(in Python v3.15)"><span class="pre">frozenset</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#mergeset.EvaluationLog.passing" title="Link to this definition">#</a></dt>
 <dd><p>Sets recorded as good, largest first.</p>
@@ -1144,8 +1166,11 @@ another. Reported, never silently smoothed over.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mergeset.EvaluationLog.pin">
-<span class="sig-name descname"><span class="pre">pin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/log.html#EvaluationLog.pin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.EvaluationLog.pin" title="Link to this definition">#</a></dt>
-<dd><p>Scope <em>this</em> log to <code class="docutils literal notranslate"><span class="pre">base</span></code> and these heads; returns <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+<span class="sig-name descname"><span class="pre">pin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/log.html#EvaluationLog.pin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.EvaluationLog.pin" title="Link to this definition">#</a></dt>
+<dd><p>Scope <em>this</em> log to <code class="docutils literal notranslate"><span class="pre">base</span></code>, these heads and <code class="docutils literal notranslate"><span class="pre">validator</span></code>; returns <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">validator</span></code> is the fingerprint of what the questions will be asked of
+(<a class="reference internal" href="mergeset.validation.html#mergeset.validation.fingerprint_of" title="mergeset.validation.fingerprint_of"><code class="xref py py-func docutils literal notranslate"><span class="pre">mergeset.validation.fingerprint_of()</span></code></a>); <code class="docutils literal notranslate"><span class="pre">None</span></code> matches rows on
+commits alone.</p>
 <p><a class="reference internal" href="#mergeset.EvaluationLog.pinned" title="mergeset.EvaluationLog.pinned"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pinned()</span></code></a> is the same without changing this object.</p>
 <p>From here on, reading (<a class="reference internal" href="#mergeset.EvaluationLog.known" title="mergeset.EvaluationLog.known"><code class="xref py py-meth docutils literal notranslate"><span class="pre">known()</span></code></a>, <a class="reference internal" href="#mergeset.EvaluationLog.exact" title="mergeset.EvaluationLog.exact"><code class="xref py py-meth docutils literal notranslate"><span class="pre">exact()</span></code></a>, the closure,
 iteration, <code class="docutils literal notranslate"><span class="pre">len</span></code>) sees only rows evaluated against these commits, and
@@ -1171,8 +1196,8 @@ rows stay in the store and in <a class="reference internal" href="#mergeset.Eval
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mergeset.EvaluationLog.pinned">
-<span class="sig-name descname"><span class="pre">pinned</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trust_unpinned</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/log.html#EvaluationLog.pinned"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.EvaluationLog.pinned" title="Link to this definition">#</a></dt>
-<dd><p>A view of this log scoped to <code class="docutils literal notranslate"><span class="pre">base</span></code> and these heads.</p>
+<span class="sig-name descname"><span class="pre">pinned</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trust_unpinned</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/log.html#EvaluationLog.pinned"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.EvaluationLog.pinned" title="Link to this definition">#</a></dt>
+<dd><p>A view of this log scoped to <code class="docutils literal notranslate"><span class="pre">base</span></code>, these heads and <code class="docutils literal notranslate"><span class="pre">validator</span></code>.</p>
 <p>Same store, same rows; this log itself is left as it was, so a caller
 that hands one log to two analyses keeps its own view of it.</p>
 <dl class="field-list simple">
@@ -1215,7 +1240,7 @@ about a branch that has since been rewritten.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="mergeset.EvaluationLog.stale">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">stale</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="mergeset.base.html#mergeset.base.Evaluation" title="mergeset.base.Evaluation"><span class="pre">Evaluation</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#mergeset.EvaluationLog.stale" title="Link to this definition">#</a></dt>
-<dd><p>Rows evaluated against other commits than the pinned ones.</p>
+<dd><p>Rows evaluated against other commits, or by another validator.</p>
 <p>Not wrong — about a different question — so kept, and not matched.</p>
 </dd></dl>
 
@@ -1228,9 +1253,11 @@ about a branch that has since been rewritten.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="mergeset.EvaluationLog.unpinned">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">unpinned</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="mergeset.base.html#mergeset.base.Evaluation" title="mergeset.base.Evaluation"><span class="pre">Evaluation</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#mergeset.EvaluationLog.unpinned" title="Link to this definition">#</a></dt>
-<dd><p>Rows recording no commits that a pinned log is not counting.</p>
-<p>All of them by default; with <code class="docutils literal notranslate"><span class="pre">trust_unpinned</span></code>, only those holding a
-change that is not in play. Empty when the log is unpinned.</p>
+<dd><p>Rows recording too little to match that a pinned log is not counting.</p>
+<p>No commits (written before #23), or no validator while the pins name
+one (written before #32). All of them by default; with
+<code class="docutils literal notranslate"><span class="pre">trust_unpinned</span></code>, only those holding a change that is not in play.
+Empty when the log is unpinned.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1838,10 +1865,12 @@ change. Default: local files under <code class="docutils literal notranslate"><s
 to <code class="docutils literal notranslate"><span class="pre">&lt;artifact</span> <span class="pre">root&gt;/evaluations/&lt;repo-slug&gt;.jsonl</span></code> (see
 <a class="reference internal" href="mergeset.storage.html#module-mergeset.storage" title="mergeset.storage"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mergeset.storage</span></code></a>), <em>outside</em> the analysed repository. Reusing
 an existing one makes a re-run nearly free. Only rows evaluated
-against the same base and heads are reused (see ADR 0028).</p></li>
+against the same base and heads, by the same validator, are reused
+(see ADR 0028 and <a class="reference internal" href="mergeset.validation.html#mergeset.validation.fingerprint_of" title="mergeset.validation.fingerprint_of"><code class="xref py py-func docutils literal notranslate"><span class="pre">mergeset.validation.fingerprint_of()</span></code></a>).</p></li>
 <li><p><strong>trust_unpinned</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]</span>) – Reuse log rows written before rows recorded their
-commits (an old log). Default: the log’s own setting, which is off.
-Only when the heads have not moved since those rows were written.</p></li>
+commits or their validator (an old log). Default: the log’s own
+setting, which is off. Only when neither the heads nor the
+validator have changed since those rows were written.</p></li>
 <li><p><strong>weight</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference internal" href="mergeset.base.html#mergeset.base.Change" title="mergeset.base.Change"><code class="xref py py-class docutils literal notranslate"><span class="pre">Change</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]]</span>) – <code class="docutils literal notranslate"><span class="pre">Change</span> <span class="pre">-&gt;</span> <span class="pre">cost</span> <span class="pre">of</span> <span class="pre">dropping</span> <span class="pre">it</span></code>; default is size-based.</p></li>
 <li><p><strong>pairwise_preoracle</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Use <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge-tree</span></code> to find textual conflicts for
 free before spending any evaluation.</p></li>
@@ -3237,7 +3266,7 @@ exists to prevent — so both halves of the key are slugified.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=2fd7553c"></script>
+      <script src="../_static/documentation_options.js?v=056c92e6"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

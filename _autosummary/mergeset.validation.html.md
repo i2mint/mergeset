@@ -13,10 +13,22 @@ which files they live in, how long it took. The solver uses that to aim its
 conflict shrinking at the changes actually implicated, rather than halving
 blindly.
 
+A validator may also say *what* it runs: a `validator_fingerprint` attribute,
+a short digest of its command, stages, timeout and environment. Every shipped
+validator carries one, and the evaluation log stamps it on each row, so a row
+recorded by `pytest -x` never answers a question asked of `pytest -m e2e`
+(i2mint/mergeset#32). A user callable has none unless it sets one, since only its
+author knows what changes its verdicts:
+`my_validator.validator_fingerprint = 'smoke-v2'`. Its rows are stamped
+`UNKNOWN_FINGERPRINT`, which matches only other such rows. A wrapper made
+with `functools.wraps` copies the wrapped validator’s fingerprint along with
+its `__dict__`; a wrapper that changes what is checked must set its own.
+
 ### Module Attributes
 
-| [`DEFAULT_PYTEST_ARGS`](#mergeset.validation.DEFAULT_PYTEST_ARGS)   | the answer we need is a bit, and the first failure has it.   |
-|------------------------------------------------------------------------|--------------------------------------------------------------|
+| [`DEFAULT_PYTEST_ARGS`](#mergeset.validation.DEFAULT_PYTEST_ARGS)   | the answer we need is a bit, and the first failure has it.                  |
+|------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| [`FINGERPRINT_ATTR`](#mergeset.validation.FINGERPRINT_ATTR)      | The attribute a validator carries to say what it runs (i2mint/mergeset#32). |
 
 ### Functions
 
@@ -27,10 +39,12 @@ blindly.
 | [`command_validation`](#mergeset.validation.command_validation)(command, \*[, timeout, env])  | A validator that runs an arbitrary shell command in the merged worktree.                                                   |
 | [`detect_runner`](#mergeset.validation.detect_runner)(path)                              | Guess how this project is tested; `None` if nothing is recognizable.                                                       |
 | [`file_fingerprint`](#mergeset.validation.file_fingerprint)(\*paths)                        | A fingerprint function over the contents of the given repo-relative files.                                                 |
+| [`fingerprint_of`](#mergeset.validation.fingerprint_of)(validate)                         | What `validate` runs, as a short string -- or `None` when it cannot say.                                                   |
 | [`flake_tolerant`](#mergeset.validation.flake_tolerant)(validate, \*[, retries])          | Re-run a failing validation `retries` times before believing it.                                                           |
 | [`js_validation`](#mergeset.validation.js_validation)(\*[, install, build, test, ...])   | A staged validator shaped like a JavaScript project.                                                                       |
 | [`merge_only_validation`](#mergeset.validation.merge_only_validation)()                          | A validator that accepts anything that merged cleanly.                                                                     |
 | [`pytest_validation`](#mergeset.validation.pytest_validation)(\*[, args, timeout, env, ...]) | A validator that runs the project's pytest suite, fail-fast by default.                                                    |
+| [`recorded_fingerprint`](#mergeset.validation.recorded_fingerprint)(validate)                   | The fingerprint a log row records for `validate`: never `None`.                                                            |
 | [`staged_validation`](#mergeset.validation.staged_validation)(stages, \*[, env])             | Run an ordered list of [`ValidationStage`](#mergeset.validation.ValidationStage) steps, reporting which one failed. |
 
 ### Classes
@@ -44,6 +58,10 @@ the answer we need is a bit, and the first failure has it.
 
 * **Type:**
   Fail-fast by default
+
+### mergeset.validation.FINGERPRINT_ATTR *= 'validator_fingerprint'*
+
+The attribute a validator carries to say what it runs (i2mint/mergeset#32).
 
 ### *class* mergeset.validation.ValidationStage(name, command, fingerprint=None, timeout=None, required=True)
 
@@ -128,6 +146,32 @@ The canonical use is a lockfile: install dependencies again only when
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
+### mergeset.validation.fingerprint_of(validate)
+
+What `validate` runs, as a short string – or `None` when it cannot say.
+
+Two validators with the same fingerprint give the same verdict on the same
+tree, so an evaluation log may answer one with the other’s rows. `None`
+means unknown: such a validator’s rows are recorded as
+`UNKNOWN_FINGERPRINT` (see [`recorded_fingerprint()`](#mergeset.validation.recorded_fingerprint)), and answer
+only other validators that cannot say what they run either.
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+```pycon
+>>> fingerprint_of(command_validation('make test')) == fingerprint_of(
+...     command_validation('make test'))
+True
+>>> fingerprint_of(command_validation('make test')) == fingerprint_of(
+...     command_validation('make check'))
+False
+>>> fingerprint_of(command_validation('make test')).startswith('command:')
+True
+>>> fingerprint_of(lambda worktree: True) is None
+True
+```
+
 ### mergeset.validation.flake_tolerant(validate, , retries=1)
 
 Re-run a failing validation `retries` times before believing it.
@@ -174,6 +218,18 @@ A validator that runs the project’s pytest suite, fail-fast by default.
     each evaluation gets dramatically cheaper. Default: run everything.
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](mergeset.base.html.md#mergeset.base.ValidationOutcome)]
+
+### mergeset.validation.recorded_fingerprint(validate)
+
+The fingerprint a log row records for `validate`: never `None`.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> recorded_fingerprint(lambda worktree: True)
+'unknown'
+```
 
 ### mergeset.validation.staged_validation(stages, , env=None)
 

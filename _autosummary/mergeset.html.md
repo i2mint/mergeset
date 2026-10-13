@@ -381,7 +381,7 @@ Upper estimate, in seconds. Used to *admit* work against a budget.
 * **Return type:**
   [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
-### *class* mergeset.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, cached=False)
+### *class* mergeset.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, validator=None, cached=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -395,7 +395,9 @@ A row is about the commits that were actually merged, not about the ids:
 written before a branch was rewritten is never mistaken for an answer about
 the rewritten branch (i2mint/mergeset#23). Rows written before pinning
 existed carry neither and read back as *unpinned*; see
-[`mergeset.log.EvaluationLog`](mergeset.log.html.md#mergeset.log.EvaluationLog).
+[`mergeset.log.EvaluationLog`](mergeset.log.html.md#mergeset.log.EvaluationLog). `validator` pins it to what was run
+on that tree, the same way (i2mint/mergeset#32): the same commits under a
+different test command are a different question.
 
 #### base_sha *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
 
@@ -432,6 +434,12 @@ JSON-able view; `subset` becomes a sorted list.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
+#### validator *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+Fingerprint of the validator that judged the tree (see
+[`mergeset.validation.fingerprint_of()`](mergeset.validation.html.md#mergeset.validation.fingerprint_of)). `None` on rows written
+before fingerprints, and on rows judged by a validator that has none.
+
 ### *class* mergeset.EvaluationLog(store=None, , pins=None, trust_unpinned=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
@@ -448,11 +456,14 @@ Append-only record of evaluations, plus the monotone closure over it.
     [`pin()`](#mergeset.EvaluationLog.pin)). Unpinned, every row counts, as before pinning existed;
     [`mergeset.analyze()`](#mergeset.analyze) always pins.
   * **trust_unpinned** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Let rows that record no commits at all (written before
-    i2mint/mergeset#23, or by an unpinned log) count as matches once the
-    log is pinned. Off by default, because such a row may be about a head
-    that has since moved — which is the defect pinning exists to close.
-    Turn it on only when you know the heads have not moved since those
-    rows were written; it is the migration path for an old log.
+    i2mint/mergeset#23, or by an unpinned log), or no validator while
+    the pins name one (written before i2mint/mergeset#32), count as
+    matches once the log is pinned. Off by default, because such a row
+    may be about a head that has since moved, or judged by a command
+    that has since changed — which is the defect pinning exists to
+    close. Turn it on only when you know neither has changed since those
+    rows were written; it is the migration path for an old log. A row
+    whose recorded commits or validator differ never counts.
 
 ```pycon
 >>> log = EvaluationLog(MemoryLines())
@@ -527,13 +538,23 @@ another. Reported, never silently smoothed over.
 * **Return type:**
   [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset), [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]]
 
+#### *property* other_validator *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](mergeset.base.html.md#mergeset.base.Evaluation)]*
+
+The [`stale`](#mergeset.EvaluationLog.stale) rows judged by a validator other than the pinned one.
+
+Usually a tier or `--validate-command` whose command was edited.
+
 #### *property* passing *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[frozenset](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]*
 
 Sets recorded as good, largest first.
 
-#### pin(, base, heads)
+#### pin(, base, heads, validator=None)
 
-Scope *this* log to `base` and these heads; returns `self`.
+Scope *this* log to `base`, these heads and `validator`; returns `self`.
+
+`validator` is the fingerprint of what the questions will be asked of
+([`mergeset.validation.fingerprint_of()`](mergeset.validation.html.md#mergeset.validation.fingerprint_of)); `None` matches rows on
+commits alone.
 
 [`pinned()`](#mergeset.EvaluationLog.pinned) is the same without changing this object.
 
@@ -557,9 +578,9 @@ rows stay in the store and in [`rows`](#mergeset.EvaluationLog.rows), and are re
 (True, 1, 1)
 ```
 
-#### pinned(, base, heads, trust_unpinned=None)
+#### pinned(, base, heads, validator=None, trust_unpinned=None)
 
-A view of this log scoped to `base` and these heads.
+A view of this log scoped to `base`, these heads and `validator`.
 
 Same store, same rows; this log itself is left as it was, so a caller
 that hands one log to two analyses keeps its own view of it.
@@ -595,7 +616,7 @@ Every row in the log, matching the pins or not, in log order.
 
 #### *property* stale *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](mergeset.base.html.md#mergeset.base.Evaluation)]*
 
-Rows evaluated against other commits than the pinned ones.
+Rows evaluated against other commits, or by another validator.
 
 Not wrong — about a different question — so kept, and not matched.
 
@@ -605,10 +626,12 @@ Whether rows recording no commits count once the log is pinned.
 
 #### *property* unpinned *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](mergeset.base.html.md#mergeset.base.Evaluation)]*
 
-Rows recording no commits that a pinned log is not counting.
+Rows recording too little to match that a pinned log is not counting.
 
-All of them by default; with `trust_unpinned`, only those holding a
-change that is not in play. Empty when the log is unpinned.
+No commits (written before #23), or no validator while the pins name
+one (written before #32). All of them by default; with
+`trust_unpinned`, only those holding a change that is not in play.
+Empty when the log is unpinned.
 
 ### *class* mergeset.JsonlLines(path)
 
@@ -1100,10 +1123,12 @@ Find the maximal sets of `changes` that merge and validate on `base`.
     to `<artifact root>/evaluations/<repo-slug>.jsonl` (see
     [`mergeset.storage`](mergeset.storage.html.md#module-mergeset.storage)), *outside* the analysed repository. Reusing
     an existing one makes a re-run nearly free. Only rows evaluated
-    against the same base and heads are reused (see ADR 0028).
+    against the same base and heads, by the same validator, are reused
+    (see ADR 0028 and [`mergeset.validation.fingerprint_of()`](mergeset.validation.html.md#mergeset.validation.fingerprint_of)).
   * **trust_unpinned** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool)]) – Reuse log rows written before rows recorded their
-    commits (an old log). Default: the log’s own setting, which is off.
-    Only when the heads have not moved since those rows were written.
+    commits or their validator (an old log). Default: the log’s own
+    setting, which is off. Only when neither the heads nor the
+    validator have changed since those rows were written.
   * **weight** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`Change`](mergeset.base.html.md#mergeset.base.Change)], [`float`](https://docs.python.org/3/builtins/functions.html#float)]]) – `Change -> cost of dropping it`; default is size-based.
   * **pairwise_preoracle** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Use `git merge-tree` to find textual conflicts for
     free before spending any evaluation.

@@ -1,4 +1,4 @@
-> built 2026-10-13 08:09 UTC from 0933305 (main) · mergeset 0.0.19. Details: build_info.json
+> built 2026-10-13 08:33 UTC from 0f66796 (main) · mergeset 0.0.20. Details: build_info.json
 
 # index.html.md
 
@@ -319,10 +319,12 @@ Find the maximal sets of `changes` that merge and validate on `base`.
     to `<artifact root>/evaluations/<repo-slug>.jsonl` (see
     [`mergeset.storage`](_autosummary/mergeset.storage.html.md#module-mergeset.storage)), *outside* the analysed repository. Reusing
     an existing one makes a re-run nearly free. Only rows evaluated
-    against the same base and heads are reused (see ADR 0028).
+    against the same base and heads, by the same validator, are reused
+    (see ADR 0028 and [`mergeset.validation.fingerprint_of()`](_autosummary/mergeset.validation.html.md#mergeset.validation.fingerprint_of)).
   * **trust_unpinned** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool)]) – Reuse log rows written before rows recorded their
-    commits (an old log). Default: the log’s own setting, which is off.
-    Only when the heads have not moved since those rows were written.
+    commits or their validator (an old log). Default: the log’s own
+    setting, which is off. Only when neither the heads nor the
+    validator have changed since those rows were written.
   * **weight** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`Change`](_autosummary/mergeset.base.html.md#mergeset.base.Change)], [`float`](https://docs.python.org/3/builtins/functions.html#float)]]) – `Change -> cost of dropping it`; default is size-based.
   * **pairwise_preoracle** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Use `git merge-tree` to find textual conflicts for
     free before spending any evaluation.
@@ -490,9 +492,10 @@ and diffable.
 
 ### Module Attributes
 
-| [`MergeFn`](_autosummary/mergeset.base.html.md#mergeset.base.MergeFn)    | (changes to merge, in order) -> outcome + a tree to validate.   |
-|-------------------------------------------------------------|-----------------------------------------------------------------|
-| [`ValidateFn`](_autosummary/mergeset.base.html.md#mergeset.base.ValidateFn) | (path to a merged worktree) -> outcome.                         |
+| [`UNKNOWN_FINGERPRINT`](_autosummary/mergeset.base.html.md#mergeset.base.UNKNOWN_FINGERPRINT)   | that is what rows written before fingerprints existed read back as, and the migration switch (`trust_unpinned`) must not adopt today's rows from an unknown validator as if they were old rows from a known one (#32).   |
+|------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`MergeFn`](_autosummary/mergeset.base.html.md#mergeset.base.MergeFn)               | (changes to merge, in order) -> outcome + a tree to validate.                                                                                                                                                            |
+| [`ValidateFn`](_autosummary/mergeset.base.html.md#mergeset.base.ValidateFn)            | (path to a merged worktree) -> outcome.                                                                                                                                                                                  |
 
 ### Functions
 
@@ -567,7 +570,7 @@ A copy of this change carrying `weight`.
 * **Return type:**
   [`Change`](_autosummary/mergeset.base.html.md#mergeset.base.Change)
 
-### *class* mergeset.base.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, cached=False)
+### *class* mergeset.base.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, validator=None, cached=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -581,7 +584,9 @@ A row is about the commits that were actually merged, not about the ids:
 written before a branch was rewritten is never mistaken for an answer about
 the rewritten branch (i2mint/mergeset#23). Rows written before pinning
 existed carry neither and read back as *unpinned*; see
-[`mergeset.log.EvaluationLog`](_autosummary/mergeset.log.html.md#mergeset.log.EvaluationLog).
+[`mergeset.log.EvaluationLog`](_autosummary/mergeset.log.html.md#mergeset.log.EvaluationLog). `validator` pins it to what was run
+on that tree, the same way (i2mint/mergeset#32): the same commits under a
+different test command are a different question.
 
 #### base_sha *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
 
@@ -617,6 +622,12 @@ JSON-able view; `subset` becomes a sorted list.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+#### validator *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+Fingerprint of the validator that judged the tree (see
+[`mergeset.validation.fingerprint_of()`](_autosummary/mergeset.validation.html.md#mergeset.validation.fingerprint_of)). `None` on rows written
+before fingerprints, and on rows judged by a validator that has none.
 
 ### *class* mergeset.base.Evaluator(\*args, \*\*kwargs)
 
@@ -701,6 +712,16 @@ JSON-able view.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### mergeset.base.UNKNOWN_FINGERPRINT *= 'unknown'*
+
+that
+is what rows written before fingerprints existed read back as, and the
+migration switch (`trust_unpinned`) must not adopt today’s rows from an
+unknown validator as if they were old rows from a known one (#32).
+
+* **Type:**
+  What a row records when its validator had no fingerprint. Not `None`
 
 ### mergeset.base.ValidateFn
 
@@ -866,7 +887,8 @@ Find maximal mergeable sets among the given branches.
     `~/.local/share/mergeset/evaluations/<repo-slug>.jsonl` —
     outside the analysed repository, always.
   * **trust_unpinned_log** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Reuse rows of an old log that predate rows
-    recording their commits. Only when no head has moved since.
+    recording their commits or their validator. Only when no head has
+    moved and the validation is unchanged since.
   * **report_dir** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Write `REPORT.md` and `report.html` into this
     directory. By default they go to the artifact store
     (`<artifact root>/reports/<repo-slug>/`), never into the
@@ -940,7 +962,8 @@ Find maximal mergeable sets among a repository’s open pull requests.
     `~/.local/share/mergeset/evaluations/<repo-slug>.jsonl` — outside
     the analysed repository, always.
   * **trust_unpinned_log** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Reuse rows of an old log that predate rows
-    recording their commits. Only when no head has moved since.
+    recording their commits or their validator. Only when no head has
+    moved and the validation is unchanged since.
   * **report_dir** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Write `REPORT.md` and `report.html` into this directory.
     By default they go to the artifact store, under
     `reports/<repo-slug>/<timestamp>/`, so a re-run never overwrites
@@ -1919,7 +1942,7 @@ Upper estimate, in seconds. Used to *admit* work against a budget.
 * **Return type:**
   [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
-### *class* mergeset.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, cached=False)
+### *class* mergeset.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, validator=None, cached=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -1933,7 +1956,9 @@ A row is about the commits that were actually merged, not about the ids:
 written before a branch was rewritten is never mistaken for an answer about
 the rewritten branch (i2mint/mergeset#23). Rows written before pinning
 existed carry neither and read back as *unpinned*; see
-[`mergeset.log.EvaluationLog`](_autosummary/mergeset.log.html.md#mergeset.log.EvaluationLog).
+[`mergeset.log.EvaluationLog`](_autosummary/mergeset.log.html.md#mergeset.log.EvaluationLog). `validator` pins it to what was run
+on that tree, the same way (i2mint/mergeset#32): the same commits under a
+different test command are a different question.
 
 #### base_sha *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
 
@@ -1970,6 +1995,12 @@ JSON-able view; `subset` becomes a sorted list.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
+#### validator *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+Fingerprint of the validator that judged the tree (see
+[`mergeset.validation.fingerprint_of()`](_autosummary/mergeset.validation.html.md#mergeset.validation.fingerprint_of)). `None` on rows written
+before fingerprints, and on rows judged by a validator that has none.
+
 ### *class* mergeset.EvaluationLog(store=None, , pins=None, trust_unpinned=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
@@ -1986,11 +2017,14 @@ Append-only record of evaluations, plus the monotone closure over it.
     [`pin()`](_autosummary/mergeset.html.md#mergeset.EvaluationLog.pin)). Unpinned, every row counts, as before pinning existed;
     [`mergeset.analyze()`](_autosummary/mergeset.html.md#mergeset.analyze) always pins.
   * **trust_unpinned** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Let rows that record no commits at all (written before
-    i2mint/mergeset#23, or by an unpinned log) count as matches once the
-    log is pinned. Off by default, because such a row may be about a head
-    that has since moved — which is the defect pinning exists to close.
-    Turn it on only when you know the heads have not moved since those
-    rows were written; it is the migration path for an old log.
+    i2mint/mergeset#23, or by an unpinned log), or no validator while
+    the pins name one (written before i2mint/mergeset#32), count as
+    matches once the log is pinned. Off by default, because such a row
+    may be about a head that has since moved, or judged by a command
+    that has since changed — which is the defect pinning exists to
+    close. Turn it on only when you know neither has changed since those
+    rows were written; it is the migration path for an old log. A row
+    whose recorded commits or validator differ never counts.
 
 ```pycon
 >>> log = EvaluationLog(MemoryLines())
@@ -2065,13 +2099,23 @@ another. Reported, never silently smoothed over.
 * **Return type:**
   [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset), [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]]
 
+#### *property* other_validator *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](_autosummary/mergeset.base.html.md#mergeset.base.Evaluation)]*
+
+The [`stale`](_autosummary/mergeset.html.md#mergeset.EvaluationLog.stale) rows judged by a validator other than the pinned one.
+
+Usually a tier or `--validate-command` whose command was edited.
+
 #### *property* passing *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[frozenset](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]*
 
 Sets recorded as good, largest first.
 
-#### pin(, base, heads)
+#### pin(, base, heads, validator=None)
 
-Scope *this* log to `base` and these heads; returns `self`.
+Scope *this* log to `base`, these heads and `validator`; returns `self`.
+
+`validator` is the fingerprint of what the questions will be asked of
+([`mergeset.validation.fingerprint_of()`](_autosummary/mergeset.validation.html.md#mergeset.validation.fingerprint_of)); `None` matches rows on
+commits alone.
 
 [`pinned()`](_autosummary/mergeset.html.md#mergeset.EvaluationLog.pinned) is the same without changing this object.
 
@@ -2095,9 +2139,9 @@ rows stay in the store and in [`rows`](_autosummary/mergeset.html.md#mergeset.Ev
 (True, 1, 1)
 ```
 
-#### pinned(, base, heads, trust_unpinned=None)
+#### pinned(, base, heads, validator=None, trust_unpinned=None)
 
-A view of this log scoped to `base` and these heads.
+A view of this log scoped to `base`, these heads and `validator`.
 
 Same store, same rows; this log itself is left as it was, so a caller
 that hands one log to two analyses keeps its own view of it.
@@ -2133,7 +2177,7 @@ Every row in the log, matching the pins or not, in log order.
 
 #### *property* stale *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](_autosummary/mergeset.base.html.md#mergeset.base.Evaluation)]*
 
-Rows evaluated against other commits than the pinned ones.
+Rows evaluated against other commits, or by another validator.
 
 Not wrong — about a different question — so kept, and not matched.
 
@@ -2143,10 +2187,12 @@ Whether rows recording no commits count once the log is pinned.
 
 #### *property* unpinned *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](_autosummary/mergeset.base.html.md#mergeset.base.Evaluation)]*
 
-Rows recording no commits that a pinned log is not counting.
+Rows recording too little to match that a pinned log is not counting.
 
-All of them by default; with `trust_unpinned`, only those holding a
-change that is not in play. Empty when the log is unpinned.
+No commits (written before #23), or no validator while the pins name
+one (written before #32). All of them by default; with
+`trust_unpinned`, only those holding a change that is not in play.
+Empty when the log is unpinned.
 
 ### *class* mergeset.JsonlLines(path)
 
@@ -2638,10 +2684,12 @@ Find the maximal sets of `changes` that merge and validate on `base`.
     to `<artifact root>/evaluations/<repo-slug>.jsonl` (see
     [`mergeset.storage`](_autosummary/mergeset.storage.html.md#module-mergeset.storage)), *outside* the analysed repository. Reusing
     an existing one makes a re-run nearly free. Only rows evaluated
-    against the same base and heads are reused (see ADR 0028).
+    against the same base and heads, by the same validator, are reused
+    (see ADR 0028 and [`mergeset.validation.fingerprint_of()`](_autosummary/mergeset.validation.html.md#mergeset.validation.fingerprint_of)).
   * **trust_unpinned** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool)]) – Reuse log rows written before rows recorded their
-    commits (an old log). Default: the log’s own setting, which is off.
-    Only when the heads have not moved since those rows were written.
+    commits or their validator (an old log). Default: the log’s own
+    setting, which is off. Only when neither the heads nor the
+    validator have changed since those rows were written.
   * **weight** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`Change`](_autosummary/mergeset.base.html.md#mergeset.base.Change)], [`float`](https://docs.python.org/3/builtins/functions.html#float)]]) – `Change -> cost of dropping it`; default is size-based.
   * **pairwise_preoracle** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Use `git merge-tree` to find textual conflicts for
     free before spending any evaluation.
@@ -3791,7 +3839,9 @@ A row is an answer about *commits*, not about ids. Once the log is pinned
 ([`EvaluationLog.pin()`](_autosummary/mergeset.log.html.md#mergeset.log.EvaluationLog.pin)) to the base and the head of each change in play,
 only rows evaluated against those same commits count — rows about an older head
 of a rewritten branch are kept on disk and in [`EvaluationLog.rows`](_autosummary/mergeset.log.html.md#mergeset.log.EvaluationLog.rows), and
-simply not matched (i2mint/mergeset#23).
+simply not matched (i2mint/mergeset#23). The same holds for *what* was run:
+rows judged by another validator (another command, other stages) are kept and
+not matched (i2mint/mergeset#32).
 
 ### Functions
 
@@ -3805,7 +3855,7 @@ simply not matched (i2mint/mergeset#23).
 | [`JsonlLines`](_autosummary/mergeset.log.html.md#mergeset.log.JsonlLines)(path)                               | Append-only sequence of JSON objects backed by one file.                                              |
 | [`Known`](_autosummary/mergeset.log.html.md#mergeset.log.Known)(verdict[, exact, witness])               | What the log already knows about a set, without re-evaluating it.                                     |
 | [`MemoryLines`](_autosummary/mergeset.log.html.md#mergeset.log.MemoryLines)([iterable])                        | In-memory stand-in for [`JsonlLines`](_autosummary/mergeset.log.html.md#mergeset.log.JsonlLines) (tests, dry runs). |
-| [`Pins`](_autosummary/mergeset.log.html.md#mergeset.log.Pins)(base, heads)                              | The commits a question is about: the base, and each change's head sha.                                |
+| [`Pins`](_autosummary/mergeset.log.html.md#mergeset.log.Pins)(base, heads[, validator])                 | What a question is about: the base, each change's head sha, the validator.                            |
 | [`StoreLines`](_autosummary/mergeset.log.html.md#mergeset.log.StoreLines)(store, key)                         | Lines backed by one key of a `MutableMapping` — the non-file backend.                                 |
 
 ### *class* mergeset.log.EvaluationLog(store=None, , pins=None, trust_unpinned=False)
@@ -3824,11 +3874,14 @@ Append-only record of evaluations, plus the monotone closure over it.
     [`pin()`](_autosummary/mergeset.log.html.md#mergeset.log.EvaluationLog.pin)). Unpinned, every row counts, as before pinning existed;
     [`mergeset.analyze()`](_autosummary/mergeset.html.md#mergeset.analyze) always pins.
   * **trust_unpinned** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Let rows that record no commits at all (written before
-    i2mint/mergeset#23, or by an unpinned log) count as matches once the
-    log is pinned. Off by default, because such a row may be about a head
-    that has since moved — which is the defect pinning exists to close.
-    Turn it on only when you know the heads have not moved since those
-    rows were written; it is the migration path for an old log.
+    i2mint/mergeset#23, or by an unpinned log), or no validator while
+    the pins name one (written before i2mint/mergeset#32), count as
+    matches once the log is pinned. Off by default, because such a row
+    may be about a head that has since moved, or judged by a command
+    that has since changed — which is the defect pinning exists to
+    close. Turn it on only when you know neither has changed since those
+    rows were written; it is the migration path for an old log. A row
+    whose recorded commits or validator differ never counts.
 
 ```pycon
 >>> log = EvaluationLog(MemoryLines())
@@ -3903,13 +3956,23 @@ another. Reported, never silently smoothed over.
 * **Return type:**
   [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset), [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]]
 
+#### *property* other_validator *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](_autosummary/mergeset.base.html.md#mergeset.base.Evaluation)]*
+
+The [`stale`](_autosummary/mergeset.log.html.md#mergeset.log.EvaluationLog.stale) rows judged by a validator other than the pinned one.
+
+Usually a tier or `--validate-command` whose command was edited.
+
 #### *property* passing *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[frozenset](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]*
 
 Sets recorded as good, largest first.
 
-#### pin(, base, heads)
+#### pin(, base, heads, validator=None)
 
-Scope *this* log to `base` and these heads; returns `self`.
+Scope *this* log to `base`, these heads and `validator`; returns `self`.
+
+`validator` is the fingerprint of what the questions will be asked of
+([`mergeset.validation.fingerprint_of()`](_autosummary/mergeset.validation.html.md#mergeset.validation.fingerprint_of)); `None` matches rows on
+commits alone.
 
 [`pinned()`](_autosummary/mergeset.log.html.md#mergeset.log.EvaluationLog.pinned) is the same without changing this object.
 
@@ -3933,9 +3996,9 @@ rows stay in the store and in [`rows`](_autosummary/mergeset.log.html.md#mergese
 (True, 1, 1)
 ```
 
-#### pinned(, base, heads, trust_unpinned=None)
+#### pinned(, base, heads, validator=None, trust_unpinned=None)
 
-A view of this log scoped to `base` and these heads.
+A view of this log scoped to `base`, these heads and `validator`.
 
 Same store, same rows; this log itself is left as it was, so a caller
 that hands one log to two analyses keeps its own view of it.
@@ -3971,7 +4034,7 @@ Every row in the log, matching the pins or not, in log order.
 
 #### *property* stale *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](_autosummary/mergeset.base.html.md#mergeset.base.Evaluation)]*
 
-Rows evaluated against other commits than the pinned ones.
+Rows evaluated against other commits, or by another validator.
 
 Not wrong — about a different question — so kept, and not matched.
 
@@ -3981,10 +4044,12 @@ Whether rows recording no commits count once the log is pinned.
 
 #### *property* unpinned *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](_autosummary/mergeset.base.html.md#mergeset.base.Evaluation)]*
 
-Rows recording no commits that a pinned log is not counting.
+Rows recording too little to match that a pinned log is not counting.
 
-All of them by default; with `trust_unpinned`, only those holding a
-change that is not in play. Empty when the log is unpinned.
+No commits (written before #23), or no validator while the pins name
+one (written before #32). All of them by default; with
+`trust_unpinned`, only those holding a change that is not in play.
+Empty when the log is unpinned.
 
 ### *class* mergeset.log.JsonlLines(path)
 
@@ -4039,11 +4104,11 @@ Append object to the end of the list.
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-### *class* mergeset.log.Pins(base, heads)
+### *class* mergeset.log.Pins(base, heads, validator=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
-The commits a question is about: the base, and each change’s head sha.
+What a question is about: the base, each change’s head sha, the validator.
 
 A row *matches* when it was merged onto the same base and every change it
 holds is in play with the same head. A row holding a change that is not in
@@ -4066,19 +4131,59 @@ False
 False
 ```
 
+With a `validator` fingerprint, a row must also have been judged by that
+validator. A row recording none (written before i2mint/mergeset#32) is not
+refuted, only incomplete: see [`EvaluationLog.unpinned`](_autosummary/mergeset.log.html.md#mergeset.log.EvaluationLog.unpinned).
+
+```pycon
+>>> pins = Pins('B', {'a': 'A1', 'b': 'B1'}, validator='command:1')
+>>> pins.matches(replace(row, validator='command:1'))
+True
+>>> pins.refutes(replace(row, validator='command:2'))   # the command changed
+True
+>>> pins.matches(row), pins.refutes(row)                # recorded no validator
+(False, False)
+```
+
+#### complete(evaluation)
+
+True iff `evaluation` records everything these pins compare.
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
 #### matches(evaluation)
 
-True iff `evaluation` was run against these commits.
+True iff `evaluation` was run against these commits, by this validator.
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+#### refutes(evaluation)
+
+True iff what `evaluation` records shows it answers another question.
+
+Other commits, or another validator. A row that records too little to
+tell is not refuted – it is incomplete (see [`complete()`](_autosummary/mergeset.log.html.md#mergeset.log.Pins.complete)).
 
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 #### stamp(evaluation)
 
-`evaluation` pinned to these commits (unless it already is).
+`evaluation` pinned to these commits and validator, where it is not.
+
+Pins naming no validator stamp [`UNKNOWN_FINGERPRINT`](_autosummary/mergeset.base.html.md#mergeset.base.UNKNOWN_FINGERPRINT),
+never nothing: a row recording no validator reads as written before
+validators were recorded, and `trust_unpinned` would adopt it.
 
 * **Return type:**
   [`Evaluation`](_autosummary/mergeset.base.html.md#mergeset.base.Evaluation)
+
+#### validator *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+Fingerprint of the validator the question is asked of (`'unknown'`
+when it cannot say what it runs). `None` compares no validator at all.
 
 ### *class* mergeset.log.StoreLines(store, key)
 
@@ -5737,10 +5842,22 @@ which files they live in, how long it took. The solver uses that to aim its
 conflict shrinking at the changes actually implicated, rather than halving
 blindly.
 
+A validator may also say *what* it runs: a `validator_fingerprint` attribute,
+a short digest of its command, stages, timeout and environment. Every shipped
+validator carries one, and the evaluation log stamps it on each row, so a row
+recorded by `pytest -x` never answers a question asked of `pytest -m e2e`
+(i2mint/mergeset#32). A user callable has none unless it sets one, since only its
+author knows what changes its verdicts:
+`my_validator.validator_fingerprint = 'smoke-v2'`. Its rows are stamped
+`UNKNOWN_FINGERPRINT`, which matches only other such rows. A wrapper made
+with `functools.wraps` copies the wrapped validator’s fingerprint along with
+its `__dict__`; a wrapper that changes what is checked must set its own.
+
 ### Module Attributes
 
-| [`DEFAULT_PYTEST_ARGS`](_autosummary/mergeset.validation.html.md#mergeset.validation.DEFAULT_PYTEST_ARGS)   | the answer we need is a bit, and the first failure has it.   |
-|------------------------------------------------------------------------|--------------------------------------------------------------|
+| [`DEFAULT_PYTEST_ARGS`](_autosummary/mergeset.validation.html.md#mergeset.validation.DEFAULT_PYTEST_ARGS)   | the answer we need is a bit, and the first failure has it.                  |
+|------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| [`FINGERPRINT_ATTR`](_autosummary/mergeset.validation.html.md#mergeset.validation.FINGERPRINT_ATTR)      | The attribute a validator carries to say what it runs (i2mint/mergeset#32). |
 
 ### Functions
 
@@ -5751,10 +5868,12 @@ blindly.
 | [`command_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.command_validation)(command, \*[, timeout, env])  | A validator that runs an arbitrary shell command in the merged worktree.                                                   |
 | [`detect_runner`](_autosummary/mergeset.validation.html.md#mergeset.validation.detect_runner)(path)                              | Guess how this project is tested; `None` if nothing is recognizable.                                                       |
 | [`file_fingerprint`](_autosummary/mergeset.validation.html.md#mergeset.validation.file_fingerprint)(\*paths)                        | A fingerprint function over the contents of the given repo-relative files.                                                 |
+| [`fingerprint_of`](_autosummary/mergeset.validation.html.md#mergeset.validation.fingerprint_of)(validate)                         | What `validate` runs, as a short string -- or `None` when it cannot say.                                                   |
 | [`flake_tolerant`](_autosummary/mergeset.validation.html.md#mergeset.validation.flake_tolerant)(validate, \*[, retries])          | Re-run a failing validation `retries` times before believing it.                                                           |
 | [`js_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.js_validation)(\*[, install, build, test, ...])   | A staged validator shaped like a JavaScript project.                                                                       |
 | [`merge_only_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.merge_only_validation)()                          | A validator that accepts anything that merged cleanly.                                                                     |
 | [`pytest_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.pytest_validation)(\*[, args, timeout, env, ...]) | A validator that runs the project's pytest suite, fail-fast by default.                                                    |
+| [`recorded_fingerprint`](_autosummary/mergeset.validation.html.md#mergeset.validation.recorded_fingerprint)(validate)                   | The fingerprint a log row records for `validate`: never `None`.                                                            |
 | [`staged_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.staged_validation)(stages, \*[, env])             | Run an ordered list of [`ValidationStage`](_autosummary/mergeset.validation.html.md#mergeset.validation.ValidationStage) steps, reporting which one failed. |
 
 ### Classes
@@ -5768,6 +5887,10 @@ the answer we need is a bit, and the first failure has it.
 
 * **Type:**
   Fail-fast by default
+
+### mergeset.validation.FINGERPRINT_ATTR *= 'validator_fingerprint'*
+
+The attribute a validator carries to say what it runs (i2mint/mergeset#32).
 
 ### *class* mergeset.validation.ValidationStage(name, command, fingerprint=None, timeout=None, required=True)
 
@@ -5852,6 +5975,32 @@ The canonical use is a lockfile: install dependencies again only when
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
+### mergeset.validation.fingerprint_of(validate)
+
+What `validate` runs, as a short string – or `None` when it cannot say.
+
+Two validators with the same fingerprint give the same verdict on the same
+tree, so an evaluation log may answer one with the other’s rows. `None`
+means unknown: such a validator’s rows are recorded as
+`UNKNOWN_FINGERPRINT` (see [`recorded_fingerprint()`](_autosummary/mergeset.validation.html.md#mergeset.validation.recorded_fingerprint)), and answer
+only other validators that cannot say what they run either.
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+```pycon
+>>> fingerprint_of(command_validation('make test')) == fingerprint_of(
+...     command_validation('make test'))
+True
+>>> fingerprint_of(command_validation('make test')) == fingerprint_of(
+...     command_validation('make check'))
+False
+>>> fingerprint_of(command_validation('make test')).startswith('command:')
+True
+>>> fingerprint_of(lambda worktree: True) is None
+True
+```
+
 ### mergeset.validation.flake_tolerant(validate, , retries=1)
 
 Re-run a failing validation `retries` times before believing it.
@@ -5899,6 +6048,18 @@ A validator that runs the project’s pytest suite, fail-fast by default.
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]
 
+### mergeset.validation.recorded_fingerprint(validate)
+
+The fingerprint a log row records for `validate`: never `None`.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> recorded_fingerprint(lambda worktree: True)
+'unknown'
+```
+
 ### mergeset.validation.staged_validation(stages, , env=None)
 
 Run an ordered list of [`ValidationStage`](_autosummary/mergeset.validation.html.md#mergeset.validation.ValidationStage) steps, reporting which one failed.
@@ -5923,18 +6084,18 @@ log distinguishes `build: ...` from `test: tests/x.ts::y`.
 
 # About this build
 
-This documentation was built on **2026-10-13 08:09 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/09333050ee3b69f7e9348b17bddbe370552da973"><code>0933305</code></a> on branch <code>main</code>, for **mergeset 0.0.19** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 08:33 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/0f667960084f6ce9a05aa0744f03083d318ec17f"><code>0f66796</code></a> on branch <code>main</code>, for **mergeset 0.0.20** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.19) is behind the latest release on PyPI (0.0.20): `pip install mergeset` gives newer code than these docs describe.
+- The documented version (0.0.20) is behind the latest release on PyPI (0.0.21): `pip install mergeset` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/mergeset/commit/09333050ee3b69f7e9348b17bddbe370552da973"><code>09333050ee3b69f7e9348b17bddbe370552da973</code></a> |
+| Commit              | <a href="https://github.com/i2mint/mergeset/commit/0f667960084f6ce9a05aa0744f03083d318ec17f"><code>0f667960084f6ce9a05aa0744f03083d318ec17f</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -5945,9 +6106,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/mergeset</code>                                                               |
-| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38367172523">38367172523</a>      |
+| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38369906166">38369906166</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>09333050ee3b69f7e9348b17bddbe370552da973</code> (in the history of the built commit) |
+| Event commit | <code>0f667960084f6ce9a05aa0744f03083d318ec17f</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -5972,13 +6133,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/mergeset/0.0.20/">0.0.20</a>, newer than the documented version (0.0.19).
+Latest release: <a href="https://pypi.org/project/mergeset/0.0.21/">0.0.21</a>, newer than the documented version (0.0.20).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/mergeset && cd mergeset
-git checkout 09333050ee3b69f7e9348b17bddbe370552da973
+git checkout 0f667960084f6ce9a05aa0744f03083d318ec17f
 pip install "epythet==0.2.15"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

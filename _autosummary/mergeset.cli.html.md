@@ -79,7 +79,8 @@ Find maximal mergeable sets among the given branches.
     `~/.local/share/mergeset/evaluations/<repo-slug>.jsonl` —
     outside the analysed repository, always.
   * **trust_unpinned_log** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Reuse rows of an old log that predate rows
-    recording their commits. Only when no head has moved since.
+    recording their commits or their validator. Only when no head has
+    moved and the validation is unchanged since.
   * **report_dir** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Write `REPORT.md` and `report.html` into this
     directory. By default they go to the artifact store
     (`<artifact root>/reports/<repo-slug>/`), never into the
@@ -153,7 +154,8 @@ Find maximal mergeable sets among a repository’s open pull requests.
     `~/.local/share/mergeset/evaluations/<repo-slug>.jsonl` — outside
     the analysed repository, always.
   * **trust_unpinned_log** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Reuse rows of an old log that predate rows
-    recording their commits. Only when no head has moved since.
+    recording their commits or their validator. Only when no head has
+    moved and the validation is unchanged since.
   * **report_dir** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Write `REPORT.md` and `report.html` into this directory.
     By default they go to the artifact store, under
     `reports/<repo-slug>/<timestamp>/`, so a re-run never overwrites

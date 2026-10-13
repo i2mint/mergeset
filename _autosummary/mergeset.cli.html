@@ -234,7 +234,8 @@ is reported alongside them, never instead. A single bare <code class="docutils l
 <code class="docutils literal notranslate"><span class="pre">~/.local/share/mergeset/evaluations/&lt;repo-slug&gt;.jsonl</span></code> —
 outside the analysed repository, always.</p></li>
 <li><p><strong>trust_unpinned_log</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Reuse rows of an old log that predate rows
-recording their commits. Only when no head has moved since.</p></li>
+recording their commits or their validator. Only when no head has
+moved and the validation is unchanged since.</p></li>
 <li><p><strong>report_dir</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – Write <code class="docutils literal notranslate"><span class="pre">REPORT.md</span></code> and <code class="docutils literal notranslate"><span class="pre">report.html</span></code> into this
 directory. By default they go to the artifact store
 (<code class="docutils literal notranslate"><span class="pre">&lt;artifact</span> <span class="pre">root&gt;/reports/&lt;repo-slug&gt;/</span></code>), never into the
@@ -321,7 +322,8 @@ report the best plan that keeps these PRs.</p></li>
 <code class="docutils literal notranslate"><span class="pre">~/.local/share/mergeset/evaluations/&lt;repo-slug&gt;.jsonl</span></code> — outside
 the analysed repository, always.</p></li>
 <li><p><strong>trust_unpinned_log</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Reuse rows of an old log that predate rows
-recording their commits. Only when no head has moved since.</p></li>
+recording their commits or their validator. Only when no head has
+moved and the validation is unchanged since.</p></li>
 <li><p><strong>report_dir</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – Write <code class="docutils literal notranslate"><span class="pre">REPORT.md</span></code> and <code class="docutils literal notranslate"><span class="pre">report.html</span></code> into this directory.
 By default they go to the artifact store, under
 <code class="docutils literal notranslate"><span class="pre">reports/&lt;repo-slug&gt;/&lt;timestamp&gt;/</span></code>, so a re-run never overwrites
@@ -394,7 +396,7 @@ not a command that could pretend the log alone is enough.)</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=2fd7553c"></script>
+      <script src="../_static/documentation_options.js?v=056c92e6"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

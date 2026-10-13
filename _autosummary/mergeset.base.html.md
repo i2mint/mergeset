@@ -13,9 +13,10 @@ and diffable.
 
 ### Module Attributes
 
-| [`MergeFn`](#mergeset.base.MergeFn)    | (changes to merge, in order) -> outcome + a tree to validate.   |
-|-------------------------------------------------------------|-----------------------------------------------------------------|
-| [`ValidateFn`](#mergeset.base.ValidateFn) | (path to a merged worktree) -> outcome.                         |
+| [`UNKNOWN_FINGERPRINT`](#mergeset.base.UNKNOWN_FINGERPRINT)   | that is what rows written before fingerprints existed read back as, and the migration switch (`trust_unpinned`) must not adopt today's rows from an unknown validator as if they were old rows from a known one (#32).   |
+|------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`MergeFn`](#mergeset.base.MergeFn)               | (changes to merge, in order) -> outcome + a tree to validate.                                                                                                                                                            |
+| [`ValidateFn`](#mergeset.base.ValidateFn)            | (path to a merged worktree) -> outcome.                                                                                                                                                                                  |
 
 ### Functions
 
@@ -90,7 +91,7 @@ A copy of this change carrying `weight`.
 * **Return type:**
   [`Change`](#mergeset.base.Change)
 
-### *class* mergeset.base.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, cached=False)
+### *class* mergeset.base.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, validator=None, cached=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -104,7 +105,9 @@ A row is about the commits that were actually merged, not about the ids:
 written before a branch was rewritten is never mistaken for an answer about
 the rewritten branch (i2mint/mergeset#23). Rows written before pinning
 existed carry neither and read back as *unpinned*; see
-[`mergeset.log.EvaluationLog`](mergeset.log.html.md#mergeset.log.EvaluationLog).
+[`mergeset.log.EvaluationLog`](mergeset.log.html.md#mergeset.log.EvaluationLog). `validator` pins it to what was run
+on that tree, the same way (i2mint/mergeset#32): the same commits under a
+different test command are a different question.
 
 #### base_sha *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
 
@@ -140,6 +143,12 @@ JSON-able view; `subset` becomes a sorted list.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+#### validator *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+Fingerprint of the validator that judged the tree (see
+[`mergeset.validation.fingerprint_of()`](mergeset.validation.html.md#mergeset.validation.fingerprint_of)). `None` on rows written
+before fingerprints, and on rows judged by a validator that has none.
 
 ### *class* mergeset.base.Evaluator(\*args, \*\*kwargs)
 
@@ -224,6 +233,16 @@ JSON-able view.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### mergeset.base.UNKNOWN_FINGERPRINT *= 'unknown'*
+
+that
+is what rows written before fingerprints existed read back as, and the
+migration switch (`trust_unpinned`) must not adopt today’s rows from an
+unknown validator as if they were old rows from a known one (#32).
+
+* **Type:**
+  What a row records when its validator had no fingerprint. Not `None`
 
 ### mergeset.base.ValidateFn
 

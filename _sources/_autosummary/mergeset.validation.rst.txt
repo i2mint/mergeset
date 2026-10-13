@@ -9,6 +9,7 @@ mergeset.validation
    .. autosummary::
    
       DEFAULT_PYTEST_ARGS
+      FINGERPRINT_ATTR
    
    .. rubric:: Functions
 
@@ -20,10 +21,12 @@ mergeset.validation
       command_validation
       detect_runner
       file_fingerprint
+      fingerprint_of
       flake_tolerant
       js_validation
       merge_only_validation
       pytest_validation
+      recorded_fingerprint
       staged_validation
    
    .. rubric:: Classes
