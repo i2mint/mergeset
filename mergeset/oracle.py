@@ -226,9 +226,7 @@ def git_oracle(
             note=(
                 "assisted resolution"
                 if outcome.assisted
-                else "base alone"
-                if not subset
-                else ""
+                else "base alone" if not subset else ""
             ),
         )
 
@@ -260,10 +258,18 @@ def _try_assisted(repo, base, heads, outcome, resolver, worktree_root, emit):
             resolved, diff = resolver(
                 path, conflicted or list(outcome.conflicting_files)
             )
-        except Exception:  # noqa: BLE001 - a resolver that gives up (a timeout)
-            # is a resolver that declined: the conflict is real, and an ERROR
-            # would abort the whole search over one slow call.
-            resolved, diff = False, ""
+        except Exception as exc:  # noqa: BLE001 - any failure of the resolver
+            # The experiment could not be run (ADR 0017, 0036): a timeout says
+            # nothing about whether the conflict is resolvable, and a FAIL row
+            # would be reused by every later run, which would never ask again.
+            _remove_worktree(repo, path)
+            return None, MergeOutcome(
+                ok=False,
+                reason="error",
+                conflicting_files=outcome.conflicting_files,
+                order=outcome.order,
+                detail=f"the conflict resolver raised {type(exc).__name__}: {exc}",
+            )
         if not (resolved and _vouches_for(path, before, head, merged, conflicted)):
             _remove_worktree(repo, path)
             return None, outcome
@@ -445,7 +451,9 @@ def claude_code_resolver(
         return True, diff[:20000]
 
     # What decides which conflicts it resolves: the policy, the command that
-    # runs it, and how long it may take (a timeout is a decline).
+    # runs it, and how long it may take. A timeout is an ERROR now (ADR 0036) and
+    # never a recorded row, but the timeout stays in the spec: dropping it would
+    # change every existing fingerprint and orphan the logs pinned to it.
     spec = json.dumps([policy, command, float(timeout)])
     digest = hashlib.sha256(spec.encode()).hexdigest()[:16]
     setattr(resolve, RESOLVER_FINGERPRINT_ATTR, f"claude-code:{digest}")

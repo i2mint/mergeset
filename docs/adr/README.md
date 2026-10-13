@@ -52,8 +52,9 @@ One decision per file. The `decision:` field in each file's front matter carries
 | [0033](0033-a-row-is-about-how-the-set-was-merged.md) | — | A row is about how the set was merged, where that decided its outcome |
 | [0034](0034-a-resolver-is-offered-what-the-pre-oracle-would-exclude.md) | — | A resolver is offered the conflicts the pre-oracle would exclude |
 | [0035](0035-an-input-is-trusted-by-its-stat-once-it-is-old.md) | — | An input file is trusted by its stat once its last change is old |
+| [0036](0036-a-resolver-that-raises-did-not-run-the-experiment.md) | — | A resolver that raises did not run the experiment |
 
-35 records. Append-only: when a decision is reversed, the old record stays
+36 records. Append-only: when a decision is reversed, the old record stays
 and the new one says what changed.
 
 Records from 0026 on have no `was` identifier: they were written after the split

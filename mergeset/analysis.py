@@ -523,6 +523,8 @@ def analyze(
 
     per_component: List[List[ChangeSet]] = []
     for component in analysis.components:
+        if any(state.error for state in analysis.searches):
+            break  # an ERROR cannot be cured by asking again (ADR 0036)
         component_conflicts = [c for c in known_conflicts if c <= component]
         emit("component", {"changes": set_key(component)})
         state = find_maximal_good_sets(
@@ -559,25 +561,29 @@ def analyze(
             "results are not assumed to combine freely "
             "(pass component_local=True if your validator cannot see across them)."
         )
-        global_state = find_maximal_good_sets(
-            [c.id for c in changes],
-            evaluate,
-            known_conflicts=analysis.conflicts,
-            depends_on=analysis.stacks,
-            weight=lambda cid: weights.get(cid, 1.0),
-            max_evaluations=max_evaluations,
-            max_seconds=max_seconds,
-            max_sets=max_sets,
-            suspects=suspects_from_failure,
-            on_event=on_event,
-        )
-        analysis.searches.append(global_state)
-        analysis.conflicts = _dedupe_conflicts(
-            analysis.conflicts + global_state.conflicts
-        )
-        analysis.maximal_sets = global_state.maximal_good_sets or _fallback_sets(
-            combined, log, analysis
-        )
+        if any(state.error for state in analysis.searches):
+            # Verifying globally would ask the same failing question again.
+            analysis.maximal_sets = _fallback_sets(combined, log, analysis)
+        else:
+            global_state = find_maximal_good_sets(
+                [c.id for c in changes],
+                evaluate,
+                known_conflicts=analysis.conflicts,
+                depends_on=analysis.stacks,
+                weight=lambda cid: weights.get(cid, 1.0),
+                max_evaluations=max_evaluations,
+                max_seconds=max_seconds,
+                max_sets=max_sets,
+                suspects=suspects_from_failure,
+                on_event=on_event,
+            )
+            analysis.searches.append(global_state)
+            analysis.conflicts = _dedupe_conflicts(
+                analysis.conflicts + global_state.conflicts
+            )
+            analysis.maximal_sets = global_state.maximal_good_sets or _fallback_sets(
+                combined, log, analysis
+            )
 
     for state in analysis.searches:
         if state.error:

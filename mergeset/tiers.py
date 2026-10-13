@@ -1019,6 +1019,12 @@ def analyze_tiered(
         (logs[screen.name], _tier_oracle(repo, analysis, screen, emit, **merging))
     ]
     for tier in tiers[1:]:
+        if (aborted := _aborted(analysis)) is not None:
+            # An ERROR means the experiment cannot be run (ADR 0036): asking
+            # again, a tier deeper or for `must_include`, spends the same
+            # failing call (a resolver's timeout, minutes each) once more.
+            _skip(result, analysis, tier, f"an earlier search aborted: {aborted}", emit)
+            break
         if not tier.is_available():
             _skip(
                 result,
@@ -1102,7 +1108,11 @@ def analyze_tiered(
             _skip(result, analysis, tier, f"it aborted: {state.error}", emit)
             break
 
-    if must_include:
+    if must_include and _aborted(analysis) is not None:
+        analysis.notes.append(
+            f"--must-include was not evaluated: a search aborted ({_aborted(analysis)})."
+        )
+    elif must_include:
         result.must_include = frozenset(must_include)
         # The same budget, priced at the depth actually reached. Passing only
         # `confirm_max_runs` left this phase completely uncapped whenever the
@@ -1276,6 +1286,11 @@ def _minimal(conflicts: Sequence[ChangeSet]) -> List[ChangeSet]:
         (c for c in unique if not any(other < c for other in unique)),
         key=lambda c: (len(c), set_key(c)),
     )
+
+
+def _aborted(analysis: Analysis) -> Optional[str]:
+    """Why a search stopped on an ERROR, or ``None`` if none did."""
+    return next((s.error for s in analysis.searches if s.error), None)
 
 
 def _skip(
