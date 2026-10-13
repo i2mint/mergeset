@@ -480,12 +480,30 @@ True
 True
 ```
 
-#### caching(evaluate)
+#### caching(evaluate, , infer_pass=True)
 
 Wrap `evaluate` so known sets are answered from the log.
 
 The returned callable is what the solver should be handed: it never
 spends a real evaluation on a set the log can already decide.
+
+`infer_pass=False` runs a set whose PASS would only be *inferred*
+from a passing superset, and records it: for a caller that needs an
+exact PASS behind every claim (a cheaper tier on the way to a deeper
+one). Exact rows and inferred FAILs are still answered from the log.
+
+```pycon
+>>> log = EvaluationLog(MemoryLines())
+>>> _ = log.record(Evaluation(frozenset('ab'), Verdict.PASS))
+>>> runs = []
+>>> def run(s):
+...     runs.append(set_key(s))
+...     return Evaluation(s, Verdict.PASS)
+>>> log.caching(run)(frozenset('a')).cached, runs
+(True, [])
+>>> log.caching(run, infer_pass=False)(frozenset('a')).cached, runs
+(False, [('a',)])
+```
 
 #### exact(subset)
 

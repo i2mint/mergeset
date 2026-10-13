@@ -1073,10 +1073,26 @@ whose recorded commits or validator differ never counts.</p></li>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="mergeset.EvaluationLog.caching">
-<span class="sig-name descname"><span class="pre">caching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/log.html#EvaluationLog.caching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.EvaluationLog.caching" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">caching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluate</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">infer_pass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/log.html#EvaluationLog.caching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.EvaluationLog.caching" title="Link to this definition">#</a></dt>
 <dd><p>Wrap <code class="docutils literal notranslate"><span class="pre">evaluate</span></code> so known sets are answered from the log.</p>
 <p>The returned callable is what the solver should be handed: it never
 spends a real evaluation on a set the log can already decide.</p>
+<p><code class="docutils literal notranslate"><span class="pre">infer_pass=False</span></code> runs a set whose PASS would only be <em>inferred</em>
+from a passing superset, and records it: for a caller that needs an
+exact PASS behind every claim (a cheaper tier on the way to a deeper
+one). Exact rows and inferred FAILs are still answered from the log.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="n">EvaluationLog</span><span class="p">(</span><span class="n">MemoryLines</span><span class="p">())</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">Evaluation</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="s1">'ab'</span><span class="p">),</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">))</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">runs</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+</span><span data-line="5"><span class="gp">... </span>    <span class="n">runs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">set_key</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+</span><span data-line="6"><span class="gp">... </span>    <span class="k">return</span> <span class="n">Evaluation</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">)</span>
+</span><span data-line="7"><span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="o">.</span><span class="n">caching</span><span class="p">(</span><span class="n">run</span><span class="p">)(</span><span class="nb">frozenset</span><span class="p">(</span><span class="s1">'a'</span><span class="p">))</span><span class="o">.</span><span class="n">cached</span><span class="p">,</span> <span class="n">runs</span>
+</span><span data-line="8"><span class="go">(True, [])</span>
+</span><span data-line="9"><span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="o">.</span><span class="n">caching</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="n">infer_pass</span><span class="o">=</span><span class="kc">False</span><span class="p">)(</span><span class="nb">frozenset</span><span class="p">(</span><span class="s1">'a'</span><span class="p">))</span><span class="o">.</span><span class="n">cached</span><span class="p">,</span> <span class="n">runs</span>
+</span><span data-line="10"><span class="go">(False, [('a',)])</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 </dl>
 </dd></dl>
@@ -3266,7 +3282,7 @@ exists to prevent — so both halves of the key are slugified.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=056c92e6"></script>
+      <script src="../_static/documentation_options.js?v=a11416ff"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

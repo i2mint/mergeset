@@ -1,4 +1,4 @@
-> built 2026-10-13 08:33 UTC from 0f66796 (main) · mergeset 0.0.20. Details: build_info.json
+> built 2026-10-13 08:49 UTC from 3a339da (main) · mergeset 0.0.21. Details: build_info.json
 
 # index.html.md
 
@@ -2041,12 +2041,30 @@ True
 True
 ```
 
-#### caching(evaluate)
+#### caching(evaluate, , infer_pass=True)
 
 Wrap `evaluate` so known sets are answered from the log.
 
 The returned callable is what the solver should be handed: it never
 spends a real evaluation on a set the log can already decide.
+
+`infer_pass=False` runs a set whose PASS would only be *inferred*
+from a passing superset, and records it: for a caller that needs an
+exact PASS behind every claim (a cheaper tier on the way to a deeper
+one). Exact rows and inferred FAILs are still answered from the log.
+
+```pycon
+>>> log = EvaluationLog(MemoryLines())
+>>> _ = log.record(Evaluation(frozenset('ab'), Verdict.PASS))
+>>> runs = []
+>>> def run(s):
+...     runs.append(set_key(s))
+...     return Evaluation(s, Verdict.PASS)
+>>> log.caching(run)(frozenset('a')).cached, runs
+(True, [])
+>>> log.caching(run, infer_pass=False)(frozenset('a')).cached, runs
+(False, [('a',)])
+```
 
 #### exact(subset)
 
@@ -3898,12 +3916,30 @@ True
 True
 ```
 
-#### caching(evaluate)
+#### caching(evaluate, , infer_pass=True)
 
 Wrap `evaluate` so known sets are answered from the log.
 
 The returned callable is what the solver should be handed: it never
 spends a real evaluation on a set the log can already decide.
+
+`infer_pass=False` runs a set whose PASS would only be *inferred*
+from a passing superset, and records it: for a caller that needs an
+exact PASS behind every claim (a cheaper tier on the way to a deeper
+one). Exact rows and inferred FAILs are still answered from the log.
+
+```pycon
+>>> log = EvaluationLog(MemoryLines())
+>>> _ = log.record(Evaluation(frozenset('ab'), Verdict.PASS))
+>>> runs = []
+>>> def run(s):
+...     runs.append(set_key(s))
+...     return Evaluation(s, Verdict.PASS)
+>>> log.caching(run)(frozenset('a')).cached, runs
+(True, [])
+>>> log.caching(run, infer_pass=False)(frozenset('a')).cached, runs
+(False, [('a',)])
+```
 
 #### exact(subset)
 
@@ -6084,18 +6120,18 @@ log distinguishes `build: ...` from `test: tests/x.ts::y`.
 
 # About this build
 
-This documentation was built on **2026-10-13 08:33 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/0f667960084f6ce9a05aa0744f03083d318ec17f"><code>0f66796</code></a> on branch <code>main</code>, for **mergeset 0.0.20** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 08:49 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/3a339da1ece616cf8865fadd1eb63f70e5d6f622"><code>3a339da</code></a> on branch <code>main</code>, for **mergeset 0.0.21** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.20) is behind the latest release on PyPI (0.0.21): `pip install mergeset` gives newer code than these docs describe.
+- The documented version (0.0.21) is behind the latest release on PyPI (0.0.22): `pip install mergeset` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/mergeset/commit/0f667960084f6ce9a05aa0744f03083d318ec17f"><code>0f667960084f6ce9a05aa0744f03083d318ec17f</code></a> |
+| Commit              | <a href="https://github.com/i2mint/mergeset/commit/3a339da1ece616cf8865fadd1eb63f70e5d6f622"><code>3a339da1ece616cf8865fadd1eb63f70e5d6f622</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -6106,9 +6142,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/mergeset</code>                                                               |
-| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38369906166">38369906166</a>      |
+| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38371805158">38371805158</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>0f667960084f6ce9a05aa0744f03083d318ec17f</code> (in the history of the built commit) |
+| Event commit | <code>3a339da1ece616cf8865fadd1eb63f70e5d6f622</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6133,13 +6169,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/mergeset/0.0.21/">0.0.21</a>, newer than the documented version (0.0.20).
+Latest release: <a href="https://pypi.org/project/mergeset/0.0.22/">0.0.22</a>, newer than the documented version (0.0.21).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/mergeset && cd mergeset
-git checkout 0f667960084f6ce9a05aa0744f03083d318ec17f
+git checkout 3a339da1ece616cf8865fadd1eb63f70e5d6f622
 pip install "epythet==0.2.15"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
