@@ -112,7 +112,9 @@ def inputs_digest(paths: Iterable[str]) -> Dict[str, str]:
     These are the files a validator runs that its command text does not
     capture: a script outside the analysed repository, a config it reads. A
     directory is digested over every file under it (names and contents,
-    following symlinks, each directory once), a missing path as ``'missing'``
+    following symlinks, each directory once; ``__pycache__``, ``*.pyc`` and
+    dot-directories such as ``.git`` are left out, since running the inputs
+    writes them), a missing path as ``'missing'``
     -- so creating it later changes the digest too -- and one that cannot be
     read as ``'unreadable'``. Relative paths are resolved against the current
     directory, *not* the worktree: files inside the repository are already
@@ -148,13 +150,23 @@ def inputs_digest(paths: Iterable[str]) -> Dict[str, str]:
     def tree_digest(path: str) -> str:
         digest = hashlib.sha256()
         seen = set()
-        for root, dirs, files in os.walk(path, followlinks=True):
+
+        def unreadable(error: OSError) -> None:
+            digest.update(f"unreadable:{error.filename}".encode() + b"\0")
+
+        for root, dirs, files in os.walk(path, followlinks=True, onerror=unreadable):
             real = os.path.realpath(root)
             if real in seen:  # a symlink loop, or the same directory twice
                 dirs[:] = []
                 continue
             seen.add(real)
-            dirs.sort()
+            # What running the inputs writes beside them (a bytecode cache, a
+            # tool's cache directory) is not what they are: counting it would
+            # stop the first run of a script that imports a sibling.
+            dirs[:] = sorted(
+                d for d in dirs if d != "__pycache__" and not d.startswith(".")
+            )
+            files = [f for f in files if not f.endswith((".pyc", ".pyo"))]
             for name in sorted(files):
                 full = os.path.join(root, name)
                 digest.update(os.path.relpath(full, path).encode() + b"\0")
@@ -205,6 +217,10 @@ def _fingerprinted(validate: Callable, kind: str, **spec: Any) -> Callable:
     readable in front of it, for a person looking at a log row.
     """
     inputs = spec.get("inputs") or ()
+    if not isinstance(inputs, (str, bytes, os.PathLike)):
+        # Read once: a generator digested here would be empty when the
+        # validator checks its inputs again around each run.
+        inputs = spec["inputs"] = list(inputs)
     spec = _same_verdicts(**spec)
     payload = json.dumps({"kind": kind, **spec}, sort_keys=True, default=str)
     digest = hashlib.sha256(payload.encode()).hexdigest()[:16]
@@ -224,7 +240,9 @@ def _inputs_held(
     by the new script and recorded under the old one's fingerprint, so that
     reverting the edit later would let those rows answer the old script. A
     verdict reached either side of the edit is refused instead, and the run
-    stops with the reason: the next run digests the new contents.
+    stops with the reason: the next run digests the new contents. The inputs
+    are digested twice per run, before and after; keep them to the files the
+    command reads, not a whole environment.
     """
 
     def check(when: str) -> None:

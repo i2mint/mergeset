@@ -710,14 +710,26 @@ def _run(
             validate_optional=validate_optional,
             validate_input=validate_input,
         )
-        missing = [p for p in validate_input if not os.path.exists(os.path.expanduser(p))]
+        candidates = {c.id for c in changes}
+        missing = [
+            p
+            for p in validate_input
+            if not os.path.exists(os.path.expanduser(p))
+            or p in candidates
+            or (
+                not os.path.isabs(os.path.expanduser(p))
+                and git(repo, "rev-parse", "--verify", "--quiet", f"{p}^{{commit}}").ok
+            )
+        ]
         if missing:
             # `--validate-input` takes every value after it, so a branch typed
             # after it lands here and silently leaves the candidates.
             raise ValueError(
-                f"--validate-input names no file: {', '.join(missing)}. It "
-                "takes every value after it, so put branch names before it; "
-                "it names files outside the repository that the validation runs."
+                f"--validate-input names no file, or names a branch: "
+                f"{', '.join(missing)}. It takes every value after it, so put "
+                "branch names before it; it names files outside the repository "
+                "that the validation runs (give a path that is also a branch "
+                "name as ./name or an absolute path)."
             )
         if validate_input and merge_only and not tier:
             # Merge-only runs nothing, so the files would be read and ignored.

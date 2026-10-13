@@ -202,7 +202,7 @@ def test_a_branch_typed_after_validate_input_is_refused(repo, tmp_path):
         report_dir=str(tmp_path / "reports"),
         quiet=True,
     )
-    assert "--validate-input names no file: feat-d" in out
+    assert "names a branch: feat-d" in out
 
 
 def test_an_input_edited_mid_run_stops_the_run(tmp_path):
@@ -266,3 +266,52 @@ def test_js_validation_takes_inputs(tmp_path):
 def test_inputs_with_an_unfingerprinted_pytest_selection_are_refused(tmp_path):
     with pytest.raises(ValueError, match="select_paths"):
         pytest_validation(select_paths=lambda wt: [], inputs=[str(tmp_path)])
+
+
+def test_a_bytecode_cache_written_by_the_run_is_not_an_edit(repo, tmp_path):
+    checks = tmp_path / "checks"
+    checks.mkdir()
+    (checks / "helper.py").write_text("OK = 0\n")
+    (checks / "smoke.py").write_text("import helper, sys\nsys.exit(helper.OK)\n")
+    import sys
+
+    validate = command_validation(
+        f'"{sys.executable}" "{checks / "smoke.py"}"', inputs=[str(checks)]
+    )
+    analysis = _analyze(repo, EvaluationLog(str(tmp_path / "eval.jsonl")), validate)
+    assert _sets(analysis) == {("feat-b", "feat-d")}
+    assert (checks / "__pycache__").is_dir(), "the run did write a cache"
+
+
+def test_a_generator_of_inputs_is_read_once(tmp_path):
+    script = tmp_path / "check.py"
+    script.write_text(_PASS)
+    validate = command_validation(
+        py_command_existing(tmp_path), inputs=(p for p in [str(script)])
+    )
+    assert validate(str(tmp_path)).ok
+
+
+def test_a_branch_that_is_also_a_directory_is_refused(repo, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "feat-d").mkdir()
+    out = cli.branches(
+        ["feat-b"],
+        repo=repo,
+        base="main",
+        validate_command="true",
+        validate_input=[str(_touch(tmp_path / "chk.sh")), "feat-d"],
+        report_dir=str(tmp_path / "reports"),
+        quiet=True,
+    )
+    assert "names a branch: feat-d" in out
+    ok = cli.branches(
+        ["feat-b"],
+        repo=repo,
+        base="main",
+        validate_command="true",
+        validate_input=["./feat-d"],
+        report_dir=str(tmp_path / "reports"),
+        quiet=True,
+    )
+    assert "--validate-input" not in ok
