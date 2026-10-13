@@ -233,6 +233,32 @@ class TieredAnalysis:
         """The answer: maximal sets at the depth reached."""
         return list(self.analysis.maximal_sets)
 
+    def cost_lines(self) -> List[str]:
+        """One line per tier: what it ran, what it spent, and how it is priced.
+
+        The price says where it came from -- ``measured`` from the tier's own
+        log, ``declared`` by the caller, or ``unknown`` -- because an estimate
+        with no provenance reads as a fact. A cost model that publishes no
+        ``summary()`` still gets the runs and the spend.
+        """
+        summary = getattr(self.cost_model, "summary", lambda: {})()
+        lines = []
+        for tier in self.tiers:
+            row = summary.get(tier.name, {})
+            spent = round(self.spent.get(tier.name, 0.0), 1)
+            runs = self.runs.get(tier.name, 0)
+            line = f"Tier `{tier.name}`: {runs} run{'s' if runs != 1 else ''}, {spent}s"
+            if row.get("source") == "measured":
+                line += f"; priced from measurements, median {row['median_seconds']}s"
+            elif row.get("source") == "declared":
+                line += f"; priced as declared, {row['declared_seconds']}s per run"
+            elif row:
+                line += "; no price known"
+            if tier.name in self.skipped:
+                line += "; skipped (the reason is in the notes)"
+            lines.append(line + ".")
+        return lines
+
     def verified_tier(self, subset: ChangeSet) -> Optional[str]:
         """The deepest tier that recorded an exact PASS for ``subset``.
 
@@ -824,6 +850,17 @@ def analyze_tiered(
             f"Tier names must stay distinct once made key-safe; {names} give "
             f"{keys}. Each tier keeps its own evaluation log, so two tiers "
             "sharing a key would let a cheap PASS answer an expensive question."
+        )
+
+    # Checked before the screen, not after it: `best_set_including` refuses an
+    # unknown id too, but only once the whole screen and every confirm stage
+    # have been paid for -- a typo in a change id should cost nothing.
+    unknown = set(must_include) - {c.id for c in changes}
+    if unknown:
+        raise ValueError(
+            f"must_include names changes that are not candidates: "
+            f"{', '.join(sorted(unknown))}. The candidates are: "
+            f"{', '.join(sorted(c.id for c in changes)) or '(none)'}."
         )
 
     emit = on_event or (lambda name, payload: None)

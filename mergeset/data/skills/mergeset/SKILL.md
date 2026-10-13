@@ -34,6 +34,17 @@ python -m mergeset prs OWNER/REPO --repo . \
     --reuse-worktree /tmp/mergeset-wt --max-seconds 3600
 ```
 
+When the decisive check is too slow to run on every set (browser tests, a container build), make it a deeper tier: the first tier screens, later tiers confirm only what survived, each with its own log.
+
+```bash
+python -m mergeset prs OWNER/REPO --repo . \
+    --validate-stage 'setup:pnpm install --frozen-lockfile' 'test:pnpm run test' \
+    --tier unit 'e2e:pnpm run e2e' --tier-cost 'e2e:300' \
+    --confirm-budget-seconds 1800 --must-include pr42
+```
+
+A bare `--tier NAME` is the validator the `--validate-*` flags describe; `'name:command'` is a one-command tier. `--must-include` adds "the best plan that keeps this change" alongside the main answer. `--log-path` is refused with `--tier` (each tier has its own log).
+
 Do not chain a sequence into one `--validate-command` string. It costs you the three things that matter: the setup stage stops being skippable (a dependency install on every evaluation), build and test failures collapse into one exit code, and an advisory lint becomes a veto.
 
 `--merge-only` costs seconds and usually finds most of the conflicts. Read that report before spending anything.
