@@ -23,6 +23,7 @@ mergeset.validation
       file_fingerprint
       fingerprint_of
       flake_tolerant
+      inputs_digest
       js_validation
       merge_only_validation
       pytest_validation

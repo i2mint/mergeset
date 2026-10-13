@@ -36,6 +36,7 @@
       staged_validation
       js_validation
       file_fingerprint
+      inputs_digest
       tips
       close_down
       close_up

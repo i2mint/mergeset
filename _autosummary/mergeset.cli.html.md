@@ -19,7 +19,7 @@ decide that `--max-seconds` is a float rather than the string `"600"`.
 | [`prs`](#mergeset.cli.prs)(repo_spec, \*[, repo, author, ...])   | Find maximal mergeable sets among a repository's open pull requests.      |
 | [`show_log`](#mergeset.cli.show_log)(\*[, log_path, repo])            | Print what the evaluation log already knows, without evaluating anything. |
 
-### mergeset.cli.branches(branch, , repo='.', base='HEAD', validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, merge_only=False, tier=None, tier_cost=None, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, confirm_budget_seconds=None, confirm_max_runs=None, confirm_max_sets=None, must_include=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
+### mergeset.cli.branches(branch, , repo='.', base='HEAD', validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, validate_input=None, merge_only=False, tier=None, tier_cost=None, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, confirm_budget_seconds=None, confirm_max_runs=None, confirm_max_sets=None, must_include=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
 
 Find maximal mergeable sets among the given branches.
 
@@ -41,6 +41,13 @@ Find maximal mergeable sets among the given branches.
   * **validate_optional** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – Stage name, repeatable — its failure is recorded but
     does not veto the set. Use it for a lint pass the project treats as
     advisory.
+  * **validate_input** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – Path, repeatable — a file (or directory) outside the
+    repository that the validation runs, such as the script in
+    `--validate-command 'python ~/checks/smoke.py'`. Its contents join
+    the validator’s fingerprint, so editing it retires the verdicts the
+    old version gave; without it, only the command’s text counts. Files
+    inside the repository need no flag: the commits pin them. Applies
+    to every tier.
   * **merge_only** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Skip validation entirely; only textual mergeability counts.
   * **tier** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – `'name:command'`, repeatable, ordered cheapest-first — tiered
     validation: the first tier screens every candidate set, and each
@@ -125,7 +132,7 @@ merges the declarations on top.
 * **Return type:**
   [`int`](https://docs.python.org/3/builtins/functions.html#int)
 
-### mergeset.cli.prs(repo_spec, , repo='.', author=None, updated_within_hours=None, base=None, include_drafts=False, validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, merge_only=False, tier=None, tier_cost=None, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, confirm_budget_seconds=None, confirm_max_runs=None, confirm_max_sets=None, must_include=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
+### mergeset.cli.prs(repo_spec, , repo='.', author=None, updated_within_hours=None, base=None, include_drafts=False, validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, validate_input=None, merge_only=False, tier=None, tier_cost=None, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, confirm_budget_seconds=None, confirm_max_runs=None, confirm_max_sets=None, must_include=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
 
 Find maximal mergeable sets among a repository’s open pull requests.
 
@@ -141,6 +148,9 @@ Find maximal mergeable sets among a repository’s open pull requests.
   * **validate_fingerprint** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – `'stage:path'`, repeatable — skip a stage unless
     that file changed (a lockfile, typically).
   * **validate_optional** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – Stage name, repeatable — recorded, but not a veto.
+  * **validate_input** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – Path, repeatable — a file outside the repository the
+    validation runs; its contents join the fingerprint. See
+    `mergeset branches --help`.
   * **tier** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – `'name:command'`, repeatable, cheapest-first — tiered validation;
     a bare name is the tier the –validate-\* flags describe. See
     `mergeset branches --help` for how tiers and stages compose.

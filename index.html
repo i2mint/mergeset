@@ -249,7 +249,9 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="8"><span class="w">    </span>--reuse-worktree<span class="w"> </span>/tmp/mergeset-wt
 </span></pre></div>
 </div>
-<p>An optional stage’s failure is recorded but does not veto the set — for a lint the project runs as a separate job rather than a gate. From the library:</p>
+<p>An optional stage’s failure is recorded but does not veto the set — for a lint the project runs as a separate job rather than a gate.</p>
+<p>The evaluation log reuses a verdict only when the commits and the validator are the same, and “the validator” means its command text. When the command runs a script that lives outside the repository (<code class="docutils literal notranslate"><span class="pre">--validate-command</span> <span class="pre">'python</span> <span class="pre">~/checks/smoke.py'</span></code>), add <code class="docutils literal notranslate"><span class="pre">--validate-input</span> <span class="pre">~/checks/smoke.py</span></code> (repeatable; a directory works too): the script’s contents then join the validator’s fingerprint, and editing it re-runs the sets instead of reusing the old script’s verdicts. In the library, <code class="docutils literal notranslate"><span class="pre">command_validation</span></code>, <code class="docutils literal notranslate"><span class="pre">pytest_validation</span></code>, <code class="docutils literal notranslate"><span class="pre">act_validation</span></code>, <code class="docutils literal notranslate"><span class="pre">staged_validation</span></code> and <code class="docutils literal notranslate"><span class="pre">js_validation</span></code> take <code class="docutils literal notranslate"><span class="pre">inputs=[...]</span></code>. The contents are read when the validator is made and checked again around every run: an input edited mid-run stops the run instead of recording a verdict under the old fingerprint.</p>
+<p>From the library:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">mergeset</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationStage</span><span class="p">,</span> <span class="n">staged_validation</span><span class="p">,</span> <span class="n">file_fingerprint</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="n">validate</span> <span class="o">=</span> <span class="n">staged_validation</span><span class="p">(</span>
@@ -308,7 +310,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-13 09:21 UTC from <a href="https://github.com/i2mint/mergeset/commit/79931e5b946f1e9dbe3b46ee84cc885372bf1ac6">79931e5</a> (main) · mergeset 0.0.23 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-13 10:52 UTC from <a href="https://github.com/i2mint/mergeset/commit/32d64c09d186042f3549d8a41494fa903efffd27">32d64c0</a> (main) · mergeset 0.0.24 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -343,7 +345,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=3294188c"></script>
+      <script src="_static/documentation_options.js?v=f91d8841"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

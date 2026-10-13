@@ -1,4 +1,4 @@
-> built 2026-10-13 09:21 UTC from 79931e5 (main) · mergeset 0.0.23. Details: build_info.json
+> built 2026-10-13 10:52 UTC from 32d64c0 (main) · mergeset 0.0.24. Details: build_info.json
 
 # index.html.md
 
@@ -124,7 +124,11 @@ python -m mergeset prs OWNER/REPO --repo . \
     --reuse-worktree /tmp/mergeset-wt
 ```
 
-An optional stage’s failure is recorded but does not veto the set — for a lint the project runs as a separate job rather than a gate. From the library:
+An optional stage’s failure is recorded but does not veto the set — for a lint the project runs as a separate job rather than a gate.
+
+The evaluation log reuses a verdict only when the commits and the validator are the same, and “the validator” means its command text. When the command runs a script that lives outside the repository (`--validate-command 'python ~/checks/smoke.py'`), add `--validate-input ~/checks/smoke.py` (repeatable; a directory works too): the script’s contents then join the validator’s fingerprint, and editing it re-runs the sets instead of reusing the old script’s verdicts. In the library, `command_validation`, `pytest_validation`, `act_validation`, `staged_validation` and `js_validation` take `inputs=[...]`. The contents are read when the validator is made and checked again around every run: an input edited mid-run stops the run instead of recording a verdict under the old fingerprint.
+
+From the library:
 
 ```python
 from mergeset import ValidationStage, staged_validation, file_fingerprint
@@ -852,7 +856,7 @@ decide that `--max-seconds` is a float rather than the string `"600"`.
 | [`prs`](_autosummary/mergeset.cli.html.md#mergeset.cli.prs)(repo_spec, \*[, repo, author, ...])   | Find maximal mergeable sets among a repository's open pull requests.      |
 | [`show_log`](_autosummary/mergeset.cli.html.md#mergeset.cli.show_log)(\*[, log_path, repo])            | Print what the evaluation log already knows, without evaluating anything. |
 
-### mergeset.cli.branches(branch, , repo='.', base='HEAD', validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, merge_only=False, tier=None, tier_cost=None, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, confirm_budget_seconds=None, confirm_max_runs=None, confirm_max_sets=None, must_include=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
+### mergeset.cli.branches(branch, , repo='.', base='HEAD', validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, validate_input=None, merge_only=False, tier=None, tier_cost=None, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, confirm_budget_seconds=None, confirm_max_runs=None, confirm_max_sets=None, must_include=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
 
 Find maximal mergeable sets among the given branches.
 
@@ -874,6 +878,13 @@ Find maximal mergeable sets among the given branches.
   * **validate_optional** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – Stage name, repeatable — its failure is recorded but
     does not veto the set. Use it for a lint pass the project treats as
     advisory.
+  * **validate_input** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – Path, repeatable — a file (or directory) outside the
+    repository that the validation runs, such as the script in
+    `--validate-command 'python ~/checks/smoke.py'`. Its contents join
+    the validator’s fingerprint, so editing it retires the verdicts the
+    old version gave; without it, only the command’s text counts. Files
+    inside the repository need no flag: the commits pin them. Applies
+    to every tier.
   * **merge_only** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Skip validation entirely; only textual mergeability counts.
   * **tier** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – `'name:command'`, repeatable, ordered cheapest-first — tiered
     validation: the first tier screens every candidate set, and each
@@ -958,7 +969,7 @@ merges the declarations on top.
 * **Return type:**
   [`int`](https://docs.python.org/3/builtins/functions.html#int)
 
-### mergeset.cli.prs(repo_spec, , repo='.', author=None, updated_within_hours=None, base=None, include_drafts=False, validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, merge_only=False, tier=None, tier_cost=None, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, confirm_budget_seconds=None, confirm_max_runs=None, confirm_max_sets=None, must_include=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
+### mergeset.cli.prs(repo_spec, , repo='.', author=None, updated_within_hours=None, base=None, include_drafts=False, validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, validate_input=None, merge_only=False, tier=None, tier_cost=None, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, confirm_budget_seconds=None, confirm_max_runs=None, confirm_max_sets=None, must_include=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
 
 Find maximal mergeable sets among a repository’s open pull requests.
 
@@ -974,6 +985,9 @@ Find maximal mergeable sets among a repository’s open pull requests.
   * **validate_fingerprint** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – `'stage:path'`, repeatable — skip a stage unless
     that file changed (a lockfile, typically).
   * **validate_optional** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – Stage name, repeatable — recorded, but not a veto.
+  * **validate_input** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – Path, repeatable — a file outside the repository the
+    validation runs; its contents join the fingerprint. See
+    `mergeset branches --help`.
   * **tier** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – `'name:command'`, repeatable, cheapest-first — tiered validation;
     a bare name is the tier the –validate-\* flags describe. See
     `mergeset branches --help` for how tiers and stages compose.
@@ -1642,14 +1656,15 @@ changes.
 | [`local_branch_names`](_autosummary/mergeset.html.md#mergeset.local_branch_names)(repo, \*[, pattern, exclude])    | Local branch names, optionally filtered by a glob `pattern`.                                                               |
 | [`detect_stacks`](_autosummary/mergeset.html.md#mergeset.detect_stacks)(changes)                              | Map change id -> the change id it is stacked on, for PR stacks.                                                            |
 | [`pytest_validation`](_autosummary/mergeset.html.md#mergeset.pytest_validation)(\*[, args, timeout, env, ...])    | A validator that runs the project's pytest suite, fail-fast by default.                                                    |
-| [`command_validation`](_autosummary/mergeset.html.md#mergeset.command_validation)(command, \*[, timeout, env])     | A validator that runs an arbitrary shell command in the merged worktree.                                                   |
-| [`act_validation`](_autosummary/mergeset.html.md#mergeset.act_validation)(\*[, job, timeout, env])             | A validator that runs the repository's GitHub Actions locally with `act`.                                                  |
+| [`command_validation`](_autosummary/mergeset.html.md#mergeset.command_validation)(command, \*[, timeout, ...])     | A validator that runs an arbitrary shell command in the merged worktree.                                                   |
+| [`act_validation`](_autosummary/mergeset.html.md#mergeset.act_validation)(\*[, job, timeout, env, inputs])     | A validator that runs the repository's GitHub Actions locally with `act`.                                                  |
 | [`callable_validation`](_autosummary/mergeset.html.md#mergeset.callable_validation)(func)                           | Adapt a plain user callable into a validator.                                                                              |
 | [`merge_only_validation`](_autosummary/mergeset.html.md#mergeset.merge_only_validation)()                             | A validator that accepts anything that merged cleanly.                                                                     |
 | [`flake_tolerant`](_autosummary/mergeset.html.md#mergeset.flake_tolerant)(validate, \*[, retries])             | Re-run a failing validation `retries` times before believing it.                                                           |
-| [`staged_validation`](_autosummary/mergeset.html.md#mergeset.staged_validation)(stages, \*[, env])                | Run an ordered list of [`ValidationStage`](_autosummary/mergeset.html.md#mergeset.ValidationStage) steps, reporting which one failed. |
+| [`staged_validation`](_autosummary/mergeset.html.md#mergeset.staged_validation)(stages, \*[, env, inputs])        | Run an ordered list of [`ValidationStage`](_autosummary/mergeset.html.md#mergeset.ValidationStage) steps, reporting which one failed. |
 | [`js_validation`](_autosummary/mergeset.html.md#mergeset.js_validation)(\*[, install, build, test, ...])      | A staged validator shaped like a JavaScript project.                                                                       |
 | [`file_fingerprint`](_autosummary/mergeset.html.md#mergeset.file_fingerprint)(\*paths)                           | A fingerprint function over the contents of the given repo-relative files.                                                 |
+| [`inputs_digest`](_autosummary/mergeset.html.md#mergeset.inputs_digest)(paths)                                | A digest of each path's current contents, keyed by its real path.                                                          |
 | [`tips`](_autosummary/mergeset.html.md#mergeset.tips)(subset, parents)                               | The members of `subset` that nothing else in `subset` is stacked on.                                                       |
 | [`close_down`](_autosummary/mergeset.html.md#mergeset.close_down)(subset, parents)                         | Add every ancestor, so the set becomes a valid thing to ask for.                                                           |
 | [`close_up`](_autosummary/mergeset.html.md#mergeset.close_up)(subset, parents)                           | Add every descendant — what dropping these changes actually costs.                                                         |
@@ -2725,9 +2740,12 @@ Bases: [`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Enum`](h
 
 Outcome of evaluating a change set.
 
-### mergeset.act_validation(, job=None, timeout=None, env=None)
+### mergeset.act_validation(, job=None, timeout=None, env=None, inputs=())
 
 A validator that runs the repository’s GitHub Actions locally with `act`.
+
+`inputs`: files outside the repository that change verdicts (an
+`.actrc`, a secrets file); see [`inputs_digest()`](_autosummary/mergeset.html.md#mergeset.inputs_digest).
 
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]
@@ -3156,9 +3174,14 @@ Cartesian-combine per-component maximal sets into global ones.
 [('a', 'c')]
 ```
 
-### mergeset.command_validation(command, , timeout=None, env=None)
+### mergeset.command_validation(command, , timeout=None, env=None, inputs=())
 
 A validator that runs an arbitrary shell command in the merged worktree.
+
+`inputs` names the files outside the repository the command runs, such as
+the script in `python ~/checks/smoke.py`: their contents join the
+validator’s fingerprint, so an edited script is not answered by the old
+script’s verdicts (see [`inputs_digest()`](_autosummary/mergeset.html.md#mergeset.inputs_digest)).
 
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]
@@ -3460,6 +3483,39 @@ turns one `2**n` search into several much smaller ones.
 [('a', 'b'), ('c',)]
 ```
 
+### mergeset.inputs_digest(paths)
+
+A digest of each path’s current contents, keyed by its real path.
+
+These are the files a validator runs that its command text does not
+capture: a script outside the analysed repository, a config it reads. A
+directory is digested over every file under it (names and contents,
+following symlinks, each directory once; `__pycache__`, `*.pyc` and
+dot-directories such as `.git` are left out, since running the inputs
+writes them), a missing path as `'missing'`
+– so creating it later changes the digest too – and one that cannot be
+read as `'unreadable'`. Relative paths are resolved against the current
+directory, *not* the worktree: files inside the repository are already
+pinned by the commits. `paths` is a collection of paths: a lone string is
+refused, since it would be read one character at a time.
+
+* **Return type:**
+  [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+```pycon
+>>> import tempfile
+>>> with tempfile.NamedTemporaryFile('w', suffix='.py', delete=False) as f:
+...     _ = f.write('print(1)')
+>>> before = inputs_digest([f.name])
+>>> with open(f.name, 'w') as g:
+...     _ = g.write('print(2)')
+>>> inputs_digest([f.name]) == before
+False
+>>> os.remove(f.name)
+>>> list(inputs_digest([f.name]).values())
+['missing']
+```
+
 ### mergeset.install_skills(target='~/.claude/skills', , skills_root=None, link=True, overwrite=False)
 
 Put the bundled skills where an agent host will find them.
@@ -3487,13 +3543,14 @@ True
 []
 ```
 
-### mergeset.js_validation(, install='pnpm install --frozen-lockfile', build=None, test='pnpm run test', lint=None, lockfile='pnpm-lock.yaml', timeout=None)
+### mergeset.js_validation(, install='pnpm install --frozen-lockfile', build=None, test='pnpm run test', lint=None, lockfile='pnpm-lock.yaml', timeout=None, inputs=())
 
 A staged validator shaped like a JavaScript project.
 
 Install is fingerprinted on the lockfile so it runs only when dependencies
 actually changed; the build, when given, is a required prerequisite of the
-tests rather than part of them.
+tests rather than part of them. `inputs`: files outside the repository
+that any step runs (see [`inputs_digest()`](_autosummary/mergeset.html.md#mergeset.inputs_digest)).
 
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]
@@ -3659,7 +3716,7 @@ Turn `gh pr list` records into changes.
 * **Return type:**
   [`Iterator`](https://docs.python.org/3/library/typing.html#typing.Iterator)[[`Change`](_autosummary/mergeset.base.html.md#mergeset.base.Change)]
 
-### mergeset.pytest_validation(, args=('-x', '-q', '--tb=short', '-p', 'no:cacheprovider'), timeout=None, env=None, select_paths=None)
+### mergeset.pytest_validation(, args=('-x', '-q', '--tb=short', '-p', 'no:cacheprovider'), timeout=None, env=None, select_paths=None, inputs=())
 
 A validator that runs the project’s pytest suite, fail-fast by default.
 
@@ -3671,6 +3728,8 @@ A validator that runs the project’s pytest suite, fail-fast by default.
   * **select_paths** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]]) – `worktree -> test paths` — the seam for test-impact
     selection. Return only the tests the merged changes can affect and
     each evaluation gets dramatically cheaper. Default: run everything.
+  * **inputs** ([`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Files outside the repository whose contents change verdicts
+    (a shared `conftest.py`, a plugin); see [`inputs_digest()`](_autosummary/mergeset.html.md#mergeset.inputs_digest).
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]
 
@@ -3807,7 +3866,7 @@ callers keep using `/`:
 (['a/b'], 1)
 ```
 
-### mergeset.staged_validation(stages, , env=None)
+### mergeset.staged_validation(stages, , env=None, inputs=())
 
 Run an ordered list of [`ValidationStage`](_autosummary/mergeset.html.md#mergeset.ValidationStage) steps, reporting which one failed.
 
@@ -3820,6 +3879,9 @@ then a lint pass.
 
 The failing stage’s name is prefixed onto every reported failure id, so the
 log distinguishes `build: ...` from `test: tests/x.ts::y`.
+
+`inputs` names files outside the repository that any stage runs; their
+contents join the fingerprint (see [`inputs_digest()`](_autosummary/mergeset.html.md#mergeset.inputs_digest)).
 
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]
@@ -5963,6 +6025,13 @@ author knows what changes its verdicts:
 with `functools.wraps` copies the wrapped validator’s fingerprint along with
 its `__dict__`; a wrapper that changes what is checked must set its own.
 
+A fingerprint covers the command’s *text*. When the command runs a script that
+lives outside the analysed repository (`python ~/checks/smoke.py`), the
+script’s contents are not in it: files inside the repository are pinned by the
+commits, files outside it are not. Name such files with `inputs=` and their
+contents join the fingerprint, so editing the script retires the verdicts it
+gave (i2mint/mergeset#39).
+
 ### Module Attributes
 
 | [`DEFAULT_PYTEST_ARGS`](_autosummary/mergeset.validation.html.md#mergeset.validation.DEFAULT_PYTEST_ARGS)   | the answer we need is a bit, and the first failure has it.                  |
@@ -5971,20 +6040,21 @@ its `__dict__`; a wrapper that changes what is checked must set its own.
 
 ### Functions
 
-| [`act_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.act_validation)(\*[, job, timeout, env])          | A validator that runs the repository's GitHub Actions locally with `act`.                                                  |
-|---------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
-| [`callable_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.callable_validation)(func)                        | Adapt a plain user callable into a validator.                                                                              |
-| [`check_validation_capability`](_autosummary/mergeset.validation.html.md#mergeset.validation.check_validation_capability)(path[, runner])      | Raise a *fixable* error if `runner` cannot work on `path`.                                                                 |
-| [`command_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.command_validation)(command, \*[, timeout, env])  | A validator that runs an arbitrary shell command in the merged worktree.                                                   |
-| [`detect_runner`](_autosummary/mergeset.validation.html.md#mergeset.validation.detect_runner)(path)                              | Guess how this project is tested; `None` if nothing is recognizable.                                                       |
-| [`file_fingerprint`](_autosummary/mergeset.validation.html.md#mergeset.validation.file_fingerprint)(\*paths)                        | A fingerprint function over the contents of the given repo-relative files.                                                 |
-| [`fingerprint_of`](_autosummary/mergeset.validation.html.md#mergeset.validation.fingerprint_of)(validate)                         | What `validate` runs, as a short string -- or `None` when it cannot say.                                                   |
-| [`flake_tolerant`](_autosummary/mergeset.validation.html.md#mergeset.validation.flake_tolerant)(validate, \*[, retries])          | Re-run a failing validation `retries` times before believing it.                                                           |
-| [`js_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.js_validation)(\*[, install, build, test, ...])   | A staged validator shaped like a JavaScript project.                                                                       |
-| [`merge_only_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.merge_only_validation)()                          | A validator that accepts anything that merged cleanly.                                                                     |
-| [`pytest_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.pytest_validation)(\*[, args, timeout, env, ...]) | A validator that runs the project's pytest suite, fail-fast by default.                                                    |
-| [`recorded_fingerprint`](_autosummary/mergeset.validation.html.md#mergeset.validation.recorded_fingerprint)(validate)                   | The fingerprint a log row records for `validate`: never `None`.                                                            |
-| [`staged_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.staged_validation)(stages, \*[, env])             | Run an ordered list of [`ValidationStage`](_autosummary/mergeset.validation.html.md#mergeset.validation.ValidationStage) steps, reporting which one failed. |
+| [`act_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.act_validation)(\*[, job, timeout, env, inputs])   | A validator that runs the repository's GitHub Actions locally with `act`.                                                  |
+|----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
+| [`callable_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.callable_validation)(func)                         | Adapt a plain user callable into a validator.                                                                              |
+| [`check_validation_capability`](_autosummary/mergeset.validation.html.md#mergeset.validation.check_validation_capability)(path[, runner])       | Raise a *fixable* error if `runner` cannot work on `path`.                                                                 |
+| [`command_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.command_validation)(command, \*[, timeout, ...])   | A validator that runs an arbitrary shell command in the merged worktree.                                                   |
+| [`detect_runner`](_autosummary/mergeset.validation.html.md#mergeset.validation.detect_runner)(path)                               | Guess how this project is tested; `None` if nothing is recognizable.                                                       |
+| [`file_fingerprint`](_autosummary/mergeset.validation.html.md#mergeset.validation.file_fingerprint)(\*paths)                         | A fingerprint function over the contents of the given repo-relative files.                                                 |
+| [`fingerprint_of`](_autosummary/mergeset.validation.html.md#mergeset.validation.fingerprint_of)(validate)                          | What `validate` runs, as a short string -- or `None` when it cannot say.                                                   |
+| [`flake_tolerant`](_autosummary/mergeset.validation.html.md#mergeset.validation.flake_tolerant)(validate, \*[, retries])           | Re-run a failing validation `retries` times before believing it.                                                           |
+| [`inputs_digest`](_autosummary/mergeset.validation.html.md#mergeset.validation.inputs_digest)(paths)                              | A digest of each path's current contents, keyed by its real path.                                                          |
+| [`js_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.js_validation)(\*[, install, build, test, ...])    | A staged validator shaped like a JavaScript project.                                                                       |
+| [`merge_only_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.merge_only_validation)()                           | A validator that accepts anything that merged cleanly.                                                                     |
+| [`pytest_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.pytest_validation)(\*[, args, timeout, env, ...])  | A validator that runs the project's pytest suite, fail-fast by default.                                                    |
+| [`recorded_fingerprint`](_autosummary/mergeset.validation.html.md#mergeset.validation.recorded_fingerprint)(validate)                    | The fingerprint a log row records for `validate`: never `None`.                                                            |
+| [`staged_validation`](_autosummary/mergeset.validation.html.md#mergeset.validation.staged_validation)(stages, \*[, env, inputs])      | Run an ordered list of [`ValidationStage`](_autosummary/mergeset.validation.html.md#mergeset.validation.ValidationStage) steps, reporting which one failed. |
 
 ### Classes
 
@@ -6026,9 +6096,12 @@ One step of a staged validation.
     for an advisory pass, such as a lint the project runs as a separate
     CI job rather than a gate.
 
-### mergeset.validation.act_validation(, job=None, timeout=None, env=None)
+### mergeset.validation.act_validation(, job=None, timeout=None, env=None, inputs=())
 
 A validator that runs the repository’s GitHub Actions locally with `act`.
+
+`inputs`: files outside the repository that change verdicts (an
+`.actrc`, a secrets file); see [`inputs_digest()`](_autosummary/mergeset.validation.html.md#mergeset.validation.inputs_digest).
 
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]
@@ -6050,9 +6123,14 @@ Raise a *fixable* error if `runner` cannot work on `path`.
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-### mergeset.validation.command_validation(command, , timeout=None, env=None)
+### mergeset.validation.command_validation(command, , timeout=None, env=None, inputs=())
 
 A validator that runs an arbitrary shell command in the merged worktree.
+
+`inputs` names the files outside the repository the command runs, such as
+the script in `python ~/checks/smoke.py`: their contents join the
+validator’s fingerprint, so an edited script is not answered by the old
+script’s verdicts (see [`inputs_digest()`](_autosummary/mergeset.validation.html.md#mergeset.validation.inputs_digest)).
 
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]
@@ -6122,13 +6200,47 @@ breaks. This is the cheap defense; the honest one is
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]
 
-### mergeset.validation.js_validation(, install='pnpm install --frozen-lockfile', build=None, test='pnpm run test', lint=None, lockfile='pnpm-lock.yaml', timeout=None)
+### mergeset.validation.inputs_digest(paths)
+
+A digest of each path’s current contents, keyed by its real path.
+
+These are the files a validator runs that its command text does not
+capture: a script outside the analysed repository, a config it reads. A
+directory is digested over every file under it (names and contents,
+following symlinks, each directory once; `__pycache__`, `*.pyc` and
+dot-directories such as `.git` are left out, since running the inputs
+writes them), a missing path as `'missing'`
+– so creating it later changes the digest too – and one that cannot be
+read as `'unreadable'`. Relative paths are resolved against the current
+directory, *not* the worktree: files inside the repository are already
+pinned by the commits. `paths` is a collection of paths: a lone string is
+refused, since it would be read one character at a time.
+
+* **Return type:**
+  [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+```pycon
+>>> import tempfile
+>>> with tempfile.NamedTemporaryFile('w', suffix='.py', delete=False) as f:
+...     _ = f.write('print(1)')
+>>> before = inputs_digest([f.name])
+>>> with open(f.name, 'w') as g:
+...     _ = g.write('print(2)')
+>>> inputs_digest([f.name]) == before
+False
+>>> os.remove(f.name)
+>>> list(inputs_digest([f.name]).values())
+['missing']
+```
+
+### mergeset.validation.js_validation(, install='pnpm install --frozen-lockfile', build=None, test='pnpm run test', lint=None, lockfile='pnpm-lock.yaml', timeout=None, inputs=())
 
 A staged validator shaped like a JavaScript project.
 
 Install is fingerprinted on the lockfile so it runs only when dependencies
 actually changed; the build, when given, is a required prerequisite of the
-tests rather than part of them.
+tests rather than part of them. `inputs`: files outside the repository
+that any step runs (see [`inputs_digest()`](_autosummary/mergeset.validation.html.md#mergeset.validation.inputs_digest)).
 
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]
@@ -6143,7 +6255,7 @@ conflict, which on real branch sets is most of them.
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]
 
-### mergeset.validation.pytest_validation(, args=('-x', '-q', '--tb=short', '-p', 'no:cacheprovider'), timeout=None, env=None, select_paths=None)
+### mergeset.validation.pytest_validation(, args=('-x', '-q', '--tb=short', '-p', 'no:cacheprovider'), timeout=None, env=None, select_paths=None, inputs=())
 
 A validator that runs the project’s pytest suite, fail-fast by default.
 
@@ -6155,6 +6267,8 @@ A validator that runs the project’s pytest suite, fail-fast by default.
   * **select_paths** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]]) – `worktree -> test paths` — the seam for test-impact
     selection. Return only the tests the merged changes can affect and
     each evaluation gets dramatically cheaper. Default: run everything.
+  * **inputs** ([`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Files outside the repository whose contents change verdicts
+    (a shared `conftest.py`, a plugin); see [`inputs_digest()`](_autosummary/mergeset.validation.html.md#mergeset.validation.inputs_digest).
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]
 
@@ -6170,7 +6284,7 @@ The fingerprint a log row records for `validate`: never `None`.
 'unknown'
 ```
 
-### mergeset.validation.staged_validation(stages, , env=None)
+### mergeset.validation.staged_validation(stages, , env=None, inputs=())
 
 Run an ordered list of [`ValidationStage`](_autosummary/mergeset.validation.html.md#mergeset.validation.ValidationStage) steps, reporting which one failed.
 
@@ -6184,6 +6298,9 @@ then a lint pass.
 The failing stage’s name is prefixed onto every reported failure id, so the
 log distinguishes `build: ...` from `test: tests/x.ts::y`.
 
+`inputs` names files outside the repository that any stage runs; their
+contents join the fingerprint (see [`inputs_digest()`](_autosummary/mergeset.validation.html.md#mergeset.validation.inputs_digest)).
+
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]
 
@@ -6194,18 +6311,16 @@ log distinguishes `build: ...` from `test: tests/x.ts::y`.
 
 # About this build
 
-This documentation was built on **2026-10-13 09:21 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/79931e5b946f1e9dbe3b46ee84cc885372bf1ac6"><code>79931e5</code></a> on branch <code>main</code>, for **mergeset 0.0.23** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 10:52 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/32d64c09d186042f3549d8a41494fa903efffd27"><code>32d64c0</code></a> on branch <code>main</code>, for **mergeset 0.0.24** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.23) is behind the latest release on PyPI (0.0.24): `pip install mergeset` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/mergeset/commit/79931e5b946f1e9dbe3b46ee84cc885372bf1ac6"><code>79931e5b946f1e9dbe3b46ee84cc885372bf1ac6</code></a> |
+| Commit              | <a href="https://github.com/i2mint/mergeset/commit/32d64c09d186042f3549d8a41494fa903efffd27"><code>32d64c09d186042f3549d8a41494fa903efffd27</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -6216,9 +6331,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/mergeset</code>                                                               |
-| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38375550751">38375550751</a>      |
+| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38386129170">38386129170</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>79931e5b946f1e9dbe3b46ee84cc885372bf1ac6</code> (in the history of the built commit) |
+| Event commit | <code>32d64c09d186042f3549d8a41494fa903efffd27</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6243,13 +6358,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/mergeset/0.0.24/">0.0.24</a>, newer than the documented version (0.0.23).
+Latest release: <a href="https://pypi.org/project/mergeset/0.0.24/">0.0.24</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/mergeset && cd mergeset
-git checkout 79931e5b946f1e9dbe3b46ee84cc885372bf1ac6
+git checkout 32d64c09d186042f3549d8a41494fa903efffd27
 pip install "epythet==0.2.15"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

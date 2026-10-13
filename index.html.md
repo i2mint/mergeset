@@ -120,7 +120,11 @@ python -m mergeset prs OWNER/REPO --repo . \
     --reuse-worktree /tmp/mergeset-wt
 ```
 
-An optional stage’s failure is recorded but does not veto the set — for a lint the project runs as a separate job rather than a gate. From the library:
+An optional stage’s failure is recorded but does not veto the set — for a lint the project runs as a separate job rather than a gate.
+
+The evaluation log reuses a verdict only when the commits and the validator are the same, and “the validator” means its command text. When the command runs a script that lives outside the repository (`--validate-command 'python ~/checks/smoke.py'`), add `--validate-input ~/checks/smoke.py` (repeatable; a directory works too): the script’s contents then join the validator’s fingerprint, and editing it re-runs the sets instead of reusing the old script’s verdicts. In the library, `command_validation`, `pytest_validation`, `act_validation`, `staged_validation` and `js_validation` take `inputs=[...]`. The contents are read when the validator is made and checked again around every run: an input edited mid-run stops the run instead of recording a verdict under the old fingerprint.
+
+From the library:
 
 ```python
 from mergeset import ValidationStage, staged_validation, file_fingerprint
