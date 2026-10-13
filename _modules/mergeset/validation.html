@@ -152,7 +152,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="22"><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 </span><span data-line="23"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
 </span><span data-line="24">
-</span><span data-line="25"><span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">CapabilityError</span><span class="p">,</span> <span class="n">ValidationOutcome</span>
+</span><span data-line="25"><span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">CapabilityError</span><span class="p">,</span> <span class="n">StageRun</span><span class="p">,</span> <span class="n">ValidationOutcome</span>
 </span><span data-line="26">
 </span><span data-line="27"><span class="c1">#: Fail-fast by default: the answer we need is a bit, and the first failure has it.</span>
 </span><span data-line="28"><span class="n">DEFAULT_PYTEST_ARGS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"-x"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">"--tb=short"</span><span class="p">,</span> <span class="s2">"-p"</span><span class="p">,</span> <span class="s2">"no:cacheprovider"</span><span class="p">)</span>
@@ -505,72 +505,79 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="343">        <span class="n">files</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span data-line="344">        <span class="n">tail</span> <span class="o">=</span> <span class="s2">""</span>
 </span><span data-line="345">        <span class="n">ok</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span data-line="346">        <span class="k">for</span> <span class="n">stage</span> <span class="ow">in</span> <span class="n">stages</span><span class="p">:</span>
-</span><span data-line="347">            <span class="k">if</span> <span class="n">stage</span><span class="o">.</span><span class="n">fingerprint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="348">                <span class="n">value</span> <span class="o">=</span> <span class="n">stage</span><span class="o">.</span><span class="n">fingerprint</span><span class="p">(</span><span class="n">worktree</span><span class="p">)</span>
-</span><span data-line="349">                <span class="k">if</span> <span class="n">done</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">worktree</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">==</span> <span class="n">value</span><span class="p">:</span>
-</span><span data-line="350">                    <span class="k">continue</span>
-</span><span data-line="351">            <span class="n">outcome</span> <span class="o">=</span> <span class="n">_run</span><span class="p">(</span>
-</span><span data-line="352">                <span class="p">[</span><span class="n">stage</span><span class="o">.</span><span class="n">command</span><span class="p">],</span> <span class="n">worktree</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">stage</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span>
-</span><span data-line="353">            <span class="p">)</span>
-</span><span data-line="354">            <span class="n">tail</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">]</span><span class="se">\n</span><span class="si">{</span><span class="n">outcome</span><span class="o">.</span><span class="n">stdout_tail</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="355">            <span class="k">if</span> <span class="n">outcome</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
-</span><span data-line="356">                <span class="k">if</span> <span class="n">stage</span><span class="o">.</span><span class="n">fingerprint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="357">                    <span class="n">done</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">worktree</span><span class="p">,</span> <span class="p">{})[</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">stage</span><span class="o">.</span><span class="n">fingerprint</span><span class="p">(</span>
-</span><span data-line="358">                        <span class="n">worktree</span>
-</span><span data-line="359">                    <span class="p">)</span>
-</span><span data-line="360">                <span class="k">continue</span>
-</span><span data-line="361">            <span class="n">found</span> <span class="o">=</span> <span class="n">outcome</span><span class="o">.</span><span class="n">failing_tests</span> <span class="ow">or</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"&lt;</span><span class="si">{</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> failed&gt;"</span><span class="p">]</span>
-</span><span data-line="362">            <span class="n">failures</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">found</span><span class="p">]</span>
-</span><span data-line="363">            <span class="n">files</span> <span class="o">+=</span> <span class="n">outcome</span><span class="o">.</span><span class="n">failing_files</span>
-</span><span data-line="364">            <span class="k">if</span> <span class="n">stage</span><span class="o">.</span><span class="n">required</span><span class="p">:</span>
-</span><span data-line="365">                <span class="n">ok</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span data-line="366">                <span class="k">break</span>
-</span><span data-line="367">            <span class="c1"># A non-required stage is *recorded* and does not veto. Otherwise the</span>
-</span><span data-line="368">            <span class="c1"># flag would be nearly pointless: an advisory lint pass would exclude</span>
-</span><span data-line="369">            <span class="c1"># every change set, and a project whose lint is a separate CI job</span>
-</span><span data-line="370">            <span class="c1"># could not be described at all.</span>
-</span><span data-line="371">        <span class="k">return</span> <span class="n">ValidationOutcome</span><span class="p">(</span>
-</span><span data-line="372">            <span class="n">ok</span><span class="o">=</span><span class="n">ok</span><span class="p">,</span>
-</span><span data-line="373">            <span class="n">failing_tests</span><span class="o">=</span><span class="n">failures</span><span class="p">,</span>
-</span><span data-line="374">            <span class="n">failing_files</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">files</span><span class="p">)),</span>
-</span><span data-line="375">            <span class="n">duration</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">,</span>
-</span><span data-line="376">            <span class="n">stdout_tail</span><span class="o">=</span><span class="n">tail</span><span class="p">,</span>
-</span><span data-line="377">            <span class="n">returncode</span><span class="o">=</span><span class="mi">0</span> <span class="k">if</span> <span class="n">ok</span> <span class="k">else</span> <span class="mi">1</span><span class="p">,</span>
-</span><span data-line="378">        <span class="p">)</span>
-</span><span data-line="379">
-</span><span data-line="380">    <span class="k">return</span> <span class="n">validate</span></div>
+</span><span data-line="346">        <span class="n">runs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">StageRun</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="347">        <span class="k">for</span> <span class="n">stage</span> <span class="ow">in</span> <span class="n">stages</span><span class="p">:</span>
+</span><span data-line="348">            <span class="k">if</span> <span class="n">stage</span><span class="o">.</span><span class="n">fingerprint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="349">                <span class="n">value</span> <span class="o">=</span> <span class="n">stage</span><span class="o">.</span><span class="n">fingerprint</span><span class="p">(</span><span class="n">worktree</span><span class="p">)</span>
+</span><span data-line="350">                <span class="k">if</span> <span class="n">done</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">worktree</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">==</span> <span class="n">value</span><span class="p">:</span>
+</span><span data-line="351">                    <span class="n">runs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">StageRun</span><span class="p">(</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">skipped</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</span><span data-line="352">                    <span class="k">continue</span>
+</span><span data-line="353">            <span class="n">stage_started</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+</span><span data-line="354">            <span class="n">outcome</span> <span class="o">=</span> <span class="n">_run</span><span class="p">(</span>
+</span><span data-line="355">                <span class="p">[</span><span class="n">stage</span><span class="o">.</span><span class="n">command</span><span class="p">],</span> <span class="n">worktree</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">stage</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span>
+</span><span data-line="356">            <span class="p">)</span>
+</span><span data-line="357">            <span class="n">runs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="358">                <span class="n">StageRun</span><span class="p">(</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">stage_started</span><span class="p">,</span> <span class="n">outcome</span><span class="o">.</span><span class="n">returncode</span><span class="p">)</span>
+</span><span data-line="359">            <span class="p">)</span>
+</span><span data-line="360">            <span class="n">tail</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">]</span><span class="se">\n</span><span class="si">{</span><span class="n">outcome</span><span class="o">.</span><span class="n">stdout_tail</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="361">            <span class="k">if</span> <span class="n">outcome</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+</span><span data-line="362">                <span class="k">if</span> <span class="n">stage</span><span class="o">.</span><span class="n">fingerprint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="363">                    <span class="n">done</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">worktree</span><span class="p">,</span> <span class="p">{})[</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">stage</span><span class="o">.</span><span class="n">fingerprint</span><span class="p">(</span>
+</span><span data-line="364">                        <span class="n">worktree</span>
+</span><span data-line="365">                    <span class="p">)</span>
+</span><span data-line="366">                <span class="k">continue</span>
+</span><span data-line="367">            <span class="n">found</span> <span class="o">=</span> <span class="n">outcome</span><span class="o">.</span><span class="n">failing_tests</span> <span class="ow">or</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"&lt;</span><span class="si">{</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> failed&gt;"</span><span class="p">]</span>
+</span><span data-line="368">            <span class="n">failures</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">found</span><span class="p">]</span>
+</span><span data-line="369">            <span class="n">files</span> <span class="o">+=</span> <span class="n">outcome</span><span class="o">.</span><span class="n">failing_files</span>
+</span><span data-line="370">            <span class="k">if</span> <span class="n">stage</span><span class="o">.</span><span class="n">required</span><span class="p">:</span>
+</span><span data-line="371">                <span class="n">ok</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span data-line="372">                <span class="k">break</span>
+</span><span data-line="373">            <span class="c1"># A non-required stage is *recorded* and does not veto. Otherwise the</span>
+</span><span data-line="374">            <span class="c1"># flag would be nearly pointless: an advisory lint pass would exclude</span>
+</span><span data-line="375">            <span class="c1"># every change set, and a project whose lint is a separate CI job</span>
+</span><span data-line="376">            <span class="c1"># could not be described at all.</span>
+</span><span data-line="377">        <span class="k">return</span> <span class="n">ValidationOutcome</span><span class="p">(</span>
+</span><span data-line="378">            <span class="n">ok</span><span class="o">=</span><span class="n">ok</span><span class="p">,</span>
+</span><span data-line="379">            <span class="n">failing_tests</span><span class="o">=</span><span class="n">failures</span><span class="p">,</span>
+</span><span data-line="380">            <span class="n">failing_files</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">files</span><span class="p">)),</span>
+</span><span data-line="381">            <span class="n">duration</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">,</span>
+</span><span data-line="382">            <span class="n">stdout_tail</span><span class="o">=</span><span class="n">tail</span><span class="p">,</span>
+</span><span data-line="383">            <span class="n">returncode</span><span class="o">=</span><span class="mi">0</span> <span class="k">if</span> <span class="n">ok</span> <span class="k">else</span> <span class="mi">1</span><span class="p">,</span>
+</span><span data-line="384">            <span class="n">stages</span><span class="o">=</span><span class="n">runs</span><span class="p">,</span>
+</span><span data-line="385">        <span class="p">)</span>
+</span><span data-line="386">
+</span><span data-line="387">    <span class="k">return</span> <span class="n">validate</span></div>
 
-</span><span data-line="381">
-</span><span data-line="382">
+</span><span data-line="388">
+</span><span data-line="389">
 <div class="viewcode-block" id="js_validation">
 <a class="viewcode-back" href="../../_autosummary/mergeset.validation.html#mergeset.js_validation">[docs]</a>
-</span><span data-line="383"><span class="k">def</span><span class="w"> </span><span class="nf">js_validation</span><span class="p">(</span>
-</span><span data-line="384">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="385">    <span class="n">install</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"pnpm install --frozen-lockfile"</span><span class="p">,</span>
-</span><span data-line="386">    <span class="n">build</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="387">    <span class="n">test</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"pnpm run test"</span><span class="p">,</span>
-</span><span data-line="388">    <span class="n">lint</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="389">    <span class="n">lockfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"pnpm-lock.yaml"</span><span class="p">,</span>
-</span><span data-line="390">    <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="391"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ValidationOutcome</span><span class="p">]:</span>
-</span><span data-line="392"><span class="w">    </span><span class="sd">"""A staged validator shaped like a JavaScript project.</span>
-</span><span data-line="393">
-</span><span data-line="394"><span class="sd">    Install is fingerprinted on the lockfile so it runs only when dependencies</span>
-</span><span data-line="395"><span class="sd">    actually changed; the build, when given, is a required prerequisite of the</span>
-</span><span data-line="396"><span class="sd">    tests rather than part of them.</span>
-</span><span data-line="397"><span class="sd">    """</span>
-</span><span data-line="398">    <span class="n">stages</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="399">        <span class="n">ValidationStage</span><span class="p">(</span>
-</span><span data-line="400">            <span class="s2">"setup"</span><span class="p">,</span> <span class="n">install</span><span class="p">,</span> <span class="n">fingerprint</span><span class="o">=</span><span class="n">file_fingerprint</span><span class="p">(</span><span class="n">lockfile</span><span class="p">),</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span>
-</span><span data-line="401">        <span class="p">)</span>
-</span><span data-line="402">    <span class="p">]</span>
-</span><span data-line="403">    <span class="k">if</span> <span class="n">build</span><span class="p">:</span>
-</span><span data-line="404">        <span class="n">stages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ValidationStage</span><span class="p">(</span><span class="s2">"build"</span><span class="p">,</span> <span class="n">build</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">))</span>
-</span><span data-line="405">    <span class="n">stages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ValidationStage</span><span class="p">(</span><span class="s2">"test"</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">))</span>
-</span><span data-line="406">    <span class="k">if</span> <span class="n">lint</span><span class="p">:</span>
-</span><span data-line="407">        <span class="n">stages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ValidationStage</span><span class="p">(</span><span class="s2">"lint"</span><span class="p">,</span> <span class="n">lint</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
-</span><span data-line="408">    <span class="k">return</span> <span class="n">staged_validation</span><span class="p">(</span><span class="n">stages</span><span class="p">)</span></div>
+</span><span data-line="390"><span class="k">def</span><span class="w"> </span><span class="nf">js_validation</span><span class="p">(</span>
+</span><span data-line="391">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="392">    <span class="n">install</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"pnpm install --frozen-lockfile"</span><span class="p">,</span>
+</span><span data-line="393">    <span class="n">build</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="394">    <span class="n">test</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"pnpm run test"</span><span class="p">,</span>
+</span><span data-line="395">    <span class="n">lint</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="396">    <span class="n">lockfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"pnpm-lock.yaml"</span><span class="p">,</span>
+</span><span data-line="397">    <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="398"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ValidationOutcome</span><span class="p">]:</span>
+</span><span data-line="399"><span class="w">    </span><span class="sd">"""A staged validator shaped like a JavaScript project.</span>
+</span><span data-line="400">
+</span><span data-line="401"><span class="sd">    Install is fingerprinted on the lockfile so it runs only when dependencies</span>
+</span><span data-line="402"><span class="sd">    actually changed; the build, when given, is a required prerequisite of the</span>
+</span><span data-line="403"><span class="sd">    tests rather than part of them.</span>
+</span><span data-line="404"><span class="sd">    """</span>
+</span><span data-line="405">    <span class="n">stages</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="406">        <span class="n">ValidationStage</span><span class="p">(</span>
+</span><span data-line="407">            <span class="s2">"setup"</span><span class="p">,</span> <span class="n">install</span><span class="p">,</span> <span class="n">fingerprint</span><span class="o">=</span><span class="n">file_fingerprint</span><span class="p">(</span><span class="n">lockfile</span><span class="p">),</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span>
+</span><span data-line="408">        <span class="p">)</span>
+</span><span data-line="409">    <span class="p">]</span>
+</span><span data-line="410">    <span class="k">if</span> <span class="n">build</span><span class="p">:</span>
+</span><span data-line="411">        <span class="n">stages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ValidationStage</span><span class="p">(</span><span class="s2">"build"</span><span class="p">,</span> <span class="n">build</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">))</span>
+</span><span data-line="412">    <span class="n">stages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ValidationStage</span><span class="p">(</span><span class="s2">"test"</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">))</span>
+</span><span data-line="413">    <span class="k">if</span> <span class="n">lint</span><span class="p">:</span>
+</span><span data-line="414">        <span class="n">stages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ValidationStage</span><span class="p">(</span><span class="s2">"lint"</span><span class="p">,</span> <span class="n">lint</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+</span><span data-line="415">    <span class="k">return</span> <span class="n">staged_validation</span><span class="p">(</span><span class="n">stages</span><span class="p">)</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -599,7 +606,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=63b572e7"></script>
+      <script src="../../_static/documentation_options.js?v=8bafd125"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

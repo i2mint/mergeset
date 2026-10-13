@@ -114,6 +114,7 @@ changes.
 | [`Verdict`](#mergeset.Verdict)(\*values)                                 | Outcome of evaluating a change set.                                                                   |
 | [`MergeOutcome`](#mergeset.MergeOutcome)(ok[, reason, ...])                   | Result of merging a change set onto its base.                                                         |
 | [`ValidationOutcome`](#mergeset.ValidationOutcome)(ok[, failing_tests, ...])       | Result of validating a merged tree.                                                                   |
+| [`StageRun`](#mergeset.StageRun)(name[, duration, returncode, skipped])   | What one stage of a staged validation did, and what it cost.                                          |
 | [`EvaluationLog`](#mergeset.EvaluationLog)([store, pins, trust_unpinned])      | Append-only record of evaluations, plus the monotone closure over it.                                 |
 | [`JsonlLines`](#mergeset.JsonlLines)(path)                                  | Append-only sequence of JSON objects backed by one file.                                              |
 | [`MemoryLines`](#mergeset.MemoryLines)([iterable])                           | In-memory stand-in for [`JsonlLines`](#mergeset.JsonlLines) (tests, dry runs). |
@@ -828,6 +829,36 @@ Bases: [`Exception`](https://docs.python.org/3/builtins/exceptions.html#Exceptio
 
 Base class for errors this package raises deliberately.
 
+### *class* mergeset.StageRun(name, duration=0.0, returncode=None, skipped=False)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+What one stage of a staged validation did, and what it cost.
+
+A stage skipped because its fingerprint matched (an install whose lockfile
+did not change) is recorded too, with `skipped=True` and no time: that
+skip is often the largest term in what an evaluation costs, and a log that
+cannot show it cannot confirm it (i2mint/mergeset#17).
+
+```pycon
+>>> StageRun.from_jdict(StageRun('setup', 33.0, 0).to_jdict())
+StageRun(name='setup', duration=33.0, returncode=0, skipped=False)
+```
+
+#### *classmethod* from_jdict(d)
+
+Inverse of [`to_jdict()`](#mergeset.StageRun.to_jdict).
+
+* **Return type:**
+  [`StageRun`](mergeset.base.html.md#mergeset.base.StageRun)
+
+#### to_jdict()
+
+JSON-able view.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
 ### *class* mergeset.StoreLines(store, key)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
@@ -958,11 +989,39 @@ D25’s rule, applied per tier.
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
-### *class* mergeset.ValidationOutcome(ok, failing_tests=(), failing_files=(), duration=0.0, stdout_tail='', returncode=None)
+### *class* mergeset.ValidationOutcome(ok, failing_tests=(), failing_files=(), duration=0.0, stdout_tail='', returncode=None, stages=())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Result of validating a merged tree.
+
+#### *classmethod* from_jdict(d)
+
+Inverse of [`to_jdict()`](#mergeset.ValidationOutcome.to_jdict); rows without `stages` read as none.
+
+Keys it does not know are ignored, so a log written by a later version
+still loads here instead of failing on its first new field.
+
+* **Return type:**
+  [`ValidationOutcome`](mergeset.base.html.md#mergeset.base.ValidationOutcome)
+
+#### *property* stage_seconds *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [float](https://docs.python.org/3/builtins/functions.html#float)]*
+
+`{stage name: seconds}` for the stages that ran (skips excluded).
+
+The shape [`mergeset.cost.Seconds`](mergeset.cost.html.md#mergeset.cost.Seconds) accepts as a breakdown. Two
+stages sharing a name are summed, never overwritten.
+
+```pycon
+>>> ValidationOutcome(True, stages=[StageRun('setup', skipped=True),
+...                                 StageRun('test', 6.0, 0)]).stage_seconds
+{'test': 6.0}
+```
+
+#### stages *: [Sequence](https://docs.python.org/3/library/typing.html#typing.Sequence)[[StageRun](mergeset.base.html.md#mergeset.base.StageRun)]* *= ()*
+
+Per-stage breakdown, in run order, for a staged validator; empty for a
+single-command one and on rows written before stages were recorded.
 
 #### to_jdict()
 

@@ -19,6 +19,7 @@ re-running anything expensive.
 |-----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
 | [`markdown_report`](#mergeset.report.markdown_report)(analysis, \*[, title])             | Render the analysis as Markdown.                                         |
 | [`pdf_report`](#mergeset.report.pdf_report)(analysis, \*[, title])                  | Render the analysis as a PDF, for the reader who wants one file to keep. |
+| [`stage_breakdown`](#mergeset.report.stage_breakdown)(record)                            | Where an evaluation's time went, stage by stage; `''` if not recorded.   |
 | [`write_reports`](#mergeset.report.write_reports)(analysis, \*[, title, formats, ...]) | Render a run's reports into the artifact store; return `{format: key}`.  |
 
 ### mergeset.report.REPORT_FORMATS *= {'html': ('report.html', False), 'markdown': ('REPORT.md', False), 'pdf': ('report.pdf', True)}*
@@ -65,6 +66,32 @@ than surfacing an ImportError from three frames down.
 
 * **Return type:**
   [`bytes`](https://docs.python.org/3/builtins/stdtypes.html#bytes)
+
+### mergeset.report.stage_breakdown(record)
+
+Where an evaluation’s time went, stage by stage; `''` if not recorded.
+
+The actionable version of a duration: “33 s of its 51 s installing
+dependencies” says what to fix, “51 s” does not. The remainder of the
+total – merging, worktree setup – is shown as `other`.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> from mergeset.base import StageRun, ValidationOutcome, Verdict
+>>> v = ValidationOutcome(True, duration=48.5, stages=[
+...     StageRun('setup', 33.0, 0), StageRun('build', 9.0, 0),
+...     StageRun('test', 6.5, 0)])
+>>> stage_breakdown(Evaluation(frozenset('a'), Verdict.PASS,
+...                            validation=v, duration=49.0))
+'setup 33.0 · build 9.0 · test 6.5 · other 0.5'
+>>> v = ValidationOutcome(True, stages=[StageRun('setup', skipped=True),
+...                                     StageRun('test', 6.0, 0)])
+>>> stage_breakdown(Evaluation(frozenset('a'), Verdict.PASS, validation=v,
+...                            duration=6.0))
+'setup skipped · test 6.0'
+```
 
 ### mergeset.report.write_reports(analysis, , title='mergeset report', formats=('markdown', 'html'), key=None, reports=None, binary_reports=None, rootdir=None)
 

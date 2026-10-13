@@ -27,6 +27,7 @@ mergeset.base
       Evaluator
       MergeOutcome
       Stage
+      StageRun
       ValidationOutcome
       Verdict
    

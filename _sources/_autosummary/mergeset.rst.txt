@@ -87,6 +87,7 @@
       Verdict
       MergeOutcome
       ValidationOutcome
+      StageRun
       EvaluationLog
       JsonlLines
       MemoryLines

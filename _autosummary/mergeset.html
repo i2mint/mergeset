@@ -194,6 +194,11 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li><a class="reference internal" href="#mergeset.MergesetError"><code class="docutils literal notranslate"><span class="pre">MergesetError</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.StageRun"><code class="docutils literal notranslate"><span class="pre">StageRun</span></code></a><ul>
+<li><a class="reference internal" href="#mergeset.StageRun.from_jdict"><code class="docutils literal notranslate"><span class="pre">StageRun.from_jdict()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.StageRun.to_jdict"><code class="docutils literal notranslate"><span class="pre">StageRun.to_jdict()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#mergeset.StoreLines"><code class="docutils literal notranslate"><span class="pre">StoreLines</span></code></a><ul>
 <li><a class="reference internal" href="#mergeset.StoreLines.append"><code class="docutils literal notranslate"><span class="pre">StoreLines.append()</span></code></a></li>
 </ul>
@@ -214,6 +219,9 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li><a class="reference internal" href="#mergeset.ValidationOutcome"><code class="docutils literal notranslate"><span class="pre">ValidationOutcome</span></code></a><ul>
+<li><a class="reference internal" href="#mergeset.ValidationOutcome.from_jdict"><code class="docutils literal notranslate"><span class="pre">ValidationOutcome.from_jdict()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.ValidationOutcome.stage_seconds"><code class="docutils literal notranslate"><span class="pre">ValidationOutcome.stage_seconds</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.ValidationOutcome.stages"><code class="docutils literal notranslate"><span class="pre">ValidationOutcome.stages</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.ValidationOutcome.to_jdict"><code class="docutils literal notranslate"><span class="pre">ValidationOutcome.to_jdict()</span></code></a></li>
 </ul>
 </li>
@@ -568,19 +576,22 @@ changes.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#mergeset.ValidationOutcome" title="mergeset.ValidationOutcome"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ValidationOutcome</span></code></a>(ok[, failing_tests, ...])</p></td>
 <td><p>Result of validating a merged tree.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.EvaluationLog" title="mergeset.EvaluationLog"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EvaluationLog</span></code></a>([store, pins, trust_unpinned])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.StageRun" title="mergeset.StageRun"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StageRun</span></code></a>(name[, duration, returncode, skipped])</p></td>
+<td><p>What one stage of a staged validation did, and what it cost.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.EvaluationLog" title="mergeset.EvaluationLog"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EvaluationLog</span></code></a>([store, pins, trust_unpinned])</p></td>
 <td><p>Append-only record of evaluations, plus the monotone closure over it.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.JsonlLines" title="mergeset.JsonlLines"><code class="xref py py-obj docutils literal notranslate"><span class="pre">JsonlLines</span></code></a>(path)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.JsonlLines" title="mergeset.JsonlLines"><code class="xref py py-obj docutils literal notranslate"><span class="pre">JsonlLines</span></code></a>(path)</p></td>
 <td><p>Append-only sequence of JSON objects backed by one file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.MemoryLines" title="mergeset.MemoryLines"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MemoryLines</span></code></a>([iterable])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.MemoryLines" title="mergeset.MemoryLines"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MemoryLines</span></code></a>([iterable])</p></td>
 <td><p>In-memory stand-in for <a class="reference internal" href="#mergeset.JsonlLines" title="mergeset.JsonlLines"><code class="xref py py-class docutils literal notranslate"><span class="pre">JsonlLines</span></code></a> (tests, dry runs).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.ValidationStage" title="mergeset.ValidationStage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ValidationStage</span></code></a>(name, command[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.ValidationStage" title="mergeset.ValidationStage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ValidationStage</span></code></a>(name, command[, ...])</p></td>
 <td><p>One step of a staged validation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.StoreLines" title="mergeset.StoreLines"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StoreLines</span></code></a>(store, key)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.StoreLines" title="mergeset.StoreLines"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StoreLines</span></code></a>(store, key)</p></td>
 <td><p>Lines backed by one key of a <code class="docutils literal notranslate"><span class="pre">MutableMapping</span></code> — the non-file backend.</p></td>
 </tr>
 </tbody>
@@ -1487,6 +1498,45 @@ not be attempted: bad path, missing ref, unusable worktree).</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="mergeset.StageRun">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.</span></span><span class="sig-name descname"><span class="pre">StageRun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">returncode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipped</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#StageRun"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.StageRun" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>What one stage of a staged validation did, and what it cost.</p>
+<p>A stage skipped because its fingerprint matched (an install whose lockfile
+did not change) is recorded too, with <code class="docutils literal notranslate"><span class="pre">skipped=True</span></code> and no time: that
+skip is often the largest term in what an evaluation costs, and a log that
+cannot show it cannot confirm it (i2mint/mergeset#17).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">StageRun</span><span class="o">.</span><span class="n">from_jdict</span><span class="p">(</span><span class="n">StageRun</span><span class="p">(</span><span class="s1">'setup'</span><span class="p">,</span> <span class="mf">33.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to_jdict</span><span class="p">())</span>
+</span><span data-line="2"><span class="go">StageRun(name='setup', duration=33.0, returncode=0, skipped=False)</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.StageRun.from_jdict">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_jdict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#StageRun.from_jdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.StageRun.from_jdict" title="Link to this definition">#</a></dt>
+<dd><p>Inverse of <a class="reference internal" href="#mergeset.StageRun.to_jdict" title="mergeset.StageRun.to_jdict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_jdict()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="mergeset.base.html#mergeset.base.StageRun" title="mergeset.base.StageRun"><code class="xref py py-class docutils literal notranslate"><span class="pre">StageRun</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.StageRun.to_jdict">
+<span class="sig-name descname"><span class="pre">to_jdict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#StageRun.to_jdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.StageRun.to_jdict" title="Link to this definition">#</a></dt>
+<dd><p>JSON-able view.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="mergeset.StoreLines">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.</span></span><span class="sig-name descname"><span class="pre">StoreLines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">store</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/log.html#StoreLines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.StoreLines" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
@@ -1651,11 +1701,44 @@ D25’s rule, applied per tier.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mergeset.ValidationOutcome">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.</span></span><span class="sig-name descname"><span class="pre">ValidationOutcome</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ok</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">failing_tests</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">failing_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stdout_tail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">returncode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#ValidationOutcome"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.ValidationOutcome" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.</span></span><span class="sig-name descname"><span class="pre">ValidationOutcome</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ok</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">failing_tests</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">failing_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stdout_tail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">returncode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#ValidationOutcome"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.ValidationOutcome" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Result of validating a merged tree.</p>
 <dl class="field-list simple">
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.ValidationOutcome.from_jdict">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_jdict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#ValidationOutcome.from_jdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.ValidationOutcome.from_jdict" title="Link to this definition">#</a></dt>
+<dd><p>Inverse of <a class="reference internal" href="#mergeset.ValidationOutcome.to_jdict" title="mergeset.ValidationOutcome.to_jdict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_jdict()</span></code></a>; rows without <code class="docutils literal notranslate"><span class="pre">stages</span></code> read as none.</p>
+<p>Keys it does not know are ignored, so a log written by a later version
+still loads here instead of failing on its first new field.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="mergeset.base.html#mergeset.base.ValidationOutcome" title="mergeset.base.ValidationOutcome"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValidationOutcome</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mergeset.ValidationOutcome.stage_seconds">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">stage_seconds</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.15)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#mergeset.ValidationOutcome.stage_seconds" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">{stage</span> <span class="pre">name:</span> <span class="pre">seconds}</span></code> for the stages that ran (skips excluded).</p>
+<p>The shape <a class="reference internal" href="mergeset.cost.html#mergeset.cost.Seconds" title="mergeset.cost.Seconds"><code class="xref py py-data docutils literal notranslate"><span class="pre">mergeset.cost.Seconds</span></code></a> accepts as a breakdown. Two
+stages sharing a name are summed, never overwritten.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">ValidationOutcome</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">stages</span><span class="o">=</span><span class="p">[</span><span class="n">StageRun</span><span class="p">(</span><span class="s1">'setup'</span><span class="p">,</span> <span class="n">skipped</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+</span><span data-line="2"><span class="gp">... </span>                                <span class="n">StageRun</span><span class="p">(</span><span class="s1">'test'</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])</span><span class="o">.</span><span class="n">stage_seconds</span>
+</span><span data-line="3"><span class="go">{'test': 6.0}</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.ValidationOutcome.stages">
+<span class="sig-name descname"><span class="pre">stages</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.15)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="mergeset.base.html#mergeset.base.StageRun" title="mergeset.base.StageRun"><span class="pre">StageRun</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">()</span></span><a class="headerlink" href="#mergeset.ValidationOutcome.stages" title="Link to this definition">#</a></dt>
+<dd><p>Per-stage breakdown, in run order, for a staged validator; empty for a
+single-command one and on rows written before stages were recorded.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="mergeset.ValidationOutcome.to_jdict">
 <span class="sig-name descname"><span class="pre">to_jdict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#ValidationOutcome.to_jdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.ValidationOutcome.to_jdict" title="Link to this definition">#</a></dt>
@@ -3137,7 +3220,7 @@ exists to prevent — so both halves of the key are slugified.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=63b572e7"></script>
+      <script src="../_static/documentation_options.js?v=8bafd125"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

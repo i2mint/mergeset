@@ -147,319 +147,429 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="17"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
 </span><span data-line="18">    <span class="n">Any</span><span class="p">,</span>
 </span><span data-line="19">    <span class="n">Callable</span><span class="p">,</span>
-</span><span data-line="20">    <span class="n">Iterable</span><span class="p">,</span>
-</span><span data-line="21">    <span class="n">Mapping</span><span class="p">,</span>
-</span><span data-line="22">    <span class="n">Optional</span><span class="p">,</span>
-</span><span data-line="23">    <span class="n">Protocol</span><span class="p">,</span>
-</span><span data-line="24">    <span class="n">Sequence</span><span class="p">,</span>
-</span><span data-line="25">    <span class="n">runtime_checkable</span><span class="p">,</span>
-</span><span data-line="26"><span class="p">)</span>
-</span><span data-line="27">
-</span><span data-line="28"><span class="n">ChangeId</span> <span class="o">=</span> <span class="nb">str</span>
-</span><span data-line="29"><span class="n">ChangeSet</span> <span class="o">=</span> <span class="nb">frozenset</span>  <span class="c1"># frozenset[ChangeId]; aliased for readability</span>
-</span><span data-line="30">
+</span><span data-line="20">    <span class="n">Dict</span><span class="p">,</span>
+</span><span data-line="21">    <span class="n">Iterable</span><span class="p">,</span>
+</span><span data-line="22">    <span class="n">Mapping</span><span class="p">,</span>
+</span><span data-line="23">    <span class="n">Optional</span><span class="p">,</span>
+</span><span data-line="24">    <span class="n">Protocol</span><span class="p">,</span>
+</span><span data-line="25">    <span class="n">Sequence</span><span class="p">,</span>
+</span><span data-line="26">    <span class="n">runtime_checkable</span><span class="p">,</span>
+</span><span data-line="27"><span class="p">)</span>
+</span><span data-line="28">
+</span><span data-line="29"><span class="n">ChangeId</span> <span class="o">=</span> <span class="nb">str</span>
+</span><span data-line="30"><span class="n">ChangeSet</span> <span class="o">=</span> <span class="nb">frozenset</span>  <span class="c1"># frozenset[ChangeId]; aliased for readability</span>
 </span><span data-line="31">
+</span><span data-line="32">
 <div class="viewcode-block" id="change_set">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.change_set">[docs]</a>
-</span><span data-line="32"><span class="k">def</span><span class="w"> </span><span class="nf">change_set</span><span class="p">(</span><span class="n">ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
-</span><span data-line="33"><span class="w">    </span><span class="sd">"""Normalize any iterable of change ids into a ``frozenset``.</span>
-</span><span data-line="34">
-</span><span data-line="35"><span class="sd">    &gt;&gt;&gt; change_set(['b', 'a', 'b']) == frozenset({'a', 'b'})</span>
-</span><span data-line="36"><span class="sd">    True</span>
-</span><span data-line="37"><span class="sd">    """</span>
-</span><span data-line="38">    <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span></div>
+</span><span data-line="33"><span class="k">def</span><span class="w"> </span><span class="nf">change_set</span><span class="p">(</span><span class="n">ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
+</span><span data-line="34"><span class="w">    </span><span class="sd">"""Normalize any iterable of change ids into a ``frozenset``.</span>
+</span><span data-line="35">
+</span><span data-line="36"><span class="sd">    &gt;&gt;&gt; change_set(['b', 'a', 'b']) == frozenset({'a', 'b'})</span>
+</span><span data-line="37"><span class="sd">    True</span>
+</span><span data-line="38"><span class="sd">    """</span>
+</span><span data-line="39">    <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span></div>
 
-</span><span data-line="39">
 </span><span data-line="40">
+</span><span data-line="41">
 <div class="viewcode-block" id="set_key">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.set_key">[docs]</a>
-</span><span data-line="41"><span class="k">def</span><span class="w"> </span><span class="nf">set_key</span><span class="p">(</span><span class="n">ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
-</span><span data-line="42"><span class="w">    </span><span class="sd">"""A stable, hashable, JSON-friendly key for a change set.</span>
-</span><span data-line="43">
-</span><span data-line="44"><span class="sd">    &gt;&gt;&gt; set_key({'b', 'a'})</span>
-</span><span data-line="45"><span class="sd">    ('a', 'b')</span>
-</span><span data-line="46"><span class="sd">    """</span>
-</span><span data-line="47">    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">ids</span><span class="p">))</span></div>
+</span><span data-line="42"><span class="k">def</span><span class="w"> </span><span class="nf">set_key</span><span class="p">(</span><span class="n">ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+</span><span data-line="43"><span class="w">    </span><span class="sd">"""A stable, hashable, JSON-friendly key for a change set.</span>
+</span><span data-line="44">
+</span><span data-line="45"><span class="sd">    &gt;&gt;&gt; set_key({'b', 'a'})</span>
+</span><span data-line="46"><span class="sd">    ('a', 'b')</span>
+</span><span data-line="47"><span class="sd">    """</span>
+</span><span data-line="48">    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">ids</span><span class="p">))</span></div>
 
-</span><span data-line="48">
 </span><span data-line="49">
+</span><span data-line="50">
 <div class="viewcode-block" id="Change">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.Change">[docs]</a>
-</span><span data-line="50"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="51"><span class="k">class</span><span class="w"> </span><span class="nc">Change</span><span class="p">:</span>
-</span><span data-line="52"><span class="w">    </span><span class="sd">"""One candidate change: everything between ``base`` and ``head``.</span>
-</span><span data-line="53">
-</span><span data-line="54"><span class="sd">    Args:</span>
-</span><span data-line="55"><span class="sd">        id: Short stable identifier, used everywhere else (log, report, CLI).</span>
-</span><span data-line="56"><span class="sd">        head: Commit-ish holding the change (branch name, sha, PR head).</span>
-</span><span data-line="57"><span class="sd">        base: Commit-ish the change is measured against.</span>
-</span><span data-line="58"><span class="sd">        source: Which source produced it (``'branch'``, ``'pr'``, ``'commit'``).</span>
-</span><span data-line="59"><span class="sd">        weight: Cost of *dropping* this change. The solver drops the cheapest</span>
-</span><span data-line="60"><span class="sd">            changes it can when it must drop something, so a high weight means</span>
-</span><span data-line="61"><span class="sd">            "keep me". ``None`` means "let the weighting policy decide".</span>
-</span><span data-line="62"><span class="sd">        meta: Source-specific extras (PR number, author, CI status, draft flag...).</span>
-</span><span data-line="63">
-</span><span data-line="64"><span class="sd">    &gt;&gt;&gt; c = Change(id='fix-a', head='origin/fix-a', base='origin/main')</span>
-</span><span data-line="65"><span class="sd">    &gt;&gt;&gt; c.id, c.source</span>
-</span><span data-line="66"><span class="sd">    ('fix-a', 'branch')</span>
-</span><span data-line="67"><span class="sd">    """</span>
-</span><span data-line="68">
-</span><span data-line="69">    <span class="nb">id</span><span class="p">:</span> <span class="n">ChangeId</span>
-</span><span data-line="70">    <span class="n">head</span><span class="p">:</span> <span class="nb">str</span>
-</span><span data-line="71">    <span class="n">base</span><span class="p">:</span> <span class="nb">str</span>
-</span><span data-line="72">    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"branch"</span>
-</span><span data-line="73">    <span class="n">weight</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="74">    <span class="n">meta</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
-</span><span data-line="75">
+</span><span data-line="51"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="52"><span class="k">class</span><span class="w"> </span><span class="nc">Change</span><span class="p">:</span>
+</span><span data-line="53"><span class="w">    </span><span class="sd">"""One candidate change: everything between ``base`` and ``head``.</span>
+</span><span data-line="54">
+</span><span data-line="55"><span class="sd">    Args:</span>
+</span><span data-line="56"><span class="sd">        id: Short stable identifier, used everywhere else (log, report, CLI).</span>
+</span><span data-line="57"><span class="sd">        head: Commit-ish holding the change (branch name, sha, PR head).</span>
+</span><span data-line="58"><span class="sd">        base: Commit-ish the change is measured against.</span>
+</span><span data-line="59"><span class="sd">        source: Which source produced it (``'branch'``, ``'pr'``, ``'commit'``).</span>
+</span><span data-line="60"><span class="sd">        weight: Cost of *dropping* this change. The solver drops the cheapest</span>
+</span><span data-line="61"><span class="sd">            changes it can when it must drop something, so a high weight means</span>
+</span><span data-line="62"><span class="sd">            "keep me". ``None`` means "let the weighting policy decide".</span>
+</span><span data-line="63"><span class="sd">        meta: Source-specific extras (PR number, author, CI status, draft flag...).</span>
+</span><span data-line="64">
+</span><span data-line="65"><span class="sd">    &gt;&gt;&gt; c = Change(id='fix-a', head='origin/fix-a', base='origin/main')</span>
+</span><span data-line="66"><span class="sd">    &gt;&gt;&gt; c.id, c.source</span>
+</span><span data-line="67"><span class="sd">    ('fix-a', 'branch')</span>
+</span><span data-line="68"><span class="sd">    """</span>
+</span><span data-line="69">
+</span><span data-line="70">    <span class="nb">id</span><span class="p">:</span> <span class="n">ChangeId</span>
+</span><span data-line="71">    <span class="n">head</span><span class="p">:</span> <span class="nb">str</span>
+</span><span data-line="72">    <span class="n">base</span><span class="p">:</span> <span class="nb">str</span>
+</span><span data-line="73">    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"branch"</span>
+</span><span data-line="74">    <span class="n">weight</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="75">    <span class="n">meta</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+</span><span data-line="76">
 <div class="viewcode-block" id="Change.with_weight">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.Change.with_weight">[docs]</a>
-</span><span data-line="76">    <span class="k">def</span><span class="w"> </span><span class="nf">with_weight</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weight</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Change"</span><span class="p">:</span>
-</span><span data-line="77"><span class="w">        </span><span class="sd">"""A copy of this change carrying ``weight``."""</span>
-</span><span data-line="78">        <span class="k">return</span> <span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span></div>
+</span><span data-line="77">    <span class="k">def</span><span class="w"> </span><span class="nf">with_weight</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weight</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Change"</span><span class="p">:</span>
+</span><span data-line="78"><span class="w">        </span><span class="sd">"""A copy of this change carrying ``weight``."""</span>
+</span><span data-line="79">        <span class="k">return</span> <span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span></div>
 
-</span><span data-line="79">
+</span><span data-line="80">
 <div class="viewcode-block" id="Change.to_jdict">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.Change.to_jdict">[docs]</a>
-</span><span data-line="80">    <span class="k">def</span><span class="w"> </span><span class="nf">to_jdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="81"><span class="w">        </span><span class="sd">"""JSON-able view of the change."""</span>
-</span><span data-line="82">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="83">            <span class="s2">"id"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-</span><span data-line="84">            <span class="s2">"head"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="p">,</span>
-</span><span data-line="85">            <span class="s2">"base"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">,</span>
-</span><span data-line="86">            <span class="s2">"source"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
-</span><span data-line="87">            <span class="s2">"weight"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span>
-</span><span data-line="88">            <span class="s2">"meta"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">),</span>
-</span><span data-line="89">        <span class="p">}</span></div>
+</span><span data-line="81">    <span class="k">def</span><span class="w"> </span><span class="nf">to_jdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="82"><span class="w">        </span><span class="sd">"""JSON-able view of the change."""</span>
+</span><span data-line="83">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="84">            <span class="s2">"id"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+</span><span data-line="85">            <span class="s2">"head"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="p">,</span>
+</span><span data-line="86">            <span class="s2">"base"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">,</span>
+</span><span data-line="87">            <span class="s2">"source"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
+</span><span data-line="88">            <span class="s2">"weight"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span>
+</span><span data-line="89">            <span class="s2">"meta"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">),</span>
+</span><span data-line="90">        <span class="p">}</span></div>
 
-</span><span data-line="90">
+</span><span data-line="91">
 <div class="viewcode-block" id="Change.from_jdict">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.Change.from_jdict">[docs]</a>
-</span><span data-line="91">    <span class="nd">@classmethod</span>
-</span><span data-line="92">    <span class="k">def</span><span class="w"> </span><span class="nf">from_jdict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">"Change"</span><span class="p">:</span>
-</span><span data-line="93"><span class="w">        </span><span class="sd">"""Inverse of :meth:`to_jdict`."""</span>
-</span><span data-line="94">        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span data-line="95">            <span class="nb">id</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="s2">"id"</span><span class="p">],</span>
-</span><span data-line="96">            <span class="n">head</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="s2">"head"</span><span class="p">],</span>
-</span><span data-line="97">            <span class="n">base</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="s2">"base"</span><span class="p">],</span>
-</span><span data-line="98">            <span class="n">source</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"source"</span><span class="p">,</span> <span class="s2">"branch"</span><span class="p">),</span>
-</span><span data-line="99">            <span class="n">weight</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"weight"</span><span class="p">),</span>
-</span><span data-line="100">            <span class="n">meta</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"meta"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{},</span>
-</span><span data-line="101">        <span class="p">)</span></div>
+</span><span data-line="92">    <span class="nd">@classmethod</span>
+</span><span data-line="93">    <span class="k">def</span><span class="w"> </span><span class="nf">from_jdict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">"Change"</span><span class="p">:</span>
+</span><span data-line="94"><span class="w">        </span><span class="sd">"""Inverse of :meth:`to_jdict`."""</span>
+</span><span data-line="95">        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span data-line="96">            <span class="nb">id</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="s2">"id"</span><span class="p">],</span>
+</span><span data-line="97">            <span class="n">head</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="s2">"head"</span><span class="p">],</span>
+</span><span data-line="98">            <span class="n">base</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="s2">"base"</span><span class="p">],</span>
+</span><span data-line="99">            <span class="n">source</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"source"</span><span class="p">,</span> <span class="s2">"branch"</span><span class="p">),</span>
+</span><span data-line="100">            <span class="n">weight</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"weight"</span><span class="p">),</span>
+</span><span data-line="101">            <span class="n">meta</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"meta"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{},</span>
+</span><span data-line="102">        <span class="p">)</span></div>
 </div>
 
-</span><span data-line="102">
 </span><span data-line="103">
+</span><span data-line="104">
 <div class="viewcode-block" id="Verdict">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.Verdict">[docs]</a>
-</span><span data-line="104"><span class="k">class</span><span class="w"> </span><span class="nc">Verdict</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
-</span><span data-line="105"><span class="w">    </span><span class="sd">"""Outcome of evaluating a change set."""</span>
-</span><span data-line="106">
-</span><span data-line="107">    <span class="n">PASS</span> <span class="o">=</span> <span class="s2">"pass"</span>
-</span><span data-line="108">    <span class="n">FAIL</span> <span class="o">=</span> <span class="s2">"fail"</span>
-</span><span data-line="109">    <span class="n">ERROR</span> <span class="o">=</span> <span class="s2">"error"</span>  <span class="c1"># the evaluation itself broke; carries no monotone information</span>
-</span><span data-line="110">    <span class="n">SKIPPED</span> <span class="o">=</span> <span class="s2">"skipped"</span>  <span class="c1"># budget exhausted</span></div>
+</span><span data-line="105"><span class="k">class</span><span class="w"> </span><span class="nc">Verdict</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+</span><span data-line="106"><span class="w">    </span><span class="sd">"""Outcome of evaluating a change set."""</span>
+</span><span data-line="107">
+</span><span data-line="108">    <span class="n">PASS</span> <span class="o">=</span> <span class="s2">"pass"</span>
+</span><span data-line="109">    <span class="n">FAIL</span> <span class="o">=</span> <span class="s2">"fail"</span>
+</span><span data-line="110">    <span class="n">ERROR</span> <span class="o">=</span> <span class="s2">"error"</span>  <span class="c1"># the evaluation itself broke; carries no monotone information</span>
+</span><span data-line="111">    <span class="n">SKIPPED</span> <span class="o">=</span> <span class="s2">"skipped"</span>  <span class="c1"># budget exhausted</span></div>
 
-</span><span data-line="111">
 </span><span data-line="112">
+</span><span data-line="113">
 <div class="viewcode-block" id="Stage">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.Stage">[docs]</a>
-</span><span data-line="113"><span class="k">class</span><span class="w"> </span><span class="nc">Stage</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
-</span><span data-line="114"><span class="w">    </span><span class="sd">"""Where an evaluation ended."""</span>
-</span><span data-line="115">
-</span><span data-line="116">    <span class="n">MERGE</span> <span class="o">=</span> <span class="s2">"merge"</span>
-</span><span data-line="117">    <span class="n">VALIDATE</span> <span class="o">=</span> <span class="s2">"validate"</span></div>
+</span><span data-line="114"><span class="k">class</span><span class="w"> </span><span class="nc">Stage</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+</span><span data-line="115"><span class="w">    </span><span class="sd">"""Where an evaluation ended."""</span>
+</span><span data-line="116">
+</span><span data-line="117">    <span class="n">MERGE</span> <span class="o">=</span> <span class="s2">"merge"</span>
+</span><span data-line="118">    <span class="n">VALIDATE</span> <span class="o">=</span> <span class="s2">"validate"</span></div>
 
-</span><span data-line="118">
 </span><span data-line="119">
+</span><span data-line="120">
 <div class="viewcode-block" id="MergeOutcome">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.MergeOutcome">[docs]</a>
-</span><span data-line="120"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="121"><span class="k">class</span><span class="w"> </span><span class="nc">MergeOutcome</span><span class="p">:</span>
-</span><span data-line="122"><span class="w">    </span><span class="sd">"""Result of merging a change set onto its base.</span>
-</span><span data-line="123">
-</span><span data-line="124"><span class="sd">    ``reason`` is load-bearing. "These changes conflict with each other" and "we</span>
-</span><span data-line="125"><span class="sd">    could not run the experiment" are completely different facts, and conflating</span>
-</span><span data-line="126"><span class="sd">    them is how a run reports *0 of 15 mergeable, complete* with total</span>
-</span><span data-line="127"><span class="sd">    confidence when the real problem was a bad worktree path. Only</span>
-</span><span data-line="128"><span class="sd">    ``reason == 'conflict'`` may ever enter the conflict set; an ``'error'``</span>
-</span><span data-line="129"><span class="sd">    aborts, because a set that was never tested has told us nothing.</span>
-</span><span data-line="130"><span class="sd">    """</span>
-</span><span data-line="131">
-</span><span data-line="132">    <span class="n">ok</span><span class="p">:</span> <span class="nb">bool</span>
-</span><span data-line="133">    <span class="c1">#: ``'conflict'`` (a real textual conflict) or ``'error'`` (the merge could</span>
-</span><span data-line="134">    <span class="c1">#: not be attempted: bad path, missing ref, unusable worktree).</span>
-</span><span data-line="135">    <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"conflict"</span>
-</span><span data-line="136">    <span class="n">conflicting_files</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
-</span><span data-line="137">    <span class="n">assisted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># resolved by an AI assist rather than cleanly</span>
-</span><span data-line="138">    <span class="n">assist_diff</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="139">    <span class="n">order</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
-</span><span data-line="140">    <span class="n">detail</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="141">
+</span><span data-line="121"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="122"><span class="k">class</span><span class="w"> </span><span class="nc">MergeOutcome</span><span class="p">:</span>
+</span><span data-line="123"><span class="w">    </span><span class="sd">"""Result of merging a change set onto its base.</span>
+</span><span data-line="124">
+</span><span data-line="125"><span class="sd">    ``reason`` is load-bearing. "These changes conflict with each other" and "we</span>
+</span><span data-line="126"><span class="sd">    could not run the experiment" are completely different facts, and conflating</span>
+</span><span data-line="127"><span class="sd">    them is how a run reports *0 of 15 mergeable, complete* with total</span>
+</span><span data-line="128"><span class="sd">    confidence when the real problem was a bad worktree path. Only</span>
+</span><span data-line="129"><span class="sd">    ``reason == 'conflict'`` may ever enter the conflict set; an ``'error'``</span>
+</span><span data-line="130"><span class="sd">    aborts, because a set that was never tested has told us nothing.</span>
+</span><span data-line="131"><span class="sd">    """</span>
+</span><span data-line="132">
+</span><span data-line="133">    <span class="n">ok</span><span class="p">:</span> <span class="nb">bool</span>
+</span><span data-line="134">    <span class="c1">#: ``'conflict'`` (a real textual conflict) or ``'error'`` (the merge could</span>
+</span><span data-line="135">    <span class="c1">#: not be attempted: bad path, missing ref, unusable worktree).</span>
+</span><span data-line="136">    <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"conflict"</span>
+</span><span data-line="137">    <span class="n">conflicting_files</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+</span><span data-line="138">    <span class="n">assisted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># resolved by an AI assist rather than cleanly</span>
+</span><span data-line="139">    <span class="n">assist_diff</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="140">    <span class="n">order</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+</span><span data-line="141">    <span class="n">detail</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="142">
 <div class="viewcode-block" id="MergeOutcome.to_jdict">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.MergeOutcome.to_jdict">[docs]</a>
-</span><span data-line="142">    <span class="k">def</span><span class="w"> </span><span class="nf">to_jdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="143"><span class="w">        </span><span class="sd">"""JSON-able view."""</span>
-</span><span data-line="144">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="145">            <span class="s2">"ok"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ok</span><span class="p">,</span>
-</span><span data-line="146">            <span class="s2">"reason"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span>
-</span><span data-line="147">            <span class="s2">"conflicting_files"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">),</span>
-</span><span data-line="148">            <span class="s2">"assisted"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">assisted</span><span class="p">,</span>
-</span><span data-line="149">            <span class="s2">"assist_diff"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">assist_diff</span><span class="p">,</span>
-</span><span data-line="150">            <span class="s2">"order"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">),</span>
-</span><span data-line="151">            <span class="s2">"detail"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">detail</span><span class="p">,</span>
-</span><span data-line="152">        <span class="p">}</span></div>
+</span><span data-line="143">    <span class="k">def</span><span class="w"> </span><span class="nf">to_jdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="144"><span class="w">        </span><span class="sd">"""JSON-able view."""</span>
+</span><span data-line="145">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="146">            <span class="s2">"ok"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ok</span><span class="p">,</span>
+</span><span data-line="147">            <span class="s2">"reason"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span>
+</span><span data-line="148">            <span class="s2">"conflicting_files"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">),</span>
+</span><span data-line="149">            <span class="s2">"assisted"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">assisted</span><span class="p">,</span>
+</span><span data-line="150">            <span class="s2">"assist_diff"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">assist_diff</span><span class="p">,</span>
+</span><span data-line="151">            <span class="s2">"order"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">),</span>
+</span><span data-line="152">            <span class="s2">"detail"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">detail</span><span class="p">,</span>
+</span><span data-line="153">        <span class="p">}</span></div>
 </div>
 
-</span><span data-line="153">
 </span><span data-line="154">
+</span><span data-line="155">
+<div class="viewcode-block" id="StageRun">
+<a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.StageRun">[docs]</a>
+</span><span data-line="156"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="157"><span class="k">class</span><span class="w"> </span><span class="nc">StageRun</span><span class="p">:</span>
+</span><span data-line="158"><span class="w">    </span><span class="sd">"""What one stage of a staged validation did, and what it cost.</span>
+</span><span data-line="159">
+</span><span data-line="160"><span class="sd">    A stage skipped because its fingerprint matched (an install whose lockfile</span>
+</span><span data-line="161"><span class="sd">    did not change) is recorded too, with ``skipped=True`` and no time: that</span>
+</span><span data-line="162"><span class="sd">    skip is often the largest term in what an evaluation costs, and a log that</span>
+</span><span data-line="163"><span class="sd">    cannot show it cannot confirm it (i2mint/mergeset#17).</span>
+</span><span data-line="164">
+</span><span data-line="165"><span class="sd">    &gt;&gt;&gt; StageRun.from_jdict(StageRun('setup', 33.0, 0).to_jdict())</span>
+</span><span data-line="166"><span class="sd">    StageRun(name='setup', duration=33.0, returncode=0, skipped=False)</span>
+</span><span data-line="167"><span class="sd">    """</span>
+</span><span data-line="168">
+</span><span data-line="169">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+</span><span data-line="170">    <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+</span><span data-line="171">    <span class="n">returncode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># None when skipped</span>
+</span><span data-line="172">    <span class="n">skipped</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span data-line="173">
+<div class="viewcode-block" id="StageRun.to_jdict">
+<a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.StageRun.to_jdict">[docs]</a>
+</span><span data-line="174">    <span class="k">def</span><span class="w"> </span><span class="nf">to_jdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="175"><span class="w">        </span><span class="sd">"""JSON-able view."""</span>
+</span><span data-line="176">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="177">            <span class="s2">"name"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+</span><span data-line="178">            <span class="s2">"duration"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+</span><span data-line="179">            <span class="s2">"returncode"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span>
+</span><span data-line="180">            <span class="s2">"skipped"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">skipped</span><span class="p">,</span>
+</span><span data-line="181">        <span class="p">}</span></div>
+
+</span><span data-line="182">
+<div class="viewcode-block" id="StageRun.from_jdict">
+<a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.StageRun.from_jdict">[docs]</a>
+</span><span data-line="183">    <span class="nd">@classmethod</span>
+</span><span data-line="184">    <span class="k">def</span><span class="w"> </span><span class="nf">from_jdict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">"StageRun"</span><span class="p">:</span>
+</span><span data-line="185"><span class="w">        </span><span class="sd">"""Inverse of :meth:`to_jdict`."""</span>
+</span><span data-line="186">        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span data-line="187">            <span class="n">name</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
+</span><span data-line="188">            <span class="n">duration</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"duration"</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">,</span>
+</span><span data-line="189">            <span class="n">returncode</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"returncode"</span><span class="p">),</span>
+</span><span data-line="190">            <span class="n">skipped</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"skipped"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+</span><span data-line="191">        <span class="p">)</span></div>
+</div>
+
+</span><span data-line="192">
+</span><span data-line="193">
 <div class="viewcode-block" id="ValidationOutcome">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.ValidationOutcome">[docs]</a>
-</span><span data-line="155"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="156"><span class="k">class</span><span class="w"> </span><span class="nc">ValidationOutcome</span><span class="p">:</span>
-</span><span data-line="157"><span class="w">    </span><span class="sd">"""Result of validating a merged tree."""</span>
-</span><span data-line="158">
-</span><span data-line="159">    <span class="n">ok</span><span class="p">:</span> <span class="nb">bool</span>
-</span><span data-line="160">    <span class="n">failing_tests</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
-</span><span data-line="161">    <span class="n">failing_files</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
-</span><span data-line="162">    <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
-</span><span data-line="163">    <span class="n">stdout_tail</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="164">    <span class="n">returncode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="165">
+</span><span data-line="194"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="195"><span class="k">class</span><span class="w"> </span><span class="nc">ValidationOutcome</span><span class="p">:</span>
+</span><span data-line="196"><span class="w">    </span><span class="sd">"""Result of validating a merged tree."""</span>
+</span><span data-line="197">
+</span><span data-line="198">    <span class="n">ok</span><span class="p">:</span> <span class="nb">bool</span>
+</span><span data-line="199">    <span class="n">failing_tests</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+</span><span data-line="200">    <span class="n">failing_files</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+</span><span data-line="201">    <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+</span><span data-line="202">    <span class="n">stdout_tail</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="203">    <span class="n">returncode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="204">    <span class="c1">#: Per-stage breakdown, in run order, for a staged validator; empty for a</span>
+</span><span data-line="205">    <span class="c1">#: single-command one and on rows written before stages were recorded.</span>
+</span><span data-line="206">    <span class="n">stages</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">StageRun</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+</span><span data-line="207">
+</span><span data-line="208">    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="209">        <span class="c1"># A tuple whatever was passed, so a recorded outcome equals its re-read.</span>
+</span><span data-line="210">        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"stages"</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stages</span><span class="p">))</span>
+</span><span data-line="211">
+</span><span data-line="212">    <span class="nd">@property</span>
+</span><span data-line="213">    <span class="k">def</span><span class="w"> </span><span class="nf">stage_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+</span><span data-line="214"><span class="w">        </span><span class="sd">"""``{stage name: seconds}`` for the stages that ran (skips excluded).</span>
+</span><span data-line="215">
+</span><span data-line="216"><span class="sd">        The shape :data:`mergeset.cost.Seconds` accepts as a breakdown. Two</span>
+</span><span data-line="217"><span class="sd">        stages sharing a name are summed, never overwritten.</span>
+</span><span data-line="218">
+</span><span data-line="219"><span class="sd">        &gt;&gt;&gt; ValidationOutcome(True, stages=[StageRun('setup', skipped=True),</span>
+</span><span data-line="220"><span class="sd">        ...                                 StageRun('test', 6.0, 0)]).stage_seconds</span>
+</span><span data-line="221"><span class="sd">        {'test': 6.0}</span>
+</span><span data-line="222"><span class="sd">        """</span>
+</span><span data-line="223">        <span class="n">seconds</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span data-line="224">        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stages</span><span class="p">:</span>
+</span><span data-line="225">            <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="o">.</span><span class="n">skipped</span><span class="p">:</span>
+</span><span data-line="226">                <span class="n">seconds</span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">seconds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">duration</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span>
+</span><span data-line="227">        <span class="k">return</span> <span class="n">seconds</span>
+</span><span data-line="228">
 <div class="viewcode-block" id="ValidationOutcome.to_jdict">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.ValidationOutcome.to_jdict">[docs]</a>
-</span><span data-line="166">    <span class="k">def</span><span class="w"> </span><span class="nf">to_jdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="167"><span class="w">        </span><span class="sd">"""JSON-able view."""</span>
-</span><span data-line="168">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="169">            <span class="s2">"ok"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ok</span><span class="p">,</span>
-</span><span data-line="170">            <span class="s2">"failing_tests"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">failing_tests</span><span class="p">),</span>
-</span><span data-line="171">            <span class="s2">"failing_files"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">failing_files</span><span class="p">),</span>
-</span><span data-line="172">            <span class="s2">"duration"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
-</span><span data-line="173">            <span class="s2">"stdout_tail"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdout_tail</span><span class="p">,</span>
-</span><span data-line="174">            <span class="s2">"returncode"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span>
-</span><span data-line="175">        <span class="p">}</span></div>
+</span><span data-line="229">    <span class="k">def</span><span class="w"> </span><span class="nf">to_jdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="230"><span class="w">        </span><span class="sd">"""JSON-able view."""</span>
+</span><span data-line="231">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="232">            <span class="s2">"ok"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ok</span><span class="p">,</span>
+</span><span data-line="233">            <span class="s2">"failing_tests"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">failing_tests</span><span class="p">),</span>
+</span><span data-line="234">            <span class="s2">"failing_files"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">failing_files</span><span class="p">),</span>
+</span><span data-line="235">            <span class="s2">"duration"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+</span><span data-line="236">            <span class="s2">"stdout_tail"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdout_tail</span><span class="p">,</span>
+</span><span data-line="237">            <span class="s2">"returncode"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span>
+</span><span data-line="238">            <span class="s2">"stages"</span><span class="p">:</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">to_jdict</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stages</span><span class="p">],</span>
+</span><span data-line="239">        <span class="p">}</span></div>
+
+</span><span data-line="240">
+<div class="viewcode-block" id="ValidationOutcome.from_jdict">
+<a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.ValidationOutcome.from_jdict">[docs]</a>
+</span><span data-line="241">    <span class="nd">@classmethod</span>
+</span><span data-line="242">    <span class="k">def</span><span class="w"> </span><span class="nf">from_jdict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">"ValidationOutcome"</span><span class="p">:</span>
+</span><span data-line="243"><span class="w">        </span><span class="sd">"""Inverse of :meth:`to_jdict`; rows without ``stages`` read as none.</span>
+</span><span data-line="244">
+</span><span data-line="245"><span class="sd">        Keys it does not know are ignored, so a log written by a later version</span>
+</span><span data-line="246"><span class="sd">        still loads here instead of failing on its first new field.</span>
+</span><span data-line="247"><span class="sd">        """</span>
+</span><span data-line="248">        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span data-line="249">            <span class="n">ok</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="s2">"ok"</span><span class="p">],</span>
+</span><span data-line="250">            <span class="n">failing_tests</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"failing_tests"</span><span class="p">,</span> <span class="p">()),</span>
+</span><span data-line="251">            <span class="n">failing_files</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"failing_files"</span><span class="p">,</span> <span class="p">()),</span>
+</span><span data-line="252">            <span class="n">duration</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"duration"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+</span><span data-line="253">            <span class="n">stdout_tail</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"stdout_tail"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
+</span><span data-line="254">            <span class="n">returncode</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"returncode"</span><span class="p">),</span>
+</span><span data-line="255">            <span class="n">stages</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">StageRun</span><span class="o">.</span><span class="n">from_jdict</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"stages"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()),</span>
+</span><span data-line="256">        <span class="p">)</span></div>
 </div>
 
-</span><span data-line="176">
-</span><span data-line="177">
+</span><span data-line="257">
+</span><span data-line="258">
 <div class="viewcode-block" id="Evaluation">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.Evaluation">[docs]</a>
-</span><span data-line="178"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="179"><span class="k">class</span><span class="w"> </span><span class="nc">Evaluation</span><span class="p">:</span>
-</span><span data-line="180"><span class="w">    </span><span class="sd">"""One row of the evaluation log — the single source of truth.</span>
-</span><span data-line="181">
-</span><span data-line="182"><span class="sd">    Everything else (conflict set, known-good/known-bad closure, merge plan,</span>
-</span><span data-line="183"><span class="sd">    reports) is *derived* from a sequence of these and is re-derivable.</span>
-</span><span data-line="184">
-</span><span data-line="185"><span class="sd">    A row is about the commits that were actually merged, not about the ids:</span>
-</span><span data-line="186"><span class="sd">    ``base_sha`` and ``heads`` (change id -&gt; head sha) pin it to them, so a row</span>
-</span><span data-line="187"><span class="sd">    written before a branch was rewritten is never mistaken for an answer about</span>
-</span><span data-line="188"><span class="sd">    the rewritten branch (i2mint/mergeset#23). Rows written before pinning</span>
-</span><span data-line="189"><span class="sd">    existed carry neither and read back as *unpinned*; see</span>
-</span><span data-line="190"><span class="sd">    :class:`mergeset.log.EvaluationLog`.</span>
-</span><span data-line="191"><span class="sd">    """</span>
-</span><span data-line="192">
-</span><span data-line="193">    <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span>
-</span><span data-line="194">    <span class="n">verdict</span><span class="p">:</span> <span class="n">Verdict</span>
-</span><span data-line="195">    <span class="n">stage</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Stage</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="196">    <span class="n">merge</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MergeOutcome</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="197">    <span class="n">validation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ValidationOutcome</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="198">    <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
-</span><span data-line="199">    <span class="n">at</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># ISO timestamp, filled by the log</span>
-</span><span data-line="200">    <span class="n">note</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="201">    <span class="c1">#: Full sha of the base the set was merged onto. ``None`` on unpinned rows.</span>
-</span><span data-line="202">    <span class="n">base_sha</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="203">    <span class="c1">#: Full head sha of each change in ``subset`` when it was evaluated.</span>
-</span><span data-line="204">    <span class="n">heads</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
-</span><span data-line="205">    <span class="c1">#: True when this came from the log rather than from a real run. Not</span>
-</span><span data-line="206">    <span class="c1">#: serialized: it is a fact about *this* lookup, not about the evaluation.</span>
-</span><span data-line="207">    <span class="n">cached</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span data-line="208">
-</span><span data-line="209">    <span class="nd">@property</span>
-</span><span data-line="210">    <span class="k">def</span><span class="w"> </span><span class="nf">ok</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="211"><span class="w">        </span><span class="sd">"""True iff the set evaluated as good."""</span>
-</span><span data-line="212">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span>
-</span><span data-line="213">
+</span><span data-line="259"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="260"><span class="k">class</span><span class="w"> </span><span class="nc">Evaluation</span><span class="p">:</span>
+</span><span data-line="261"><span class="w">    </span><span class="sd">"""One row of the evaluation log — the single source of truth.</span>
+</span><span data-line="262">
+</span><span data-line="263"><span class="sd">    Everything else (conflict set, known-good/known-bad closure, merge plan,</span>
+</span><span data-line="264"><span class="sd">    reports) is *derived* from a sequence of these and is re-derivable.</span>
+</span><span data-line="265">
+</span><span data-line="266"><span class="sd">    A row is about the commits that were actually merged, not about the ids:</span>
+</span><span data-line="267"><span class="sd">    ``base_sha`` and ``heads`` (change id -&gt; head sha) pin it to them, so a row</span>
+</span><span data-line="268"><span class="sd">    written before a branch was rewritten is never mistaken for an answer about</span>
+</span><span data-line="269"><span class="sd">    the rewritten branch (i2mint/mergeset#23). Rows written before pinning</span>
+</span><span data-line="270"><span class="sd">    existed carry neither and read back as *unpinned*; see</span>
+</span><span data-line="271"><span class="sd">    :class:`mergeset.log.EvaluationLog`.</span>
+</span><span data-line="272"><span class="sd">    """</span>
+</span><span data-line="273">
+</span><span data-line="274">    <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span>
+</span><span data-line="275">    <span class="n">verdict</span><span class="p">:</span> <span class="n">Verdict</span>
+</span><span data-line="276">    <span class="n">stage</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Stage</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="277">    <span class="n">merge</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MergeOutcome</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="278">    <span class="n">validation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ValidationOutcome</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="279">    <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+</span><span data-line="280">    <span class="n">at</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># ISO timestamp, filled by the log</span>
+</span><span data-line="281">    <span class="n">note</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="282">    <span class="c1">#: Full sha of the base the set was merged onto. ``None`` on unpinned rows.</span>
+</span><span data-line="283">    <span class="n">base_sha</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="284">    <span class="c1">#: Full head sha of each change in ``subset`` when it was evaluated.</span>
+</span><span data-line="285">    <span class="n">heads</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+</span><span data-line="286">    <span class="c1">#: True when this came from the log rather than from a real run. Not</span>
+</span><span data-line="287">    <span class="c1">#: serialized: it is a fact about *this* lookup, not about the evaluation.</span>
+</span><span data-line="288">    <span class="n">cached</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span data-line="289">
+</span><span data-line="290">    <span class="nd">@property</span>
+</span><span data-line="291">    <span class="k">def</span><span class="w"> </span><span class="nf">ok</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="292"><span class="w">        </span><span class="sd">"""True iff the set evaluated as good."""</span>
+</span><span data-line="293">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span>
+</span><span data-line="294">
 <div class="viewcode-block" id="Evaluation.to_jdict">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.Evaluation.to_jdict">[docs]</a>
-</span><span data-line="214">    <span class="k">def</span><span class="w"> </span><span class="nf">to_jdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="215"><span class="w">        </span><span class="sd">"""JSON-able view; ``subset`` becomes a sorted list."""</span>
-</span><span data-line="216">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="217">            <span class="s2">"subset"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">set_key</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subset</span><span class="p">)),</span>
-</span><span data-line="218">            <span class="s2">"verdict"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">verdict</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-</span><span data-line="219">            <span class="s2">"stage"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">stage</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stage</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="220">            <span class="s2">"merge"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">merge</span><span class="o">.</span><span class="n">to_jdict</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">merge</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="221">            <span class="s2">"validation"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">validation</span><span class="o">.</span><span class="n">to_jdict</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validation</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="222">            <span class="s2">"duration"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
-</span><span data-line="223">            <span class="s2">"at"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">at</span><span class="p">,</span>
-</span><span data-line="224">            <span class="s2">"note"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">note</span><span class="p">,</span>
-</span><span data-line="225">            <span class="s2">"base_sha"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_sha</span><span class="p">,</span>
-</span><span data-line="226">            <span class="s2">"heads"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">heads</span><span class="o">.</span><span class="n">items</span><span class="p">())),</span>
-</span><span data-line="227">        <span class="p">}</span></div>
+</span><span data-line="295">    <span class="k">def</span><span class="w"> </span><span class="nf">to_jdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="296"><span class="w">        </span><span class="sd">"""JSON-able view; ``subset`` becomes a sorted list."""</span>
+</span><span data-line="297">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="298">            <span class="s2">"subset"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">set_key</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subset</span><span class="p">)),</span>
+</span><span data-line="299">            <span class="s2">"verdict"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">verdict</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+</span><span data-line="300">            <span class="s2">"stage"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">stage</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stage</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="301">            <span class="s2">"merge"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">merge</span><span class="o">.</span><span class="n">to_jdict</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">merge</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="302">            <span class="s2">"validation"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validation_jdict</span><span class="p">(),</span>
+</span><span data-line="303">            <span class="c1"># Beside ``validation``, not inside it: releases before #17 build</span>
+</span><span data-line="304">            <span class="c1"># ``ValidationOutcome(**validation)`` and would refuse the whole log</span>
+</span><span data-line="305">            <span class="c1"># over one unknown key, while they ignore unknown top-level keys.</span>
+</span><span data-line="306">            <span class="s2">"validation_stages"</span><span class="p">:</span> <span class="p">(</span>
+</span><span data-line="307">                <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">to_jdict</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">validation</span><span class="o">.</span><span class="n">stages</span><span class="p">]</span>
+</span><span data-line="308">                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validation</span>
+</span><span data-line="309">                <span class="k">else</span> <span class="p">[]</span>
+</span><span data-line="310">            <span class="p">),</span>
+</span><span data-line="311">            <span class="s2">"duration"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+</span><span data-line="312">            <span class="s2">"at"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">at</span><span class="p">,</span>
+</span><span data-line="313">            <span class="s2">"note"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">note</span><span class="p">,</span>
+</span><span data-line="314">            <span class="s2">"base_sha"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_sha</span><span class="p">,</span>
+</span><span data-line="315">            <span class="s2">"heads"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">heads</span><span class="o">.</span><span class="n">items</span><span class="p">())),</span>
+</span><span data-line="316">        <span class="p">}</span></div>
 
-</span><span data-line="228">
+</span><span data-line="317">
+</span><span data-line="318">    <span class="k">def</span><span class="w"> </span><span class="nf">_validation_jdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+</span><span data-line="319">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="320">            <span class="k">return</span> <span class="kc">None</span>
+</span><span data-line="321">        <span class="n">jdict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validation</span><span class="o">.</span><span class="n">to_jdict</span><span class="p">()</span>
+</span><span data-line="322">        <span class="k">del</span> <span class="n">jdict</span><span class="p">[</span><span class="s2">"stages"</span><span class="p">]</span>  <span class="c1"># stored beside it; see ``to_jdict``</span>
+</span><span data-line="323">        <span class="k">return</span> <span class="n">jdict</span>
+</span><span data-line="324">
 <div class="viewcode-block" id="Evaluation.from_jdict">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.Evaluation.from_jdict">[docs]</a>
-</span><span data-line="229">    <span class="nd">@classmethod</span>
-</span><span data-line="230">    <span class="k">def</span><span class="w"> </span><span class="nf">from_jdict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">"Evaluation"</span><span class="p">:</span>
-</span><span data-line="231"><span class="w">        </span><span class="sd">"""Inverse of :meth:`to_jdict`."""</span>
-</span><span data-line="232">        <span class="n">merge</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"merge"</span><span class="p">)</span>
-</span><span data-line="233">        <span class="n">validation</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"validation"</span><span class="p">)</span>
-</span><span data-line="234">        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span data-line="235">            <span class="n">subset</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">"subset"</span><span class="p">]),</span>
-</span><span data-line="236">            <span class="n">verdict</span><span class="o">=</span><span class="n">Verdict</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">"verdict"</span><span class="p">]),</span>
-</span><span data-line="237">            <span class="n">stage</span><span class="o">=</span><span class="n">Stage</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">"stage"</span><span class="p">])</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"stage"</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="238">            <span class="n">merge</span><span class="o">=</span><span class="n">MergeOutcome</span><span class="p">(</span><span class="o">**</span><span class="n">merge</span><span class="p">)</span> <span class="k">if</span> <span class="n">merge</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="239">            <span class="n">validation</span><span class="o">=</span><span class="n">ValidationOutcome</span><span class="p">(</span><span class="o">**</span><span class="n">validation</span><span class="p">)</span> <span class="k">if</span> <span class="n">validation</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="240">            <span class="n">duration</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"duration"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-</span><span data-line="241">            <span class="n">at</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"at"</span><span class="p">),</span>
-</span><span data-line="242">            <span class="n">note</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"note"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
-</span><span data-line="243">            <span class="c1"># Absent on rows written before pinning: they read back unpinned,</span>
-</span><span data-line="244">            <span class="c1"># never dropped (i2mint/mergeset#23).</span>
-</span><span data-line="245">            <span class="n">base_sha</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"base_sha"</span><span class="p">),</span>
-</span><span data-line="246">            <span class="n">heads</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"heads"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}),</span>
-</span><span data-line="247">        <span class="p">)</span></div>
+</span><span data-line="325">    <span class="nd">@classmethod</span>
+</span><span data-line="326">    <span class="k">def</span><span class="w"> </span><span class="nf">from_jdict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">"Evaluation"</span><span class="p">:</span>
+</span><span data-line="327"><span class="w">        </span><span class="sd">"""Inverse of :meth:`to_jdict`."""</span>
+</span><span data-line="328">        <span class="n">merge</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"merge"</span><span class="p">)</span>
+</span><span data-line="329">        <span class="n">validation</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"validation"</span><span class="p">)</span>
+</span><span data-line="330">        <span class="k">if</span> <span class="n">validation</span> <span class="ow">and</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"validation_stages"</span><span class="p">):</span>
+</span><span data-line="331">            <span class="n">validation</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">validation</span><span class="p">,</span> <span class="s2">"stages"</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="s2">"validation_stages"</span><span class="p">]}</span>
+</span><span data-line="332">        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span data-line="333">            <span class="n">subset</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">"subset"</span><span class="p">]),</span>
+</span><span data-line="334">            <span class="n">verdict</span><span class="o">=</span><span class="n">Verdict</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">"verdict"</span><span class="p">]),</span>
+</span><span data-line="335">            <span class="n">stage</span><span class="o">=</span><span class="n">Stage</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">"stage"</span><span class="p">])</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"stage"</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="336">            <span class="n">merge</span><span class="o">=</span><span class="n">MergeOutcome</span><span class="p">(</span><span class="o">**</span><span class="n">merge</span><span class="p">)</span> <span class="k">if</span> <span class="n">merge</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="337">            <span class="n">validation</span><span class="o">=</span><span class="n">ValidationOutcome</span><span class="o">.</span><span class="n">from_jdict</span><span class="p">(</span><span class="n">validation</span><span class="p">)</span> <span class="k">if</span> <span class="n">validation</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="338">            <span class="n">duration</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"duration"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+</span><span data-line="339">            <span class="n">at</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"at"</span><span class="p">),</span>
+</span><span data-line="340">            <span class="n">note</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"note"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
+</span><span data-line="341">            <span class="c1"># Absent on rows written before pinning: they read back unpinned,</span>
+</span><span data-line="342">            <span class="c1"># never dropped (i2mint/mergeset#23).</span>
+</span><span data-line="343">            <span class="n">base_sha</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"base_sha"</span><span class="p">),</span>
+</span><span data-line="344">            <span class="n">heads</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"heads"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}),</span>
+</span><span data-line="345">        <span class="p">)</span></div>
 
-</span><span data-line="248">
-</span><span data-line="249">    <span class="nd">@property</span>
-</span><span data-line="250">    <span class="k">def</span><span class="w"> </span><span class="nf">pinned</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="251"><span class="w">        </span><span class="sd">"""True iff the row records which commits it was evaluated against."""</span>
-</span><span data-line="252">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_sha</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+</span><span data-line="346">
+</span><span data-line="347">    <span class="nd">@property</span>
+</span><span data-line="348">    <span class="k">def</span><span class="w"> </span><span class="nf">pinned</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="349"><span class="w">        </span><span class="sd">"""True iff the row records which commits it was evaluated against."""</span>
+</span><span data-line="350">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_sha</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
 
-</span><span data-line="253">
-</span><span data-line="254">
+</span><span data-line="351">
+</span><span data-line="352">
 <div class="viewcode-block" id="Evaluator">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.Evaluator">[docs]</a>
-</span><span data-line="255"><span class="nd">@runtime_checkable</span>
-</span><span data-line="256"><span class="k">class</span><span class="w"> </span><span class="nc">Evaluator</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-</span><span data-line="257"><span class="w">    </span><span class="sd">"""Callable that decides whether a change set is good.</span>
-</span><span data-line="258">
-</span><span data-line="259"><span class="sd">    This is *the* expensive seam: one call is typically a merge plus a test run.</span>
-</span><span data-line="260"><span class="sd">    """</span>
-</span><span data-line="261">
-</span><span data-line="262">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Evaluation</span><span class="p">:</span>
-</span><span data-line="263"><span class="w">        </span><span class="sd">"""Evaluate ``subset`` and return the full record, not just a bit."""</span>
-</span><span data-line="264">        <span class="o">...</span></div>
+</span><span data-line="353"><span class="nd">@runtime_checkable</span>
+</span><span data-line="354"><span class="k">class</span><span class="w"> </span><span class="nc">Evaluator</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+</span><span data-line="355"><span class="w">    </span><span class="sd">"""Callable that decides whether a change set is good.</span>
+</span><span data-line="356">
+</span><span data-line="357"><span class="sd">    This is *the* expensive seam: one call is typically a merge plus a test run.</span>
+</span><span data-line="358"><span class="sd">    """</span>
+</span><span data-line="359">
+</span><span data-line="360">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Evaluation</span><span class="p">:</span>
+</span><span data-line="361"><span class="w">        </span><span class="sd">"""Evaluate ``subset`` and return the full record, not just a bit."""</span>
+</span><span data-line="362">        <span class="o">...</span></div>
 
-</span><span data-line="265">
-</span><span data-line="266">
-</span><span data-line="267"><span class="c1">#: A merge function: (changes to merge, in order) -&gt; outcome + a tree to validate.</span>
-</span><span data-line="268"><span class="n">MergeFn</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">MergeOutcome</span><span class="p">]</span>
-</span><span data-line="269">
-</span><span data-line="270"><span class="c1">#: A validation function: (path to a merged worktree) -&gt; outcome.</span>
-</span><span data-line="271"><span class="n">ValidateFn</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">ValidationOutcome</span><span class="p">]</span>
-</span><span data-line="272">
-</span><span data-line="273">
+</span><span data-line="363">
+</span><span data-line="364">
+</span><span data-line="365"><span class="c1">#: A merge function: (changes to merge, in order) -&gt; outcome + a tree to validate.</span>
+</span><span data-line="366"><span class="n">MergeFn</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">MergeOutcome</span><span class="p">]</span>
+</span><span data-line="367">
+</span><span data-line="368"><span class="c1">#: A validation function: (path to a merged worktree) -&gt; outcome.</span>
+</span><span data-line="369"><span class="n">ValidateFn</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">ValidationOutcome</span><span class="p">]</span>
+</span><span data-line="370">
+</span><span data-line="371">
 <div class="viewcode-block" id="MergesetError">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.MergesetError">[docs]</a>
-</span><span data-line="274"><span class="k">class</span><span class="w"> </span><span class="nc">MergesetError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-</span><span data-line="275"><span class="w">    </span><span class="sd">"""Base class for errors this package raises deliberately."""</span></div>
+</span><span data-line="372"><span class="k">class</span><span class="w"> </span><span class="nc">MergesetError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+</span><span data-line="373"><span class="w">    </span><span class="sd">"""Base class for errors this package raises deliberately."""</span></div>
 
-</span><span data-line="276">
-</span><span data-line="277">
+</span><span data-line="374">
+</span><span data-line="375">
 <div class="viewcode-block" id="CapabilityError">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.CapabilityError">[docs]</a>
-</span><span data-line="278"><span class="k">class</span><span class="w"> </span><span class="nc">CapabilityError</span><span class="p">(</span><span class="n">MergesetError</span><span class="p">):</span>
-</span><span data-line="279"><span class="w">    </span><span class="sd">"""A required external capability is missing; the message says how to fix it."""</span></div>
+</span><span data-line="376"><span class="k">class</span><span class="w"> </span><span class="nc">CapabilityError</span><span class="p">(</span><span class="n">MergesetError</span><span class="p">):</span>
+</span><span data-line="377"><span class="w">    </span><span class="sd">"""A required external capability is missing; the message says how to fix it."""</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -488,7 +598,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=63b572e7"></script>
+      <script src="../../_static/documentation_options.js?v=8bafd125"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

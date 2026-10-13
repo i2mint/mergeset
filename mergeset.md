@@ -1,4 +1,4 @@
-> built 2026-10-13 03:46 UTC from d4f423c (main) · mergeset 0.0.17. Details: build_info.json
+> built 2026-10-13 03:57 UTC from 7826cea (main) · mergeset 0.0.18. Details: build_info.json
 
 # index.html.md
 
@@ -492,6 +492,7 @@ and diffable.
 | [`Evaluator`](_autosummary/mergeset.base.html.md#mergeset.base.Evaluator)(\*args, \*\*kwargs)                    | Callable that decides whether a change set is good.           |
 | [`MergeOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.MergeOutcome)(ok[, reason, ...])                  | Result of merging a change set onto its base.                 |
 | [`Stage`](_autosummary/mergeset.base.html.md#mergeset.base.Stage)(\*values)                                  | Where an evaluation ended.                                    |
+| [`StageRun`](_autosummary/mergeset.base.html.md#mergeset.base.StageRun)(name[, duration, returncode, skipped])  | What one stage of a staged validation did, and what it cost.  |
 | [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)(ok[, failing_tests, ...])      | Result of validating a merged tree.                           |
 | [`Verdict`](_autosummary/mergeset.base.html.md#mergeset.base.Verdict)(\*values)                                | Outcome of evaluating a change set.                           |
 
@@ -655,6 +656,36 @@ Bases: [`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Enum`](h
 
 Where an evaluation ended.
 
+### *class* mergeset.base.StageRun(name, duration=0.0, returncode=None, skipped=False)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+What one stage of a staged validation did, and what it cost.
+
+A stage skipped because its fingerprint matched (an install whose lockfile
+did not change) is recorded too, with `skipped=True` and no time: that
+skip is often the largest term in what an evaluation costs, and a log that
+cannot show it cannot confirm it (i2mint/mergeset#17).
+
+```pycon
+>>> StageRun.from_jdict(StageRun('setup', 33.0, 0).to_jdict())
+StageRun(name='setup', duration=33.0, returncode=0, skipped=False)
+```
+
+#### *classmethod* from_jdict(d)
+
+Inverse of [`to_jdict()`](_autosummary/mergeset.base.html.md#mergeset.base.StageRun.to_jdict).
+
+* **Return type:**
+  [`StageRun`](_autosummary/mergeset.base.html.md#mergeset.base.StageRun)
+
+#### to_jdict()
+
+JSON-able view.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
 ### mergeset.base.ValidateFn
 
 (path to a merged worktree) -> outcome.
@@ -664,11 +695,39 @@ Where an evaluation ended.
 
 alias of `Callable`[[…], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]
 
-### *class* mergeset.base.ValidationOutcome(ok, failing_tests=(), failing_files=(), duration=0.0, stdout_tail='', returncode=None)
+### *class* mergeset.base.ValidationOutcome(ok, failing_tests=(), failing_files=(), duration=0.0, stdout_tail='', returncode=None, stages=())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Result of validating a merged tree.
+
+#### *classmethod* from_jdict(d)
+
+Inverse of [`to_jdict()`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome.to_jdict); rows without `stages` read as none.
+
+Keys it does not know are ignored, so a log written by a later version
+still loads here instead of failing on its first new field.
+
+* **Return type:**
+  [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)
+
+#### *property* stage_seconds *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [float](https://docs.python.org/3/builtins/functions.html#float)]*
+
+`{stage name: seconds}` for the stages that ran (skips excluded).
+
+The shape [`mergeset.cost.Seconds`](_autosummary/mergeset.cost.html.md#mergeset.cost.Seconds) accepts as a breakdown. Two
+stages sharing a name are summed, never overwritten.
+
+```pycon
+>>> ValidationOutcome(True, stages=[StageRun('setup', skipped=True),
+...                                 StageRun('test', 6.0, 0)]).stage_seconds
+{'test': 6.0}
+```
+
+#### stages *: [Sequence](https://docs.python.org/3/library/typing.html#typing.Sequence)[[StageRun](_autosummary/mergeset.base.html.md#mergeset.base.StageRun)]* *= ()*
+
+Per-stage breakdown, in run order, for a staged validator; empty for a
+single-command one and on rows written before stages were recorded.
 
 #### to_jdict()
 
@@ -1535,6 +1594,7 @@ changes.
 | [`Verdict`](_autosummary/mergeset.html.md#mergeset.Verdict)(\*values)                                 | Outcome of evaluating a change set.                                                                   |
 | [`MergeOutcome`](_autosummary/mergeset.html.md#mergeset.MergeOutcome)(ok[, reason, ...])                   | Result of merging a change set onto its base.                                                         |
 | [`ValidationOutcome`](_autosummary/mergeset.html.md#mergeset.ValidationOutcome)(ok[, failing_tests, ...])       | Result of validating a merged tree.                                                                   |
+| [`StageRun`](_autosummary/mergeset.html.md#mergeset.StageRun)(name[, duration, returncode, skipped])   | What one stage of a staged validation did, and what it cost.                                          |
 | [`EvaluationLog`](_autosummary/mergeset.html.md#mergeset.EvaluationLog)([store, pins, trust_unpinned])      | Append-only record of evaluations, plus the monotone closure over it.                                 |
 | [`JsonlLines`](_autosummary/mergeset.html.md#mergeset.JsonlLines)(path)                                  | Append-only sequence of JSON objects backed by one file.                                              |
 | [`MemoryLines`](_autosummary/mergeset.html.md#mergeset.MemoryLines)([iterable])                           | In-memory stand-in for [`JsonlLines`](_autosummary/mergeset.html.md#mergeset.JsonlLines) (tests, dry runs). |
@@ -2249,6 +2309,36 @@ Bases: [`Exception`](https://docs.python.org/3/builtins/exceptions.html#Exceptio
 
 Base class for errors this package raises deliberately.
 
+### *class* mergeset.StageRun(name, duration=0.0, returncode=None, skipped=False)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+What one stage of a staged validation did, and what it cost.
+
+A stage skipped because its fingerprint matched (an install whose lockfile
+did not change) is recorded too, with `skipped=True` and no time: that
+skip is often the largest term in what an evaluation costs, and a log that
+cannot show it cannot confirm it (i2mint/mergeset#17).
+
+```pycon
+>>> StageRun.from_jdict(StageRun('setup', 33.0, 0).to_jdict())
+StageRun(name='setup', duration=33.0, returncode=0, skipped=False)
+```
+
+#### *classmethod* from_jdict(d)
+
+Inverse of [`to_jdict()`](_autosummary/mergeset.html.md#mergeset.StageRun.to_jdict).
+
+* **Return type:**
+  [`StageRun`](_autosummary/mergeset.base.html.md#mergeset.base.StageRun)
+
+#### to_jdict()
+
+JSON-able view.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
 ### *class* mergeset.StoreLines(store, key)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
@@ -2379,11 +2469,39 @@ D25’s rule, applied per tier.
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
-### *class* mergeset.ValidationOutcome(ok, failing_tests=(), failing_files=(), duration=0.0, stdout_tail='', returncode=None)
+### *class* mergeset.ValidationOutcome(ok, failing_tests=(), failing_files=(), duration=0.0, stdout_tail='', returncode=None, stages=())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Result of validating a merged tree.
+
+#### *classmethod* from_jdict(d)
+
+Inverse of [`to_jdict()`](_autosummary/mergeset.html.md#mergeset.ValidationOutcome.to_jdict); rows without `stages` read as none.
+
+Keys it does not know are ignored, so a log written by a later version
+still loads here instead of failing on its first new field.
+
+* **Return type:**
+  [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)
+
+#### *property* stage_seconds *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [float](https://docs.python.org/3/builtins/functions.html#float)]*
+
+`{stage name: seconds}` for the stages that ran (skips excluded).
+
+The shape [`mergeset.cost.Seconds`](_autosummary/mergeset.cost.html.md#mergeset.cost.Seconds) accepts as a breakdown. Two
+stages sharing a name are summed, never overwritten.
+
+```pycon
+>>> ValidationOutcome(True, stages=[StageRun('setup', skipped=True),
+...                                 StageRun('test', 6.0, 0)]).stage_seconds
+{'test': 6.0}
+```
+
+#### stages *: [Sequence](https://docs.python.org/3/library/typing.html#typing.Sequence)[[StageRun](_autosummary/mergeset.base.html.md#mergeset.base.StageRun)]* *= ()*
+
+Per-stage breakdown, in run order, for a staged validator; empty for a
+single-command one and on rows written before stages were recorded.
 
 #### to_jdict()
 
@@ -4054,6 +4172,7 @@ re-running anything expensive.
 |-----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
 | [`markdown_report`](_autosummary/mergeset.report.html.md#mergeset.report.markdown_report)(analysis, \*[, title])             | Render the analysis as Markdown.                                         |
 | [`pdf_report`](_autosummary/mergeset.report.html.md#mergeset.report.pdf_report)(analysis, \*[, title])                  | Render the analysis as a PDF, for the reader who wants one file to keep. |
+| [`stage_breakdown`](_autosummary/mergeset.report.html.md#mergeset.report.stage_breakdown)(record)                            | Where an evaluation's time went, stage by stage; `''` if not recorded.   |
 | [`write_reports`](_autosummary/mergeset.report.html.md#mergeset.report.write_reports)(analysis, \*[, title, formats, ...]) | Render a run's reports into the artifact store; return `{format: key}`.  |
 
 ### mergeset.report.REPORT_FORMATS *= {'html': ('report.html', False), 'markdown': ('REPORT.md', False), 'pdf': ('report.pdf', True)}*
@@ -4100,6 +4219,32 @@ than surfacing an ImportError from three frames down.
 
 * **Return type:**
   [`bytes`](https://docs.python.org/3/builtins/stdtypes.html#bytes)
+
+### mergeset.report.stage_breakdown(record)
+
+Where an evaluation’s time went, stage by stage; `''` if not recorded.
+
+The actionable version of a duration: “33 s of its 51 s installing
+dependencies” says what to fix, “51 s” does not. The remainder of the
+total – merging, worktree setup – is shown as `other`.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> from mergeset.base import StageRun, ValidationOutcome, Verdict
+>>> v = ValidationOutcome(True, duration=48.5, stages=[
+...     StageRun('setup', 33.0, 0), StageRun('build', 9.0, 0),
+...     StageRun('test', 6.5, 0)])
+>>> stage_breakdown(Evaluation(frozenset('a'), Verdict.PASS,
+...                            validation=v, duration=49.0))
+'setup 33.0 · build 9.0 · test 6.5 · other 0.5'
+>>> v = ValidationOutcome(True, stages=[StageRun('setup', skipped=True),
+...                                     StageRun('test', 6.0, 0)])
+>>> stage_breakdown(Evaluation(frozenset('a'), Verdict.PASS, validation=v,
+...                            duration=6.0))
+'setup skipped · test 6.0'
+```
 
 ### mergeset.report.write_reports(analysis, , title='mergeset report', formats=('markdown', 'html'), key=None, reports=None, binary_reports=None, rootdir=None)
 
@@ -5694,18 +5839,16 @@ log distinguishes `build: ...` from `test: tests/x.ts::y`.
 
 # About this build
 
-This documentation was built on **2026-10-13 03:46 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/d4f423c132e441c9220ad7db10533d01adb0b324"><code>d4f423c</code></a> on branch <code>main</code>, for **mergeset 0.0.17** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 03:57 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/7826ceaf9deebda3f5563755b6f396ebad3cfcf5"><code>7826cea</code></a> on branch <code>main</code>, for **mergeset 0.0.18** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.17) is behind the latest release on PyPI (0.0.18): `pip install mergeset` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/mergeset/commit/d4f423c132e441c9220ad7db10533d01adb0b324"><code>d4f423c132e441c9220ad7db10533d01adb0b324</code></a> |
+| Commit              | <a href="https://github.com/i2mint/mergeset/commit/7826ceaf9deebda3f5563755b6f396ebad3cfcf5"><code>7826ceaf9deebda3f5563755b6f396ebad3cfcf5</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -5716,9 +5859,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/mergeset</code>                                                               |
-| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38343183873">38343183873</a>      |
+| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38343990023">38343990023</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>d4f423c132e441c9220ad7db10533d01adb0b324</code> (in the history of the built commit) |
+| Event commit | <code>7826ceaf9deebda3f5563755b6f396ebad3cfcf5</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -5743,13 +5886,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/mergeset/0.0.18/">0.0.18</a>, newer than the documented version (0.0.17).
+Latest release: <a href="https://pypi.org/project/mergeset/0.0.18/">0.0.18</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/mergeset && cd mergeset
-git checkout d4f423c132e441c9220ad7db10533d01adb0b324
+git checkout 7826ceaf9deebda3f5563755b6f396ebad3cfcf5
 pip install "epythet==0.2.13"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
