@@ -929,3 +929,56 @@ def test_an_untiered_report_is_unchanged(repo, tmp_path):
     md = markdown_report(analysis)
     assert "### Tier" not in md
     assert f"{analysis.evaluations} expensive evaluations spent ·" in md
+
+
+def test_failure_evidence_comes_from_the_tier_that_failed(repo, tmp_path):
+    """Review of #40: a screen PASS listing an advisory stage's failure must not
+    stand in for the deep tier's real failing test."""
+    from mergeset.report import markdown_report
+
+    lint = "import os, sys\nsys.exit(1 if os.path.exists('new-d.txt') else 0)\n"
+    screen = staged_validation(
+        [ValidationStage("lint", py_command(tmp_path, "lint", lint), required=False)]
+    )
+    deep_code = (
+        "import os, sys\n"
+        "if os.path.exists('new-d.txt'):\n"
+        "    print('FAILED tests/test_x.py::test_real')\n"
+        "    sys.exit(1)\n"
+    )
+    result = analyze_tiered(
+        repo,
+        _changes(repo, ["feat-b", "feat-d"]),
+        base="main",
+        tiers=[
+            Tier("screen", screen),
+            Tier("deep", _stage_validator(tmp_path, "deep", deep_code)),
+        ],
+        pairwise_preoracle=False,
+        use_ci_status=False,
+    )
+    d = frozenset({"feat-d"})
+    screen_row = result.logs["screen"].exact(d)
+    assert screen_row.verdict is Verdict.PASS and screen_row.validation.failing_tests
+    assert result.logs["deep"].exact(d).verdict is Verdict.FAIL
+    md = markdown_report(result.analysis)
+    conflict_line = next(
+        line for line in md.splitlines() if line.startswith("- `feat-d` — failing")
+    )
+    assert "test_real" in conflict_line and "lint" not in conflict_line
+
+
+def test_a_name_holding_a_closing_script_tag_stays_data(repo, tmp_path):
+    from mergeset.report import html_report
+
+    result = analyze_tiered(
+        repo,
+        _changes(repo, ["feat-b"]),
+        base="main",
+        tiers=[Tier("x</script><b>", merge_only_validation())],
+        pairwise_preoracle=False,
+        use_ci_status=False,
+    )
+    page = html_report(result.analysis)
+    script = page.split("<script>", 1)[1]
+    assert script.count("</script>") == 1, "only the real closing tag"

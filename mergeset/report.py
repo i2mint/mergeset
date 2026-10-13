@@ -15,7 +15,7 @@ from collections.abc import MutableMapping
 from typing import Iterable, Iterator, List, Optional
 
 from mergeset.analysis import Analysis
-from mergeset.base import CapabilityError, ChangeSet, Evaluation, set_key
+from mergeset.base import CapabilityError, ChangeSet, Evaluation, Verdict, set_key
 
 
 def stage_breakdown(record: Evaluation) -> str:
@@ -264,7 +264,13 @@ def _failure_evidence(analysis: Analysis, conflict: ChangeSet) -> str:
     """Which tests, if we know — the difference between a report and an oracle."""
     logs = list(analysis.tier_logs.values()) or [analysis.log or []]
     for record in (r for log in logs for r in log):
-        if record.subset == conflict and record.validation:
+        # A FAIL only: across tiers the same set can PASS the screen with an
+        # advisory stage's failures listed, and FAIL deeper for a real reason.
+        if (
+            record.subset == conflict
+            and record.verdict is Verdict.FAIL
+            and record.validation
+        ):
             tests = record.validation.failing_tests[:3]
             if tests:
                 return " — failing: " + ", ".join(f"`{t}`" for t in tests)
@@ -280,8 +286,11 @@ def html_report(analysis: Analysis, *, title: str = "mergeset") -> str:
     and the evaluation timeline.
     """
     data = _analysis_jdict(analysis)
+    # `</` escaped: a tier name, a note or a test id holding `</script>` would
+    # otherwise end the script and the rest of it would run as markup.
+    payload = json.dumps(data).replace("</", "<\\/")
     return _HTML_TEMPLATE.replace("__TITLE__", html.escape(title)).replace(
-        "__DATA__", json.dumps(data)
+        "__DATA__", payload
     )
 
 
@@ -482,7 +491,7 @@ const logTable = rows =>
 
 // One table per tier when validation was tiered: a deep tier's refutations are
 // in its own log, and a table of the screen alone cannot show them.
-document.getElementById('logs').innerHTML = DATA.tier_logs.length
+document.getElementById('logs').innerHTML = (DATA.tier_logs || []).length
   ? DATA.tier_logs.map(t =>
       `<h3>Tier <code>${esc(t.name)}</code></h3>` + logTable(t.log)).join('')
   : logTable(DATA.log);

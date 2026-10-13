@@ -133,6 +133,9 @@ class Analysis:
     def evaluations(self) -> int:
         """How many expensive evaluations this analysis rests on.
 
+        In a tiered run, those of the first tier (``log``); every tier's count
+        is :attr:`evaluations_by_tier`, which is what the reports show.
+
         Counted from the **log**, which is the source of truth, not from the
         search state, which only knows what *this process* ran. Regenerating a
         report from a complete log spends nothing, and the search-state number
