@@ -1,4 +1,4 @@
-> built 2026-10-13 11:07 UTC from 803ca17 (main) · mergeset 0.0.25. Details: build_info.json
+> built 2026-10-13 11:39 UTC from 3d59364 (main) · mergeset 0.0.26. Details: build_info.json
 
 # index.html.md
 
@@ -317,7 +317,7 @@ normal case. See [`merge_plan()`](_autosummary/mergeset.analysis.html.md#mergese
 
 Cost of dropping each change *including its descendant cone*.
 
-### mergeset.analysis.analyze(repo, changes, , base=None, validate=None, resolver=None, log=None, log_path=None, trust_unpinned=None, artifacts=None, weight=None, pairwise_preoracle=True, decompose=True, component_local=None, use_ci_status=True, check_base=True, max_evaluations=None, max_seconds=None, max_sets=None, worktree_root=None, reuse_worktree=None, on_event=None)
+### mergeset.analysis.analyze(repo, changes, , base=None, validate=None, resolver=None, log=None, log_path=None, trust_unpinned=None, artifacts=None, weight=None, pairwise_preoracle=None, decompose=True, component_local=None, use_ci_status=True, check_base=True, max_evaluations=None, max_seconds=None, max_sets=None, worktree_root=None, reuse_worktree=None, on_event=None)
 
 Find the maximal sets of `changes` that merge and validate on `base`.
 
@@ -344,8 +344,11 @@ Find the maximal sets of `changes` that merge and validate on `base`.
     setting, which is off. Only when neither the heads nor the
     validator have changed since those rows were written.
   * **weight** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`Change`](_autosummary/mergeset.base.html.md#mergeset.base.Change)], [`float`](https://docs.python.org/3/builtins/functions.html#float)]]) – `Change -> cost of dropping it`; default is size-based.
-  * **pairwise_preoracle** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Use `git merge-tree` to find textual conflicts for
-    free before spending any evaluation.
+  * **pairwise_preoracle** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool)]) – Use `git merge-tree` to find textual conflicts for
+    free before spending any evaluation, and exclude them. `None` (the
+    default) means on, unless a `resolver` is given: those conflicts
+    are what it is for, so it is offered them instead (ADR 0034). Pass
+    `True` to exclude them even then.
   * **decompose** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Use file-overlap components to find conflicts cheaply. The
     components are always searched first, because a conflict found
     inside a small component is a conflict found for a fraction of the
@@ -974,7 +977,8 @@ Find maximal mergeable sets among the given branches.
     subagent attempt *mechanical* conflict resolutions. Anything it
     resolves is flagged as assisted and its diff kept — never
     reported as a clean merge.
-  * **no_pairwise** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Skip the `git merge-tree` pre-oracle.
+  * **no_pairwise** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Skip the `git merge-tree` pre-oracle (skipped anyway with a
+    resolver, which is offered those conflicts instead).
   * **no_decompose** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Do not split into independent file-overlap components.
   * **quiet** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Suppress progress output.
 * **Return type:**
@@ -2825,7 +2829,7 @@ A validator that runs the repository’s GitHub Actions locally with `act`.
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]
 
-### mergeset.analyze(repo, changes, , base=None, validate=None, resolver=None, log=None, log_path=None, trust_unpinned=None, artifacts=None, weight=None, pairwise_preoracle=True, decompose=True, component_local=None, use_ci_status=True, check_base=True, max_evaluations=None, max_seconds=None, max_sets=None, worktree_root=None, reuse_worktree=None, on_event=None)
+### mergeset.analyze(repo, changes, , base=None, validate=None, resolver=None, log=None, log_path=None, trust_unpinned=None, artifacts=None, weight=None, pairwise_preoracle=None, decompose=True, component_local=None, use_ci_status=True, check_base=True, max_evaluations=None, max_seconds=None, max_sets=None, worktree_root=None, reuse_worktree=None, on_event=None)
 
 Find the maximal sets of `changes` that merge and validate on `base`.
 
@@ -2852,8 +2856,11 @@ Find the maximal sets of `changes` that merge and validate on `base`.
     setting, which is off. Only when neither the heads nor the
     validator have changed since those rows were written.
   * **weight** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`Change`](_autosummary/mergeset.base.html.md#mergeset.base.Change)], [`float`](https://docs.python.org/3/builtins/functions.html#float)]]) – `Change -> cost of dropping it`; default is size-based.
-  * **pairwise_preoracle** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Use `git merge-tree` to find textual conflicts for
-    free before spending any evaluation.
+  * **pairwise_preoracle** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool)]) – Use `git merge-tree` to find textual conflicts for
+    free before spending any evaluation, and exclude them. `None` (the
+    default) means on, unless a `resolver` is given: those conflicts
+    are what it is for, so it is offered them instead (ADR 0034). Pass
+    `True` to exclude them even then.
   * **decompose** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Use file-overlap components to find conflicts cheaply. The
     components are always searched first, because a conflict found
     inside a small component is a conflict found for a fraction of the
@@ -6433,18 +6440,18 @@ contents join the fingerprint (see [`inputs_digest()`](_autosummary/mergeset.val
 
 # About this build
 
-This documentation was built on **2026-10-13 11:07 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/803ca178408a030a2ba924111a705da028eda5eb"><code>803ca17</code></a> on branch <code>main</code>, for **mergeset 0.0.25** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 11:39 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/3d593646c43cf826bb11a06ddf3c95a1a5f2d00e"><code>3d59364</code></a> on branch <code>main</code>, for **mergeset 0.0.26** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.25) is behind the latest release on PyPI (0.0.26): `pip install mergeset` gives newer code than these docs describe.
+- The documented version (0.0.26) is behind the latest release on PyPI (0.0.27): `pip install mergeset` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/mergeset/commit/803ca178408a030a2ba924111a705da028eda5eb"><code>803ca178408a030a2ba924111a705da028eda5eb</code></a> |
+| Commit              | <a href="https://github.com/i2mint/mergeset/commit/3d593646c43cf826bb11a06ddf3c95a1a5f2d00e"><code>3d593646c43cf826bb11a06ddf3c95a1a5f2d00e</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -6455,9 +6462,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/mergeset</code>                                                               |
-| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38387827249">38387827249</a>      |
+| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38391532752">38391532752</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>803ca178408a030a2ba924111a705da028eda5eb</code> (in the history of the built commit) |
+| Event commit | <code>3d593646c43cf826bb11a06ddf3c95a1a5f2d00e</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6482,13 +6489,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/mergeset/0.0.26/">0.0.26</a>, newer than the documented version (0.0.25).
+Latest release: <a href="https://pypi.org/project/mergeset/0.0.27/">0.0.27</a>, newer than the documented version (0.0.26).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/mergeset && cd mergeset
-git checkout 803ca178408a030a2ba924111a705da028eda5eb
+git checkout 3d593646c43cf826bb11a06ddf3c95a1a5f2d00e
 pip install "epythet==0.2.15"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

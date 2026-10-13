@@ -627,518 +627,519 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="495"><span class="sd">            subagent attempt *mechanical* conflict resolutions. Anything it</span>
 </span><span data-line="496"><span class="sd">            resolves is flagged as assisted and its diff kept — never</span>
 </span><span data-line="497"><span class="sd">            reported as a clean merge.</span>
-</span><span data-line="498"><span class="sd">        no_pairwise: Skip the `git merge-tree` pre-oracle.</span>
-</span><span data-line="499"><span class="sd">        no_decompose: Do not split into independent file-overlap components.</span>
-</span><span data-line="500"><span class="sd">        quiet: Suppress progress output.</span>
-</span><span data-line="501"><span class="sd">    """</span>
-</span><span data-line="502">    <span class="n">changes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">branch_changes</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">branch</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">))</span>
-</span><span data-line="503">    <span class="k">return</span> <span class="n">_run</span><span class="p">(</span>
-</span><span data-line="504">        <span class="n">repo</span><span class="p">,</span>
-</span><span data-line="505">        <span class="n">changes</span><span class="p">,</span>
-</span><span data-line="506">        <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span>
-</span><span data-line="507">        <span class="n">validate_command</span><span class="o">=</span><span class="n">validate_command</span><span class="p">,</span>
-</span><span data-line="508">        <span class="n">validate_stage</span><span class="o">=</span><span class="n">validate_stage</span> <span class="ow">or</span> <span class="p">(),</span>
-</span><span data-line="509">        <span class="n">validate_fingerprint</span><span class="o">=</span><span class="n">validate_fingerprint</span> <span class="ow">or</span> <span class="p">(),</span>
-</span><span data-line="510">        <span class="n">validate_optional</span><span class="o">=</span><span class="n">validate_optional</span> <span class="ow">or</span> <span class="p">(),</span>
-</span><span data-line="511">        <span class="n">validate_input</span><span class="o">=</span><span class="n">validate_input</span> <span class="ow">or</span> <span class="p">(),</span>
-</span><span data-line="512">        <span class="n">merge_only</span><span class="o">=</span><span class="n">merge_only</span><span class="p">,</span>
-</span><span data-line="513">        <span class="n">tier</span><span class="o">=</span><span class="n">tier</span><span class="p">,</span>
-</span><span data-line="514">        <span class="n">tier_cost</span><span class="o">=</span><span class="n">tier_cost</span><span class="p">,</span>
-</span><span data-line="515">        <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-</span><span data-line="516">        <span class="n">retries</span><span class="o">=</span><span class="n">retries</span><span class="p">,</span>
-</span><span data-line="517">        <span class="n">max_evaluations</span><span class="o">=</span><span class="n">max_evaluations</span><span class="p">,</span>
-</span><span data-line="518">        <span class="n">max_seconds</span><span class="o">=</span><span class="n">max_seconds</span><span class="p">,</span>
-</span><span data-line="519">        <span class="n">max_sets</span><span class="o">=</span><span class="n">max_sets</span><span class="p">,</span>
-</span><span data-line="520">        <span class="n">confirm_budget_seconds</span><span class="o">=</span><span class="n">confirm_budget_seconds</span><span class="p">,</span>
-</span><span data-line="521">        <span class="n">confirm_max_runs</span><span class="o">=</span><span class="n">confirm_max_runs</span><span class="p">,</span>
-</span><span data-line="522">        <span class="n">confirm_max_sets</span><span class="o">=</span><span class="n">confirm_max_sets</span><span class="p">,</span>
-</span><span data-line="523">        <span class="n">must_include</span><span class="o">=</span><span class="n">must_include</span><span class="p">,</span>
-</span><span data-line="524">        <span class="n">log_path</span><span class="o">=</span><span class="n">log_path</span><span class="p">,</span>
-</span><span data-line="525">        <span class="n">trust_unpinned_log</span><span class="o">=</span><span class="n">trust_unpinned_log</span><span class="p">,</span>
-</span><span data-line="526">        <span class="n">report_dir</span><span class="o">=</span><span class="n">report_dir</span><span class="p">,</span>
-</span><span data-line="527">        <span class="n">report_format</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">report_format</span><span class="p">)</span> <span class="k">if</span> <span class="n">report_format</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="528">        <span class="n">integration_branches</span><span class="o">=</span><span class="n">integration_branches</span><span class="p">,</span>
-</span><span data-line="529">        <span class="n">reuse_worktree</span><span class="o">=</span><span class="n">reuse_worktree</span><span class="p">,</span>
-</span><span data-line="530">        <span class="n">resolver</span><span class="o">=</span><span class="n">resolver</span><span class="p">,</span>
-</span><span data-line="531">        <span class="n">no_pairwise</span><span class="o">=</span><span class="n">no_pairwise</span><span class="p">,</span>
-</span><span data-line="532">        <span class="n">no_decompose</span><span class="o">=</span><span class="n">no_decompose</span><span class="p">,</span>
-</span><span data-line="533">        <span class="n">quiet</span><span class="o">=</span><span class="n">quiet</span><span class="p">,</span>
-</span><span data-line="534">        <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">"mergeset — branches on </span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-</span><span data-line="535">    <span class="p">)</span></div>
+</span><span data-line="498"><span class="sd">        no_pairwise: Skip the `git merge-tree` pre-oracle (skipped anyway with a</span>
+</span><span data-line="499"><span class="sd">            resolver, which is offered those conflicts instead).</span>
+</span><span data-line="500"><span class="sd">        no_decompose: Do not split into independent file-overlap components.</span>
+</span><span data-line="501"><span class="sd">        quiet: Suppress progress output.</span>
+</span><span data-line="502"><span class="sd">    """</span>
+</span><span data-line="503">    <span class="n">changes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">branch_changes</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">branch</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">))</span>
+</span><span data-line="504">    <span class="k">return</span> <span class="n">_run</span><span class="p">(</span>
+</span><span data-line="505">        <span class="n">repo</span><span class="p">,</span>
+</span><span data-line="506">        <span class="n">changes</span><span class="p">,</span>
+</span><span data-line="507">        <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span>
+</span><span data-line="508">        <span class="n">validate_command</span><span class="o">=</span><span class="n">validate_command</span><span class="p">,</span>
+</span><span data-line="509">        <span class="n">validate_stage</span><span class="o">=</span><span class="n">validate_stage</span> <span class="ow">or</span> <span class="p">(),</span>
+</span><span data-line="510">        <span class="n">validate_fingerprint</span><span class="o">=</span><span class="n">validate_fingerprint</span> <span class="ow">or</span> <span class="p">(),</span>
+</span><span data-line="511">        <span class="n">validate_optional</span><span class="o">=</span><span class="n">validate_optional</span> <span class="ow">or</span> <span class="p">(),</span>
+</span><span data-line="512">        <span class="n">validate_input</span><span class="o">=</span><span class="n">validate_input</span> <span class="ow">or</span> <span class="p">(),</span>
+</span><span data-line="513">        <span class="n">merge_only</span><span class="o">=</span><span class="n">merge_only</span><span class="p">,</span>
+</span><span data-line="514">        <span class="n">tier</span><span class="o">=</span><span class="n">tier</span><span class="p">,</span>
+</span><span data-line="515">        <span class="n">tier_cost</span><span class="o">=</span><span class="n">tier_cost</span><span class="p">,</span>
+</span><span data-line="516">        <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+</span><span data-line="517">        <span class="n">retries</span><span class="o">=</span><span class="n">retries</span><span class="p">,</span>
+</span><span data-line="518">        <span class="n">max_evaluations</span><span class="o">=</span><span class="n">max_evaluations</span><span class="p">,</span>
+</span><span data-line="519">        <span class="n">max_seconds</span><span class="o">=</span><span class="n">max_seconds</span><span class="p">,</span>
+</span><span data-line="520">        <span class="n">max_sets</span><span class="o">=</span><span class="n">max_sets</span><span class="p">,</span>
+</span><span data-line="521">        <span class="n">confirm_budget_seconds</span><span class="o">=</span><span class="n">confirm_budget_seconds</span><span class="p">,</span>
+</span><span data-line="522">        <span class="n">confirm_max_runs</span><span class="o">=</span><span class="n">confirm_max_runs</span><span class="p">,</span>
+</span><span data-line="523">        <span class="n">confirm_max_sets</span><span class="o">=</span><span class="n">confirm_max_sets</span><span class="p">,</span>
+</span><span data-line="524">        <span class="n">must_include</span><span class="o">=</span><span class="n">must_include</span><span class="p">,</span>
+</span><span data-line="525">        <span class="n">log_path</span><span class="o">=</span><span class="n">log_path</span><span class="p">,</span>
+</span><span data-line="526">        <span class="n">trust_unpinned_log</span><span class="o">=</span><span class="n">trust_unpinned_log</span><span class="p">,</span>
+</span><span data-line="527">        <span class="n">report_dir</span><span class="o">=</span><span class="n">report_dir</span><span class="p">,</span>
+</span><span data-line="528">        <span class="n">report_format</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">report_format</span><span class="p">)</span> <span class="k">if</span> <span class="n">report_format</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="529">        <span class="n">integration_branches</span><span class="o">=</span><span class="n">integration_branches</span><span class="p">,</span>
+</span><span data-line="530">        <span class="n">reuse_worktree</span><span class="o">=</span><span class="n">reuse_worktree</span><span class="p">,</span>
+</span><span data-line="531">        <span class="n">resolver</span><span class="o">=</span><span class="n">resolver</span><span class="p">,</span>
+</span><span data-line="532">        <span class="n">no_pairwise</span><span class="o">=</span><span class="n">no_pairwise</span><span class="p">,</span>
+</span><span data-line="533">        <span class="n">no_decompose</span><span class="o">=</span><span class="n">no_decompose</span><span class="p">,</span>
+</span><span data-line="534">        <span class="n">quiet</span><span class="o">=</span><span class="n">quiet</span><span class="p">,</span>
+</span><span data-line="535">        <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">"mergeset — branches on </span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+</span><span data-line="536">    <span class="p">)</span></div>
 
-</span><span data-line="536">
 </span><span data-line="537">
+</span><span data-line="538">
 <div class="viewcode-block" id="prs">
 <a class="viewcode-back" href="../../_autosummary/mergeset.cli.html#mergeset.cli.prs">[docs]</a>
-</span><span data-line="538"><span class="nd">@_repeatable</span><span class="p">(</span><span class="o">*</span><span class="n">_LIST_FLAGS</span><span class="p">)</span>
-</span><span data-line="539"><span class="k">def</span><span class="w"> </span><span class="nf">prs</span><span class="p">(</span>
-</span><span data-line="540">    <span class="n">repo_spec</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="541">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="542">    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">,</span>
-</span><span data-line="543">    <span class="n">author</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="544">    <span class="n">updated_within_hours</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="545">    <span class="n">base</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="546">    <span class="n">include_drafts</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="547">    <span class="n">validate_command</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="548">    <span class="n">validate_stage</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="549">    <span class="n">validate_fingerprint</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="550">    <span class="n">validate_optional</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="551">    <span class="n">validate_input</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="552">    <span class="n">merge_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="553">    <span class="n">tier</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="554">    <span class="n">tier_cost</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="555">    <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="556">    <span class="n">retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-</span><span data-line="557">    <span class="n">max_evaluations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="558">    <span class="n">max_seconds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="559">    <span class="n">max_sets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="560">    <span class="n">confirm_budget_seconds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="561">    <span class="n">confirm_max_runs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="562">    <span class="n">confirm_max_sets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="563">    <span class="n">must_include</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="564">    <span class="n">log_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="565">    <span class="n">trust_unpinned_log</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="566">    <span class="n">report_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="567">    <span class="n">report_format</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="568">    <span class="n">integration_branches</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="569">    <span class="n">reuse_worktree</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="570">    <span class="n">resolver</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"none"</span><span class="p">,</span>
-</span><span data-line="571">    <span class="n">no_pairwise</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="572">    <span class="n">no_decompose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="573">    <span class="n">quiet</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="574"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="575"><span class="w">    </span><span class="sd">"""Find maximal mergeable sets among a repository's open pull requests.</span>
-</span><span data-line="576">
-</span><span data-line="577"><span class="sd">    Args:</span>
-</span><span data-line="578"><span class="sd">        repo_spec: GitHub ``owner/name``.</span>
-</span><span data-line="579"><span class="sd">        repo: Local clone the PR head refs are fetched into.</span>
-</span><span data-line="580"><span class="sd">        author: Only PRs by this GitHub login.</span>
-</span><span data-line="581"><span class="sd">        updated_within_hours: Only PRs updated this recently.</span>
-</span><span data-line="582"><span class="sd">        base: Override the base commit; default is each PR's own base.</span>
-</span><span data-line="583"><span class="sd">        include_drafts: Include draft PRs (excluded by default).</span>
-</span><span data-line="584"><span class="sd">        validate_stage: ``'name:command'``, repeatable and ordered — see</span>
-</span><span data-line="585"><span class="sd">            ``mergeset branches --help``.</span>
-</span><span data-line="586"><span class="sd">        validate_fingerprint: ``'stage:path'``, repeatable — skip a stage unless</span>
-</span><span data-line="587"><span class="sd">            that file changed (a lockfile, typically).</span>
-</span><span data-line="588"><span class="sd">        validate_optional: Stage name, repeatable — recorded, but not a veto.</span>
-</span><span data-line="589"><span class="sd">        validate_input: Path, repeatable — a file outside the repository the</span>
-</span><span data-line="590"><span class="sd">            validation runs; its contents join the fingerprint. See</span>
-</span><span data-line="591"><span class="sd">            ``mergeset branches --help``.</span>
-</span><span data-line="592"><span class="sd">        tier: ``'name:command'``, repeatable, cheapest-first — tiered validation;</span>
-</span><span data-line="593"><span class="sd">            a bare name is the tier the --validate-* flags describe. See</span>
-</span><span data-line="594"><span class="sd">            ``mergeset branches --help`` for how tiers and stages compose.</span>
-</span><span data-line="595"><span class="sd">        tier_cost: ``'tier:seconds'``, repeatable — declared cost per run.</span>
-</span><span data-line="596"><span class="sd">        confirm_budget_seconds: With --tier: seconds each deeper tier may spend.</span>
-</span><span data-line="597"><span class="sd">        confirm_max_runs: With --tier: at most this many runs per deeper tier.</span>
-</span><span data-line="598"><span class="sd">        confirm_max_sets: With --tier: stop a deeper tier after this many sets.</span>
-</span><span data-line="599"><span class="sd">        must_include: PR change id (``pr12``), repeatable, with --tier — also</span>
-</span><span data-line="600"><span class="sd">            report the best plan that keeps these PRs.</span>
-</span><span data-line="601"><span class="sd">        log_path: Evaluation log (JSONL). Default:</span>
-</span><span data-line="602"><span class="sd">            ``~/.local/share/mergeset/evaluations/&lt;repo-slug&gt;.jsonl`` — outside</span>
-</span><span data-line="603"><span class="sd">            the analysed repository, always.</span>
-</span><span data-line="604"><span class="sd">        trust_unpinned_log: Reuse rows of an old log that predate rows</span>
-</span><span data-line="605"><span class="sd">            recording their commits or their validator. Only when no head has</span>
-</span><span data-line="606"><span class="sd">            moved and the validation is unchanged since.</span>
-</span><span data-line="607"><span class="sd">        report_dir: Write ``REPORT.md`` and ``report.html`` into this directory.</span>
-</span><span data-line="608"><span class="sd">            By default they go to the artifact store, under</span>
-</span><span data-line="609"><span class="sd">            ``reports/&lt;repo-slug&gt;/&lt;timestamp&gt;/``, so a re-run never overwrites</span>
-</span><span data-line="610"><span class="sd">            the run before it.</span>
-</span><span data-line="611"><span class="sd">        report_format: Repeatable — ``markdown``, ``html``, ``pdf``. Default:</span>
-</span><span data-line="612"><span class="sd">            markdown and html. ``pdf`` needs ``pip install 'mergeset[pdf]'``.</span>
-</span><span data-line="613"><span class="sd">    """</span>
-</span><span data-line="614">    <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">timezone</span>
-</span><span data-line="615">
-</span><span data-line="616">    <span class="n">pull_requests</span> <span class="o">=</span> <span class="n">fetch_pull_requests</span><span class="p">(</span><span class="n">repo_spec</span><span class="p">,</span> <span class="n">author</span><span class="o">=</span><span class="n">author</span><span class="p">)</span>
-</span><span data-line="617">    <span class="k">if</span> <span class="ow">not</span> <span class="n">include_drafts</span><span class="p">:</span>
-</span><span data-line="618">        <span class="n">pull_requests</span> <span class="o">=</span> <span class="p">[</span><span class="n">pr</span> <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">pull_requests</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"isDraft"</span><span class="p">)]</span>
-</span><span data-line="619">    <span class="k">if</span> <span class="n">updated_within_hours</span><span class="p">:</span>
-</span><span data-line="620">        <span class="n">cutoff</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">updated_within_hours</span><span class="p">)</span>
-</span><span data-line="621">        <span class="n">pull_requests</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="622">            <span class="n">pr</span>
-</span><span data-line="623">            <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">pull_requests</span>
-</span><span data-line="624">            <span class="k">if</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"updatedAt"</span><span class="p">)</span>
-</span><span data-line="625">            <span class="ow">and</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">pr</span><span class="p">[</span><span class="s2">"updatedAt"</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"Z"</span><span class="p">,</span> <span class="s2">"+00:00"</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="n">cutoff</span>
-</span><span data-line="626">        <span class="p">]</span>
-</span><span data-line="627">    <span class="k">if</span> <span class="ow">not</span> <span class="n">pull_requests</span><span class="p">:</span>
-</span><span data-line="628">        <span class="k">return</span> <span class="s2">"No pull requests matched the filters."</span>
-</span><span data-line="629">    <span class="n">changes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">pr_changes</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">pull_requests</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">))</span>
-</span><span data-line="630">    <span class="k">return</span> <span class="n">_run</span><span class="p">(</span>
-</span><span data-line="631">        <span class="n">repo</span><span class="p">,</span>
-</span><span data-line="632">        <span class="n">changes</span><span class="p">,</span>
-</span><span data-line="633">        <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span>
-</span><span data-line="634">        <span class="n">validate_command</span><span class="o">=</span><span class="n">validate_command</span><span class="p">,</span>
-</span><span data-line="635">        <span class="n">validate_stage</span><span class="o">=</span><span class="n">validate_stage</span> <span class="ow">or</span> <span class="p">(),</span>
-</span><span data-line="636">        <span class="n">validate_fingerprint</span><span class="o">=</span><span class="n">validate_fingerprint</span> <span class="ow">or</span> <span class="p">(),</span>
-</span><span data-line="637">        <span class="n">validate_optional</span><span class="o">=</span><span class="n">validate_optional</span> <span class="ow">or</span> <span class="p">(),</span>
-</span><span data-line="638">        <span class="n">validate_input</span><span class="o">=</span><span class="n">validate_input</span> <span class="ow">or</span> <span class="p">(),</span>
-</span><span data-line="639">        <span class="n">merge_only</span><span class="o">=</span><span class="n">merge_only</span><span class="p">,</span>
-</span><span data-line="640">        <span class="n">tier</span><span class="o">=</span><span class="n">tier</span><span class="p">,</span>
-</span><span data-line="641">        <span class="n">tier_cost</span><span class="o">=</span><span class="n">tier_cost</span><span class="p">,</span>
-</span><span data-line="642">        <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-</span><span data-line="643">        <span class="n">retries</span><span class="o">=</span><span class="n">retries</span><span class="p">,</span>
-</span><span data-line="644">        <span class="n">max_evaluations</span><span class="o">=</span><span class="n">max_evaluations</span><span class="p">,</span>
-</span><span data-line="645">        <span class="n">max_seconds</span><span class="o">=</span><span class="n">max_seconds</span><span class="p">,</span>
-</span><span data-line="646">        <span class="n">max_sets</span><span class="o">=</span><span class="n">max_sets</span><span class="p">,</span>
-</span><span data-line="647">        <span class="n">confirm_budget_seconds</span><span class="o">=</span><span class="n">confirm_budget_seconds</span><span class="p">,</span>
-</span><span data-line="648">        <span class="n">confirm_max_runs</span><span class="o">=</span><span class="n">confirm_max_runs</span><span class="p">,</span>
-</span><span data-line="649">        <span class="n">confirm_max_sets</span><span class="o">=</span><span class="n">confirm_max_sets</span><span class="p">,</span>
-</span><span data-line="650">        <span class="n">must_include</span><span class="o">=</span><span class="n">must_include</span><span class="p">,</span>
-</span><span data-line="651">        <span class="n">log_path</span><span class="o">=</span><span class="n">log_path</span><span class="p">,</span>
-</span><span data-line="652">        <span class="n">trust_unpinned_log</span><span class="o">=</span><span class="n">trust_unpinned_log</span><span class="p">,</span>
-</span><span data-line="653">        <span class="n">report_dir</span><span class="o">=</span><span class="n">report_dir</span><span class="p">,</span>
-</span><span data-line="654">        <span class="n">report_format</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">report_format</span><span class="p">)</span> <span class="k">if</span> <span class="n">report_format</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="655">        <span class="n">integration_branches</span><span class="o">=</span><span class="n">integration_branches</span><span class="p">,</span>
-</span><span data-line="656">        <span class="n">reuse_worktree</span><span class="o">=</span><span class="n">reuse_worktree</span><span class="p">,</span>
-</span><span data-line="657">        <span class="n">resolver</span><span class="o">=</span><span class="n">resolver</span><span class="p">,</span>
-</span><span data-line="658">        <span class="n">no_pairwise</span><span class="o">=</span><span class="n">no_pairwise</span><span class="p">,</span>
-</span><span data-line="659">        <span class="n">no_decompose</span><span class="o">=</span><span class="n">no_decompose</span><span class="p">,</span>
-</span><span data-line="660">        <span class="n">quiet</span><span class="o">=</span><span class="n">quiet</span><span class="p">,</span>
-</span><span data-line="661">        <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">"mergeset — </span><span class="si">{</span><span class="n">repo_spec</span><span class="si">}</span><span class="s2"> PRs"</span><span class="p">,</span>
-</span><span data-line="662">    <span class="p">)</span></div>
+</span><span data-line="539"><span class="nd">@_repeatable</span><span class="p">(</span><span class="o">*</span><span class="n">_LIST_FLAGS</span><span class="p">)</span>
+</span><span data-line="540"><span class="k">def</span><span class="w"> </span><span class="nf">prs</span><span class="p">(</span>
+</span><span data-line="541">    <span class="n">repo_spec</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="542">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="543">    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">,</span>
+</span><span data-line="544">    <span class="n">author</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="545">    <span class="n">updated_within_hours</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="546">    <span class="n">base</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="547">    <span class="n">include_drafts</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="548">    <span class="n">validate_command</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="549">    <span class="n">validate_stage</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="550">    <span class="n">validate_fingerprint</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="551">    <span class="n">validate_optional</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="552">    <span class="n">validate_input</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="553">    <span class="n">merge_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="554">    <span class="n">tier</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="555">    <span class="n">tier_cost</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="556">    <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="557">    <span class="n">retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+</span><span data-line="558">    <span class="n">max_evaluations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="559">    <span class="n">max_seconds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="560">    <span class="n">max_sets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="561">    <span class="n">confirm_budget_seconds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="562">    <span class="n">confirm_max_runs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="563">    <span class="n">confirm_max_sets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="564">    <span class="n">must_include</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="565">    <span class="n">log_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="566">    <span class="n">trust_unpinned_log</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="567">    <span class="n">report_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="568">    <span class="n">report_format</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="569">    <span class="n">integration_branches</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="570">    <span class="n">reuse_worktree</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="571">    <span class="n">resolver</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"none"</span><span class="p">,</span>
+</span><span data-line="572">    <span class="n">no_pairwise</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="573">    <span class="n">no_decompose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="574">    <span class="n">quiet</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="575"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="576"><span class="w">    </span><span class="sd">"""Find maximal mergeable sets among a repository's open pull requests.</span>
+</span><span data-line="577">
+</span><span data-line="578"><span class="sd">    Args:</span>
+</span><span data-line="579"><span class="sd">        repo_spec: GitHub ``owner/name``.</span>
+</span><span data-line="580"><span class="sd">        repo: Local clone the PR head refs are fetched into.</span>
+</span><span data-line="581"><span class="sd">        author: Only PRs by this GitHub login.</span>
+</span><span data-line="582"><span class="sd">        updated_within_hours: Only PRs updated this recently.</span>
+</span><span data-line="583"><span class="sd">        base: Override the base commit; default is each PR's own base.</span>
+</span><span data-line="584"><span class="sd">        include_drafts: Include draft PRs (excluded by default).</span>
+</span><span data-line="585"><span class="sd">        validate_stage: ``'name:command'``, repeatable and ordered — see</span>
+</span><span data-line="586"><span class="sd">            ``mergeset branches --help``.</span>
+</span><span data-line="587"><span class="sd">        validate_fingerprint: ``'stage:path'``, repeatable — skip a stage unless</span>
+</span><span data-line="588"><span class="sd">            that file changed (a lockfile, typically).</span>
+</span><span data-line="589"><span class="sd">        validate_optional: Stage name, repeatable — recorded, but not a veto.</span>
+</span><span data-line="590"><span class="sd">        validate_input: Path, repeatable — a file outside the repository the</span>
+</span><span data-line="591"><span class="sd">            validation runs; its contents join the fingerprint. See</span>
+</span><span data-line="592"><span class="sd">            ``mergeset branches --help``.</span>
+</span><span data-line="593"><span class="sd">        tier: ``'name:command'``, repeatable, cheapest-first — tiered validation;</span>
+</span><span data-line="594"><span class="sd">            a bare name is the tier the --validate-* flags describe. See</span>
+</span><span data-line="595"><span class="sd">            ``mergeset branches --help`` for how tiers and stages compose.</span>
+</span><span data-line="596"><span class="sd">        tier_cost: ``'tier:seconds'``, repeatable — declared cost per run.</span>
+</span><span data-line="597"><span class="sd">        confirm_budget_seconds: With --tier: seconds each deeper tier may spend.</span>
+</span><span data-line="598"><span class="sd">        confirm_max_runs: With --tier: at most this many runs per deeper tier.</span>
+</span><span data-line="599"><span class="sd">        confirm_max_sets: With --tier: stop a deeper tier after this many sets.</span>
+</span><span data-line="600"><span class="sd">        must_include: PR change id (``pr12``), repeatable, with --tier — also</span>
+</span><span data-line="601"><span class="sd">            report the best plan that keeps these PRs.</span>
+</span><span data-line="602"><span class="sd">        log_path: Evaluation log (JSONL). Default:</span>
+</span><span data-line="603"><span class="sd">            ``~/.local/share/mergeset/evaluations/&lt;repo-slug&gt;.jsonl`` — outside</span>
+</span><span data-line="604"><span class="sd">            the analysed repository, always.</span>
+</span><span data-line="605"><span class="sd">        trust_unpinned_log: Reuse rows of an old log that predate rows</span>
+</span><span data-line="606"><span class="sd">            recording their commits or their validator. Only when no head has</span>
+</span><span data-line="607"><span class="sd">            moved and the validation is unchanged since.</span>
+</span><span data-line="608"><span class="sd">        report_dir: Write ``REPORT.md`` and ``report.html`` into this directory.</span>
+</span><span data-line="609"><span class="sd">            By default they go to the artifact store, under</span>
+</span><span data-line="610"><span class="sd">            ``reports/&lt;repo-slug&gt;/&lt;timestamp&gt;/``, so a re-run never overwrites</span>
+</span><span data-line="611"><span class="sd">            the run before it.</span>
+</span><span data-line="612"><span class="sd">        report_format: Repeatable — ``markdown``, ``html``, ``pdf``. Default:</span>
+</span><span data-line="613"><span class="sd">            markdown and html. ``pdf`` needs ``pip install 'mergeset[pdf]'``.</span>
+</span><span data-line="614"><span class="sd">    """</span>
+</span><span data-line="615">    <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">timezone</span>
+</span><span data-line="616">
+</span><span data-line="617">    <span class="n">pull_requests</span> <span class="o">=</span> <span class="n">fetch_pull_requests</span><span class="p">(</span><span class="n">repo_spec</span><span class="p">,</span> <span class="n">author</span><span class="o">=</span><span class="n">author</span><span class="p">)</span>
+</span><span data-line="618">    <span class="k">if</span> <span class="ow">not</span> <span class="n">include_drafts</span><span class="p">:</span>
+</span><span data-line="619">        <span class="n">pull_requests</span> <span class="o">=</span> <span class="p">[</span><span class="n">pr</span> <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">pull_requests</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"isDraft"</span><span class="p">)]</span>
+</span><span data-line="620">    <span class="k">if</span> <span class="n">updated_within_hours</span><span class="p">:</span>
+</span><span data-line="621">        <span class="n">cutoff</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">updated_within_hours</span><span class="p">)</span>
+</span><span data-line="622">        <span class="n">pull_requests</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="623">            <span class="n">pr</span>
+</span><span data-line="624">            <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">pull_requests</span>
+</span><span data-line="625">            <span class="k">if</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"updatedAt"</span><span class="p">)</span>
+</span><span data-line="626">            <span class="ow">and</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">pr</span><span class="p">[</span><span class="s2">"updatedAt"</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"Z"</span><span class="p">,</span> <span class="s2">"+00:00"</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="n">cutoff</span>
+</span><span data-line="627">        <span class="p">]</span>
+</span><span data-line="628">    <span class="k">if</span> <span class="ow">not</span> <span class="n">pull_requests</span><span class="p">:</span>
+</span><span data-line="629">        <span class="k">return</span> <span class="s2">"No pull requests matched the filters."</span>
+</span><span data-line="630">    <span class="n">changes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">pr_changes</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">pull_requests</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">))</span>
+</span><span data-line="631">    <span class="k">return</span> <span class="n">_run</span><span class="p">(</span>
+</span><span data-line="632">        <span class="n">repo</span><span class="p">,</span>
+</span><span data-line="633">        <span class="n">changes</span><span class="p">,</span>
+</span><span data-line="634">        <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span>
+</span><span data-line="635">        <span class="n">validate_command</span><span class="o">=</span><span class="n">validate_command</span><span class="p">,</span>
+</span><span data-line="636">        <span class="n">validate_stage</span><span class="o">=</span><span class="n">validate_stage</span> <span class="ow">or</span> <span class="p">(),</span>
+</span><span data-line="637">        <span class="n">validate_fingerprint</span><span class="o">=</span><span class="n">validate_fingerprint</span> <span class="ow">or</span> <span class="p">(),</span>
+</span><span data-line="638">        <span class="n">validate_optional</span><span class="o">=</span><span class="n">validate_optional</span> <span class="ow">or</span> <span class="p">(),</span>
+</span><span data-line="639">        <span class="n">validate_input</span><span class="o">=</span><span class="n">validate_input</span> <span class="ow">or</span> <span class="p">(),</span>
+</span><span data-line="640">        <span class="n">merge_only</span><span class="o">=</span><span class="n">merge_only</span><span class="p">,</span>
+</span><span data-line="641">        <span class="n">tier</span><span class="o">=</span><span class="n">tier</span><span class="p">,</span>
+</span><span data-line="642">        <span class="n">tier_cost</span><span class="o">=</span><span class="n">tier_cost</span><span class="p">,</span>
+</span><span data-line="643">        <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+</span><span data-line="644">        <span class="n">retries</span><span class="o">=</span><span class="n">retries</span><span class="p">,</span>
+</span><span data-line="645">        <span class="n">max_evaluations</span><span class="o">=</span><span class="n">max_evaluations</span><span class="p">,</span>
+</span><span data-line="646">        <span class="n">max_seconds</span><span class="o">=</span><span class="n">max_seconds</span><span class="p">,</span>
+</span><span data-line="647">        <span class="n">max_sets</span><span class="o">=</span><span class="n">max_sets</span><span class="p">,</span>
+</span><span data-line="648">        <span class="n">confirm_budget_seconds</span><span class="o">=</span><span class="n">confirm_budget_seconds</span><span class="p">,</span>
+</span><span data-line="649">        <span class="n">confirm_max_runs</span><span class="o">=</span><span class="n">confirm_max_runs</span><span class="p">,</span>
+</span><span data-line="650">        <span class="n">confirm_max_sets</span><span class="o">=</span><span class="n">confirm_max_sets</span><span class="p">,</span>
+</span><span data-line="651">        <span class="n">must_include</span><span class="o">=</span><span class="n">must_include</span><span class="p">,</span>
+</span><span data-line="652">        <span class="n">log_path</span><span class="o">=</span><span class="n">log_path</span><span class="p">,</span>
+</span><span data-line="653">        <span class="n">trust_unpinned_log</span><span class="o">=</span><span class="n">trust_unpinned_log</span><span class="p">,</span>
+</span><span data-line="654">        <span class="n">report_dir</span><span class="o">=</span><span class="n">report_dir</span><span class="p">,</span>
+</span><span data-line="655">        <span class="n">report_format</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">report_format</span><span class="p">)</span> <span class="k">if</span> <span class="n">report_format</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="656">        <span class="n">integration_branches</span><span class="o">=</span><span class="n">integration_branches</span><span class="p">,</span>
+</span><span data-line="657">        <span class="n">reuse_worktree</span><span class="o">=</span><span class="n">reuse_worktree</span><span class="p">,</span>
+</span><span data-line="658">        <span class="n">resolver</span><span class="o">=</span><span class="n">resolver</span><span class="p">,</span>
+</span><span data-line="659">        <span class="n">no_pairwise</span><span class="o">=</span><span class="n">no_pairwise</span><span class="p">,</span>
+</span><span data-line="660">        <span class="n">no_decompose</span><span class="o">=</span><span class="n">no_decompose</span><span class="p">,</span>
+</span><span data-line="661">        <span class="n">quiet</span><span class="o">=</span><span class="n">quiet</span><span class="p">,</span>
+</span><span data-line="662">        <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">"mergeset — </span><span class="si">{</span><span class="n">repo_spec</span><span class="si">}</span><span class="s2"> PRs"</span><span class="p">,</span>
+</span><span data-line="663">    <span class="p">)</span></div>
 
-</span><span data-line="663">
 </span><span data-line="664">
-</span><span data-line="665"><span class="k">def</span><span class="w"> </span><span class="nf">_run</span><span class="p">(</span>
-</span><span data-line="666">    <span class="n">repo</span><span class="p">,</span>
-</span><span data-line="667">    <span class="n">changes</span><span class="p">,</span>
-</span><span data-line="668">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="669">    <span class="n">base</span><span class="p">,</span>
-</span><span data-line="670">    <span class="n">validate_command</span><span class="p">,</span>
-</span><span data-line="671">    <span class="n">validate_stage</span><span class="p">,</span>
-</span><span data-line="672">    <span class="n">validate_fingerprint</span><span class="p">,</span>
-</span><span data-line="673">    <span class="n">validate_optional</span><span class="p">,</span>
-</span><span data-line="674">    <span class="n">validate_input</span><span class="p">,</span>
-</span><span data-line="675">    <span class="n">merge_only</span><span class="p">,</span>
-</span><span data-line="676">    <span class="n">tier</span><span class="p">,</span>
-</span><span data-line="677">    <span class="n">tier_cost</span><span class="p">,</span>
-</span><span data-line="678">    <span class="n">timeout</span><span class="p">,</span>
-</span><span data-line="679">    <span class="n">retries</span><span class="p">,</span>
-</span><span data-line="680">    <span class="n">max_evaluations</span><span class="p">,</span>
-</span><span data-line="681">    <span class="n">max_seconds</span><span class="p">,</span>
-</span><span data-line="682">    <span class="n">max_sets</span><span class="p">,</span>
-</span><span data-line="683">    <span class="n">confirm_budget_seconds</span><span class="p">,</span>
-</span><span data-line="684">    <span class="n">confirm_max_runs</span><span class="p">,</span>
-</span><span data-line="685">    <span class="n">confirm_max_sets</span><span class="p">,</span>
-</span><span data-line="686">    <span class="n">must_include</span><span class="p">,</span>
-</span><span data-line="687">    <span class="n">log_path</span><span class="p">,</span>
-</span><span data-line="688">    <span class="n">trust_unpinned_log</span><span class="p">,</span>
-</span><span data-line="689">    <span class="n">report_dir</span><span class="p">,</span>
-</span><span data-line="690">    <span class="n">report_format</span><span class="p">,</span>
-</span><span data-line="691">    <span class="n">integration_branches</span><span class="p">,</span>
-</span><span data-line="692">    <span class="n">reuse_worktree</span><span class="p">,</span>
-</span><span data-line="693">    <span class="n">resolver</span><span class="p">,</span>
-</span><span data-line="694">    <span class="n">no_pairwise</span><span class="p">,</span>
-</span><span data-line="695">    <span class="n">no_decompose</span><span class="p">,</span>
-</span><span data-line="696">    <span class="n">quiet</span><span class="p">,</span>
-</span><span data-line="697">    <span class="n">title</span><span class="p">,</span>
-</span><span data-line="698"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="699">    <span class="k">if</span> <span class="n">resolver</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"none"</span><span class="p">,</span> <span class="s2">"claude"</span><span class="p">):</span>
-</span><span data-line="700">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"Unknown resolver </span><span class="si">{</span><span class="n">resolver</span><span class="si">!r}</span><span class="s2">; expected 'none' or 'claude'."</span>
-</span><span data-line="701">    <span class="n">given</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span>
-</span><span data-line="702">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="703">        <span class="n">validate</span> <span class="o">=</span> <span class="n">_validator</span><span class="p">(</span>
-</span><span data-line="704">            <span class="n">merge_only</span><span class="o">=</span><span class="n">merge_only</span><span class="p">,</span>
-</span><span data-line="705">            <span class="n">validate_command</span><span class="o">=</span><span class="n">validate_command</span><span class="p">,</span>
-</span><span data-line="706">            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-</span><span data-line="707">            <span class="n">retries</span><span class="o">=</span><span class="n">retries</span><span class="p">,</span>
-</span><span data-line="708">            <span class="n">validate_stage</span><span class="o">=</span><span class="n">validate_stage</span><span class="p">,</span>
-</span><span data-line="709">            <span class="n">validate_fingerprint</span><span class="o">=</span><span class="n">validate_fingerprint</span><span class="p">,</span>
-</span><span data-line="710">            <span class="n">validate_optional</span><span class="o">=</span><span class="n">validate_optional</span><span class="p">,</span>
-</span><span data-line="711">            <span class="n">validate_input</span><span class="o">=</span><span class="n">validate_input</span><span class="p">,</span>
-</span><span data-line="712">        <span class="p">)</span>
-</span><span data-line="713">        <span class="n">candidates</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">}</span>
-</span><span data-line="714">        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="715">            <span class="n">p</span>
-</span><span data-line="716">            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">validate_input</span>
-</span><span data-line="717">            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
-</span><span data-line="718">            <span class="ow">or</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">candidates</span>
-</span><span data-line="719">            <span class="ow">or</span> <span class="p">(</span>
-</span><span data-line="720">                <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
-</span><span data-line="721">                <span class="ow">and</span> <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"--verify"</span><span class="p">,</span> <span class="s2">"--quiet"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">^</span><span class="se">{{</span><span class="s2">commit</span><span class="se">}}</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span>
-</span><span data-line="722">            <span class="p">)</span>
-</span><span data-line="723">        <span class="p">]</span>
-</span><span data-line="724">        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
-</span><span data-line="725">            <span class="c1"># `--validate-input` takes every value after it, so a branch typed</span>
-</span><span data-line="726">            <span class="c1"># after it lands here and silently leaves the candidates.</span>
-</span><span data-line="727">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="728">                <span class="sa">f</span><span class="s2">"--validate-input names no file, or names a branch: "</span>
-</span><span data-line="729">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2">. It takes every value after it, so put "</span>
-</span><span data-line="730">                <span class="s2">"branch names before it; it names files outside the repository "</span>
-</span><span data-line="731">                <span class="s2">"that the validation runs (give a path that is also a branch "</span>
-</span><span data-line="732">                <span class="s2">"name as ./name or an absolute path)."</span>
-</span><span data-line="733">            <span class="p">)</span>
-</span><span data-line="734">        <span class="k">if</span> <span class="n">validate_input</span> <span class="ow">and</span> <span class="n">merge_only</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">tier</span><span class="p">:</span>
-</span><span data-line="735">            <span class="c1"># Merge-only runs nothing, so the files would be read and ignored.</span>
-</span><span data-line="736">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="737">                <span class="s2">"--validate-input names files a validation runs, but --merge-only "</span>
-</span><span data-line="738">                <span class="s2">"runs none. Drop one of them."</span>
-</span><span data-line="739">            <span class="p">)</span>
-</span><span data-line="740">        <span class="k">for</span> <span class="n">kw</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="p">(</span>
-</span><span data-line="741">            <span class="p">(</span><span class="s2">"tier"</span><span class="p">,</span> <span class="n">tier</span><span class="p">),</span>
-</span><span data-line="742">            <span class="p">(</span><span class="s2">"tier_cost"</span><span class="p">,</span> <span class="n">tier_cost</span><span class="p">),</span>
-</span><span data-line="743">            <span class="p">(</span><span class="s2">"must_include"</span><span class="p">,</span> <span class="n">must_include</span><span class="p">),</span>
-</span><span data-line="744">        <span class="p">):</span>
-</span><span data-line="745">            <span class="k">if</span> <span class="n">values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">values</span><span class="p">:</span>
-</span><span data-line="746">                <span class="n">flag</span> <span class="o">=</span> <span class="s2">"--"</span> <span class="o">+</span> <span class="n">kw</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"_"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">)</span>
-</span><span data-line="747">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="748">                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">flag</span><span class="si">}</span><span class="s2"> was given no values. Drop it, or pass at least one "</span>
-</span><span data-line="749">                    <span class="sa">f</span><span class="s2">"(see --help)."</span>
-</span><span data-line="750">                <span class="p">)</span>
-</span><span data-line="751">        <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"confirm_budget_seconds"</span><span class="p">,</span> <span class="s2">"confirm_max_runs"</span><span class="p">,</span> <span class="s2">"confirm_max_sets"</span><span class="p">):</span>
-</span><span data-line="752">            <span class="k">if</span> <span class="n">given</span><span class="p">[</span><span class="n">kw</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">given</span><span class="p">[</span><span class="n">kw</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="753">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="754">                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_TIER_ONLY_FLAGS</span><span class="p">[</span><span class="n">kw</span><span class="p">]</span><span class="si">}</span><span class="s2"> cannot be negative (got </span><span class="si">{</span><span class="n">given</span><span class="p">[</span><span class="n">kw</span><span class="p">]</span><span class="si">}</span><span class="s2">)."</span>
-</span><span data-line="755">                <span class="p">)</span>
-</span><span data-line="756">        <span class="n">unknown_formats</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">report_format</span> <span class="ow">or</span> <span class="p">())</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">REPORT_FORMATS</span><span class="p">)</span>
-</span><span data-line="757">        <span class="k">if</span> <span class="n">unknown_formats</span><span class="p">:</span>
-</span><span data-line="758">            <span class="c1"># Checked before the run, not when the reports are written after</span>
-</span><span data-line="759">            <span class="c1"># it: a branch name typed after --report-format lands here.</span>
-</span><span data-line="760">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="761">                <span class="sa">f</span><span class="s2">"--report-format names no format: "</span>
-</span><span data-line="762">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">unknown_formats</span><span class="p">))</span><span class="si">}</span><span class="s2">. Formats are: "</span>
-</span><span data-line="763">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">REPORT_FORMATS</span><span class="p">)</span><span class="si">}</span><span class="s2">. Put branch names before it."</span>
-</span><span data-line="764">            <span class="p">)</span>
-</span><span data-line="765">        <span class="k">if</span> <span class="ow">not</span> <span class="n">tier</span><span class="p">:</span>
-</span><span data-line="766">            <span class="c1"># `is not None`, not truthiness: `--confirm-max-runs 0` is an</span>
-</span><span data-line="767">            <span class="c1"># instruction, and ignoring it would be the silent drop.</span>
-</span><span data-line="768">            <span class="n">stray</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="769">                <span class="n">flag</span> <span class="k">for</span> <span class="n">kw</span><span class="p">,</span> <span class="n">flag</span> <span class="ow">in</span> <span class="n">_TIER_ONLY_FLAGS</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">given</span><span class="p">[</span><span class="n">kw</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-</span><span data-line="770">            <span class="p">]</span>
-</span><span data-line="771">            <span class="k">if</span> <span class="n">stray</span><span class="p">:</span>
-</span><span data-line="772">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="773">                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stray</span><span class="p">)</span><span class="si">}</span><span class="s2"> only mean something with --tier. To ask "</span>
-</span><span data-line="774">                    <span class="s2">"them of the ordinary validator, make it the one tier: "</span>
-</span><span data-line="775">                    <span class="s2">"--tier NAME (a bare name)."</span>
-</span><span data-line="776">                <span class="p">)</span>
-</span><span data-line="777">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="778">            <span class="n">unknown</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">must_include</span> <span class="ow">or</span> <span class="p">())</span> <span class="o">-</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">}</span>
-</span><span data-line="779">            <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
-</span><span data-line="780">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="781">                    <span class="sa">f</span><span class="s2">"--must-include names changes that are not candidates: "</span>
-</span><span data-line="782">                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">unknown</span><span class="p">))</span><span class="si">}</span><span class="s2">. The candidates are: "</span>
-</span><span data-line="783">                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">id</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">changes</span><span class="p">))</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'(none)'</span><span class="si">}</span><span class="s2">."</span>
-</span><span data-line="784">                <span class="p">)</span>
-</span><span data-line="785">        <span class="k">if</span> <span class="n">tier</span> <span class="ow">and</span> <span class="n">log_path</span><span class="p">:</span>
-</span><span data-line="786">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="787">                <span class="s2">"--log-path cannot be used with --tier: each tier keeps its own "</span>
-</span><span data-line="788">                <span class="s2">"evaluation log, and one path would merge them into the one "</span>
-</span><span data-line="789">                <span class="s2">"shared cache this design exists to prevent. The tier logs sit "</span>
-</span><span data-line="790">                <span class="s2">"next to the default log, one file per tier."</span>
-</span><span data-line="791">            <span class="p">)</span>
-</span><span data-line="792">        <span class="n">common</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-</span><span data-line="793">            <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span>
-</span><span data-line="794">            <span class="n">resolver</span><span class="o">=</span><span class="n">claude_code_resolver</span><span class="p">()</span> <span class="k">if</span> <span class="n">resolver</span> <span class="o">==</span> <span class="s2">"claude"</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="795">            <span class="n">trust_unpinned</span><span class="o">=</span><span class="n">trust_unpinned_log</span><span class="p">,</span>
-</span><span data-line="796">            <span class="n">reuse_worktree</span><span class="o">=</span><span class="p">(</span>
-</span><span data-line="797">                <span class="n">_persistent_worktree</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">reuse_worktree</span><span class="p">)</span>
-</span><span data-line="798">                <span class="k">if</span> <span class="n">reuse_worktree</span>
-</span><span data-line="799">                <span class="k">else</span> <span class="kc">None</span>
-</span><span data-line="800">            <span class="p">),</span>
-</span><span data-line="801">            <span class="n">pairwise_preoracle</span><span class="o">=</span><span class="ow">not</span> <span class="n">no_pairwise</span><span class="p">,</span>
-</span><span data-line="802">            <span class="n">decompose</span><span class="o">=</span><span class="ow">not</span> <span class="n">no_decompose</span><span class="p">,</span>
-</span><span data-line="803">            <span class="n">max_evaluations</span><span class="o">=</span><span class="n">max_evaluations</span><span class="p">,</span>
-</span><span data-line="804">            <span class="n">max_seconds</span><span class="o">=</span><span class="n">max_seconds</span><span class="p">,</span>
-</span><span data-line="805">            <span class="n">max_sets</span><span class="o">=</span><span class="n">max_sets</span><span class="p">,</span>
-</span><span data-line="806">            <span class="n">on_event</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">quiet</span> <span class="k">else</span> <span class="n">_progress</span><span class="p">,</span>
-</span><span data-line="807">        <span class="p">)</span>
-</span><span data-line="808">        <span class="k">if</span> <span class="n">tier</span><span class="p">:</span>
-</span><span data-line="809">            <span class="n">tiered</span> <span class="o">=</span> <span class="n">_analyze_tiered</span><span class="p">(</span>
-</span><span data-line="810">                <span class="n">repo</span><span class="p">,</span>
-</span><span data-line="811">                <span class="n">changes</span><span class="p">,</span>
-</span><span data-line="812">                <span class="n">tiers</span><span class="o">=</span><span class="n">_tiers</span><span class="p">(</span>
-</span><span data-line="813">                    <span class="n">tier</span><span class="p">,</span>
-</span><span data-line="814">                    <span class="n">tier_cost</span> <span class="ow">or</span> <span class="p">(),</span>
-</span><span data-line="815">                    <span class="n">validator</span><span class="o">=</span><span class="n">validate</span><span class="p">,</span>
-</span><span data-line="816">                    <span class="n">validator_flags</span><span class="o">=</span><span class="p">[</span>
-</span><span data-line="817">                        <span class="n">flag</span> <span class="k">for</span> <span class="n">kw</span><span class="p">,</span> <span class="n">flag</span> <span class="ow">in</span> <span class="n">_VALIDATOR_FLAGS</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">given</span><span class="p">[</span><span class="n">kw</span><span class="p">]</span>
-</span><span data-line="818">                    <span class="p">],</span>
-</span><span data-line="819">                    <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-</span><span data-line="820">                    <span class="n">retries</span><span class="o">=</span><span class="n">retries</span><span class="p">,</span>
-</span><span data-line="821">                    <span class="n">inputs</span><span class="o">=</span><span class="n">validate_input</span><span class="p">,</span>
-</span><span data-line="822">                    <span class="n">is_commit</span><span class="o">=</span><span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="p">(</span>
-</span><span data-line="823">                        <span class="n">name</span> <span class="ow">in</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">}</span>
-</span><span data-line="824">                        <span class="ow">or</span> <span class="n">git</span><span class="p">(</span>
-</span><span data-line="825">                            <span class="n">repo</span><span class="p">,</span>
-</span><span data-line="826">                            <span class="s2">"rev-parse"</span><span class="p">,</span>
-</span><span data-line="827">                            <span class="s2">"--verify"</span><span class="p">,</span>
-</span><span data-line="828">                            <span class="s2">"--quiet"</span><span class="p">,</span>
-</span><span data-line="829">                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">^</span><span class="se">{{</span><span class="s2">commit</span><span class="se">}}</span><span class="s2">"</span><span class="p">,</span>
-</span><span data-line="830">                        <span class="p">)</span><span class="o">.</span><span class="n">ok</span>
-</span><span data-line="831">                    <span class="p">),</span>
-</span><span data-line="832">                <span class="p">),</span>
-</span><span data-line="833">                <span class="n">confirm_budget_seconds</span><span class="o">=</span><span class="n">confirm_budget_seconds</span><span class="p">,</span>
-</span><span data-line="834">                <span class="n">confirm_max_runs</span><span class="o">=</span><span class="n">confirm_max_runs</span><span class="p">,</span>
-</span><span data-line="835">                <span class="n">confirm_max_sets</span><span class="o">=</span><span class="n">confirm_max_sets</span><span class="p">,</span>
-</span><span data-line="836">                <span class="n">must_include</span><span class="o">=</span><span class="n">must_include</span> <span class="ow">or</span> <span class="p">(),</span>
-</span><span data-line="837">                <span class="o">**</span><span class="n">common</span><span class="p">,</span>
-</span><span data-line="838">            <span class="p">)</span>
-</span><span data-line="839">            <span class="n">analysis</span> <span class="o">=</span> <span class="n">tiered</span><span class="o">.</span><span class="n">analysis</span>
-</span><span data-line="840">            <span class="c1"># Into the notes, so every report format carries the price list,</span>
-</span><span data-line="841">            <span class="c1"># not only this command's stdout.</span>
-</span><span data-line="842">            <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tiered</span><span class="o">.</span><span class="n">cost_lines</span><span class="p">())</span>
-</span><span data-line="843">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="844">            <span class="n">analysis</span> <span class="o">=</span> <span class="n">_analyze</span><span class="p">(</span>
-</span><span data-line="845">                <span class="n">repo</span><span class="p">,</span> <span class="n">changes</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">,</span> <span class="n">log_path</span><span class="o">=</span><span class="n">log_path</span><span class="p">,</span> <span class="o">**</span><span class="n">common</span>
-</span><span data-line="846">            <span class="p">)</span>
-</span><span data-line="847">    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span data-line="848">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"mergeset could not read that option:</span><span class="se">\n\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="849">    <span class="k">except</span> <span class="n">CapabilityError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span data-line="850">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"mergeset cannot run yet:</span><span class="se">\n\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="851">    <span class="k">except</span> <span class="n">MergesetError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span data-line="852">        <span class="c1"># A refusal is a result, not a crash: it deserves the same shape of</span>
-</span><span data-line="853">        <span class="c1"># message as any other, not a traceback with the reason at the bottom.</span>
-</span><span data-line="854">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"mergeset refused to run:</span><span class="se">\n\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="855">    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">markdown_report</span><span class="p">(</span><span class="n">analysis</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">)]</span>
-</span><span data-line="856">    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">_emit_reports</span><span class="p">(</span>
-</span><span data-line="857">        <span class="n">analysis</span><span class="p">,</span> <span class="n">report_dir</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">formats</span><span class="o">=</span><span class="n">report_format</span> <span class="ow">or</span> <span class="p">(</span><span class="s2">"markdown"</span><span class="p">,</span> <span class="s2">"html"</span><span class="p">)</span>
-</span><span data-line="858">    <span class="p">):</span>
-</span><span data-line="859">        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Wrote </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="860">    <span class="k">if</span> <span class="n">integration_branches</span><span class="p">:</span>
-</span><span data-line="861">        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">## Integration branches</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="862">        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">_integration_branches</span><span class="p">(</span><span class="n">analysis</span><span class="p">):</span>
-</span><span data-line="863">            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"- </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="864">    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
-</span><span data-line="865">
+</span><span data-line="665">
+</span><span data-line="666"><span class="k">def</span><span class="w"> </span><span class="nf">_run</span><span class="p">(</span>
+</span><span data-line="667">    <span class="n">repo</span><span class="p">,</span>
+</span><span data-line="668">    <span class="n">changes</span><span class="p">,</span>
+</span><span data-line="669">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="670">    <span class="n">base</span><span class="p">,</span>
+</span><span data-line="671">    <span class="n">validate_command</span><span class="p">,</span>
+</span><span data-line="672">    <span class="n">validate_stage</span><span class="p">,</span>
+</span><span data-line="673">    <span class="n">validate_fingerprint</span><span class="p">,</span>
+</span><span data-line="674">    <span class="n">validate_optional</span><span class="p">,</span>
+</span><span data-line="675">    <span class="n">validate_input</span><span class="p">,</span>
+</span><span data-line="676">    <span class="n">merge_only</span><span class="p">,</span>
+</span><span data-line="677">    <span class="n">tier</span><span class="p">,</span>
+</span><span data-line="678">    <span class="n">tier_cost</span><span class="p">,</span>
+</span><span data-line="679">    <span class="n">timeout</span><span class="p">,</span>
+</span><span data-line="680">    <span class="n">retries</span><span class="p">,</span>
+</span><span data-line="681">    <span class="n">max_evaluations</span><span class="p">,</span>
+</span><span data-line="682">    <span class="n">max_seconds</span><span class="p">,</span>
+</span><span data-line="683">    <span class="n">max_sets</span><span class="p">,</span>
+</span><span data-line="684">    <span class="n">confirm_budget_seconds</span><span class="p">,</span>
+</span><span data-line="685">    <span class="n">confirm_max_runs</span><span class="p">,</span>
+</span><span data-line="686">    <span class="n">confirm_max_sets</span><span class="p">,</span>
+</span><span data-line="687">    <span class="n">must_include</span><span class="p">,</span>
+</span><span data-line="688">    <span class="n">log_path</span><span class="p">,</span>
+</span><span data-line="689">    <span class="n">trust_unpinned_log</span><span class="p">,</span>
+</span><span data-line="690">    <span class="n">report_dir</span><span class="p">,</span>
+</span><span data-line="691">    <span class="n">report_format</span><span class="p">,</span>
+</span><span data-line="692">    <span class="n">integration_branches</span><span class="p">,</span>
+</span><span data-line="693">    <span class="n">reuse_worktree</span><span class="p">,</span>
+</span><span data-line="694">    <span class="n">resolver</span><span class="p">,</span>
+</span><span data-line="695">    <span class="n">no_pairwise</span><span class="p">,</span>
+</span><span data-line="696">    <span class="n">no_decompose</span><span class="p">,</span>
+</span><span data-line="697">    <span class="n">quiet</span><span class="p">,</span>
+</span><span data-line="698">    <span class="n">title</span><span class="p">,</span>
+</span><span data-line="699"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="700">    <span class="k">if</span> <span class="n">resolver</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"none"</span><span class="p">,</span> <span class="s2">"claude"</span><span class="p">):</span>
+</span><span data-line="701">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"Unknown resolver </span><span class="si">{</span><span class="n">resolver</span><span class="si">!r}</span><span class="s2">; expected 'none' or 'claude'."</span>
+</span><span data-line="702">    <span class="n">given</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span>
+</span><span data-line="703">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="704">        <span class="n">validate</span> <span class="o">=</span> <span class="n">_validator</span><span class="p">(</span>
+</span><span data-line="705">            <span class="n">merge_only</span><span class="o">=</span><span class="n">merge_only</span><span class="p">,</span>
+</span><span data-line="706">            <span class="n">validate_command</span><span class="o">=</span><span class="n">validate_command</span><span class="p">,</span>
+</span><span data-line="707">            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+</span><span data-line="708">            <span class="n">retries</span><span class="o">=</span><span class="n">retries</span><span class="p">,</span>
+</span><span data-line="709">            <span class="n">validate_stage</span><span class="o">=</span><span class="n">validate_stage</span><span class="p">,</span>
+</span><span data-line="710">            <span class="n">validate_fingerprint</span><span class="o">=</span><span class="n">validate_fingerprint</span><span class="p">,</span>
+</span><span data-line="711">            <span class="n">validate_optional</span><span class="o">=</span><span class="n">validate_optional</span><span class="p">,</span>
+</span><span data-line="712">            <span class="n">validate_input</span><span class="o">=</span><span class="n">validate_input</span><span class="p">,</span>
+</span><span data-line="713">        <span class="p">)</span>
+</span><span data-line="714">        <span class="n">candidates</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">}</span>
+</span><span data-line="715">        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="716">            <span class="n">p</span>
+</span><span data-line="717">            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">validate_input</span>
+</span><span data-line="718">            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+</span><span data-line="719">            <span class="ow">or</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">candidates</span>
+</span><span data-line="720">            <span class="ow">or</span> <span class="p">(</span>
+</span><span data-line="721">                <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+</span><span data-line="722">                <span class="ow">and</span> <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"--verify"</span><span class="p">,</span> <span class="s2">"--quiet"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">^</span><span class="se">{{</span><span class="s2">commit</span><span class="se">}}</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span>
+</span><span data-line="723">            <span class="p">)</span>
+</span><span data-line="724">        <span class="p">]</span>
+</span><span data-line="725">        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+</span><span data-line="726">            <span class="c1"># `--validate-input` takes every value after it, so a branch typed</span>
+</span><span data-line="727">            <span class="c1"># after it lands here and silently leaves the candidates.</span>
+</span><span data-line="728">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="729">                <span class="sa">f</span><span class="s2">"--validate-input names no file, or names a branch: "</span>
+</span><span data-line="730">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2">. It takes every value after it, so put "</span>
+</span><span data-line="731">                <span class="s2">"branch names before it; it names files outside the repository "</span>
+</span><span data-line="732">                <span class="s2">"that the validation runs (give a path that is also a branch "</span>
+</span><span data-line="733">                <span class="s2">"name as ./name or an absolute path)."</span>
+</span><span data-line="734">            <span class="p">)</span>
+</span><span data-line="735">        <span class="k">if</span> <span class="n">validate_input</span> <span class="ow">and</span> <span class="n">merge_only</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">tier</span><span class="p">:</span>
+</span><span data-line="736">            <span class="c1"># Merge-only runs nothing, so the files would be read and ignored.</span>
+</span><span data-line="737">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="738">                <span class="s2">"--validate-input names files a validation runs, but --merge-only "</span>
+</span><span data-line="739">                <span class="s2">"runs none. Drop one of them."</span>
+</span><span data-line="740">            <span class="p">)</span>
+</span><span data-line="741">        <span class="k">for</span> <span class="n">kw</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="p">(</span>
+</span><span data-line="742">            <span class="p">(</span><span class="s2">"tier"</span><span class="p">,</span> <span class="n">tier</span><span class="p">),</span>
+</span><span data-line="743">            <span class="p">(</span><span class="s2">"tier_cost"</span><span class="p">,</span> <span class="n">tier_cost</span><span class="p">),</span>
+</span><span data-line="744">            <span class="p">(</span><span class="s2">"must_include"</span><span class="p">,</span> <span class="n">must_include</span><span class="p">),</span>
+</span><span data-line="745">        <span class="p">):</span>
+</span><span data-line="746">            <span class="k">if</span> <span class="n">values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">values</span><span class="p">:</span>
+</span><span data-line="747">                <span class="n">flag</span> <span class="o">=</span> <span class="s2">"--"</span> <span class="o">+</span> <span class="n">kw</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"_"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">)</span>
+</span><span data-line="748">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="749">                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">flag</span><span class="si">}</span><span class="s2"> was given no values. Drop it, or pass at least one "</span>
+</span><span data-line="750">                    <span class="sa">f</span><span class="s2">"(see --help)."</span>
+</span><span data-line="751">                <span class="p">)</span>
+</span><span data-line="752">        <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"confirm_budget_seconds"</span><span class="p">,</span> <span class="s2">"confirm_max_runs"</span><span class="p">,</span> <span class="s2">"confirm_max_sets"</span><span class="p">):</span>
+</span><span data-line="753">            <span class="k">if</span> <span class="n">given</span><span class="p">[</span><span class="n">kw</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">given</span><span class="p">[</span><span class="n">kw</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="754">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="755">                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_TIER_ONLY_FLAGS</span><span class="p">[</span><span class="n">kw</span><span class="p">]</span><span class="si">}</span><span class="s2"> cannot be negative (got </span><span class="si">{</span><span class="n">given</span><span class="p">[</span><span class="n">kw</span><span class="p">]</span><span class="si">}</span><span class="s2">)."</span>
+</span><span data-line="756">                <span class="p">)</span>
+</span><span data-line="757">        <span class="n">unknown_formats</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">report_format</span> <span class="ow">or</span> <span class="p">())</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">REPORT_FORMATS</span><span class="p">)</span>
+</span><span data-line="758">        <span class="k">if</span> <span class="n">unknown_formats</span><span class="p">:</span>
+</span><span data-line="759">            <span class="c1"># Checked before the run, not when the reports are written after</span>
+</span><span data-line="760">            <span class="c1"># it: a branch name typed after --report-format lands here.</span>
+</span><span data-line="761">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="762">                <span class="sa">f</span><span class="s2">"--report-format names no format: "</span>
+</span><span data-line="763">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">unknown_formats</span><span class="p">))</span><span class="si">}</span><span class="s2">. Formats are: "</span>
+</span><span data-line="764">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">REPORT_FORMATS</span><span class="p">)</span><span class="si">}</span><span class="s2">. Put branch names before it."</span>
+</span><span data-line="765">            <span class="p">)</span>
+</span><span data-line="766">        <span class="k">if</span> <span class="ow">not</span> <span class="n">tier</span><span class="p">:</span>
+</span><span data-line="767">            <span class="c1"># `is not None`, not truthiness: `--confirm-max-runs 0` is an</span>
+</span><span data-line="768">            <span class="c1"># instruction, and ignoring it would be the silent drop.</span>
+</span><span data-line="769">            <span class="n">stray</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="770">                <span class="n">flag</span> <span class="k">for</span> <span class="n">kw</span><span class="p">,</span> <span class="n">flag</span> <span class="ow">in</span> <span class="n">_TIER_ONLY_FLAGS</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">given</span><span class="p">[</span><span class="n">kw</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span data-line="771">            <span class="p">]</span>
+</span><span data-line="772">            <span class="k">if</span> <span class="n">stray</span><span class="p">:</span>
+</span><span data-line="773">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="774">                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stray</span><span class="p">)</span><span class="si">}</span><span class="s2"> only mean something with --tier. To ask "</span>
+</span><span data-line="775">                    <span class="s2">"them of the ordinary validator, make it the one tier: "</span>
+</span><span data-line="776">                    <span class="s2">"--tier NAME (a bare name)."</span>
+</span><span data-line="777">                <span class="p">)</span>
+</span><span data-line="778">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="779">            <span class="n">unknown</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">must_include</span> <span class="ow">or</span> <span class="p">())</span> <span class="o">-</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">}</span>
+</span><span data-line="780">            <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+</span><span data-line="781">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="782">                    <span class="sa">f</span><span class="s2">"--must-include names changes that are not candidates: "</span>
+</span><span data-line="783">                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">unknown</span><span class="p">))</span><span class="si">}</span><span class="s2">. The candidates are: "</span>
+</span><span data-line="784">                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">id</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">changes</span><span class="p">))</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'(none)'</span><span class="si">}</span><span class="s2">."</span>
+</span><span data-line="785">                <span class="p">)</span>
+</span><span data-line="786">        <span class="k">if</span> <span class="n">tier</span> <span class="ow">and</span> <span class="n">log_path</span><span class="p">:</span>
+</span><span data-line="787">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="788">                <span class="s2">"--log-path cannot be used with --tier: each tier keeps its own "</span>
+</span><span data-line="789">                <span class="s2">"evaluation log, and one path would merge them into the one "</span>
+</span><span data-line="790">                <span class="s2">"shared cache this design exists to prevent. The tier logs sit "</span>
+</span><span data-line="791">                <span class="s2">"next to the default log, one file per tier."</span>
+</span><span data-line="792">            <span class="p">)</span>
+</span><span data-line="793">        <span class="n">common</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+</span><span data-line="794">            <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span>
+</span><span data-line="795">            <span class="n">resolver</span><span class="o">=</span><span class="n">claude_code_resolver</span><span class="p">()</span> <span class="k">if</span> <span class="n">resolver</span> <span class="o">==</span> <span class="s2">"claude"</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="796">            <span class="n">trust_unpinned</span><span class="o">=</span><span class="n">trust_unpinned_log</span><span class="p">,</span>
+</span><span data-line="797">            <span class="n">reuse_worktree</span><span class="o">=</span><span class="p">(</span>
+</span><span data-line="798">                <span class="n">_persistent_worktree</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">reuse_worktree</span><span class="p">)</span>
+</span><span data-line="799">                <span class="k">if</span> <span class="n">reuse_worktree</span>
+</span><span data-line="800">                <span class="k">else</span> <span class="kc">None</span>
+</span><span data-line="801">            <span class="p">),</span>
+</span><span data-line="802">            <span class="n">pairwise_preoracle</span><span class="o">=</span><span class="kc">False</span> <span class="k">if</span> <span class="n">no_pairwise</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="803">            <span class="n">decompose</span><span class="o">=</span><span class="ow">not</span> <span class="n">no_decompose</span><span class="p">,</span>
+</span><span data-line="804">            <span class="n">max_evaluations</span><span class="o">=</span><span class="n">max_evaluations</span><span class="p">,</span>
+</span><span data-line="805">            <span class="n">max_seconds</span><span class="o">=</span><span class="n">max_seconds</span><span class="p">,</span>
+</span><span data-line="806">            <span class="n">max_sets</span><span class="o">=</span><span class="n">max_sets</span><span class="p">,</span>
+</span><span data-line="807">            <span class="n">on_event</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">quiet</span> <span class="k">else</span> <span class="n">_progress</span><span class="p">,</span>
+</span><span data-line="808">        <span class="p">)</span>
+</span><span data-line="809">        <span class="k">if</span> <span class="n">tier</span><span class="p">:</span>
+</span><span data-line="810">            <span class="n">tiered</span> <span class="o">=</span> <span class="n">_analyze_tiered</span><span class="p">(</span>
+</span><span data-line="811">                <span class="n">repo</span><span class="p">,</span>
+</span><span data-line="812">                <span class="n">changes</span><span class="p">,</span>
+</span><span data-line="813">                <span class="n">tiers</span><span class="o">=</span><span class="n">_tiers</span><span class="p">(</span>
+</span><span data-line="814">                    <span class="n">tier</span><span class="p">,</span>
+</span><span data-line="815">                    <span class="n">tier_cost</span> <span class="ow">or</span> <span class="p">(),</span>
+</span><span data-line="816">                    <span class="n">validator</span><span class="o">=</span><span class="n">validate</span><span class="p">,</span>
+</span><span data-line="817">                    <span class="n">validator_flags</span><span class="o">=</span><span class="p">[</span>
+</span><span data-line="818">                        <span class="n">flag</span> <span class="k">for</span> <span class="n">kw</span><span class="p">,</span> <span class="n">flag</span> <span class="ow">in</span> <span class="n">_VALIDATOR_FLAGS</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">given</span><span class="p">[</span><span class="n">kw</span><span class="p">]</span>
+</span><span data-line="819">                    <span class="p">],</span>
+</span><span data-line="820">                    <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+</span><span data-line="821">                    <span class="n">retries</span><span class="o">=</span><span class="n">retries</span><span class="p">,</span>
+</span><span data-line="822">                    <span class="n">inputs</span><span class="o">=</span><span class="n">validate_input</span><span class="p">,</span>
+</span><span data-line="823">                    <span class="n">is_commit</span><span class="o">=</span><span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="p">(</span>
+</span><span data-line="824">                        <span class="n">name</span> <span class="ow">in</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">}</span>
+</span><span data-line="825">                        <span class="ow">or</span> <span class="n">git</span><span class="p">(</span>
+</span><span data-line="826">                            <span class="n">repo</span><span class="p">,</span>
+</span><span data-line="827">                            <span class="s2">"rev-parse"</span><span class="p">,</span>
+</span><span data-line="828">                            <span class="s2">"--verify"</span><span class="p">,</span>
+</span><span data-line="829">                            <span class="s2">"--quiet"</span><span class="p">,</span>
+</span><span data-line="830">                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">^</span><span class="se">{{</span><span class="s2">commit</span><span class="se">}}</span><span class="s2">"</span><span class="p">,</span>
+</span><span data-line="831">                        <span class="p">)</span><span class="o">.</span><span class="n">ok</span>
+</span><span data-line="832">                    <span class="p">),</span>
+</span><span data-line="833">                <span class="p">),</span>
+</span><span data-line="834">                <span class="n">confirm_budget_seconds</span><span class="o">=</span><span class="n">confirm_budget_seconds</span><span class="p">,</span>
+</span><span data-line="835">                <span class="n">confirm_max_runs</span><span class="o">=</span><span class="n">confirm_max_runs</span><span class="p">,</span>
+</span><span data-line="836">                <span class="n">confirm_max_sets</span><span class="o">=</span><span class="n">confirm_max_sets</span><span class="p">,</span>
+</span><span data-line="837">                <span class="n">must_include</span><span class="o">=</span><span class="n">must_include</span> <span class="ow">or</span> <span class="p">(),</span>
+</span><span data-line="838">                <span class="o">**</span><span class="n">common</span><span class="p">,</span>
+</span><span data-line="839">            <span class="p">)</span>
+</span><span data-line="840">            <span class="n">analysis</span> <span class="o">=</span> <span class="n">tiered</span><span class="o">.</span><span class="n">analysis</span>
+</span><span data-line="841">            <span class="c1"># Into the notes, so every report format carries the price list,</span>
+</span><span data-line="842">            <span class="c1"># not only this command's stdout.</span>
+</span><span data-line="843">            <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tiered</span><span class="o">.</span><span class="n">cost_lines</span><span class="p">())</span>
+</span><span data-line="844">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="845">            <span class="n">analysis</span> <span class="o">=</span> <span class="n">_analyze</span><span class="p">(</span>
+</span><span data-line="846">                <span class="n">repo</span><span class="p">,</span> <span class="n">changes</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">,</span> <span class="n">log_path</span><span class="o">=</span><span class="n">log_path</span><span class="p">,</span> <span class="o">**</span><span class="n">common</span>
+</span><span data-line="847">            <span class="p">)</span>
+</span><span data-line="848">    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span data-line="849">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"mergeset could not read that option:</span><span class="se">\n\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="850">    <span class="k">except</span> <span class="n">CapabilityError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span data-line="851">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"mergeset cannot run yet:</span><span class="se">\n\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="852">    <span class="k">except</span> <span class="n">MergesetError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span data-line="853">        <span class="c1"># A refusal is a result, not a crash: it deserves the same shape of</span>
+</span><span data-line="854">        <span class="c1"># message as any other, not a traceback with the reason at the bottom.</span>
+</span><span data-line="855">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"mergeset refused to run:</span><span class="se">\n\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="856">    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">markdown_report</span><span class="p">(</span><span class="n">analysis</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">)]</span>
+</span><span data-line="857">    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">_emit_reports</span><span class="p">(</span>
+</span><span data-line="858">        <span class="n">analysis</span><span class="p">,</span> <span class="n">report_dir</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">formats</span><span class="o">=</span><span class="n">report_format</span> <span class="ow">or</span> <span class="p">(</span><span class="s2">"markdown"</span><span class="p">,</span> <span class="s2">"html"</span><span class="p">)</span>
+</span><span data-line="859">    <span class="p">):</span>
+</span><span data-line="860">        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Wrote </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="861">    <span class="k">if</span> <span class="n">integration_branches</span><span class="p">:</span>
+</span><span data-line="862">        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">## Integration branches</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="863">        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">_integration_branches</span><span class="p">(</span><span class="n">analysis</span><span class="p">):</span>
+</span><span data-line="864">            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"- </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="865">    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
 </span><span data-line="866">
-</span><span data-line="867"><span class="k">def</span><span class="w"> </span><span class="nf">_integration_branches</span><span class="p">(</span><span class="n">analysis</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
-</span><span data-line="868">    <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span>
-</span><span data-line="869">
-</span><span data-line="870">    <span class="n">by_id</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">by_id</span>
-</span><span data-line="871">    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="872">    <span class="k">for</span> <span class="n">plan</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">merge_plan</span><span class="p">():</span>
-</span><span data-line="873">        <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"integration/</span><span class="si">{</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">plan</span><span class="p">[</span><span class="s1">'rank'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="874">        <span class="n">created</span><span class="p">,</span> <span class="n">detail</span> <span class="o">=</span> <span class="n">create_integration_branch</span><span class="p">(</span>
-</span><span data-line="875">            <span class="n">analysis</span><span class="o">.</span><span class="n">repo</span><span class="p">,</span>
-</span><span data-line="876">            <span class="n">name</span><span class="p">,</span>
-</span><span data-line="877">            <span class="n">analysis</span><span class="o">.</span><span class="n">base_sha</span><span class="p">,</span>
-</span><span data-line="878">            <span class="c1"># The shas that were validated, not the refs: a branch that moved</span>
-</span><span data-line="879">            <span class="c1"># since would put unvalidated commits on the integration branch.</span>
-</span><span data-line="880">            <span class="p">[</span>
-</span><span data-line="881">                <span class="p">(</span><span class="n">cid</span><span class="p">,</span> <span class="n">analysis</span><span class="o">.</span><span class="n">head_shas</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cid</span><span class="p">,</span> <span class="n">by_id</span><span class="p">[</span><span class="n">cid</span><span class="p">]</span><span class="o">.</span><span class="n">head</span><span class="p">))</span>
-</span><span data-line="882">                <span class="k">for</span> <span class="n">cid</span> <span class="ow">in</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"changes"</span><span class="p">]</span>
-</span><span data-line="883">            <span class="p">],</span>
-</span><span data-line="884">        <span class="p">)</span>
-</span><span data-line="885">        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">`: </span><span class="si">{</span><span class="s1">'created '</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">detail</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">created</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="n">detail</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="886">    <span class="k">return</span> <span class="n">out</span>
-</span><span data-line="887">
+</span><span data-line="867">
+</span><span data-line="868"><span class="k">def</span><span class="w"> </span><span class="nf">_integration_branches</span><span class="p">(</span><span class="n">analysis</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+</span><span data-line="869">    <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span>
+</span><span data-line="870">
+</span><span data-line="871">    <span class="n">by_id</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">by_id</span>
+</span><span data-line="872">    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="873">    <span class="k">for</span> <span class="n">plan</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">merge_plan</span><span class="p">():</span>
+</span><span data-line="874">        <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"integration/</span><span class="si">{</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">plan</span><span class="p">[</span><span class="s1">'rank'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="875">        <span class="n">created</span><span class="p">,</span> <span class="n">detail</span> <span class="o">=</span> <span class="n">create_integration_branch</span><span class="p">(</span>
+</span><span data-line="876">            <span class="n">analysis</span><span class="o">.</span><span class="n">repo</span><span class="p">,</span>
+</span><span data-line="877">            <span class="n">name</span><span class="p">,</span>
+</span><span data-line="878">            <span class="n">analysis</span><span class="o">.</span><span class="n">base_sha</span><span class="p">,</span>
+</span><span data-line="879">            <span class="c1"># The shas that were validated, not the refs: a branch that moved</span>
+</span><span data-line="880">            <span class="c1"># since would put unvalidated commits on the integration branch.</span>
+</span><span data-line="881">            <span class="p">[</span>
+</span><span data-line="882">                <span class="p">(</span><span class="n">cid</span><span class="p">,</span> <span class="n">analysis</span><span class="o">.</span><span class="n">head_shas</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cid</span><span class="p">,</span> <span class="n">by_id</span><span class="p">[</span><span class="n">cid</span><span class="p">]</span><span class="o">.</span><span class="n">head</span><span class="p">))</span>
+</span><span data-line="883">                <span class="k">for</span> <span class="n">cid</span> <span class="ow">in</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"changes"</span><span class="p">]</span>
+</span><span data-line="884">            <span class="p">],</span>
+</span><span data-line="885">        <span class="p">)</span>
+</span><span data-line="886">        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">`: </span><span class="si">{</span><span class="s1">'created '</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">detail</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">created</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="n">detail</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="887">    <span class="k">return</span> <span class="n">out</span>
 </span><span data-line="888">
+</span><span data-line="889">
 <div class="viewcode-block" id="show_log">
 <a class="viewcode-back" href="../../_autosummary/mergeset.cli.html#mergeset.cli.show_log">[docs]</a>
-</span><span data-line="889"><span class="k">def</span><span class="w"> </span><span class="nf">show_log</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">log_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="890"><span class="w">    </span><span class="sd">"""Print what the evaluation log already knows, without evaluating anything.</span>
-</span><span data-line="891">
-</span><span data-line="892"><span class="sd">    Use this to answer questions about a finished run: the log is the single</span>
-</span><span data-line="893"><span class="sd">    source of truth, so re-deriving what it already says costs a reader's trust.</span>
-</span><span data-line="894"><span class="sd">    (Re-rendering the full Markdown/HTML reports needs the candidate metadata as</span>
-</span><span data-line="895"><span class="sd">    well as the log, so it is a library call — ``markdown_report(analysis)`` —</span>
-</span><span data-line="896"><span class="sd">    not a command that could pretend the log alone is enough.)</span>
-</span><span data-line="897"><span class="sd">    """</span>
-</span><span data-line="898">    <span class="n">log_path</span> <span class="o">=</span> <span class="n">log_path</span> <span class="ow">or</span> <span class="n">evaluation_log_path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
-</span><span data-line="899">    <span class="n">log</span> <span class="o">=</span> <span class="n">EvaluationLog</span><span class="p">(</span><span class="n">log_path</span><span class="p">)</span>
-</span><span data-line="900">    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">log</span><span class="p">)</span><span class="si">}</span><span class="s2"> evaluations in </span><span class="si">{</span><span class="n">log_path</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">""</span><span class="p">]</span>
-</span><span data-line="901">    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">log</span><span class="p">:</span>
-</span><span data-line="902">        <span class="n">on</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"@</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">base_sha</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">base_sha</span> <span class="k">else</span> <span class="s2">"@unpinned"</span>
-</span><span data-line="903">        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="904">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">verdict</span><span class="o">.</span><span class="n">value</span><span class="si">:</span><span class="s2">6</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">duration</span><span class="si">:</span><span class="s2">7.1f</span><span class="si">}</span><span class="s2">s </span><span class="si">{</span><span class="n">on</span><span class="si">:</span><span class="s2">9</span><span class="si">}</span><span class="s2">  "</span>
-</span><span data-line="905">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">subset</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="906">        <span class="p">)</span>
-</span><span data-line="907">        <span class="k">if</span> <span class="n">stage_breakdown</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
-</span><span data-line="908">            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">''</span><span class="si">:</span><span class="s2">26</span><span class="si">}{</span><span class="n">stage_breakdown</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="909">    <span class="n">moved</span> <span class="o">=</span> <span class="n">_moved_commits</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
-</span><span data-line="910">    <span class="k">if</span> <span class="n">moved</span><span class="p">:</span>
-</span><span data-line="911">        <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
-</span><span data-line="912">            <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="913">            <span class="s2">"! The rows below are about different commits or validators ("</span>
-</span><span data-line="914">            <span class="o">+</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">moved</span><span class="p">)</span>
-</span><span data-line="915">            <span class="o">+</span> <span class="s2">"), so the sets mix answers to different questions. A run of "</span>
-</span><span data-line="916">            <span class="s2">"`branches`/`prs` pins the log to the current heads and uses only "</span>
-</span><span data-line="917">            <span class="s2">"the rows that match them."</span><span class="p">,</span>
-</span><span data-line="918">        <span class="p">]</span>
-</span><span data-line="919">    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"Maximal passing sets:"</span><span class="p">]</span>
-</span><span data-line="920">    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">s</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">log</span><span class="o">.</span><span class="n">maximal_passing_sets</span><span class="p">()]</span>
-</span><span data-line="921">    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"Minimal failing sets (conflicts):"</span><span class="p">]</span>
-</span><span data-line="922">    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">s</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">log</span><span class="o">.</span><span class="n">minimal_failing_sets</span><span class="p">()]</span>
-</span><span data-line="923">    <span class="k">for</span> <span class="n">good</span><span class="p">,</span> <span class="n">bad</span> <span class="ow">in</span> <span class="n">log</span><span class="o">.</span><span class="n">monotonicity_violations</span><span class="p">():</span>
-</span><span data-line="924">        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="925">            <span class="sa">f</span><span class="s2">"  ! monotonicity violation: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">bad</span><span class="p">)</span><span class="si">}</span><span class="s2"> bad but </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">good</span><span class="p">)</span><span class="si">}</span><span class="s2"> good"</span>
-</span><span data-line="926">        <span class="p">)</span>
-</span><span data-line="927">    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+</span><span data-line="890"><span class="k">def</span><span class="w"> </span><span class="nf">show_log</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">log_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="891"><span class="w">    </span><span class="sd">"""Print what the evaluation log already knows, without evaluating anything.</span>
+</span><span data-line="892">
+</span><span data-line="893"><span class="sd">    Use this to answer questions about a finished run: the log is the single</span>
+</span><span data-line="894"><span class="sd">    source of truth, so re-deriving what it already says costs a reader's trust.</span>
+</span><span data-line="895"><span class="sd">    (Re-rendering the full Markdown/HTML reports needs the candidate metadata as</span>
+</span><span data-line="896"><span class="sd">    well as the log, so it is a library call — ``markdown_report(analysis)`` —</span>
+</span><span data-line="897"><span class="sd">    not a command that could pretend the log alone is enough.)</span>
+</span><span data-line="898"><span class="sd">    """</span>
+</span><span data-line="899">    <span class="n">log_path</span> <span class="o">=</span> <span class="n">log_path</span> <span class="ow">or</span> <span class="n">evaluation_log_path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+</span><span data-line="900">    <span class="n">log</span> <span class="o">=</span> <span class="n">EvaluationLog</span><span class="p">(</span><span class="n">log_path</span><span class="p">)</span>
+</span><span data-line="901">    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">log</span><span class="p">)</span><span class="si">}</span><span class="s2"> evaluations in </span><span class="si">{</span><span class="n">log_path</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">""</span><span class="p">]</span>
+</span><span data-line="902">    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">log</span><span class="p">:</span>
+</span><span data-line="903">        <span class="n">on</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"@</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">base_sha</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">base_sha</span> <span class="k">else</span> <span class="s2">"@unpinned"</span>
+</span><span data-line="904">        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="905">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">verdict</span><span class="o">.</span><span class="n">value</span><span class="si">:</span><span class="s2">6</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">duration</span><span class="si">:</span><span class="s2">7.1f</span><span class="si">}</span><span class="s2">s </span><span class="si">{</span><span class="n">on</span><span class="si">:</span><span class="s2">9</span><span class="si">}</span><span class="s2">  "</span>
+</span><span data-line="906">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">subset</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="907">        <span class="p">)</span>
+</span><span data-line="908">        <span class="k">if</span> <span class="n">stage_breakdown</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+</span><span data-line="909">            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">''</span><span class="si">:</span><span class="s2">26</span><span class="si">}{</span><span class="n">stage_breakdown</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="910">    <span class="n">moved</span> <span class="o">=</span> <span class="n">_moved_commits</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
+</span><span data-line="911">    <span class="k">if</span> <span class="n">moved</span><span class="p">:</span>
+</span><span data-line="912">        <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
+</span><span data-line="913">            <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="914">            <span class="s2">"! The rows below are about different commits or validators ("</span>
+</span><span data-line="915">            <span class="o">+</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">moved</span><span class="p">)</span>
+</span><span data-line="916">            <span class="o">+</span> <span class="s2">"), so the sets mix answers to different questions. A run of "</span>
+</span><span data-line="917">            <span class="s2">"`branches`/`prs` pins the log to the current heads and uses only "</span>
+</span><span data-line="918">            <span class="s2">"the rows that match them."</span><span class="p">,</span>
+</span><span data-line="919">        <span class="p">]</span>
+</span><span data-line="920">    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"Maximal passing sets:"</span><span class="p">]</span>
+</span><span data-line="921">    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">s</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">log</span><span class="o">.</span><span class="n">maximal_passing_sets</span><span class="p">()]</span>
+</span><span data-line="922">    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"Minimal failing sets (conflicts):"</span><span class="p">]</span>
+</span><span data-line="923">    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">s</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">log</span><span class="o">.</span><span class="n">minimal_failing_sets</span><span class="p">()]</span>
+</span><span data-line="924">    <span class="k">for</span> <span class="n">good</span><span class="p">,</span> <span class="n">bad</span> <span class="ow">in</span> <span class="n">log</span><span class="o">.</span><span class="n">monotonicity_violations</span><span class="p">():</span>
+</span><span data-line="925">        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="926">            <span class="sa">f</span><span class="s2">"  ! monotonicity violation: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">bad</span><span class="p">)</span><span class="si">}</span><span class="s2"> bad but </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">good</span><span class="p">)</span><span class="si">}</span><span class="s2"> good"</span>
+</span><span data-line="927">        <span class="p">)</span>
+</span><span data-line="928">    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
 
-</span><span data-line="928">
 </span><span data-line="929">
-</span><span data-line="930"><span class="k">def</span><span class="w"> </span><span class="nf">_moved_commits</span><span class="p">(</span><span class="n">log</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
-</span><span data-line="931"><span class="w">    </span><span class="sd">"""What makes the log's rows disagree about commits, one phrase each."""</span>
-</span><span data-line="932">    <span class="n">bases</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="o">.</span><span class="n">base_sha</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">log</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">base_sha</span><span class="p">}</span>
-</span><span data-line="933">    <span class="n">heads</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span data-line="934">    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">log</span><span class="p">:</span>
-</span><span data-line="935">        <span class="k">for</span> <span class="n">cid</span><span class="p">,</span> <span class="n">sha</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">heads</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-</span><span data-line="936">            <span class="n">heads</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">cid</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">sha</span><span class="p">)</span>
-</span><span data-line="937">    <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">bases</span><span class="p">)</span><span class="si">}</span><span class="s2"> bases"</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bases</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="p">[]</span>
-</span><span data-line="938">    <span class="n">out</span> <span class="o">+=</span> <span class="p">[</span>
-</span><span data-line="939">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2"> at </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">shas</span><span class="p">)</span><span class="si">}</span><span class="s2"> heads"</span>
-</span><span data-line="940">        <span class="k">for</span> <span class="n">cid</span><span class="p">,</span> <span class="n">shas</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">heads</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
-</span><span data-line="941">        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shas</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
-</span><span data-line="942">    <span class="p">]</span>
-</span><span data-line="943">    <span class="c1"># Rows recording no validator count as one more: a mix of old rows and</span>
-</span><span data-line="944">    <span class="c1"># fingerprinted ones is a mix too.</span>
-</span><span data-line="945">    <span class="n">validators</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="o">.</span><span class="n">validator</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">log</span><span class="p">}</span>
-</span><span data-line="946">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">validators</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-</span><span data-line="947">        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">validators</span><span class="p">)</span><span class="si">}</span><span class="s2"> validators"</span><span class="p">)</span>
-</span><span data-line="948">    <span class="n">unpinned</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">log</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">e</span><span class="o">.</span><span class="n">pinned</span><span class="p">)</span>
-</span><span data-line="949">    <span class="k">if</span> <span class="n">unpinned</span> <span class="ow">and</span> <span class="p">(</span><span class="n">bases</span> <span class="ow">or</span> <span class="n">heads</span><span class="p">):</span>
-</span><span data-line="950">        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">unpinned</span><span class="si">}</span><span class="s2"> rows record no commits"</span><span class="p">)</span>
-</span><span data-line="951">    <span class="k">return</span> <span class="n">out</span>
-</span><span data-line="952">
+</span><span data-line="930">
+</span><span data-line="931"><span class="k">def</span><span class="w"> </span><span class="nf">_moved_commits</span><span class="p">(</span><span class="n">log</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+</span><span data-line="932"><span class="w">    </span><span class="sd">"""What makes the log's rows disagree about commits, one phrase each."""</span>
+</span><span data-line="933">    <span class="n">bases</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="o">.</span><span class="n">base_sha</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">log</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">base_sha</span><span class="p">}</span>
+</span><span data-line="934">    <span class="n">heads</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span data-line="935">    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">log</span><span class="p">:</span>
+</span><span data-line="936">        <span class="k">for</span> <span class="n">cid</span><span class="p">,</span> <span class="n">sha</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">heads</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span data-line="937">            <span class="n">heads</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">cid</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">sha</span><span class="p">)</span>
+</span><span data-line="938">    <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">bases</span><span class="p">)</span><span class="si">}</span><span class="s2"> bases"</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bases</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="p">[]</span>
+</span><span data-line="939">    <span class="n">out</span> <span class="o">+=</span> <span class="p">[</span>
+</span><span data-line="940">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cid</span><span class="si">}</span><span class="s2"> at </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">shas</span><span class="p">)</span><span class="si">}</span><span class="s2"> heads"</span>
+</span><span data-line="941">        <span class="k">for</span> <span class="n">cid</span><span class="p">,</span> <span class="n">shas</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">heads</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+</span><span data-line="942">        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shas</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+</span><span data-line="943">    <span class="p">]</span>
+</span><span data-line="944">    <span class="c1"># Rows recording no validator count as one more: a mix of old rows and</span>
+</span><span data-line="945">    <span class="c1"># fingerprinted ones is a mix too.</span>
+</span><span data-line="946">    <span class="n">validators</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="o">.</span><span class="n">validator</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">log</span><span class="p">}</span>
+</span><span data-line="947">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">validators</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+</span><span data-line="948">        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">validators</span><span class="p">)</span><span class="si">}</span><span class="s2"> validators"</span><span class="p">)</span>
+</span><span data-line="949">    <span class="n">unpinned</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">log</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">e</span><span class="o">.</span><span class="n">pinned</span><span class="p">)</span>
+</span><span data-line="950">    <span class="k">if</span> <span class="n">unpinned</span> <span class="ow">and</span> <span class="p">(</span><span class="n">bases</span> <span class="ow">or</span> <span class="n">heads</span><span class="p">):</span>
+</span><span data-line="951">        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">unpinned</span><span class="si">}</span><span class="s2"> rows record no commits"</span><span class="p">)</span>
+</span><span data-line="952">    <span class="k">return</span> <span class="n">out</span>
 </span><span data-line="953">
+</span><span data-line="954">
 <div class="viewcode-block" id="install_skills">
 <a class="viewcode-back" href="../../_autosummary/mergeset.cli.html#mergeset.cli.install_skills">[docs]</a>
-</span><span data-line="954"><span class="k">def</span><span class="w"> </span><span class="nf">install_skills</span><span class="p">(</span>
-</span><span data-line="955">    <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"~/.claude/skills"</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">copy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span data-line="956"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="957"><span class="w">    </span><span class="sd">"""Install the agent skill bundled in this package into an agent host.</span>
-</span><span data-line="958">
-</span><span data-line="959"><span class="sd">    ``pip install mergeset`` already ships the skill inside the package; agent</span>
-</span><span data-line="960"><span class="sd">    hosts read their own directory, so this links one to the other. A symlink by</span>
-</span><span data-line="961"><span class="sd">    default, so upgrading the package upgrades the skill; ``--copy`` for hosts</span>
-</span><span data-line="962"><span class="sd">    or filesystems that cannot follow one. An existing skill is left alone;</span>
-</span><span data-line="963"><span class="sd">    ``--overwrite`` replaces whatever is at the destination.</span>
-</span><span data-line="964"><span class="sd">    """</span>
-</span><span data-line="965">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="966">        <span class="n">installed</span> <span class="o">=</span> <span class="n">_install_skills</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">link</span><span class="o">=</span><span class="ow">not</span> <span class="n">copy</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">)</span>
-</span><span data-line="967">    <span class="k">except</span> <span class="n">MergesetError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span data-line="968">        <span class="c1"># Same shape as every other refusal here: a message, not a traceback.</span>
-</span><span data-line="969">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"mergeset refused to install:</span><span class="se">\n\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="970">    <span class="k">if</span> <span class="ow">not</span> <span class="n">installed</span><span class="p">:</span>
-</span><span data-line="971">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"Already installed in </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> (nothing to do)."</span>
-</span><span data-line="972">    <span class="k">return</span> <span class="s2">"Installed:</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">installed</span><span class="p">)</span></div>
+</span><span data-line="955"><span class="k">def</span><span class="w"> </span><span class="nf">install_skills</span><span class="p">(</span>
+</span><span data-line="956">    <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"~/.claude/skills"</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">copy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span data-line="957"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="958"><span class="w">    </span><span class="sd">"""Install the agent skill bundled in this package into an agent host.</span>
+</span><span data-line="959">
+</span><span data-line="960"><span class="sd">    ``pip install mergeset`` already ships the skill inside the package; agent</span>
+</span><span data-line="961"><span class="sd">    hosts read their own directory, so this links one to the other. A symlink by</span>
+</span><span data-line="962"><span class="sd">    default, so upgrading the package upgrades the skill; ``--copy`` for hosts</span>
+</span><span data-line="963"><span class="sd">    or filesystems that cannot follow one. An existing skill is left alone;</span>
+</span><span data-line="964"><span class="sd">    ``--overwrite`` replaces whatever is at the destination.</span>
+</span><span data-line="965"><span class="sd">    """</span>
+</span><span data-line="966">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="967">        <span class="n">installed</span> <span class="o">=</span> <span class="n">_install_skills</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">link</span><span class="o">=</span><span class="ow">not</span> <span class="n">copy</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">)</span>
+</span><span data-line="968">    <span class="k">except</span> <span class="n">MergesetError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span data-line="969">        <span class="c1"># Same shape as every other refusal here: a message, not a traceback.</span>
+</span><span data-line="970">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"mergeset refused to install:</span><span class="se">\n\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="971">    <span class="k">if</span> <span class="ow">not</span> <span class="n">installed</span><span class="p">:</span>
+</span><span data-line="972">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"Already installed in </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> (nothing to do)."</span>
+</span><span data-line="973">    <span class="k">return</span> <span class="s2">"Installed:</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">installed</span><span class="p">)</span></div>
 
-</span><span data-line="973">
 </span><span data-line="974">
-</span><span data-line="975"><span class="c1">#: SSOT of the CLI surface. Any adapter (cw, HTTP, MCP) consumes this list.</span>
-</span><span data-line="976"><span class="n">_dispatch_funcs</span> <span class="o">=</span> <span class="p">[</span><span class="n">branches</span><span class="p">,</span> <span class="n">prs</span><span class="p">,</span> <span class="n">show_log</span><span class="p">,</span> <span class="n">install_skills</span><span class="p">]</span>
-</span><span data-line="977">
+</span><span data-line="975">
+</span><span data-line="976"><span class="c1">#: SSOT of the CLI surface. Any adapter (cw, HTTP, MCP) consumes this list.</span>
+</span><span data-line="977"><span class="n">_dispatch_funcs</span> <span class="o">=</span> <span class="p">[</span><span class="n">branches</span><span class="p">,</span> <span class="n">prs</span><span class="p">,</span> <span class="n">show_log</span><span class="p">,</span> <span class="n">install_skills</span><span class="p">]</span>
 </span><span data-line="978">
+</span><span data-line="979">
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../_autosummary/mergeset.cli.html#mergeset.cli.main">[docs]</a>
-</span><span data-line="979"><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span><span data-line="980"><span class="w">    </span><span class="sd">"""Entry point: project ``_dispatch_funcs`` onto a command line parser.</span>
-</span><span data-line="981">
-</span><span data-line="982"><span class="sd">    cw's default convention stops reading a function's annotations as soon as</span>
-</span><span data-line="983"><span class="sd">    it declares any parameter (argh's rule), which would turn ``--max-seconds</span>
-</span><span data-line="984"><span class="sd">    60`` into the string ``"60"``. ``hints_when_declared`` keeps the hints and</span>
-</span><span data-line="985"><span class="sd">    merges the declarations on top.</span>
-</span><span data-line="986"><span class="sd">    """</span>
-</span><span data-line="987">    <span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
-</span><span data-line="988">
-</span><span data-line="989">    <span class="kn">import</span><span class="w"> </span><span class="nn">cw</span>
-</span><span data-line="990">
-</span><span data-line="991">    <span class="n">convention</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">cw</span><span class="o">.</span><span class="n">ARGH</span><span class="p">,</span> <span class="n">hints_when_declared</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="992">    <span class="k">return</span> <span class="n">cw</span><span class="o">.</span><span class="n">dispatch</span><span class="p">(</span><span class="n">_dispatch_funcs</span><span class="p">,</span> <span class="n">argv</span><span class="o">=</span><span class="n">argv</span><span class="p">,</span> <span class="n">convention</span><span class="o">=</span><span class="n">convention</span><span class="p">)</span></div>
+</span><span data-line="980"><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span data-line="981"><span class="w">    </span><span class="sd">"""Entry point: project ``_dispatch_funcs`` onto a command line parser.</span>
+</span><span data-line="982">
+</span><span data-line="983"><span class="sd">    cw's default convention stops reading a function's annotations as soon as</span>
+</span><span data-line="984"><span class="sd">    it declares any parameter (argh's rule), which would turn ``--max-seconds</span>
+</span><span data-line="985"><span class="sd">    60`` into the string ``"60"``. ``hints_when_declared`` keeps the hints and</span>
+</span><span data-line="986"><span class="sd">    merges the declarations on top.</span>
+</span><span data-line="987"><span class="sd">    """</span>
+</span><span data-line="988">    <span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
+</span><span data-line="989">
+</span><span data-line="990">    <span class="kn">import</span><span class="w"> </span><span class="nn">cw</span>
+</span><span data-line="991">
+</span><span data-line="992">    <span class="n">convention</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">cw</span><span class="o">.</span><span class="n">ARGH</span><span class="p">,</span> <span class="n">hints_when_declared</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="993">    <span class="k">return</span> <span class="n">cw</span><span class="o">.</span><span class="n">dispatch</span><span class="p">(</span><span class="n">_dispatch_funcs</span><span class="p">,</span> <span class="n">argv</span><span class="o">=</span><span class="n">argv</span><span class="p">,</span> <span class="n">convention</span><span class="o">=</span><span class="n">convention</span><span class="p">)</span></div>
 
-</span><span data-line="993">
 </span><span data-line="994">
-</span><span data-line="995"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
-</span><span data-line="996">    <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</span><span data-line="995">
+</span><span data-line="996"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+</span><span data-line="997">    <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </span></pre></div>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -1166,7 +1167,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=5d650c58"></script>
+      <script src="../../_static/documentation_options.js?v=6a9d8632"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

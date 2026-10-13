@@ -128,7 +128,7 @@ normal case. See [`merge_plan()`](#mergeset.analysis.Analysis.merge_plan)’s `v
 
 Cost of dropping each change *including its descendant cone*.
 
-### mergeset.analysis.analyze(repo, changes, , base=None, validate=None, resolver=None, log=None, log_path=None, trust_unpinned=None, artifacts=None, weight=None, pairwise_preoracle=True, decompose=True, component_local=None, use_ci_status=True, check_base=True, max_evaluations=None, max_seconds=None, max_sets=None, worktree_root=None, reuse_worktree=None, on_event=None)
+### mergeset.analysis.analyze(repo, changes, , base=None, validate=None, resolver=None, log=None, log_path=None, trust_unpinned=None, artifacts=None, weight=None, pairwise_preoracle=None, decompose=True, component_local=None, use_ci_status=True, check_base=True, max_evaluations=None, max_seconds=None, max_sets=None, worktree_root=None, reuse_worktree=None, on_event=None)
 
 Find the maximal sets of `changes` that merge and validate on `base`.
 
@@ -155,8 +155,11 @@ Find the maximal sets of `changes` that merge and validate on `base`.
     setting, which is off. Only when neither the heads nor the
     validator have changed since those rows were written.
   * **weight** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`Change`](mergeset.base.html.md#mergeset.base.Change)], [`float`](https://docs.python.org/3/builtins/functions.html#float)]]) – `Change -> cost of dropping it`; default is size-based.
-  * **pairwise_preoracle** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Use `git merge-tree` to find textual conflicts for
-    free before spending any evaluation.
+  * **pairwise_preoracle** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool)]) – Use `git merge-tree` to find textual conflicts for
+    free before spending any evaluation, and exclude them. `None` (the
+    default) means on, unless a `resolver` is given: those conflicts
+    are what it is for, so it is offered them instead (ADR 0034). Pass
+    `True` to exclude them even then.
   * **decompose** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Use file-overlap components to find conflicts cheaply. The
     components are always searched first, because a conflict found
     inside a small component is a conflict found for a fraction of the
