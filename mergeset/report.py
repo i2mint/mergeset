@@ -171,8 +171,10 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
         declined = ours not in (None, NO_RESOLVER) and any(
             ours in unmerged[c][1] for c in did_not_merge
         )
-        why = "found by merging; the resolver declined" if declined else (
-            "found by merging"
+        why = (
+            "found by merging; the resolver declined"
+            if declined
+            else ("found by merging")
         )
         yield f"**Did not merge** ({why}):"
         yield ""

@@ -443,7 +443,9 @@ def analyze(
             "resolver, a textual conflict is offered to it rather than excluded "
             "up front."
         )
-    pairwise_preoracle = True if pairwise_preoracle is None else bool(pairwise_preoracle)
+    pairwise_preoracle = (
+        True if pairwise_preoracle is None else bool(pairwise_preoracle)
+    )
     if pairwise_preoracle:
         for change_id, files in singleton_textual_conflicts(
             repo, base_sha, heads_by_id
