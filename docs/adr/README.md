@@ -46,8 +46,9 @@ One decision per file. The `decision:` field in each file's front matter carries
 | [0027](0027-a-gating-test-must-be-shown-to-gate.md) | — | A gating test must be shown to gate, not merely named after the property |
 | [0028](0028-a-row-is-about-commits-not-ids.md) | — | A log row is about the commits that were merged, not about the change ids |
 | [0029](0029-a-row-is-about-what-was-run-too.md) | — | A log row is about what was run too, not only about the commits |
+| [0030](0030-a-cheaper-tier-runs-what-it-only-inferred.md) | — | On the way to a deeper tier, a cheaper tier runs what it had only inferred |
 
-29 records. Append-only: when a decision is reversed, the old record stays
+30 records. Append-only: when a decision is reversed, the old record stays
 and the new one says what changed.
 
 Records from 0026 on have no `was` identifier: they were written after the split

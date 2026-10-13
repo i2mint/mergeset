@@ -62,7 +62,7 @@ from __future__ import annotations
 import hashlib
 import os
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import (
     Callable,
     Dict,
@@ -921,6 +921,8 @@ def analyze_tiered(
     # The screen's log was pinned by `analyze`; every deeper tier's log answers
     # questions about the same commits, so it is pinned to them too (#23).
     logs[screen.name] = analysis.log  # the pinned view `analyze` made
+    # `analyze` has reported these; the confirm stages can find more (#31).
+    noted_violations = set(analysis.log.monotonicity_violations())
     for tier in tiers[1:]:
         logs[tier.name] = logs[tier.name].pinned(
             base=analysis.base_sha,
@@ -937,14 +939,19 @@ def analyze_tiered(
     # from `declared` while a log full of real timings sat on disk is how a
     # 600 s budget admitted 3000 s of work. The docstring promised "measurements
     # from one run price the next"; this is what makes that true.
-    for tier in tiers:
-        result.spent[tier.name] = _sync_costs(
-            cost_model, logs[tier.name], tier.name, ingested
-        )
-        # Evaluations are counted from the tier's log, not from the search
-        # state: a search resumed against a complete log runs nothing and would
-        # report zero spend for work that really happened (i2mint/mergeset#16).
-        result.runs[tier.name] = len(logs[tier.name])
+    def sync_every_tier() -> None:
+        # Every tier, not only the one just searched: a confirm stage runs the
+        # cheaper tiers too, on sets they had only inferred (#31).
+        for tier in tiers:
+            result.spent[tier.name] = _sync_costs(
+                cost_model, logs[tier.name], tier.name, ingested
+            )
+            # Evaluations are counted from the tier's log, not from the search
+            # state: a search resumed against a complete log runs nothing and
+            # would report zero spend for work that really happened (#16).
+            result.runs[tier.name] = len(logs[tier.name])
+
+    sync_every_tier()
 
     change_ids = [c.id for c in changes]
     universe = frozenset(change_ids)
@@ -983,8 +990,10 @@ def analyze_tiered(
         for k in ("resolver", "reuse_worktree", "worktree_root")
         if analyze_kwargs.get(k) is not None
     }
+    # (log, oracle) per tier entered so far; `_confirming_chain` caches each
+    # oracle by its own log and chains them.
     evaluators = [
-        _tier_evaluator(repo, analysis, screen, logs[screen.name], emit, **merging)
+        (logs[screen.name], _tier_oracle(repo, analysis, screen, emit, **merging))
     ]
     for tier in tiers[1:]:
         if not tier.is_available():
@@ -1018,7 +1027,7 @@ def analyze_tiered(
             )
             break
         evaluators.append(
-            _tier_evaluator(repo, analysis, tier, logs[tier.name], emit, **merging)
+            (logs[tier.name], _tier_oracle(repo, analysis, tier, emit, **merging))
         )
         # ADR-0018 applies to every tier, not only the first. `analyze` checks
         # the base for the screen; without the same check here, a deep tier that
@@ -1028,7 +1037,7 @@ def analyze_tiered(
         # notice: a tier expensive enough to need this design is a tier nobody
         # can cheaply re-run by hand to cross-check.
         if check_base:
-            baseline = chained_evaluate(evaluators)(frozenset())
+            baseline = _confirming_chain(evaluators)(frozenset())
             if baseline.verdict is not Verdict.PASS:
                 # Skipped, not raised -- the one place this departs from
                 # ADR-0018. By now the screen search is banked, often many
@@ -1049,7 +1058,7 @@ def analyze_tiered(
         emit("tier", {"name": tier.name, "role": "confirm", "max_runs": allowance})
         state = find_maximal_good_sets(
             change_ids,
-            chained_evaluate(evaluators),
+            _confirming_chain(evaluators),
             known_conflicts=conflicts,
             depends_on=analysis.stacks,
             weight=weight_of_id,
@@ -1061,10 +1070,7 @@ def analyze_tiered(
         analysis.searches.append(state)
         conflicts = conflicts + list(state.conflicts)
         analysis.conflicts = _minimal(analysis.conflicts + state.conflicts)
-        result.spent[tier.name] = _sync_costs(
-            cost_model, logs[tier.name], tier.name, ingested
-        )
-        result.runs[tier.name] = len(logs[tier.name])
+        sync_every_tier()
         if state.maximal_good_sets:
             analysis.maximal_sets = state.maximal_good_sets
         result.depth_reached = tier.name
@@ -1089,7 +1095,7 @@ def analyze_tiered(
         )
         best, found, _ = best_set_including(
             change_ids,
-            chained_evaluate(evaluators),
+            _confirming_chain(evaluators),
             must_include=must_include,
             conflicts=conflicts,
             weight=weight_of_id,
@@ -1099,11 +1105,7 @@ def analyze_tiered(
         result.best_including = best
         conflicts = _minimal(list(conflicts) + list(found))
         analysis.conflicts = _minimal(list(analysis.conflicts) + list(found))
-        for tier_name in names:
-            result.spent[tier_name] = _sync_costs(
-                cost_model, logs[tier_name], tier_name, ingested
-            )
-            result.runs[tier_name] = len(logs[tier_name])
+        sync_every_tier()
         kept = ", ".join(sorted(result.must_include))
         if best is None:
             analysis.notes.append(
@@ -1119,35 +1121,81 @@ def analyze_tiered(
                 "answer to it is not a worse answer."
             )
 
+    sync_every_tier()  # a skipped tier's base check ran too
+    # A cheaper tier runs, on the way to a deeper one, sets it had only
+    # inferred from a passing superset (`_confirming_chain`); when one fails,
+    # the monotone prior broke at that tier, and the reader must hear it.
+    for tier_name in names:
+        for good, bad in logs[tier_name].monotonicity_violations():
+            if (good, bad) in noted_violations and tier_name == screen.name:
+                continue
+            analysis.notes.append(
+                f"MONOTONICITY VIOLATION at tier `{tier_name}`: {set_key(bad)} "
+                f"failed but {set_key(good)} passed, though it contains it. "
+                "Suspect a flaky test, or a change that fixes another. Results "
+                "below are not fully trustworthy."
+            )
     _record_what_may_be_claimed(result, analysis, names, refresh_answer())
     return result
 
 
-def _tier_evaluator(
+def _confirming_chain(
+    stages: Sequence[Tuple[EvaluationLog, Callable[[ChangeSet], Evaluation]]],
+) -> Callable[[ChangeSet], Evaluation]:
+    """Chain the tiers' oracles, each cached by its own log, cheapest first.
+
+    Each log answers for its own tier, so a set the screen already decided is a
+    cache hit at the screen and a real run only at the tier that has not seen
+    it. One exception: a cheaper tier never passes a set *by inference* on the
+    way to a deeper one; it runs the set (i2mint/mergeset#31). The deep tier
+    is about to spend real money on the set, and the claim that comes out of
+    it -- "passed every tier up to this one" (``TieredAnalysis.verified_tier``,
+    D25) -- needs an exact PASS at each. Inference from a passing superset is a
+    prior, not a run: a change that fixes another makes ``{a, b, d}`` pass while
+    ``{a, b}`` fails. The cheap run costs little by the tiers' own ordering,
+    and a cheap FAIL saves the deep run outright. The deepest tier in the chain
+    still infers, as any search does from its own tier's results.
+    """
+    *cheaper, (log, oracle) = stages
+    chain = chained_evaluate(
+        [lg.caching(o, infer_pass=False) for lg, o in cheaper] + [log.caching(oracle)]
+    )
+
+    def evaluate(subset: ChangeSet) -> Evaluation:
+        before = len(log.rows)
+        result = chain(subset)
+        # The search spending this chain counts its budget (`max_runs` of the
+        # deepest tier) in uncached results. A set refuted by a cheaper tier
+        # cost the deepest tier nothing -- that run is on the cheaper tier's
+        # own log and counted there -- so it must not use up a deep run.
+        if not result.cached and len(log.rows) == before:
+            result = replace(result, cached=True)
+        return result
+
+    return evaluate
+
+
+def _tier_oracle(
     repo: str,
     analysis: Analysis,
     tier: Tier,
-    log: EvaluationLog,
     emit: Callable[[str, dict], None],
     **merging,
 ):
-    """A log-cached evaluator for one tier: merge onto the base, then run the tier.
+    """The uncached evaluator for one tier: merge onto the base, then run the tier.
 
-    Backed by the tier's *own* log, so a set the screen already decided is a
-    cache hit at the screen and a real run only at the tier that has not seen it.
     ``merging`` is how sets are merged (``resolver``, ``reuse_worktree``,
-    ``worktree_root``), the same for every tier.
+    ``worktree_root``), the same for every tier. Cached by
+    :func:`_confirming_chain`.
     """
-    return log.caching(
-        git_oracle(
-            repo,
-            analysis.base_sha,
-            analysis.pinned_changes,
-            validate=tier.validate,
-            depends_on=analysis.merged_through,
-            on_event=lambda event, payload: emit(event, {**payload, "tier": tier.name}),
-            **merging,
-        )
+    return git_oracle(
+        repo,
+        analysis.base_sha,
+        analysis.pinned_changes,
+        validate=tier.validate,
+        depends_on=analysis.merged_through,
+        on_event=lambda event, payload: emit(event, {**payload, "tier": tier.name}),
+        **merging,
     )
 
 
