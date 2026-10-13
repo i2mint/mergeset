@@ -33,7 +33,7 @@ not matched (i2mint/mergeset#32).
 | [`JsonlLines`](#mergeset.log.JsonlLines)(path)                               | Append-only sequence of JSON objects backed by one file.                                              |
 | [`Known`](#mergeset.log.Known)(verdict[, exact, witness])               | What the log already knows about a set, without re-evaluating it.                                     |
 | [`MemoryLines`](#mergeset.log.MemoryLines)([iterable])                        | In-memory stand-in for [`JsonlLines`](#mergeset.log.JsonlLines) (tests, dry runs). |
-| [`Pins`](#mergeset.log.Pins)(base, heads[, validator])                 | What a question is about: the base, each change's head sha, the validator.                            |
+| [`Pins`](#mergeset.log.Pins)(base, heads[, validator, resolver])       | What a question is about: the base, each change's head sha, the validator.                            |
 | [`StoreLines`](#mergeset.log.StoreLines)(store, key)                         | Lines backed by one key of a `MutableMapping` — the non-file backend.                                 |
 
 ### *class* mergeset.log.EvaluationLog(store=None, , pins=None, trust_unpinned=False)
@@ -152,6 +152,13 @@ another. Reported, never silently smoothed over.
 * **Return type:**
   [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset), [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]]
 
+#### *property* other_resolver *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](mergeset.base.html.md#mergeset.base.Evaluation)]*
+
+The [`stale`](#mergeset.log.EvaluationLog.stale) rows whose outcome another resolver decided.
+
+An assisted PASS read by a run without the resolver, or a conflict
+recorded without one read by a run with one (i2mint/mergeset#34).
+
 #### *property* other_validator *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](mergeset.base.html.md#mergeset.base.Evaluation)]*
 
 The [`stale`](#mergeset.log.EvaluationLog.stale) rows judged by a validator other than the pinned one.
@@ -162,13 +169,15 @@ Usually a tier or `--validate-command` whose command was edited.
 
 Sets recorded as good, largest first.
 
-#### pin(, base, heads, validator=None)
+#### pin(, base, heads, validator=None, resolver=None)
 
 Scope *this* log to `base`, these heads and `validator`; returns `self`.
 
 `validator` is the fingerprint of what the questions will be asked of
 ([`mergeset.validation.fingerprint_of()`](mergeset.validation.html.md#mergeset.validation.fingerprint_of)); `None` matches rows on
-commits alone.
+commits alone. `resolver` is how their sets are merged
+([`mergeset.oracle.resolver_fingerprint_of()`](mergeset.oracle.html.md#mergeset.oracle.resolver_fingerprint_of)): rows whose outcome a
+different resolver decided stop counting; `None` ignores it.
 
 [`pinned()`](#mergeset.log.EvaluationLog.pinned) is the same without changing this object.
 
@@ -192,7 +201,7 @@ rows stay in the store and in [`rows`](#mergeset.log.EvaluationLog.rows), and ar
 (True, 1, 1)
 ```
 
-#### pinned(, base, heads, validator=None, trust_unpinned=None)
+#### pinned(, base, heads, validator=None, resolver=None, trust_unpinned=None)
 
 A view of this log scoped to `base`, these heads and `validator`.
 
@@ -300,7 +309,7 @@ Append object to the end of the list.
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-### *class* mergeset.log.Pins(base, heads, validator=None)
+### *class* mergeset.log.Pins(base, heads, validator=None, resolver=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -364,6 +373,14 @@ tell is not refuted – it is incomplete (see [`complete()`](#mergeset.log.Pins.
 
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+#### resolver *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+`'none'` (conflicts stand), or the
+resolver’s fingerprint (i2mint/mergeset#34). `None` compares none.
+
+* **Type:**
+  How the question’s sets are merged
 
 #### stamp(evaluation)
 

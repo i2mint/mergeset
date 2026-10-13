@@ -10,6 +10,7 @@ mergeset.oracle
    
       RESOLVED_REF_PREFIX
       Resolver
+      RESOLVER_FINGERPRINT_ATTR
    
    .. rubric:: Functions
 
@@ -18,4 +19,5 @@ mergeset.oracle
       claude_code_resolver
       git_oracle
       merge_order
+      resolver_fingerprint_of
    

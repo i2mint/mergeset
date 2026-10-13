@@ -1,4 +1,4 @@
-> built 2026-10-13 10:52 UTC from 32d64c0 (main) · mergeset 0.0.24. Details: build_info.json
+> built 2026-10-13 11:07 UTC from 803ca17 (main) · mergeset 0.0.25. Details: build_info.json
 
 # index.html.md
 
@@ -512,6 +512,7 @@ and diffable.
 
 | [`UNKNOWN_FINGERPRINT`](_autosummary/mergeset.base.html.md#mergeset.base.UNKNOWN_FINGERPRINT)   | that is what rows written before fingerprints existed read back as, and the migration switch (`trust_unpinned`) must not adopt today's rows from an unknown validator as if they were old rows from a known one (#32).   |
 |------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`NO_RESOLVER`](_autosummary/mergeset.base.html.md#mergeset.base.NO_RESOLVER)           | What a row records as its resolver when conflicts were left unresolved (i2mint/mergeset#34).                                                                                                                             |
 | [`MergeFn`](_autosummary/mergeset.base.html.md#mergeset.base.MergeFn)               | (changes to merge, in order) -> outcome + a tree to validate.                                                                                                                                                            |
 | [`ValidateFn`](_autosummary/mergeset.base.html.md#mergeset.base.ValidateFn)            | (path to a merged worktree) -> outcome.                                                                                                                                                                                  |
 
@@ -588,7 +589,7 @@ A copy of this change carrying `weight`.
 * **Return type:**
   [`Change`](_autosummary/mergeset.base.html.md#mergeset.base.Change)
 
-### *class* mergeset.base.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, validator=None, cached=False)
+### *class* mergeset.base.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, validator=None, resolver=None, cached=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -626,6 +627,25 @@ Inverse of [`to_jdict()`](_autosummary/mergeset.base.html.md#mergeset.base.Evalu
 
 Full head sha of each change in `subset` when it was evaluated.
 
+#### *property* merge_dependent *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
+
+True iff how conflicts were resolved decided this row’s outcome.
+
+An assisted merge exists only because a resolver resolved it; a
+textual conflict stands only because none did. A clean merge is the
+same tree whatever the resolver, so its verdict answers any of them.
+
+```pycon
+>>> Evaluation(frozenset('a'), Verdict.PASS).merge_dependent
+False
+>>> Evaluation(frozenset('a'), Verdict.PASS,
+...            merge=MergeOutcome(True, assisted=True)).merge_dependent
+True
+>>> Evaluation(frozenset('ab'), Verdict.FAIL,
+...            merge=MergeOutcome(False, 'conflict')).merge_dependent
+True
+```
+
 #### *property* ok *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
 
 True iff the set evaluated as good.
@@ -634,12 +654,23 @@ True iff the set evaluated as good.
 
 True iff the row records which commits it was evaluated against.
 
+#### resolver *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+Fingerprint of how conflicts were resolved when the set was merged
+([`NO_RESOLVER`](_autosummary/mergeset.base.html.md#mergeset.base.NO_RESOLVER), or [`mergeset.oracle.resolver_fingerprint_of()`](_autosummary/mergeset.oracle.html.md#mergeset.oracle.resolver_fingerprint_of)).
+`None` on rows written before i2mint/mergeset#34. It matters only on a
+row whose outcome the resolver decided: see [`merge_dependent`](_autosummary/mergeset.base.html.md#mergeset.base.Evaluation.merge_dependent).
+
 #### to_jdict()
 
 JSON-able view; `subset` becomes a sorted list.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+#### *property* unresolved_conflict *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
+
+True iff the row is a textual conflict that no resolver resolved.
 
 #### validator *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
 
@@ -705,6 +736,11 @@ JSON-able view (without [`resolved_commit`](_autosummary/mergeset.base.html.md#m
 Bases: [`Exception`](https://docs.python.org/3/builtins/exceptions.html#Exception)
 
 Base class for errors this package raises deliberately.
+
+### mergeset.base.NO_RESOLVER *= 'none'*
+
+What a row records as its resolver when conflicts were left unresolved
+(i2mint/mergeset#34).
 
 ### *class* mergeset.base.Stage(\*values)
 
@@ -1996,7 +2032,7 @@ Upper estimate, in seconds. Used to *admit* work against a budget.
 * **Return type:**
   [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
-### *class* mergeset.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, validator=None, cached=False)
+### *class* mergeset.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, validator=None, resolver=None, cached=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -2034,6 +2070,25 @@ Inverse of [`to_jdict()`](_autosummary/mergeset.html.md#mergeset.Evaluation.to_j
 
 Full head sha of each change in `subset` when it was evaluated.
 
+#### *property* merge_dependent *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
+
+True iff how conflicts were resolved decided this row’s outcome.
+
+An assisted merge exists only because a resolver resolved it; a
+textual conflict stands only because none did. A clean merge is the
+same tree whatever the resolver, so its verdict answers any of them.
+
+```pycon
+>>> Evaluation(frozenset('a'), Verdict.PASS).merge_dependent
+False
+>>> Evaluation(frozenset('a'), Verdict.PASS,
+...            merge=MergeOutcome(True, assisted=True)).merge_dependent
+True
+>>> Evaluation(frozenset('ab'), Verdict.FAIL,
+...            merge=MergeOutcome(False, 'conflict')).merge_dependent
+True
+```
+
 #### *property* ok *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
 
 True iff the set evaluated as good.
@@ -2042,12 +2097,23 @@ True iff the set evaluated as good.
 
 True iff the row records which commits it was evaluated against.
 
+#### resolver *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+Fingerprint of how conflicts were resolved when the set was merged
+(`NO_RESOLVER`, or [`mergeset.oracle.resolver_fingerprint_of()`](_autosummary/mergeset.oracle.html.md#mergeset.oracle.resolver_fingerprint_of)).
+`None` on rows written before i2mint/mergeset#34. It matters only on a
+row whose outcome the resolver decided: see [`merge_dependent`](_autosummary/mergeset.html.md#mergeset.Evaluation.merge_dependent).
+
 #### to_jdict()
 
 JSON-able view; `subset` becomes a sorted list.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+#### *property* unresolved_conflict *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
+
+True iff the row is a textual conflict that no resolver resolved.
 
 #### validator *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
 
@@ -2171,6 +2237,13 @@ another. Reported, never silently smoothed over.
 * **Return type:**
   [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset), [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]]
 
+#### *property* other_resolver *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](_autosummary/mergeset.base.html.md#mergeset.base.Evaluation)]*
+
+The [`stale`](_autosummary/mergeset.html.md#mergeset.EvaluationLog.stale) rows whose outcome another resolver decided.
+
+An assisted PASS read by a run without the resolver, or a conflict
+recorded without one read by a run with one (i2mint/mergeset#34).
+
 #### *property* other_validator *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](_autosummary/mergeset.base.html.md#mergeset.base.Evaluation)]*
 
 The [`stale`](_autosummary/mergeset.html.md#mergeset.EvaluationLog.stale) rows judged by a validator other than the pinned one.
@@ -2181,13 +2254,15 @@ Usually a tier or `--validate-command` whose command was edited.
 
 Sets recorded as good, largest first.
 
-#### pin(, base, heads, validator=None)
+#### pin(, base, heads, validator=None, resolver=None)
 
 Scope *this* log to `base`, these heads and `validator`; returns `self`.
 
 `validator` is the fingerprint of what the questions will be asked of
 ([`mergeset.validation.fingerprint_of()`](_autosummary/mergeset.validation.html.md#mergeset.validation.fingerprint_of)); `None` matches rows on
-commits alone.
+commits alone. `resolver` is how their sets are merged
+([`mergeset.oracle.resolver_fingerprint_of()`](_autosummary/mergeset.oracle.html.md#mergeset.oracle.resolver_fingerprint_of)): rows whose outcome a
+different resolver decided stop counting; `None` ignores it.
 
 [`pinned()`](_autosummary/mergeset.html.md#mergeset.EvaluationLog.pinned) is the same without changing this object.
 
@@ -2211,7 +2286,7 @@ rows stay in the store and in [`rows`](_autosummary/mergeset.html.md#mergeset.Ev
 (True, 1, 1)
 ```
 
-#### pinned(, base, heads, validator=None, trust_unpinned=None)
+#### pinned(, base, heads, validator=None, resolver=None, trust_unpinned=None)
 
 A view of this log scoped to `base`, these heads and `validator`.
 
@@ -3994,7 +4069,7 @@ not matched (i2mint/mergeset#32).
 | [`JsonlLines`](_autosummary/mergeset.log.html.md#mergeset.log.JsonlLines)(path)                               | Append-only sequence of JSON objects backed by one file.                                              |
 | [`Known`](_autosummary/mergeset.log.html.md#mergeset.log.Known)(verdict[, exact, witness])               | What the log already knows about a set, without re-evaluating it.                                     |
 | [`MemoryLines`](_autosummary/mergeset.log.html.md#mergeset.log.MemoryLines)([iterable])                        | In-memory stand-in for [`JsonlLines`](_autosummary/mergeset.log.html.md#mergeset.log.JsonlLines) (tests, dry runs). |
-| [`Pins`](_autosummary/mergeset.log.html.md#mergeset.log.Pins)(base, heads[, validator])                 | What a question is about: the base, each change's head sha, the validator.                            |
+| [`Pins`](_autosummary/mergeset.log.html.md#mergeset.log.Pins)(base, heads[, validator, resolver])       | What a question is about: the base, each change's head sha, the validator.                            |
 | [`StoreLines`](_autosummary/mergeset.log.html.md#mergeset.log.StoreLines)(store, key)                         | Lines backed by one key of a `MutableMapping` — the non-file backend.                                 |
 
 ### *class* mergeset.log.EvaluationLog(store=None, , pins=None, trust_unpinned=False)
@@ -4113,6 +4188,13 @@ another. Reported, never silently smoothed over.
 * **Return type:**
   [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset), [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]]
 
+#### *property* other_resolver *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](_autosummary/mergeset.base.html.md#mergeset.base.Evaluation)]*
+
+The [`stale`](_autosummary/mergeset.log.html.md#mergeset.log.EvaluationLog.stale) rows whose outcome another resolver decided.
+
+An assisted PASS read by a run without the resolver, or a conflict
+recorded without one read by a run with one (i2mint/mergeset#34).
+
 #### *property* other_validator *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](_autosummary/mergeset.base.html.md#mergeset.base.Evaluation)]*
 
 The [`stale`](_autosummary/mergeset.log.html.md#mergeset.log.EvaluationLog.stale) rows judged by a validator other than the pinned one.
@@ -4123,13 +4205,15 @@ Usually a tier or `--validate-command` whose command was edited.
 
 Sets recorded as good, largest first.
 
-#### pin(, base, heads, validator=None)
+#### pin(, base, heads, validator=None, resolver=None)
 
 Scope *this* log to `base`, these heads and `validator`; returns `self`.
 
 `validator` is the fingerprint of what the questions will be asked of
 ([`mergeset.validation.fingerprint_of()`](_autosummary/mergeset.validation.html.md#mergeset.validation.fingerprint_of)); `None` matches rows on
-commits alone.
+commits alone. `resolver` is how their sets are merged
+([`mergeset.oracle.resolver_fingerprint_of()`](_autosummary/mergeset.oracle.html.md#mergeset.oracle.resolver_fingerprint_of)): rows whose outcome a
+different resolver decided stop counting; `None` ignores it.
 
 [`pinned()`](_autosummary/mergeset.log.html.md#mergeset.log.EvaluationLog.pinned) is the same without changing this object.
 
@@ -4153,7 +4237,7 @@ rows stay in the store and in [`rows`](_autosummary/mergeset.log.html.md#mergese
 (True, 1, 1)
 ```
 
-#### pinned(, base, heads, validator=None, trust_unpinned=None)
+#### pinned(, base, heads, validator=None, resolver=None, trust_unpinned=None)
 
 A view of this log scoped to `base`, these heads and `validator`.
 
@@ -4261,7 +4345,7 @@ Append object to the end of the list.
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-### *class* mergeset.log.Pins(base, heads, validator=None)
+### *class* mergeset.log.Pins(base, heads, validator=None, resolver=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -4325,6 +4409,14 @@ tell is not refuted – it is incomplete (see [`complete()`](_autosummary/merges
 
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+#### resolver *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+`'none'` (conflicts stand), or the
+resolver’s fingerprint (i2mint/mergeset#34). `None` compares none.
+
+* **Type:**
+  How the question’s sets are merged
 
 #### stamp(evaluation)
 
@@ -4403,9 +4495,10 @@ resolution diff saved. It is never silently reported as a clean merge.
 
 ### Module Attributes
 
-| [`RESOLVED_REF_PREFIX`](_autosummary/mergeset.oracle.html.md#mergeset.oracle.RESOLVED_REF_PREFIX)   | Where a resolved merge commit is kept reachable (`<prefix><sha>`), so a log that outlives `git gc`'s grace period can still be confirmed.   |
-|------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| [`Resolver`](_autosummary/mergeset.oracle.html.md#mergeset.oracle.Resolver)              | `(worktree, conflicting_files) -> (resolved?, diff)`.                                                                                       |
+| [`RESOLVED_REF_PREFIX`](_autosummary/mergeset.oracle.html.md#mergeset.oracle.RESOLVED_REF_PREFIX)       | Where a resolved merge commit is kept reachable (`<prefix><sha>`), so a log that outlives `git gc`'s grace period can still be confirmed.   |
+|----------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| [`Resolver`](_autosummary/mergeset.oracle.html.md#mergeset.oracle.Resolver)                  | `(worktree, conflicting_files) -> (resolved?, diff)`.                                                                                       |
+| [`RESOLVER_FINGERPRINT_ATTR`](_autosummary/mergeset.oracle.html.md#mergeset.oracle.RESOLVER_FINGERPRINT_ATTR) | The attribute a resolver carries to say how it resolves (i2mint/mergeset#34).                                                               |
 
 ### Functions
 
@@ -4413,11 +4506,16 @@ resolution diff saved. It is never silently reported as a clean merge.
 |-------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
 | [`git_oracle`](_autosummary/mergeset.oracle.html.md#mergeset.oracle.git_oracle)(repo, base, changes, \*[, ...])     | Build the evaluator: merge the set onto `base`, then validate the tree. |
 | [`merge_order`](_autosummary/mergeset.oracle.html.md#mergeset.oracle.merge_order)(subset, changes)                   | A deterministic merge order for a change set.                           |
+| [`resolver_fingerprint_of`](_autosummary/mergeset.oracle.html.md#mergeset.oracle.resolver_fingerprint_of)(resolver)              | How `resolver` resolves conflicts, as the string a log row records.     |
 
 ### mergeset.oracle.RESOLVED_REF_PREFIX *= 'refs/mergeset/resolved/'*
 
 Where a resolved merge commit is kept reachable (`<prefix><sha>`), so a
 log that outlives `git gc`’s grace period can still be confirmed.
+
+### mergeset.oracle.RESOLVER_FINGERPRINT_ATTR *= 'resolver_fingerprint'*
+
+The attribute a resolver carries to say how it resolves (i2mint/mergeset#34).
 
 ### mergeset.oracle.Resolver
 
@@ -4494,6 +4592,30 @@ surfaces the cheap conflicts early.
 ```pycon
 >>> merge_order(frozenset({'b', 'a'}), {})
 ['a', 'b']
+```
+
+### mergeset.oracle.resolver_fingerprint_of(resolver)
+
+How `resolver` resolves conflicts, as the string a log row records.
+
+A row whose outcome a resolver decided (an assisted merge, or a conflict
+left standing) answers only runs that resolve the same way: see
+[`mergeset.base.Evaluation.merge_dependent`](_autosummary/mergeset.base.html.md#mergeset.base.Evaluation.merge_dependent). `None` resolves
+nothing ([`NO_RESOLVER`](_autosummary/mergeset.base.html.md#mergeset.base.NO_RESOLVER)); a resolver that cannot say
+how it resolves records [`UNKNOWN_FINGERPRINT`](_autosummary/mergeset.base.html.md#mergeset.base.UNKNOWN_FINGERPRINT), which
+matches only other such rows. A user resolver may set
+`resolver.resolver_fingerprint = 'my-resolver-v2'`.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> resolver_fingerprint_of(None)
+'none'
+>>> resolver_fingerprint_of(lambda worktree, files: (False, ''))
+'unknown'
+>>> resolver_fingerprint_of(claude_code_resolver()).startswith('claude-code:')
+True
 ```
 
 
@@ -6311,16 +6433,18 @@ contents join the fingerprint (see [`inputs_digest()`](_autosummary/mergeset.val
 
 # About this build
 
-This documentation was built on **2026-10-13 10:52 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/32d64c09d186042f3549d8a41494fa903efffd27"><code>32d64c0</code></a> on branch <code>main</code>, for **mergeset 0.0.24** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 11:07 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/803ca178408a030a2ba924111a705da028eda5eb"><code>803ca17</code></a> on branch <code>main</code>, for **mergeset 0.0.25** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.25) is behind the latest release on PyPI (0.0.26): `pip install mergeset` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/mergeset/commit/32d64c09d186042f3549d8a41494fa903efffd27"><code>32d64c09d186042f3549d8a41494fa903efffd27</code></a> |
+| Commit              | <a href="https://github.com/i2mint/mergeset/commit/803ca178408a030a2ba924111a705da028eda5eb"><code>803ca178408a030a2ba924111a705da028eda5eb</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -6331,9 +6455,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/mergeset</code>                                                               |
-| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38386129170">38386129170</a>      |
+| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38387827249">38387827249</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>32d64c09d186042f3549d8a41494fa903efffd27</code> (in the history of the built commit) |
+| Event commit | <code>803ca178408a030a2ba924111a705da028eda5eb</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6358,13 +6482,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/mergeset/0.0.24/">0.0.24</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/mergeset/0.0.26/">0.0.26</a>, newer than the documented version (0.0.25).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/mergeset && cd mergeset
-git checkout 32d64c09d186042f3549d8a41494fa903efffd27
+git checkout 803ca178408a030a2ba924111a705da028eda5eb
 pip install "epythet==0.2.15"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

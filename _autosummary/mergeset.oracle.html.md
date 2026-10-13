@@ -16,9 +16,10 @@ resolution diff saved. It is never silently reported as a clean merge.
 
 ### Module Attributes
 
-| [`RESOLVED_REF_PREFIX`](#mergeset.oracle.RESOLVED_REF_PREFIX)   | Where a resolved merge commit is kept reachable (`<prefix><sha>`), so a log that outlives `git gc`'s grace period can still be confirmed.   |
-|------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| [`Resolver`](#mergeset.oracle.Resolver)              | `(worktree, conflicting_files) -> (resolved?, diff)`.                                                                                       |
+| [`RESOLVED_REF_PREFIX`](#mergeset.oracle.RESOLVED_REF_PREFIX)       | Where a resolved merge commit is kept reachable (`<prefix><sha>`), so a log that outlives `git gc`'s grace period can still be confirmed.   |
+|----------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| [`Resolver`](#mergeset.oracle.Resolver)                  | `(worktree, conflicting_files) -> (resolved?, diff)`.                                                                                       |
+| [`RESOLVER_FINGERPRINT_ATTR`](#mergeset.oracle.RESOLVER_FINGERPRINT_ATTR) | The attribute a resolver carries to say how it resolves (i2mint/mergeset#34).                                                               |
 
 ### Functions
 
@@ -26,11 +27,16 @@ resolution diff saved. It is never silently reported as a clean merge.
 |-------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
 | [`git_oracle`](#mergeset.oracle.git_oracle)(repo, base, changes, \*[, ...])     | Build the evaluator: merge the set onto `base`, then validate the tree. |
 | [`merge_order`](#mergeset.oracle.merge_order)(subset, changes)                   | A deterministic merge order for a change set.                           |
+| [`resolver_fingerprint_of`](#mergeset.oracle.resolver_fingerprint_of)(resolver)              | How `resolver` resolves conflicts, as the string a log row records.     |
 
 ### mergeset.oracle.RESOLVED_REF_PREFIX *= 'refs/mergeset/resolved/'*
 
 Where a resolved merge commit is kept reachable (`<prefix><sha>`), so a
 log that outlives `git gc`’s grace period can still be confirmed.
+
+### mergeset.oracle.RESOLVER_FINGERPRINT_ATTR *= 'resolver_fingerprint'*
+
+The attribute a resolver carries to say how it resolves (i2mint/mergeset#34).
 
 ### mergeset.oracle.Resolver
 
@@ -107,4 +113,28 @@ surfaces the cheap conflicts early.
 ```pycon
 >>> merge_order(frozenset({'b', 'a'}), {})
 ['a', 'b']
+```
+
+### mergeset.oracle.resolver_fingerprint_of(resolver)
+
+How `resolver` resolves conflicts, as the string a log row records.
+
+A row whose outcome a resolver decided (an assisted merge, or a conflict
+left standing) answers only runs that resolve the same way: see
+[`mergeset.base.Evaluation.merge_dependent`](mergeset.base.html.md#mergeset.base.Evaluation.merge_dependent). `None` resolves
+nothing ([`NO_RESOLVER`](mergeset.base.html.md#mergeset.base.NO_RESOLVER)); a resolver that cannot say
+how it resolves records [`UNKNOWN_FINGERPRINT`](mergeset.base.html.md#mergeset.base.UNKNOWN_FINGERPRINT), which
+matches only other such rows. A user resolver may set
+`resolver.resolver_fingerprint = 'my-resolver-v2'`.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> resolver_fingerprint_of(None)
+'none'
+>>> resolver_fingerprint_of(lambda worktree, files: (False, ''))
+'unknown'
+>>> resolver_fingerprint_of(claude_code_resolver()).startswith('claude-code:')
+True
 ```

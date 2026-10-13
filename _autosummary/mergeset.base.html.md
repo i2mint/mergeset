@@ -15,6 +15,7 @@ and diffable.
 
 | [`UNKNOWN_FINGERPRINT`](#mergeset.base.UNKNOWN_FINGERPRINT)   | that is what rows written before fingerprints existed read back as, and the migration switch (`trust_unpinned`) must not adopt today's rows from an unknown validator as if they were old rows from a known one (#32).   |
 |------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`NO_RESOLVER`](#mergeset.base.NO_RESOLVER)           | What a row records as its resolver when conflicts were left unresolved (i2mint/mergeset#34).                                                                                                                             |
 | [`MergeFn`](#mergeset.base.MergeFn)               | (changes to merge, in order) -> outcome + a tree to validate.                                                                                                                                                            |
 | [`ValidateFn`](#mergeset.base.ValidateFn)            | (path to a merged worktree) -> outcome.                                                                                                                                                                                  |
 
@@ -91,7 +92,7 @@ A copy of this change carrying `weight`.
 * **Return type:**
   [`Change`](#mergeset.base.Change)
 
-### *class* mergeset.base.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, validator=None, cached=False)
+### *class* mergeset.base.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, validator=None, resolver=None, cached=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -129,6 +130,25 @@ Inverse of [`to_jdict()`](#mergeset.base.Evaluation.to_jdict).
 
 Full head sha of each change in `subset` when it was evaluated.
 
+#### *property* merge_dependent *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
+
+True iff how conflicts were resolved decided this row’s outcome.
+
+An assisted merge exists only because a resolver resolved it; a
+textual conflict stands only because none did. A clean merge is the
+same tree whatever the resolver, so its verdict answers any of them.
+
+```pycon
+>>> Evaluation(frozenset('a'), Verdict.PASS).merge_dependent
+False
+>>> Evaluation(frozenset('a'), Verdict.PASS,
+...            merge=MergeOutcome(True, assisted=True)).merge_dependent
+True
+>>> Evaluation(frozenset('ab'), Verdict.FAIL,
+...            merge=MergeOutcome(False, 'conflict')).merge_dependent
+True
+```
+
 #### *property* ok *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
 
 True iff the set evaluated as good.
@@ -137,12 +157,23 @@ True iff the set evaluated as good.
 
 True iff the row records which commits it was evaluated against.
 
+#### resolver *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+Fingerprint of how conflicts were resolved when the set was merged
+([`NO_RESOLVER`](#mergeset.base.NO_RESOLVER), or [`mergeset.oracle.resolver_fingerprint_of()`](mergeset.oracle.html.md#mergeset.oracle.resolver_fingerprint_of)).
+`None` on rows written before i2mint/mergeset#34. It matters only on a
+row whose outcome the resolver decided: see [`merge_dependent`](#mergeset.base.Evaluation.merge_dependent).
+
 #### to_jdict()
 
 JSON-able view; `subset` becomes a sorted list.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+#### *property* unresolved_conflict *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
+
+True iff the row is a textual conflict that no resolver resolved.
 
 #### validator *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
 
@@ -208,6 +239,11 @@ JSON-able view (without [`resolved_commit`](#mergeset.base.MergeOutcome.resolved
 Bases: [`Exception`](https://docs.python.org/3/builtins/exceptions.html#Exception)
 
 Base class for errors this package raises deliberately.
+
+### mergeset.base.NO_RESOLVER *= 'none'*
+
+What a row records as its resolver when conflicts were left unresolved
+(i2mint/mergeset#34).
 
 ### *class* mergeset.base.Stage(\*values)
 

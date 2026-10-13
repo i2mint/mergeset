@@ -110,9 +110,12 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#mergeset.base.Evaluation.cached"><code class="docutils literal notranslate"><span class="pre">Evaluation.cached</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.Evaluation.from_jdict"><code class="docutils literal notranslate"><span class="pre">Evaluation.from_jdict()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.Evaluation.heads"><code class="docutils literal notranslate"><span class="pre">Evaluation.heads</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.Evaluation.merge_dependent"><code class="docutils literal notranslate"><span class="pre">Evaluation.merge_dependent</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.Evaluation.ok"><code class="docutils literal notranslate"><span class="pre">Evaluation.ok</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.Evaluation.pinned"><code class="docutils literal notranslate"><span class="pre">Evaluation.pinned</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.Evaluation.resolver"><code class="docutils literal notranslate"><span class="pre">Evaluation.resolver</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.Evaluation.to_jdict"><code class="docutils literal notranslate"><span class="pre">Evaluation.to_jdict()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.Evaluation.unresolved_conflict"><code class="docutils literal notranslate"><span class="pre">Evaluation.unresolved_conflict</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.Evaluation.validator"><code class="docutils literal notranslate"><span class="pre">Evaluation.validator</span></code></a></li>
 </ul>
 </li>
@@ -125,6 +128,7 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li><a class="reference internal" href="#mergeset.base.MergesetError"><code class="docutils literal notranslate"><span class="pre">MergesetError</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.NO_RESOLVER"><code class="docutils literal notranslate"><span class="pre">NO_RESOLVER</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.Stage"><code class="docutils literal notranslate"><span class="pre">Stage</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.StageRun"><code class="docutils literal notranslate"><span class="pre">StageRun</span></code></a><ul>
 <li><a class="reference internal" href="#mergeset.base.StageRun.from_jdict"><code class="docutils literal notranslate"><span class="pre">StageRun.from_jdict()</span></code></a></li>
@@ -198,10 +202,13 @@ and diffable.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.base.UNKNOWN_FINGERPRINT" title="mergeset.base.UNKNOWN_FINGERPRINT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UNKNOWN_FINGERPRINT</span></code></a></p></td>
 <td><p>that is what rows written before fingerprints existed read back as, and the migration switch (<code class="docutils literal notranslate"><span class="pre">trust_unpinned</span></code>) must not adopt today's rows from an unknown validator as if they were old rows from a known one (#32).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.base.MergeFn" title="mergeset.base.MergeFn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MergeFn</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.base.NO_RESOLVER" title="mergeset.base.NO_RESOLVER"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NO_RESOLVER</span></code></a></p></td>
+<td><p>What a row records as its resolver when conflicts were left unresolved (i2mint/mergeset#34).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.base.MergeFn" title="mergeset.base.MergeFn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MergeFn</span></code></a></p></td>
 <td><p>(changes to merge, in order) -&gt; outcome + a tree to validate.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.base.ValidateFn" title="mergeset.base.ValidateFn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ValidateFn</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.base.ValidateFn" title="mergeset.base.ValidateFn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ValidateFn</span></code></a></p></td>
 <td><p>(path to a merged worktree) -&gt; outcome.</p></td>
 </tr>
 </tbody>
@@ -332,7 +339,7 @@ changes it can when it must drop something, so a high weight means
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mergeset.base.Evaluation">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">Evaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_sha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Evaluation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.Evaluation" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">Evaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_sha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Evaluation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.Evaluation" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>One row of the evaluation log — the single source of truth.</p>
 <p>Everything else (conflict set, known-good/known-bad closure, merge plan,
@@ -378,6 +385,25 @@ serialized: it is a fact about <em>this</em> lookup, not about the evaluation.</
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="mergeset.base.Evaluation.merge_dependent">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">merge_dependent</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><a class="headerlink" href="#mergeset.base.Evaluation.merge_dependent" title="Link to this definition">#</a></dt>
+<dd><p>True iff how conflicts were resolved decided this row’s outcome.</p>
+<p>An assisted merge exists only because a resolver resolved it; a
+textual conflict stands only because none did. A clean merge is the
+same tree whatever the resolver, so its verdict answers any of them.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">Evaluation</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="s1">'a'</span><span class="p">),</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">)</span><span class="o">.</span><span class="n">merge_dependent</span>
+</span><span data-line="2"><span class="go">False</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">Evaluation</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="s1">'a'</span><span class="p">),</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">,</span>
+</span><span data-line="4"><span class="gp">... </span>           <span class="n">merge</span><span class="o">=</span><span class="n">MergeOutcome</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">assisted</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span><span class="o">.</span><span class="n">merge_dependent</span>
+</span><span data-line="5"><span class="go">True</span>
+</span><span data-line="6"><span class="gp">&gt;&gt;&gt; </span><span class="n">Evaluation</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="s1">'ab'</span><span class="p">),</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">,</span>
+</span><span data-line="7"><span class="gp">... </span>           <span class="n">merge</span><span class="o">=</span><span class="n">MergeOutcome</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="s1">'conflict'</span><span class="p">))</span><span class="o">.</span><span class="n">merge_dependent</span>
+</span><span data-line="8"><span class="go">True</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="mergeset.base.Evaluation.ok">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ok</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><a class="headerlink" href="#mergeset.base.Evaluation.ok" title="Link to this definition">#</a></dt>
 <dd><p>True iff the set evaluated as good.</p>
@@ -389,6 +415,15 @@ serialized: it is a fact about <em>this</em> lookup, not about the evaluation.</
 <dd><p>True iff the row records which commits it was evaluated against.</p>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.base.Evaluation.resolver">
+<span class="sig-name descname"><span class="pre">resolver</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.base.Evaluation.resolver" title="Link to this definition">#</a></dt>
+<dd><p>Fingerprint of how conflicts were resolved when the set was merged
+(<a class="reference internal" href="#mergeset.base.NO_RESOLVER" title="mergeset.base.NO_RESOLVER"><code class="xref py py-data docutils literal notranslate"><span class="pre">NO_RESOLVER</span></code></a>, or <a class="reference internal" href="mergeset.oracle.html#mergeset.oracle.resolver_fingerprint_of" title="mergeset.oracle.resolver_fingerprint_of"><code class="xref py py-func docutils literal notranslate"><span class="pre">mergeset.oracle.resolver_fingerprint_of()</span></code></a>).
+<code class="docutils literal notranslate"><span class="pre">None</span></code> on rows written before i2mint/mergeset#34. It matters only on a
+row whose outcome the resolver decided: see <a class="reference internal" href="#mergeset.base.Evaluation.merge_dependent" title="mergeset.base.Evaluation.merge_dependent"><code class="xref py py-attr docutils literal notranslate"><span class="pre">merge_dependent</span></code></a>.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="mergeset.base.Evaluation.to_jdict">
 <span class="sig-name descname"><span class="pre">to_jdict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Evaluation.to_jdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.Evaluation.to_jdict" title="Link to this definition">#</a></dt>
@@ -398,6 +433,12 @@ serialized: it is a fact about <em>this</em> lookup, not about the evaluation.</
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mergeset.base.Evaluation.unresolved_conflict">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">unresolved_conflict</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><a class="headerlink" href="#mergeset.base.Evaluation.unresolved_conflict" title="Link to this definition">#</a></dt>
+<dd><p>True iff the row is a textual conflict that no resolver resolved.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -483,6 +524,13 @@ before #30 build <code class="docutils literal notranslate"><span class="pre">Me
 <span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">MergesetError</span></span><a class="reference internal" href="../_modules/mergeset/base.html#MergesetError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.MergesetError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#Exception" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
 <p>Base class for errors this package raises deliberately.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mergeset.base.NO_RESOLVER">
+<span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">NO_RESOLVER</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'none'</span></span><a class="headerlink" href="#mergeset.base.NO_RESOLVER" title="Link to this definition">#</a></dt>
+<dd><p>What a row records as its resolver when conflicts were left unresolved
+(i2mint/mergeset#34).</p>
 </dd></dl>
 
 <dl class="py class">
@@ -689,7 +737,7 @@ single-command one and on rows written before stages were recorded.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=f91d8841"></script>
+      <script src="../_static/documentation_options.js?v=5d650c58"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

@@ -396,7 +396,7 @@ Upper estimate, in seconds. Used to *admit* work against a budget.
 * **Return type:**
   [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
-### *class* mergeset.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, validator=None, cached=False)
+### *class* mergeset.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, validator=None, resolver=None, cached=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -434,6 +434,25 @@ Inverse of [`to_jdict()`](#mergeset.Evaluation.to_jdict).
 
 Full head sha of each change in `subset` when it was evaluated.
 
+#### *property* merge_dependent *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
+
+True iff how conflicts were resolved decided this row’s outcome.
+
+An assisted merge exists only because a resolver resolved it; a
+textual conflict stands only because none did. A clean merge is the
+same tree whatever the resolver, so its verdict answers any of them.
+
+```pycon
+>>> Evaluation(frozenset('a'), Verdict.PASS).merge_dependent
+False
+>>> Evaluation(frozenset('a'), Verdict.PASS,
+...            merge=MergeOutcome(True, assisted=True)).merge_dependent
+True
+>>> Evaluation(frozenset('ab'), Verdict.FAIL,
+...            merge=MergeOutcome(False, 'conflict')).merge_dependent
+True
+```
+
 #### *property* ok *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
 
 True iff the set evaluated as good.
@@ -442,12 +461,23 @@ True iff the set evaluated as good.
 
 True iff the row records which commits it was evaluated against.
 
+#### resolver *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+Fingerprint of how conflicts were resolved when the set was merged
+(`NO_RESOLVER`, or [`mergeset.oracle.resolver_fingerprint_of()`](mergeset.oracle.html.md#mergeset.oracle.resolver_fingerprint_of)).
+`None` on rows written before i2mint/mergeset#34. It matters only on a
+row whose outcome the resolver decided: see [`merge_dependent`](#mergeset.Evaluation.merge_dependent).
+
 #### to_jdict()
 
 JSON-able view; `subset` becomes a sorted list.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+#### *property* unresolved_conflict *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
+
+True iff the row is a textual conflict that no resolver resolved.
 
 #### validator *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
 
@@ -571,6 +601,13 @@ another. Reported, never silently smoothed over.
 * **Return type:**
   [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset), [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]]
 
+#### *property* other_resolver *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](mergeset.base.html.md#mergeset.base.Evaluation)]*
+
+The [`stale`](#mergeset.EvaluationLog.stale) rows whose outcome another resolver decided.
+
+An assisted PASS read by a run without the resolver, or a conflict
+recorded without one read by a run with one (i2mint/mergeset#34).
+
 #### *property* other_validator *: [List](https://docs.python.org/3/library/typing.html#typing.List)[[Evaluation](mergeset.base.html.md#mergeset.base.Evaluation)]*
 
 The [`stale`](#mergeset.EvaluationLog.stale) rows judged by a validator other than the pinned one.
@@ -581,13 +618,15 @@ Usually a tier or `--validate-command` whose command was edited.
 
 Sets recorded as good, largest first.
 
-#### pin(, base, heads, validator=None)
+#### pin(, base, heads, validator=None, resolver=None)
 
 Scope *this* log to `base`, these heads and `validator`; returns `self`.
 
 `validator` is the fingerprint of what the questions will be asked of
 ([`mergeset.validation.fingerprint_of()`](mergeset.validation.html.md#mergeset.validation.fingerprint_of)); `None` matches rows on
-commits alone.
+commits alone. `resolver` is how their sets are merged
+([`mergeset.oracle.resolver_fingerprint_of()`](mergeset.oracle.html.md#mergeset.oracle.resolver_fingerprint_of)): rows whose outcome a
+different resolver decided stop counting; `None` ignores it.
 
 [`pinned()`](#mergeset.EvaluationLog.pinned) is the same without changing this object.
 
@@ -611,7 +650,7 @@ rows stay in the store and in [`rows`](#mergeset.EvaluationLog.rows), and are re
 (True, 1, 1)
 ```
 
-#### pinned(, base, heads, validator=None, trust_unpinned=None)
+#### pinned(, base, heads, validator=None, resolver=None, trust_unpinned=None)
 
 A view of this log scoped to `base`, these heads and `validator`.
 

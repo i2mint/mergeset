@@ -99,10 +99,12 @@ data-aria-dark="Switch to auto color mode">
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#mergeset.oracle.RESOLVED_REF_PREFIX"><code class="docutils literal notranslate"><span class="pre">RESOLVED_REF_PREFIX</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.oracle.RESOLVER_FINGERPRINT_ATTR"><code class="docutils literal notranslate"><span class="pre">RESOLVER_FINGERPRINT_ATTR</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.oracle.Resolver"><code class="docutils literal notranslate"><span class="pre">Resolver</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.oracle.claude_code_resolver"><code class="docutils literal notranslate"><span class="pre">claude_code_resolver()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.oracle.git_oracle"><code class="docutils literal notranslate"><span class="pre">git_oracle()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.oracle.merge_order"><code class="docutils literal notranslate"><span class="pre">merge_order()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.oracle.resolver_fingerprint_of"><code class="docutils literal notranslate"><span class="pre">resolver_fingerprint_of()</span></code></a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
@@ -164,6 +166,9 @@ resolution diff saved. It is never silently reported as a clean merge.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#mergeset.oracle.Resolver" title="mergeset.oracle.Resolver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Resolver</span></code></a></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">(worktree,</span> <span class="pre">conflicting_files)</span> <span class="pre">-&gt;</span> <span class="pre">(resolved?,</span> <span class="pre">diff)</span></code>.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.oracle.RESOLVER_FINGERPRINT_ATTR" title="mergeset.oracle.RESOLVER_FINGERPRINT_ATTR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RESOLVER_FINGERPRINT_ATTR</span></code></a></p></td>
+<td><p>The attribute a resolver carries to say how it resolves (i2mint/mergeset#34).</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -180,6 +185,9 @@ resolution diff saved. It is never silently reported as a clean merge.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.oracle.merge_order" title="mergeset.oracle.merge_order"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_order</span></code></a>(subset, changes)</p></td>
 <td><p>A deterministic merge order for a change set.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.oracle.resolver_fingerprint_of" title="mergeset.oracle.resolver_fingerprint_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolver_fingerprint_of</span></code></a>(resolver)</p></td>
+<td><p>How <code class="docutils literal notranslate"><span class="pre">resolver</span></code> resolves conflicts, as the string a log row records.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -188,6 +196,12 @@ resolution diff saved. It is never silently reported as a clean merge.</p>
 <span class="sig-prename descclassname"><span class="pre">mergeset.oracle.</span></span><span class="sig-name descname"><span class="pre">RESOLVED_REF_PREFIX</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'refs/mergeset/resolved/'</span></span><a class="headerlink" href="#mergeset.oracle.RESOLVED_REF_PREFIX" title="Link to this definition">#</a></dt>
 <dd><p>Where a resolved merge commit is kept reachable (<code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;&lt;sha&gt;</span></code>), so a
 log that outlives <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">gc</span></code>’s grace period can still be confirmed.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mergeset.oracle.RESOLVER_FINGERPRINT_ATTR">
+<span class="sig-prename descclassname"><span class="pre">mergeset.oracle.</span></span><span class="sig-name descname"><span class="pre">RESOLVER_FINGERPRINT_ATTR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'resolver_fingerprint'</span></span><a class="headerlink" href="#mergeset.oracle.RESOLVER_FINGERPRINT_ATTR" title="Link to this definition">#</a></dt>
+<dd><p>The attribute a resolver carries to say how it resolves (i2mint/mergeset#34).</p>
 </dd></dl>
 
 <dl class="py data">
@@ -283,6 +297,32 @@ surfaces the cheap conflicts early.</p>
 </div>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.oracle.resolver_fingerprint_of">
+<span class="sig-prename descclassname"><span class="pre">mergeset.oracle.</span></span><span class="sig-name descname"><span class="pre">resolver_fingerprint_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolver</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/oracle.html#resolver_fingerprint_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.oracle.resolver_fingerprint_of" title="Link to this definition">#</a></dt>
+<dd><p>How <code class="docutils literal notranslate"><span class="pre">resolver</span></code> resolves conflicts, as the string a log row records.</p>
+<p>A row whose outcome a resolver decided (an assisted merge, or a conflict
+left standing) answers only runs that resolve the same way: see
+<a class="reference internal" href="mergeset.base.html#mergeset.base.Evaluation.merge_dependent" title="mergeset.base.Evaluation.merge_dependent"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mergeset.base.Evaluation.merge_dependent</span></code></a>. <code class="docutils literal notranslate"><span class="pre">None</span></code> resolves
+nothing (<a class="reference internal" href="mergeset.base.html#mergeset.base.NO_RESOLVER" title="mergeset.base.NO_RESOLVER"><code class="xref py py-data docutils literal notranslate"><span class="pre">NO_RESOLVER</span></code></a>); a resolver that cannot say
+how it resolves records <a class="reference internal" href="mergeset.base.html#mergeset.base.UNKNOWN_FINGERPRINT" title="mergeset.base.UNKNOWN_FINGERPRINT"><code class="xref py py-data docutils literal notranslate"><span class="pre">UNKNOWN_FINGERPRINT</span></code></a>, which
+matches only other such rows. A user resolver may set
+<code class="docutils literal notranslate"><span class="pre">resolver.resolver_fingerprint</span> <span class="pre">=</span> <span class="pre">'my-resolver-v2'</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">resolver_fingerprint_of</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">'none'</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">resolver_fingerprint_of</span><span class="p">(</span><span class="k">lambda</span> <span class="n">worktree</span><span class="p">,</span> <span class="n">files</span><span class="p">:</span> <span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="s1">''</span><span class="p">))</span>
+</span><span data-line="4"><span class="go">'unknown'</span>
+</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="n">resolver_fingerprint_of</span><span class="p">(</span><span class="n">claude_code_resolver</span><span class="p">())</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'claude-code:'</span><span class="p">)</span>
+</span><span data-line="6"><span class="go">True</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
 </section>
 
         </article><button class="back-to-top" type="button">
@@ -325,7 +365,7 @@ surfaces the cheap conflicts early.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=f91d8841"></script>
+      <script src="../_static/documentation_options.js?v=5d650c58"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
