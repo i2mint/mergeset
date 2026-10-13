@@ -38,5 +38,6 @@ mergeset.base
    .. autosummary::
    
       CapabilityError
+      EvaluationAborted
       MergesetError
    

@@ -58,6 +58,11 @@ stage 2 is skipped rather than degraded, and the answer is labelled with the
 depth it actually reached. \*\*A tier that did not run is not a tier that
 passed.\*\*
 
+### Module Attributes
+
+| [`MUST_INCLUDE_PHASE`](#mergeset.tiers.MUST_INCLUDE_PHASE)   | The name an abort during `--must-include` is reported under (`Analysis.aborted_phase`): a phase after the tiers, not a tier.   |
+|-----------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+
 ### Functions
 
 | [`analyze_tiered`](#mergeset.tiers.analyze_tiered)(repo, changes, \*, tiers[, ...])   | Screen with the cheap tier, confirm the frontier with the expensive ones.    |
@@ -146,6 +151,11 @@ One line a progress display or a report can print.
 ...               frozenset({'a', 'b'}), 0.0, True).summary()
 'best 2 changes (weight 2.0, all tiers); provably maximal'
 ```
+
+### mergeset.tiers.MUST_INCLUDE_PHASE *= '--must-include'*
+
+The name an abort during `--must-include` is reported under
+(`Analysis.aborted_phase`): a phase after the tiers, not a tier.
 
 ### *class* mergeset.tiers.Tier(name, validate, cost=None, available=None)
 
@@ -372,6 +382,10 @@ enumerates.
   `(best set or None, the conflicts now known, evaluations spent)`.
   `None` means the required changes cannot all be kept: every way of
   resolving the known conflicts drops one of them.
+* **Raises:**
+  [**EvaluationAborted**](mergeset.html.md#mergeset.EvaluationAborted) – an evaluation could not be performed (`ERROR`).
+      That is not an answer; the exception carries the conflicts known
+      so far.
 
 ```pycon
 >>> from mergeset.base import Evaluation, Verdict

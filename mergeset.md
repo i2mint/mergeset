@@ -1,4 +1,4 @@
-> built 2026-10-13 13:21 UTC from 412ea8c (main) · mergeset 0.0.32. Details: build_info.json
+> built 2026-10-13 14:19 UTC from d168cc5 (main) · mergeset 0.0.33. Details: build_info.json
 
 # index.html.md
 
@@ -215,7 +215,7 @@ The order of operations is the whole point, because it is the order of *cost*:
 | [`Analysis`](_autosummary/mergeset.analysis.html.md#mergeset.analysis.Analysis)(repo, base, base_sha, changes[, ...])   | Everything a run learned.   |
 |---------------------------------------------------------------------------------------------------|-----------------------------|
 
-### *class* mergeset.analysis.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, aborted_tier=None, unverified_sets=<factory>, log=None, tier_logs=<factory>, searches=<factory>, notes=<factory>)
+### *class* mergeset.analysis.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, aborted_tier=None, aborted_phase=None, unverified_sets=<factory>, log=None, tier_logs=<factory>, searches=<factory>, notes=<factory>)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -227,6 +227,14 @@ Why a search stopped on an `ERROR`, or `None`.
 
 An abort is not a budget stop (ADR 0017, 0036): the run could not do
 what it was asked, and what it reports is only what it had established.
+
+#### aborted_phase *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+the tiers’
+results are complete, only that phase’s answer is missing.
+
+* **Type:**
+  A phase after the tiers that aborted (`"--must-include"`)
 
 #### aborted_tier *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
 
@@ -552,9 +560,10 @@ and diffable.
 
 ### Exceptions
 
-| [`CapabilityError`](_autosummary/mergeset.base.html.md#mergeset.base.CapabilityError)   | A required external capability is missing; the message says how to fix it.   |
-|--------------------------------------------------------------------|------------------------------------------------------------------------------|
-| [`MergesetError`](_autosummary/mergeset.base.html.md#mergeset.base.MergesetError)     | Base class for errors this package raises deliberately.                      |
+| [`CapabilityError`](_autosummary/mergeset.base.html.md#mergeset.base.CapabilityError)                                  | A required external capability is missing; the message says how to fix it.   |
+|---------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
+| [`EvaluationAborted`](_autosummary/mergeset.base.html.md#mergeset.base.EvaluationAborted)(why[, conflicts, best_so_far]) | An evaluation could not be performed (`Verdict.ERROR`, ADR 0017).            |
+| [`MergesetError`](_autosummary/mergeset.base.html.md#mergeset.base.MergesetError)                                    | Base class for errors this package raises deliberately.                      |
 
 ### *exception* mergeset.base.CapabilityError
 
@@ -693,6 +702,23 @@ True iff the row is a textual conflict that no resolver resolved.
 Fingerprint of the validator that judged the tree (see
 [`mergeset.validation.fingerprint_of()`](_autosummary/mergeset.validation.html.md#mergeset.validation.fingerprint_of)). `None` on rows written
 before fingerprints, and on rows judged by a validator that has none.
+
+### *exception* mergeset.base.EvaluationAborted(why, conflicts=(), best_so_far=None)
+
+Bases: [`MergesetError`](_autosummary/mergeset.base.html.md#mergeset.base.MergesetError)
+
+An evaluation could not be performed (`Verdict.ERROR`, ADR 0017).
+
+Raised by searches that return a plain answer and so have no room to say
+“unfinished” (`best_set_including`): returning `None` there would read
+as a finding (“no set keeps X”) when the experiment never ran. `why` is
+the evaluation’s note; `conflicts` are the (sound) conflicts established
+before it.
+
+#### best_so_far
+
+A set that was validated before the abort (and keeps what was asked),
+not proven the heaviest; `None` when there is none.
 
 ### *class* mergeset.base.Evaluator(\*args, \*\*kwargs)
 
@@ -1803,11 +1829,12 @@ changes.
 
 ### Exceptions
 
-| [`MergesetError`](_autosummary/mergeset.html.md#mergeset.MergesetError)   | Base class for errors this package raises deliberately.                    |
-|------------------------------------------------------------------|----------------------------------------------------------------------------|
-| [`CapabilityError`](_autosummary/mergeset.html.md#mergeset.CapabilityError) | A required external capability is missing; the message says how to fix it. |
+| [`MergesetError`](_autosummary/mergeset.html.md#mergeset.MergesetError)                                    | Base class for errors this package raises deliberately.                    |
+|---------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
+| [`EvaluationAborted`](_autosummary/mergeset.html.md#mergeset.EvaluationAborted)(why[, conflicts, best_so_far]) | An evaluation could not be performed (`Verdict.ERROR`, ADR 0017).          |
+| [`CapabilityError`](_autosummary/mergeset.html.md#mergeset.CapabilityError)                                  | A required external capability is missing; the message says how to fix it. |
 
-### *class* mergeset.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, aborted_tier=None, unverified_sets=<factory>, log=None, tier_logs=<factory>, searches=<factory>, notes=<factory>)
+### *class* mergeset.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, aborted_tier=None, aborted_phase=None, unverified_sets=<factory>, log=None, tier_logs=<factory>, searches=<factory>, notes=<factory>)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -1819,6 +1846,14 @@ Why a search stopped on an `ERROR`, or `None`.
 
 An abort is not a budget stop (ADR 0017, 0036): the run could not do
 what it was asked, and what it reports is only what it had established.
+
+#### aborted_phase *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+the tiers’
+results are complete, only that phase’s answer is missing.
+
+* **Type:**
+  A phase after the tiers that aborted (`"--must-include"`)
 
 #### aborted_tier *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
 
@@ -2175,6 +2210,23 @@ True iff the row is a textual conflict that no resolver resolved.
 Fingerprint of the validator that judged the tree (see
 [`mergeset.validation.fingerprint_of()`](_autosummary/mergeset.validation.html.md#mergeset.validation.fingerprint_of)). `None` on rows written
 before fingerprints, and on rows judged by a validator that has none.
+
+### *exception* mergeset.EvaluationAborted(why, conflicts=(), best_so_far=None)
+
+Bases: [`MergesetError`](_autosummary/mergeset.base.html.md#mergeset.base.MergesetError)
+
+An evaluation could not be performed (`Verdict.ERROR`, ADR 0017).
+
+Raised by searches that return a plain answer and so have no room to say
+“unfinished” (`best_set_including`): returning `None` there would read
+as a finding (“no set keeps X”) when the experiment never ran. `why` is
+the evaluation’s note; `conflicts` are the (sound) conflicts established
+before it.
+
+#### best_so_far
+
+A set that was validated before the abort (and keeps what was asked),
+not proven the heaviest; `None` when there is none.
 
 ### *class* mergeset.EvaluationLog(store=None, , pins=None, trust_unpinned=False)
 
@@ -3159,6 +3211,10 @@ enumerates.
   `(best set or None, the conflicts now known, evaluations spent)`.
   `None` means the required changes cannot all be kept: every way of
   resolving the known conflicts drops one of them.
+* **Raises:**
+  [**EvaluationAborted**](_autosummary/mergeset.html.md#mergeset.EvaluationAborted) – an evaluation could not be performed (`ERROR`).
+      That is not an answer; the exception carries the conflicts known
+      so far.
 
 ```pycon
 >>> from mergeset.base import Evaluation, Verdict
@@ -5787,6 +5843,11 @@ stage 2 is skipped rather than degraded, and the answer is labelled with the
 depth it actually reached. \*\*A tier that did not run is not a tier that
 passed.\*\*
 
+### Module Attributes
+
+| [`MUST_INCLUDE_PHASE`](_autosummary/mergeset.tiers.html.md#mergeset.tiers.MUST_INCLUDE_PHASE)   | The name an abort during `--must-include` is reported under (`Analysis.aborted_phase`): a phase after the tiers, not a tier.   |
+|-----------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+
 ### Functions
 
 | [`analyze_tiered`](_autosummary/mergeset.tiers.html.md#mergeset.tiers.analyze_tiered)(repo, changes, \*, tiers[, ...])   | Screen with the cheap tier, confirm the frontier with the expensive ones.    |
@@ -5875,6 +5936,11 @@ One line a progress display or a report can print.
 ...               frozenset({'a', 'b'}), 0.0, True).summary()
 'best 2 changes (weight 2.0, all tiers); provably maximal'
 ```
+
+### mergeset.tiers.MUST_INCLUDE_PHASE *= '--must-include'*
+
+The name an abort during `--must-include` is reported under
+(`Analysis.aborted_phase`): a phase after the tiers, not a tier.
 
 ### *class* mergeset.tiers.Tier(name, validate, cost=None, available=None)
 
@@ -6101,6 +6167,10 @@ enumerates.
   `(best set or None, the conflicts now known, evaluations spent)`.
   `None` means the required changes cannot all be kept: every way of
   resolving the known conflicts drops one of them.
+* **Raises:**
+  [**EvaluationAborted**](_autosummary/mergeset.html.md#mergeset.EvaluationAborted) – an evaluation could not be performed (`ERROR`).
+      That is not an answer; the exception carries the conflicts known
+      so far.
 
 ```pycon
 >>> from mergeset.base import Evaluation, Verdict
@@ -6541,18 +6611,16 @@ contents join the fingerprint (see [`inputs_digest()`](_autosummary/mergeset.val
 
 # About this build
 
-This documentation was built on **2026-10-13 13:21 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/412ea8c807079945adf851e9cf29562f06d7f457"><code>412ea8c</code></a> on branch <code>main</code>, for **mergeset 0.0.32** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 14:19 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/d168cc5c84924adf3813629d101430d893cf5787"><code>d168cc5</code></a> on branch <code>main</code>, for **mergeset 0.0.33** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.32) is behind the latest release on PyPI (0.0.33): `pip install mergeset` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/mergeset/commit/412ea8c807079945adf851e9cf29562f06d7f457"><code>412ea8c807079945adf851e9cf29562f06d7f457</code></a> |
+| Commit              | <a href="https://github.com/i2mint/mergeset/commit/d168cc5c84924adf3813629d101430d893cf5787"><code>d168cc5c84924adf3813629d101430d893cf5787</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -6563,9 +6631,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/mergeset</code>                                                               |
-| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38404112167">38404112167</a>      |
+| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38412108844">38412108844</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>412ea8c807079945adf851e9cf29562f06d7f457</code> (in the history of the built commit) |
+| Event commit | <code>d168cc5c84924adf3813629d101430d893cf5787</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6590,13 +6658,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/mergeset/0.0.33/">0.0.33</a>, newer than the documented version (0.0.32).
+Latest release: <a href="https://pypi.org/project/mergeset/0.0.33/">0.0.33</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/mergeset && cd mergeset
-git checkout 412ea8c807079945adf851e9cf29562f06d7f457
+git checkout d168cc5c84924adf3813629d101430d893cf5787
 pip install "epythet==0.2.15"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

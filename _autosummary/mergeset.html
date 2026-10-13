@@ -100,6 +100,7 @@ data-aria-dark="Switch to auto color mode">
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#mergeset.Analysis"><code class="docutils literal notranslate"><span class="pre">Analysis</span></code></a><ul>
 <li><a class="reference internal" href="#mergeset.Analysis.aborted"><code class="docutils literal notranslate"><span class="pre">Analysis.aborted</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.Analysis.aborted_phase"><code class="docutils literal notranslate"><span class="pre">Analysis.aborted_phase</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.Analysis.aborted_tier"><code class="docutils literal notranslate"><span class="pre">Analysis.aborted_tier</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.Analysis.by_id"><code class="docutils literal notranslate"><span class="pre">Analysis.by_id</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.Analysis.components_combined"><code class="docutils literal notranslate"><span class="pre">Analysis.components_combined</span></code></a></li>
@@ -157,6 +158,10 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#mergeset.Evaluation.to_jdict"><code class="docutils literal notranslate"><span class="pre">Evaluation.to_jdict()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.Evaluation.unresolved_conflict"><code class="docutils literal notranslate"><span class="pre">Evaluation.unresolved_conflict</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.Evaluation.validator"><code class="docutils literal notranslate"><span class="pre">Evaluation.validator</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mergeset.EvaluationAborted"><code class="docutils literal notranslate"><span class="pre">EvaluationAborted</span></code></a><ul>
+<li><a class="reference internal" href="#mergeset.EvaluationAborted.best_so_far"><code class="docutils literal notranslate"><span class="pre">EvaluationAborted.best_so_far</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#mergeset.EvaluationLog"><code class="docutils literal notranslate"><span class="pre">EvaluationLog</span></code></a><ul>
@@ -620,7 +625,10 @@ changes.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.MergesetError" title="mergeset.MergesetError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MergesetError</span></code></a></p></td>
 <td><p>Base class for errors this package raises deliberately.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.CapabilityError" title="mergeset.CapabilityError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CapabilityError</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.EvaluationAborted" title="mergeset.EvaluationAborted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EvaluationAborted</span></code></a>(why[, conflicts, best_so_far])</p></td>
+<td><p>An evaluation could not be performed (<code class="docutils literal notranslate"><span class="pre">Verdict.ERROR</span></code>, ADR 0017).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.CapabilityError" title="mergeset.CapabilityError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CapabilityError</span></code></a></p></td>
 <td><p>A required external capability is missing; the message says how to fix it.</p></td>
 </tr>
 </tbody>
@@ -628,7 +636,7 @@ changes.</p>
 </div>
 <dl class="py class">
 <dt class="sig sig-object py" id="mergeset.Analysis">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.</span></span><span class="sig-name descname"><span class="pre">Analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_sha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">changes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">head_shas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maximal_sets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conflicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">textual_conflicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files_by_change</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stacks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merged_through</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">own_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">singleton_conflicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components_combined</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aborted_tier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unverified_sets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tier_logs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">searches</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/analysis.html#Analysis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.Analysis" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.</span></span><span class="sig-name descname"><span class="pre">Analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_sha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">changes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">head_shas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maximal_sets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conflicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">textual_conflicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files_by_change</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stacks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merged_through</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">own_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">singleton_conflicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components_combined</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aborted_tier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aborted_phase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unverified_sets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tier_logs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">searches</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/analysis.html#Analysis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.Analysis" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Everything a run learned. Every field is derivable from <code class="docutils literal notranslate"><span class="pre">log</span></code> + git.</p>
 <dl class="field-list simple">
@@ -639,6 +647,18 @@ changes.</p>
 <dd><p>Why a search stopped on an <code class="docutils literal notranslate"><span class="pre">ERROR</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 <p>An abort is not a budget stop (ADR 0017, 0036): the run could not do
 what it was asked, and what it reports is only what it had established.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.Analysis.aborted_phase">
+<span class="sig-name descname"><span class="pre">aborted_phase</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.Analysis.aborted_phase" title="Link to this definition">#</a></dt>
+<dd><p>the tiers’
+results are complete, only that phase’s answer is missing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A phase after the tiers that aborted (<code class="docutils literal notranslate"><span class="pre">&quot;--must-include&quot;</span></code>)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1104,6 +1124,27 @@ row whose outcome the resolver decided: see <a class="reference internal" href="
 <dd><p>Fingerprint of the validator that judged the tree (see
 <a class="reference internal" href="mergeset.validation.html#mergeset.validation.fingerprint_of" title="mergeset.validation.fingerprint_of"><code class="xref py py-func docutils literal notranslate"><span class="pre">mergeset.validation.fingerprint_of()</span></code></a>). <code class="docutils literal notranslate"><span class="pre">None</span></code> on rows written
 before fingerprints, and on rows judged by a validator that has none.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="mergeset.EvaluationAborted">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.</span></span><span class="sig-name descname"><span class="pre">EvaluationAborted</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">why</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conflicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_so_far</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#EvaluationAborted"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.EvaluationAborted" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="mergeset.base.html#mergeset.base.MergesetError" title="mergeset.base.MergesetError"><code class="xref py py-class docutils literal notranslate"><span class="pre">MergesetError</span></code></a></p>
+<p>An evaluation could not be performed (<code class="docutils literal notranslate"><span class="pre">Verdict.ERROR</span></code>, ADR 0017).</p>
+<p>Raised by searches that return a plain answer and so have no room to say
+“unfinished” (<code class="docutils literal notranslate"><span class="pre">best_set_including</span></code>): returning <code class="docutils literal notranslate"><span class="pre">None</span></code> there would read
+as a finding (“no set keeps X”) when the experiment never ran. <code class="docutils literal notranslate"><span class="pre">why</span></code> is
+the evaluation’s note; <code class="docutils literal notranslate"><span class="pre">conflicts</span></code> are the (sound) conflicts established
+before it.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.EvaluationAborted.best_so_far">
+<span class="sig-name descname"><span class="pre">best_so_far</span></span><a class="headerlink" href="#mergeset.EvaluationAborted.best_so_far" title="Link to this definition">#</a></dt>
+<dd><p>A set that was validated before the abort (and keeps what was asked),
+not proven the heaviest; <code class="docutils literal notranslate"><span class="pre">None</span></code> when there is none.</p>
 </dd></dl>
 
 </dd></dl>
@@ -2284,6 +2325,11 @@ reuse everything the unconstrained search learned.</p></li>
 <code class="docutils literal notranslate"><span class="pre">None</span></code> means the required changes cannot all be kept: every way of
 resolving the known conflicts drops one of them.</p>
 </dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#mergeset.EvaluationAborted" title="mergeset.EvaluationAborted"><strong>EvaluationAborted</strong></a> – an evaluation could not be performed (<code class="docutils literal notranslate"><span class="pre">ERROR</span></code>).
+    That is not an answer; the exception carries the conflicts known
+    so far.</p>
+</dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Evaluation</span><span class="p">,</span> <span class="n">Verdict</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">oracle</span><span class="p">(</span><span class="n">subset</span><span class="p">):</span>                      <span class="c1"># 'h' conflicts with 'a' and 'b'</span>
@@ -3456,7 +3502,7 @@ exists to prevent — so both halves of the key are slugified.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=f2234cd1"></script>
+      <script src="../_static/documentation_options.js?v=565bc8c8"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

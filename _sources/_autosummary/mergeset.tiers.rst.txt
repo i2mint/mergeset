@@ -4,6 +4,12 @@ mergeset.tiers
 .. automodule:: mergeset.tiers
 
    
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      MUST_INCLUDE_PHASE
+   
    .. rubric:: Functions
 
    .. autosummary::

@@ -119,6 +119,10 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#mergeset.base.Evaluation.validator"><code class="docutils literal notranslate"><span class="pre">Evaluation.validator</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#mergeset.base.EvaluationAborted"><code class="docutils literal notranslate"><span class="pre">EvaluationAborted</span></code></a><ul>
+<li><a class="reference internal" href="#mergeset.base.EvaluationAborted.best_so_far"><code class="docutils literal notranslate"><span class="pre">EvaluationAborted.best_so_far</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#mergeset.base.Evaluator"><code class="docutils literal notranslate"><span class="pre">Evaluator</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.MergeFn"><code class="docutils literal notranslate"><span class="pre">MergeFn</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.MergeOutcome"><code class="docutils literal notranslate"><span class="pre">MergeOutcome</span></code></a><ul>
@@ -265,7 +269,10 @@ and diffable.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.base.CapabilityError" title="mergeset.base.CapabilityError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CapabilityError</span></code></a></p></td>
 <td><p>A required external capability is missing; the message says how to fix it.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.base.MergesetError" title="mergeset.base.MergesetError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MergesetError</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.base.EvaluationAborted" title="mergeset.base.EvaluationAborted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EvaluationAborted</span></code></a>(why[, conflicts, best_so_far])</p></td>
+<td><p>An evaluation could not be performed (<code class="docutils literal notranslate"><span class="pre">Verdict.ERROR</span></code>, ADR 0017).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.base.MergesetError" title="mergeset.base.MergesetError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MergesetError</span></code></a></p></td>
 <td><p>Base class for errors this package raises deliberately.</p></td>
 </tr>
 </tbody>
@@ -447,6 +454,27 @@ row whose outcome the resolver decided: see <a class="reference internal" href="
 <dd><p>Fingerprint of the validator that judged the tree (see
 <a class="reference internal" href="mergeset.validation.html#mergeset.validation.fingerprint_of" title="mergeset.validation.fingerprint_of"><code class="xref py py-func docutils literal notranslate"><span class="pre">mergeset.validation.fingerprint_of()</span></code></a>). <code class="docutils literal notranslate"><span class="pre">None</span></code> on rows written
 before fingerprints, and on rows judged by a validator that has none.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="mergeset.base.EvaluationAborted">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">EvaluationAborted</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">why</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conflicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_so_far</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#EvaluationAborted"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.EvaluationAborted" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mergeset.base.MergesetError" title="mergeset.base.MergesetError"><code class="xref py py-class docutils literal notranslate"><span class="pre">MergesetError</span></code></a></p>
+<p>An evaluation could not be performed (<code class="docutils literal notranslate"><span class="pre">Verdict.ERROR</span></code>, ADR 0017).</p>
+<p>Raised by searches that return a plain answer and so have no room to say
+“unfinished” (<code class="docutils literal notranslate"><span class="pre">best_set_including</span></code>): returning <code class="docutils literal notranslate"><span class="pre">None</span></code> there would read
+as a finding (“no set keeps X”) when the experiment never ran. <code class="docutils literal notranslate"><span class="pre">why</span></code> is
+the evaluation’s note; <code class="docutils literal notranslate"><span class="pre">conflicts</span></code> are the (sound) conflicts established
+before it.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.base.EvaluationAborted.best_so_far">
+<span class="sig-name descname"><span class="pre">best_so_far</span></span><a class="headerlink" href="#mergeset.base.EvaluationAborted.best_so_far" title="Link to this definition">#</a></dt>
+<dd><p>A set that was validated before the abort (and keeps what was asked),
+not proven the heaviest; <code class="docutils literal notranslate"><span class="pre">None</span></code> when there is none.</p>
 </dd></dl>
 
 </dd></dl>
@@ -737,7 +765,7 @@ single-command one and on rows written before stages were recorded.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=f2234cd1"></script>
+      <script src="../_static/documentation_options.js?v=565bc8c8"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

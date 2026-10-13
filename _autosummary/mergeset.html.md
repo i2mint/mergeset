@@ -124,11 +124,12 @@ changes.
 
 ### Exceptions
 
-| [`MergesetError`](#mergeset.MergesetError)   | Base class for errors this package raises deliberately.                    |
-|------------------------------------------------------------------|----------------------------------------------------------------------------|
-| [`CapabilityError`](#mergeset.CapabilityError) | A required external capability is missing; the message says how to fix it. |
+| [`MergesetError`](#mergeset.MergesetError)                                    | Base class for errors this package raises deliberately.                    |
+|---------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
+| [`EvaluationAborted`](#mergeset.EvaluationAborted)(why[, conflicts, best_so_far]) | An evaluation could not be performed (`Verdict.ERROR`, ADR 0017).          |
+| [`CapabilityError`](#mergeset.CapabilityError)                                  | A required external capability is missing; the message says how to fix it. |
 
-### *class* mergeset.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, aborted_tier=None, unverified_sets=<factory>, log=None, tier_logs=<factory>, searches=<factory>, notes=<factory>)
+### *class* mergeset.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, aborted_tier=None, aborted_phase=None, unverified_sets=<factory>, log=None, tier_logs=<factory>, searches=<factory>, notes=<factory>)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -140,6 +141,14 @@ Why a search stopped on an `ERROR`, or `None`.
 
 An abort is not a budget stop (ADR 0017, 0036): the run could not do
 what it was asked, and what it reports is only what it had established.
+
+#### aborted_phase *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+the tiers’
+results are complete, only that phase’s answer is missing.
+
+* **Type:**
+  A phase after the tiers that aborted (`"--must-include"`)
 
 #### aborted_tier *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
 
@@ -496,6 +505,23 @@ True iff the row is a textual conflict that no resolver resolved.
 Fingerprint of the validator that judged the tree (see
 [`mergeset.validation.fingerprint_of()`](mergeset.validation.html.md#mergeset.validation.fingerprint_of)). `None` on rows written
 before fingerprints, and on rows judged by a validator that has none.
+
+### *exception* mergeset.EvaluationAborted(why, conflicts=(), best_so_far=None)
+
+Bases: [`MergesetError`](mergeset.base.html.md#mergeset.base.MergesetError)
+
+An evaluation could not be performed (`Verdict.ERROR`, ADR 0017).
+
+Raised by searches that return a plain answer and so have no room to say
+“unfinished” (`best_set_including`): returning `None` there would read
+as a finding (“no set keeps X”) when the experiment never ran. `why` is
+the evaluation’s note; `conflicts` are the (sound) conflicts established
+before it.
+
+#### best_so_far
+
+A set that was validated before the abort (and keeps what was asked),
+not proven the heaviest; `None` when there is none.
 
 ### *class* mergeset.EvaluationLog(store=None, , pins=None, trust_unpinned=False)
 
@@ -1480,6 +1506,10 @@ enumerates.
   `(best set or None, the conflicts now known, evaluations spent)`.
   `None` means the required changes cannot all be kept: every way of
   resolving the known conflicts drops one of them.
+* **Raises:**
+  [**EvaluationAborted**](#mergeset.EvaluationAborted) – an evaluation could not be performed (`ERROR`).
+      That is not an answer; the exception carries the conflicts known
+      so far.
 
 ```pycon
 >>> from mergeset.base import Evaluation, Verdict

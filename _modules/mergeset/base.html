@@ -635,10 +635,32 @@ data-aria-dark="Switch to auto color mode">
 
 </span><span data-line="443">
 </span><span data-line="444">
+<div class="viewcode-block" id="EvaluationAborted">
+<a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.EvaluationAborted">[docs]</a>
+</span><span data-line="445"><span class="k">class</span><span class="w"> </span><span class="nc">EvaluationAborted</span><span class="p">(</span><span class="n">MergesetError</span><span class="p">):</span>
+</span><span data-line="446"><span class="w">    </span><span class="sd">"""An evaluation could not be performed (``Verdict.ERROR``, ADR 0017).</span>
+</span><span data-line="447">
+</span><span data-line="448"><span class="sd">    Raised by searches that return a plain answer and so have no room to say</span>
+</span><span data-line="449"><span class="sd">    "unfinished" (``best_set_including``): returning ``None`` there would read</span>
+</span><span data-line="450"><span class="sd">    as a finding ("no set keeps X") when the experiment never ran. ``why`` is</span>
+</span><span data-line="451"><span class="sd">    the evaluation's note; ``conflicts`` are the (sound) conflicts established</span>
+</span><span data-line="452"><span class="sd">    before it.</span>
+</span><span data-line="453"><span class="sd">    """</span>
+</span><span data-line="454">
+</span><span data-line="455">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">why</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">conflicts</span><span class="o">=</span><span class="p">(),</span> <span class="n">best_so_far</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span data-line="456">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">why</span><span class="p">)</span>
+</span><span data-line="457">        <span class="bp">self</span><span class="o">.</span><span class="n">why</span> <span class="o">=</span> <span class="n">why</span>
+</span><span data-line="458">        <span class="bp">self</span><span class="o">.</span><span class="n">conflicts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">conflicts</span><span class="p">)</span>
+</span><span data-line="459">        <span class="c1">#: A set that was validated before the abort (and keeps what was asked),</span>
+</span><span data-line="460">        <span class="c1">#: not proven the heaviest; ``None`` when there is none.</span>
+</span><span data-line="461">        <span class="bp">self</span><span class="o">.</span><span class="n">best_so_far</span> <span class="o">=</span> <span class="n">best_so_far</span></div>
+
+</span><span data-line="462">
+</span><span data-line="463">
 <div class="viewcode-block" id="CapabilityError">
 <a class="viewcode-back" href="../../_autosummary/mergeset.base.html#mergeset.CapabilityError">[docs]</a>
-</span><span data-line="445"><span class="k">class</span><span class="w"> </span><span class="nc">CapabilityError</span><span class="p">(</span><span class="n">MergesetError</span><span class="p">):</span>
-</span><span data-line="446"><span class="w">    </span><span class="sd">"""A required external capability is missing; the message says how to fix it."""</span></div>
+</span><span data-line="464"><span class="k">class</span><span class="w"> </span><span class="nc">CapabilityError</span><span class="p">(</span><span class="n">MergesetError</span><span class="p">):</span>
+</span><span data-line="465"><span class="w">    </span><span class="sd">"""A required external capability is missing; the message says how to fix it."""</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -667,7 +689,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=f2234cd1"></script>
+      <script src="../../_static/documentation_options.js?v=565bc8c8"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

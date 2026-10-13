@@ -39,9 +39,10 @@ and diffable.
 
 ### Exceptions
 
-| [`CapabilityError`](#mergeset.base.CapabilityError)   | A required external capability is missing; the message says how to fix it.   |
-|--------------------------------------------------------------------|------------------------------------------------------------------------------|
-| [`MergesetError`](#mergeset.base.MergesetError)     | Base class for errors this package raises deliberately.                      |
+| [`CapabilityError`](#mergeset.base.CapabilityError)                                  | A required external capability is missing; the message says how to fix it.   |
+|---------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
+| [`EvaluationAborted`](#mergeset.base.EvaluationAborted)(why[, conflicts, best_so_far]) | An evaluation could not be performed (`Verdict.ERROR`, ADR 0017).            |
+| [`MergesetError`](#mergeset.base.MergesetError)                                    | Base class for errors this package raises deliberately.                      |
 
 ### *exception* mergeset.base.CapabilityError
 
@@ -180,6 +181,23 @@ True iff the row is a textual conflict that no resolver resolved.
 Fingerprint of the validator that judged the tree (see
 [`mergeset.validation.fingerprint_of()`](mergeset.validation.html.md#mergeset.validation.fingerprint_of)). `None` on rows written
 before fingerprints, and on rows judged by a validator that has none.
+
+### *exception* mergeset.base.EvaluationAborted(why, conflicts=(), best_so_far=None)
+
+Bases: [`MergesetError`](#mergeset.base.MergesetError)
+
+An evaluation could not be performed (`Verdict.ERROR`, ADR 0017).
+
+Raised by searches that return a plain answer and so have no room to say
+“unfinished” (`best_set_including`): returning `None` there would read
+as a finding (“no set keeps X”) when the experiment never ran. `why` is
+the evaluation’s note; `conflicts` are the (sound) conflicts established
+before it.
+
+#### best_so_far
+
+A set that was validated before the abort (and keeps what was asked),
+not proven the heaviest; `None` when there is none.
 
 ### *class* mergeset.base.Evaluator(\*args, \*\*kwargs)
 

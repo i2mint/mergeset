@@ -110,6 +110,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#mergeset.tiers.AnytimeAnswer.summary"><code class="docutils literal notranslate"><span class="pre">AnytimeAnswer.summary()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#mergeset.tiers.MUST_INCLUDE_PHASE"><code class="docutils literal notranslate"><span class="pre">MUST_INCLUDE_PHASE</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.tiers.Tier"><code class="docutils literal notranslate"><span class="pre">Tier</span></code></a><ul>
 <li><a class="reference internal" href="#mergeset.tiers.Tier.is_available"><code class="docutils literal notranslate"><span class="pre">Tier.is_available()</span></code></a></li>
 </ul>
@@ -226,6 +227,16 @@ its interior is answered from the screen’s log for free.</p></li>
 stage 2 is skipped rather than degraded, and the answer is labelled with the
 depth it actually reached. **A tier that did not run is not a tier that
 passed.**</p>
+<p class="rubric">Module Attributes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.tiers.MUST_INCLUDE_PHASE" title="mergeset.tiers.MUST_INCLUDE_PHASE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MUST_INCLUDE_PHASE</span></code></a></p></td>
+<td><p>The name an abort during <code class="docutils literal notranslate"><span class="pre">--must-include</span></code> is reported under (<code class="docutils literal notranslate"><span class="pre">Analysis.aborted_phase</span></code>): a phase after the tiers, not a tier.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
@@ -359,6 +370,13 @@ cost”.</p>
 </div>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mergeset.tiers.MUST_INCLUDE_PHASE">
+<span class="sig-prename descclassname"><span class="pre">mergeset.tiers.</span></span><span class="sig-name descname"><span class="pre">MUST_INCLUDE_PHASE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'--must-include'</span></span><a class="headerlink" href="#mergeset.tiers.MUST_INCLUDE_PHASE" title="Link to this definition">#</a></dt>
+<dd><p>The name an abort during <code class="docutils literal notranslate"><span class="pre">--must-include</span></code> is reported under
+(<code class="docutils literal notranslate"><span class="pre">Analysis.aborted_phase</span></code>): a phase after the tiers, not a tier.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -635,6 +653,11 @@ reuse everything the unconstrained search learned.</p></li>
 <code class="docutils literal notranslate"><span class="pre">None</span></code> means the required changes cannot all be kept: every way of
 resolving the known conflicts drops one of them.</p>
 </dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="mergeset.html#mergeset.EvaluationAborted" title="mergeset.EvaluationAborted"><strong>EvaluationAborted</strong></a> – an evaluation could not be performed (<code class="docutils literal notranslate"><span class="pre">ERROR</span></code>).
+    That is not an answer; the exception carries the conflicts known
+    so far.</p>
+</dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Evaluation</span><span class="p">,</span> <span class="n">Verdict</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">oracle</span><span class="p">(</span><span class="n">subset</span><span class="p">):</span>                      <span class="c1"># 'h' conflicts with 'a' and 'b'</span>
@@ -770,7 +793,7 @@ exists to prevent — so both halves of the key are slugified.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=f2234cd1"></script>
+      <script src="../_static/documentation_options.js?v=565bc8c8"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
