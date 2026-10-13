@@ -41,6 +41,7 @@ import shutil
 import subprocess
 import time
 from dataclasses import dataclass
+from stat import S_ISDIR, S_ISREG
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
 from mergeset.base import (
@@ -112,8 +113,9 @@ def recorded_fingerprint(validate: Optional[Callable]) -> str:
 #: filesystem timestamps (FAT). Younger files are always read.
 RACY_SECONDS = 2.0
 
-#: How many file digests :data:`FILE_DIGESTS` holds before it starts over.
-MAX_CACHED_DIGESTS = 1_000_000
+#: How many file digests :data:`FILE_DIGESTS` holds before it starts over:
+#: about 110 MiB, room for a large virtual environment.
+MAX_CACHED_DIGESTS = 250_000
 
 #: Content digests of input files, keyed by the file's path and stat (#42).
 #: Reading an 8.5 GB tree takes about a minute; stat-ing it, seconds. A run
@@ -121,9 +123,11 @@ MAX_CACHED_DIGESTS = 1_000_000
 #: evaluation, so all but the first read come from here.
 FILE_DIGESTS: Dict[tuple, str] = {}
 
+_SHARED = object()  # `cache=` default: FILE_DIGESTS, read when called
+
 
 def inputs_digest(
-    paths: Iterable[str], *, cache: Optional[Dict[tuple, str]] = FILE_DIGESTS
+    paths: Iterable[str], *, cache: Optional[Dict[tuple, str]] = _SHARED
 ) -> Dict[str, str]:
     """A digest of each path's current contents, keyed by its real path.
 
@@ -145,6 +149,12 @@ def inputs_digest(
     which no tool can set back) is :data:`RACY_SECONDS` older than that read.
     ``cache=None`` reads every file.
 
+    Trusting a stat is what ``make`` and ``git`` do, with their blind spots: a
+    second write through a shared ``mmap`` to an already-dirty page changes
+    no timestamp, and a network filesystem may serve cached attributes (NFS,
+    for up to a minute) or stamp times from a clock behind this one. For inputs
+    edited that way, pass ``cache=None`` (ADR 0035).
+
     >>> import tempfile
     >>> with tempfile.NamedTemporaryFile('w', suffix='.py', delete=False) as f:
     ...     _ = f.write('print(1)')
@@ -158,14 +168,15 @@ def inputs_digest(
     ['missing']
     """
 
+    if cache is _SHARED:
+        cache = FILE_DIGESTS
     if isinstance(paths, (str, bytes, os.PathLike)):
         raise TypeError(
             f"inputs is a collection of paths, got the single path {paths!r}: "
             f"wrap it in a list, inputs=[{paths!r}]."
         )
 
-    def file_digest(path: str) -> str:
-        stat = os.stat(path)
+    def file_digest(path: str, stat: os.stat_result) -> str:
         key = (
             path,
             stat.st_dev,
@@ -219,9 +230,15 @@ def inputs_digest(
 
     def digest_of(path: str) -> str:
         try:
-            if os.path.isfile(path):
-                return file_digest(path)
-            if os.path.isdir(path):
+            stat = os.stat(path)
+        except FileNotFoundError:
+            return "missing"
+        except OSError:
+            return "unreadable"
+        try:
+            if S_ISREG(stat.st_mode):
+                return file_digest(path, stat)
+            if S_ISDIR(stat.st_mode):
                 return tree_digest(path)
         except OSError:
             return "unreadable"

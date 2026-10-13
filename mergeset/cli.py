@@ -744,6 +744,33 @@ def _run(
                 "--validate-input names files a validation runs, but --merge-only "
                 "runs none. Drop one of them."
             )
+        # Built before anything is created (a reused worktree, a resolver), so
+        # a bad validation flag is refused first -- and the bare validator only
+        # when a tier runs it (#42).
+        tiers = None
+        if tier:
+            tiers = _tiers(
+                tier,
+                tier_cost or (),
+                make_validator=make_validator,
+                validator_flags=[
+                    flag for kw, flag in _VALIDATOR_FLAGS.items() if given[kw]
+                ],
+                timeout=timeout,
+                retries=retries,
+                inputs=validate_input,
+                is_commit=lambda name: (
+                    name in {c.id for c in changes}
+                    or git(
+                        repo,
+                        "rev-parse",
+                        "--verify",
+                        "--quiet",
+                        f"{name}^{{commit}}",
+                    ).ok
+                ),
+            )
+        validate = None if tier else make_validator()
         for kw, values in (
             ("tier", tier),
             ("tier_cost", tier_cost),
@@ -816,27 +843,7 @@ def _run(
             tiered = _analyze_tiered(
                 repo,
                 changes,
-                tiers=_tiers(
-                    tier,
-                    tier_cost or (),
-                    make_validator=make_validator,
-                    validator_flags=[
-                        flag for kw, flag in _VALIDATOR_FLAGS.items() if given[kw]
-                    ],
-                    timeout=timeout,
-                    retries=retries,
-                    inputs=validate_input,
-                    is_commit=lambda name: (
-                        name in {c.id for c in changes}
-                        or git(
-                            repo,
-                            "rev-parse",
-                            "--verify",
-                            "--quiet",
-                            f"{name}^{{commit}}",
-                        ).ok
-                    ),
-                ),
+                tiers=tiers,
                 confirm_budget_seconds=confirm_budget_seconds,
                 confirm_max_runs=confirm_max_runs,
                 confirm_max_sets=confirm_max_sets,
@@ -849,7 +856,7 @@ def _run(
             analysis.notes.extend(tiered.cost_lines())
         else:
             analysis = _analyze(
-                repo, changes, validate=make_validator(), log_path=log_path, **common
+                repo, changes, validate=validate, log_path=log_path, **common
             )
     except ValueError as e:
         return f"mergeset could not read that option:\n\n{e}"
@@ -1002,9 +1009,11 @@ def _moved_commits(log) -> list:
         for e in log
     )
     resolvers = {
-        NO_RESOLVER
-        if e.resolver is None and e.unresolved_conflict and not old_assisted
-        else e.resolver
+        (
+            NO_RESOLVER
+            if e.resolver is None and e.unresolved_conflict and not old_assisted
+            else e.resolver
+        )
         for e in log
         if e.merge_dependent
     }

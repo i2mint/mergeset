@@ -88,3 +88,27 @@ def test_no_cache_reads_every_file(tmp_path, monkeypatch):
     _write(path, "print(1)")
     monkeypatch.setattr(validation, "RACY_SECONDS", 0.0)
     assert inputs_digest([path], cache=None) == inputs_digest([path], cache=None)
+
+
+def test_a_bad_validation_flag_is_refused_before_a_worktree_is_made(repo, tmp_path):
+    """Review of #50: the lazy validator was built after `--reuse-worktree`."""
+    tree = tmp_path / "wt"
+    out = cli.branches(
+        ["feat-a"],
+        repo=repo,
+        base="main",
+        validate_stage=["no colon here"],
+        reuse_worktree=str(tree),
+    )
+    assert "could not read that option" in out
+    assert not tree.exists()
+
+
+def test_a_default_cache_rebound_is_the_one_used(tmp_path, monkeypatch):
+    path = str(tmp_path / "check.py")
+    _write(path, "print(1)")
+    monkeypatch.setattr(validation, "RACY_SECONDS", 0.0)
+    mine = {}
+    monkeypatch.setattr(validation, "FILE_DIGESTS", mine)
+    inputs_digest([path])
+    assert len(mine) == 1
