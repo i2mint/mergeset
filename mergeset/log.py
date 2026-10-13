@@ -155,6 +155,17 @@ class Known:
     def __bool__(self) -> bool:
         return self.verdict is not None
 
+    def answer(self, subset: ChangeSet) -> Evaluation:
+        """The evaluation this knowledge stands for, as a cache hit returns it."""
+        if self.exact is not None:
+            return replace(self.exact, cached=True)
+        return Evaluation(
+            subset=subset,
+            verdict=self.verdict,
+            note=f"inferred from {set_key(self.witness)}",
+            cached=True,
+        )
+
 
 @dataclass(frozen=True)
 class Pins:
@@ -638,14 +649,7 @@ class EvaluationLog:
             known = self.known(subset)
             inferred_pass = known.exact is None and known.verdict is Verdict.PASS
             if known and (infer_pass or not inferred_pass):
-                if known.exact is not None:
-                    return replace(known.exact, cached=True)
-                return Evaluation(
-                    subset=subset,
-                    verdict=known.verdict,
-                    note=f"inferred from {set_key(known.witness)}",
-                    cached=True,
-                )
+                return known.answer(subset)
             return self.record(evaluate(subset))
 
         return cached

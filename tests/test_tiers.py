@@ -982,3 +982,123 @@ def test_a_name_holding_a_closing_script_tag_stays_data(repo, tmp_path):
     page = html_report(result.analysis)
     script = page.split("<script>", 1)[1]
     assert script.count("</script>") == 1, "only the real closing tag"
+
+
+# --------------------------------------------------------------------------
+# i2mint/mergeset#37: the deepest tier runs the plan it will vouch for
+# --------------------------------------------------------------------------
+
+
+def _all_pass_then_screen_refuses_d(repo, tmp_path, **kwargs):
+    """A deep-only PASS for ``{a, b, d}`` is banked; then the screen changes.
+
+    Run one passes everything at both tiers, so the deep log holds an exact
+    PASS for the triple. Run two edits the screen to refuse ``d`` (a new
+    fingerprint, so the screen's old rows stop answering, #32) while the deep
+    log keeps its rows: ``{a, b}`` is maximal and the deep log can *infer* it.
+    """
+    deep = _stage_validator(tmp_path, "deep", "raise SystemExit(0)\n")
+    common = dict(
+        base="main",
+        pairwise_preoracle=False,
+        decompose=False,
+        use_ci_status=False,
+        **kwargs,
+    )
+    changes = _changes(repo, ["feat-a", "feat-b", "feat-d"])
+    analyze_tiered(
+        repo,
+        changes,
+        tiers=[
+            Tier("screen", _stage_validator(tmp_path, "s1", "raise SystemExit(0)\n")),
+            Tier("deep", deep),
+        ],
+        **common,
+    )
+    screen = _stage_validator(
+        tmp_path,
+        "s2",
+        "import os, sys\nsys.exit(1 if os.path.exists('new-d.txt') else 0)\n",
+    )
+    return analyze_tiered(
+        repo, changes, tiers=[Tier("screen", screen), Tier("deep", deep)], **common
+    )
+
+
+def test_the_deepest_tier_runs_a_plan_it_had_only_inferred(repo, tmp_path):
+    result = _all_pass_then_screen_refuses_d(repo, tmp_path)
+    pair = frozenset({"feat-a", "feat-b"})
+    assert result.maximal_sets == [pair]
+    assert result.logs["deep"].exact(pair).verdict is Verdict.PASS
+    assert result.verified_tier(pair) == "deep"
+    assert not result.analysis.unverified_sets
+    assert result.runs["deep"] == len(result.logs["deep"])
+
+
+def test_a_plan_the_deepest_tier_fails_is_refined_not_reported(repo, tmp_path):
+    """The deep tier fails ``{a, b}`` without ``d``: the inferred plan was wrong.
+
+    The deep log's triple PASS made ``{a, b}`` look good; running it shows the
+    deep tier needs ``d`` for them to pass together. The search must go on from
+    the failure, and every plan it ends with is one the deep tier ran.
+    """
+    deep_code = (
+        "import os, sys\n"
+        "a = open('shared.txt').read().splitlines()[1] == 'AAA'\n"
+        "b = open('other.txt').read() == 'changed by b\\n'\n"
+        "sys.exit(1 if a and b and not os.path.exists('new-d.txt') else 0)\n"
+    )
+    deep = _stage_validator(tmp_path, "deep", deep_code)
+    common = dict(
+        base="main", pairwise_preoracle=False, decompose=False, use_ci_status=False
+    )
+    changes = _changes(repo, ["feat-a", "feat-b", "feat-d"])
+    analyze_tiered(
+        repo,
+        changes,
+        tiers=[
+            Tier("screen", _stage_validator(tmp_path, "s1", "raise SystemExit(0)\n")),
+            Tier("deep", deep),
+        ],
+        **common,
+    )
+    screen = _stage_validator(
+        tmp_path,
+        "s2",
+        "import os, sys\nsys.exit(1 if os.path.exists('new-d.txt') else 0)\n",
+    )
+    result = analyze_tiered(
+        repo, changes, tiers=[Tier("screen", screen), Tier("deep", deep)], **common
+    )
+    pair = frozenset({"feat-a", "feat-b"})
+    assert result.logs["deep"].exact(pair).verdict is Verdict.FAIL
+    assert pair not in result.maximal_sets and result.maximal_sets
+    for plan in result.maximal_sets:
+        assert result.verified_tier(plan) == "deep"
+
+
+def test_a_cheaper_tier_does_not_rerun_what_a_deeper_log_refuted():
+    """A deeper log holds an exact FAIL; the screen only infers a PASS.
+
+    Running the set at the screen would spend a cheap run to learn what the
+    chain already knows (a log written before #35, or after a screen edit).
+    """
+    from mergeset.tiers import _confirming_chain
+
+    screen_log, deep_log = (EvaluationLog(MemoryLines()) for _ in range(2))
+    triple, pair = frozenset("abd"), frozenset("ab")
+    screen_log.record(Evaluation(triple, Verdict.PASS))
+    deep_log.record(Evaluation(pair, Verdict.FAIL))
+    screen_runs, deep_runs = [], []
+    chain = _confirming_chain(
+        [
+            (screen_log, lambda s: screen_runs.append(s) or Evaluation(s, Verdict.PASS)),
+            (deep_log, lambda s: deep_runs.append(s) or Evaluation(s, Verdict.PASS)),
+        ]
+    )
+    answer = chain(pair)
+    assert answer.verdict is Verdict.FAIL
+    assert screen_runs == [] and deep_runs == []
+    # A set no deeper log has refuted is still run at the screen.
+    chain(frozenset("a"))
+    assert screen_runs == [frozenset("a")]
