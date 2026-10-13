@@ -83,7 +83,16 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
         f"{_state(analysis)}"
     )
     yield ""
-    if analysis.aborted:
+    if analysis.aborted_tier:
+        yield (
+            f"> **Aborted at tier `{analysis.aborted_tier}`:** {analysis.aborted}. "
+            "The tiers before it finished, so the plans below hold at the depth "
+            f"they reached (see the notes) but were **not** confirmed at "
+            f"`{analysis.aborted_tier}`. Fix the cause and re-run: decided rows "
+            "are kept, the failed one is asked again."
+        )
+        yield ""
+    elif analysis.aborted:
         yield (
             f"> **Aborted:** {analysis.aborted}. The run could not do what it was "
             "asked; what follows is only what had been established before that "
@@ -95,7 +104,14 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
     yield "## Recommended merge plans"
     yield ""
     plans = analysis.merge_plan()
-    if not plans:
+    if (
+        analysis.aborted
+        and not analysis.aborted_tier
+        and not any(p["merge"] for p in plans)
+    ):
+        yield "_No plan: the run aborted before any set was established._"
+        plans = []
+    elif not plans:
         yield "_No good set was found. Every candidate conflicts._"
     for plan in plans:
         yield (
@@ -108,7 +124,11 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
                 "> This set was **never merged and validated as a whole**. It is a "
                 "combination of per-component answers, and a validator that sees the "
                 "whole repository can object to a combination it has never seen. "
-                "Re-run with a larger budget before acting on it."
+                + (
+                    "Fix the cause of the abort and re-run before acting on it."
+                    if analysis.aborted
+                    else "Re-run with a larger budget before acting on it."
+                )
             )
             yield ""
         yield "Merge in this order:"
@@ -216,7 +236,9 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
         and not unexplained
         and not analysis.singleton_conflicts
     ):
-        if analysis.aborted:
+        if analysis.aborted_tier:
+            yield "_No conflicts found by the tiers that finished._"
+        elif analysis.aborted:
             yield (
                 "_Nothing found yet: the run aborted before any conflict was "
                 "found, so this is not a finding._"
@@ -296,6 +318,8 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
 
 def _state(analysis: Analysis) -> str:
     """The header's verdict on the run: complete, aborted, or stopped on budget."""
+    if analysis.aborted_tier:
+        return f"ABORTED at tier `{analysis.aborted_tier}`"
     if analysis.aborted:
         return "ABORTED"
     return "complete" if analysis.exhausted else "partial (budget reached)"
@@ -427,6 +451,7 @@ def _analysis_jdict(analysis: Analysis) -> dict:
         "base_sha": analysis.base_sha,
         "exhausted": analysis.exhausted,
         "aborted": analysis.aborted,
+        "aborted_tier": analysis.aborted_tier,
         "evaluations": analysis.evaluations,
         "changes": [
             {
@@ -509,6 +534,7 @@ _HTML_TEMPLATE = r"""<!doctype html>
 <div class="wrap">
   <h1>__TITLE__</h1>
   <div class="sub" id="summary"></div>
+  <div class="card" id="abort" style="display:none"></div>
   <h2>Conflict graph</h2>
   <div class="card"><div id="graph"></div>
     <div class="legend">Solid red = textual conflict (found by <code>git merge-tree</code> or by merging; no test run).
@@ -535,9 +561,19 @@ const COLORS = ['#3b5b9e','#2f7d4f','#8a6a1f','#7a3f8f','#b3452e','#2f7d7d'];
 document.getElementById('summary').innerHTML =
   `base <code>${esc(DATA.base)}</code> (<code>${esc(DATA.base_sha.slice(0,8))}</code>) · ` +
   `${DATA.changes.length} changes · ${spend()} · ` +
-  (DATA.aborted ? `<span class="bad">ABORTED</span> — ${esc(DATA.aborted)}`
+  (DATA.aborted ? `<span class="bad">ABORTED${DATA.aborted_tier ? ' at tier <code>' + esc(DATA.aborted_tier) + '</code>' : ''}</span> — ${esc(DATA.aborted)}`
    : DATA.exhausted ? '<span class="good">complete</span>'
                   : '<span class="warn">partial (budget reached)</span>');
+
+if (DATA.aborted) {
+  const banner = document.getElementById('abort');
+  banner.style.display = 'block';
+  banner.innerHTML = '<b class="bad">Aborted.</b> ' + esc(DATA.aborted) +
+    (DATA.aborted_tier
+      ? ` The tiers before <code>${esc(DATA.aborted_tier)}</code> finished; the plans were not confirmed there.`
+      : ' The plans are only what had been established before the abort, not an answer.') +
+    ' Fix the cause and re-run: decided rows are kept, the failed one is asked again.';
+}
 
 // --- conflict graph: changes on a circle, conflicts as chords -------------
 (function drawGraph(){

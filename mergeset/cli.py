@@ -283,6 +283,7 @@ def _progress(event: str, payload: dict) -> None:
         "component": lambda p: f"component: {', '.join(p['changes'])}",
         "assisted_merge": lambda p: f"  attempting assisted resolution of {p['files']}",
         "tier": lambda p: f"tier {p['name']} ({p['role']})",
+        "aborted": lambda p: f"  ABORTED: {p['error']}",
         "tier_skipped": lambda p: f"  tier {p['name']} skipped: {p['why']}",
         "anytime": lambda p: f"  anytime: {p['summary']}",
     }

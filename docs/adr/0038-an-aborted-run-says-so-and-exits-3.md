@@ -10,4 +10,6 @@ ADR 0017 and 0036 make an `ERROR` end the search. The report did not know: it he
 
 **Decision.** `Analysis.aborted` (the first search's error, or `None`) is the one fact. The Markdown and HTML reports headline `ABORTED`, open with a banner carrying the reason and saying the plans are only what was established before it, and no longer call an empty conflict list "a budget stop". An `error` row in the log table shows its note, and the table says such rows are asked again. The CLI returns the report as `AbortedReport` (a `str`), whose egress exits `EXIT_ABORTED` (3; 1 and 2 stay with Python and argparse), and does not create integration branches from an aborted run. The report is still printed in full: it is what was established.
 
-Refusals (`mergeset cannot run yet`, `refused to run`) keep exit 0 as before; that is a separate question.
+**A confirm tier that aborts** after the screen finished is an abort too (the user asked for that depth, so exit 3), but the report is tier-aware: `ABORTED at tier \`deep\``, a banner saying the plans hold at the depth reached and were not confirmed there, and no claim that the empty conflict list is "not a finding". A flat abort with nothing established says "No plan", not "merge 0 of N". Review round 1 found that the first version told a valid screen answer it was "not an answer".
+
+Refusals (`mergeset cannot run yet, `refused to run`) keep exit 0 as before; that is a separate question.

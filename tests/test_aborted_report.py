@@ -115,3 +115,40 @@ def test_the_cli_exits_3_on_an_abort_and_0_otherwise(repo, tmp_path, monkeypatch
     with contextlib.redirect_stdout(out):
         code = cli.main(argv)
     assert code == 0 and "ABORTED" not in out.getvalue()
+
+
+def test_a_deep_tier_abort_does_not_disown_the_screens_answer(
+    repo, tmp_path, monkeypatch
+):
+    """Review of #57: the banner called a finished screen's plans 'not an answer'."""
+    import mergeset.tiers as tiers_module
+    from mergeset.solve import SearchState
+    from mergeset.tiers import Tier, analyze_tiered
+
+    def deep_search_aborts(*args, **kwargs):
+        # `tiers` runs a search only for the confirm tiers; the screen's is
+        # `analyze`'s own.
+        state = SearchState()
+        state.error = "the deep tier's resolution is gone"
+        return state
+
+    monkeypatch.setattr(tiers_module, "find_maximal_good_sets", deep_search_aborts)
+    ok = command_validation(py_command(tmp_path, "pass", _PASS))
+    deep = command_validation(py_command(tmp_path, "deep", _PASS))
+    result = analyze_tiered(
+        repo,
+        [Change(id=n, head=n, base="main") for n in ("feat-b", "feat-d")],
+        base="main",
+        tiers=[Tier("screen", ok), Tier("deep", deep)],
+        pairwise_preoracle=False,
+        decompose=False,
+        use_ci_status=False,
+    )
+    analysis = result.analysis
+    assert analysis.aborted_tier == "deep"
+    text = markdown_report(analysis)
+    assert "ABORTED at tier `deep`" in text.splitlines()[2]
+    assert "hold at the depth they reached" in text
+    assert "not an answer" not in text and "this is not a finding" not in text
+    assert "No conflicts found by the tiers that finished" in text
+    assert any("ran but it aborted" in n for n in analysis.notes)

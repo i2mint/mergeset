@@ -100,6 +100,9 @@ class Analysis:
     #: Whether the per-component answers were trusted to combine, or whether a
     #: global search had to verify them. See ``analyze(component_local=...)``.
     components_combined: bool = False
+    #: The confirm tier whose search aborted, when one did after the screen
+    #: finished (``None``: the screen itself aborted, or nothing did).
+    aborted_tier: Optional[str] = None
     #: Sets reported without ever having been evaluated as a whole. Empty is the
     #: normal case. See :meth:`merge_plan`'s ``verified`` and ADR 0025.
     unverified_sets: List[ChangeSet] = field(default_factory=list)

@@ -38,7 +38,7 @@ Budget it: `--max-seconds`, `--max-evaluations`. Partial results are labelled pa
 
 ## What must make you stop
 
-- **The report says ABORTED, or a note says an evaluation could not be performed.** The results are not an answer. Find out what broke (usually a bad path or a wrong validation command), fix it, re-run. Do not present partial results from an aborted run as findings.
+- **The report says ABORTED (the CLI exits 3, with the report printed), or a note says an evaluation could not be performed.** The results are not an answer. Find out what broke (usually a bad path or a wrong validation command), fix it, re-run. Do not present partial results from an aborted run as findings.
 - **The base does not validate on its own.** `mergeset` refuses to start in this case. Do not pass `check_base=False` to get past it; fix the base or the command.
 - **A monotonicity violation is reported.** Something failed that a passing set contains. Say so plainly: it means a flaky test or a change that fixes another, and the conclusions are not trustworthy until it is understood.
 - **A plan recommends dropping something the user cares about.** Weights are heuristic. Offer to re-run with `weight=` favouring it, or pinned.
