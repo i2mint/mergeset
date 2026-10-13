@@ -1100,14 +1100,18 @@ def analyze_tiered(
         conflicts = conflicts + list(state.conflicts)
         analysis.conflicts = _minimal(analysis.conflicts + state.conflicts)
         sync_every_tier()
+        if state.error:
+            # An aborted tier confirmed nothing: its partial sets do not replace
+            # the previous depth's answer, and the depth is not reached (#55).
+            # The conflicts it did find are evidence, and are kept above.
+            analysis.aborted_tier = tier.name
+            _skip(result, analysis, tier, f"it aborted: {state.error}", emit)
+            refresh_answer()
+            break
         if state.maximal_good_sets:
             analysis.maximal_sets = state.maximal_good_sets
         result.depth_reached = tier.name
         refresh_answer()
-        if state.error:
-            analysis.aborted_tier = tier.name
-            _skip(result, analysis, tier, f"it aborted: {state.error}", emit)
-            break
 
     if must_include and _aborted(analysis) is not None:
         analysis.notes.append(
@@ -1329,10 +1333,15 @@ def _record_what_may_be_claimed(
         and deepest == result.tiers[0].name
         and deepest == names[-1]
     )
+    # A tier that aborted ran on some sets (and refuted or confirmed them) even
+    # though it is not "reached": a set is judged against the deepest tier that
+    # was entered, so a set the aborted tier refuted stays NOT VERIFIED and one
+    # it confirmed is not (#55, review).
+    entered = analysis.aborted_tier or deepest
     analysis.unverified_sets = (
         []
         if trusted
-        else [s for s in analysis.maximal_sets if result.verified_tier(s) != deepest]
+        else [s for s in analysis.maximal_sets if result.verified_tier(s) != entered]
     )
     chain = " -> ".join(names)
     if deepest == names[-1] and not analysis.unverified_sets:
@@ -1351,6 +1360,13 @@ def _record_what_may_be_claimed(
             f"every set below was confirmed there. `{deepest}` refuted or did "
             "not run on the sets marked NOT VERIFIED; they hold only at the "
             "tier that did accept them."
+        )
+    elif analysis.aborted_tier:
+        analysis.notes.append(
+            f"Validation was tiered ({chain}) but `{analysis.aborted_tier}` "
+            f"aborted, so only `{deepest}` is claimed. A set marked NOT VERIFIED "
+            f"was not confirmed at `{analysis.aborted_tier}`; one it did confirm "
+            "is not marked."
         )
     else:
         missing = ", ".join(f"`{n}`" for n in names[names.index(deepest) + 1 :])
