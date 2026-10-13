@@ -207,20 +207,86 @@ def test_a_resolver_that_drops_earlier_heads_has_declined(repo, tmp_path):
     assert triple not in analysis.maximal_sets
 
 
-def test_a_resolver_that_leaves_edits_outside_its_commit_has_declined(repo, tmp_path):
-    """Otherwise the screen validates a tree the recorded commit is not."""
+def test_files_a_resolver_leaves_outside_its_commit_are_not_validated(repo, tmp_path):
+    """The screen must validate the recorded commit, not a dirty tree (#38).
 
-    def sloppy(worktree, files):
+    Untracked and ignored leftovers (a regenerated lockfile, ``__pycache__``)
+    are removed rather than declined: a resolver that ran the tests is not
+    a resolver that failed.
+    """
+
+    def leaves_files(worktree, files):
         _scripted_resolver([])(worktree, files)
-        with open(os.path.join(worktree, "lockfile"), "w") as f:
+        with open(os.path.join(worktree, "stray.txt"), "w") as f:
             f.write("regenerated, never committed\n")
         return True, "kept both edits"
 
-    analysis = _screen_only(repo, tmp_path, ["feat-a", "feat-c"], sloppy)
+    from mergeset.analysis import analyze
+
+    no_stray = "import os, sys\nsys.exit(1 if os.path.exists('stray.txt') else 0)\n"
+    analysis = analyze(
+        repo,
+        _changes(["feat-a", "feat-c"]),
+        base="main",
+        validate=command_validation(py_command(tmp_path, "nostray", no_stray)),
+        resolver=leaves_files,
+        pairwise_preoracle=False,
+        decompose=False,
+        use_ci_status=False,
+    )
+    assert frozenset({"feat-a", "feat-c"}) in analysis.maximal_sets
+
+
+def test_a_resolver_that_leaves_tracked_edits_uncommitted_has_declined(
+    repo, tmp_path
+):
+    def uncommitted(worktree, files):
+        _scripted_resolver([])(worktree, files)
+        with open(os.path.join(worktree, "other.txt"), "a") as f:
+            f.write("edited after the commit\n")
+        return True, "kept both edits"
+
+    analysis = _screen_only(repo, tmp_path, ["feat-a", "feat-c"], uncommitted)
     assert frozenset({"feat-a", "feat-c"}) not in analysis.maximal_sets
 
 
-def test_a_resolver_that_raises_is_an_error_and_leaks_nothing(repo, tmp_path):
+def test_a_resolver_that_keeps_a_heads_commit_but_not_its_work_has_declined(
+    repo, tmp_path
+):
+    """``merge -s ours`` keeps feat-c as a parent and drops what it did."""
+    from conftest import run
+
+    run(repo, "checkout", "-q", "feat-c")
+    with open(os.path.join(repo, "c_only.txt"), "w") as f:
+        f.write("only feat-c has this\n")
+    run(repo, "add", "-A")
+    run(repo, "commit", "-qm", "feat-c: more work")
+    run(repo, "checkout", "-q", "main")
+
+    def ours(worktree, files):
+        git(worktree, "merge", "--abort")
+        merged = git(
+            worktree,
+            "-c",
+            "user.email=t@example.com",
+            "-c",
+            "user.name=T",
+            "merge",
+            "--no-edit",
+            "-s",
+            "ours",
+            "feat-c",
+        )
+        return merged.ok, "kept ours"
+
+    analysis = _screen_only(repo, tmp_path, ["feat-a", "feat-c"], ours)
+    assert frozenset({"feat-a", "feat-c"}) not in analysis.maximal_sets
+
+
+def test_a_resolver_that_raises_has_declined_and_leaks_nothing(repo, tmp_path):
+    """A timeout is a resolver giving up: a conflict, not an ERROR that would
+    abort the whole search over one slow call."""
+
     def broken(worktree, files):
         raise TimeoutError("resolver timed out")
 
@@ -231,8 +297,19 @@ def test_a_resolver_that_raises_is_an_error_and_leaks_nothing(repo, tmp_path):
         validate=command_validation(py_command(tmp_path, "pass", _PASS)),
         resolver=broken,
     )(frozenset({"feat-a", "feat-c"}))
-    assert row.verdict is Verdict.ERROR and "timed out" in row.note
+    assert row.verdict is Verdict.FAIL and row.note == "textual merge conflict"
     assert len(git(repo, "worktree", "list").stdout.strip().splitlines()) == 1
+
+
+def test_only_the_resolution_namespace_is_written(repo, tmp_path):
+    def refs():
+        listed = git(repo, "for-each-ref", "--format=%(refname)").stdout.split()
+        return set(listed)
+
+    before = refs()
+    _tiered(repo, tmp_path, ["feat-a", "feat-c"], resolver=_scripted_resolver([]))
+    added = refs() - before
+    assert added and all(r.startswith("refs/mergeset/resolved/") for r in added)
 
 
 def test_a_resolution_survives_garbage_collection(repo, tmp_path):

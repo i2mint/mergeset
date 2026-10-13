@@ -219,38 +219,28 @@ def _try_assisted(repo, base, heads, outcome, resolver, worktree_root, emit):
         return None, outcome
     diffs = []
     merged = [base]
-    try:
-        for _, head in heads:
-            merged.append(head)
-            if _merge_into(path, head):
-                continue
-            conflicted = git(
-                path, "diff", "--name-only", "--diff-filter=U"
-            ).stdout.split()
+    for _, head in heads:
+        merged.append(head)
+        before = resolve(path, "HEAD")
+        if _merge_into(path, head):
+            continue
+        conflicted = git(path, "diff", "--name-only", "--diff-filter=U").stdout.split()
+        try:
             resolved, diff = resolver(
                 path, conflicted or list(outcome.conflicting_files)
             )
-            # What gets validated must be exactly the commit that is recorded,
-            # and that commit must hold everything merged so far: a resolver
-            # that took one side wholesale, or left edits outside the commit,
-            # declined -- whatever it says.
-            dirty = git(path, "status", "--porcelain", "--untracked-files=all")
-            if not resolved or _missing(path, "HEAD", merged) or dirty.stdout.strip():
-                _remove_worktree(repo, path)
-                return None, outcome
-            diffs.append(diff)
-        sha = resolve(path, "HEAD")
-    except Exception as error:  # a resolver that times out is not a crash
-        _remove_worktree(repo, path)
-        return None, replace(
-            outcome,
-            ok=False,
-            reason="error",
-            detail=f"the assisted resolution failed: {error!r}",
-        )
+        except Exception:  # noqa: BLE001 - a resolver that gives up (a timeout)
+            # is a resolver that declined: the conflict is real, and an ERROR
+            # would abort the whole search over one slow call.
+            resolved, diff = False, ""
+        if not (resolved and _vouches_for(path, before, head, merged, conflicted)):
+            _remove_worktree(repo, path)
+            return None, outcome
+        diffs.append(diff)
+    sha = resolve(path, "HEAD")
     # Reachable from a ref, or `git gc` prunes it once the worktree is gone and
     # every deep tier after that refuses the set. A new hidden ref, never a
-    # branch, and never one that existed before (D12).
+    # branch, and never one that existed before (D12, widened by ADR 0031).
     git(repo, "update-ref", f"{RESOLVED_REF_PREFIX}{sha}", sha, "")
     return path, MergeOutcome(
         ok=True,
@@ -261,6 +251,32 @@ def _try_assisted(repo, base, heads, outcome, resolver, worktree_root, emit):
         detail="conflict resolved by assisted merge; review the diff",
         resolved_commit=sha,
     )
+
+
+def _vouches_for(path, before, head, merged, conflicted) -> bool:
+    """Whether the resolver's commit is a resolution of *this* conflict, and only that.
+
+    What gets validated must be exactly the commit that is recorded, holding
+    everything merged so far, and differing from git's own merge of ``head``
+    only in the files that conflicted. A resolver that took one side wholesale
+    (dropping earlier heads, or ``merge -s ours`` keeping a head's commit but
+    not its work) or left the merge unfinished has declined, whatever it says.
+    Files it left outside the commit (``__pycache__``, a build) are not a
+    decline -- they are removed, ignored ones too, so the tree validated here
+    is the one a deeper tier checks out.
+    """
+    unfinished = git(path, "rev-parse", "-q", "--verify", "MERGE_HEAD").ok
+    tracked = git(path, "status", "--porcelain", "--untracked-files=no").stdout
+    if unfinished or tracked.strip() or _missing(path, "HEAD", merged):
+        return False
+    auto = git(path, "merge-tree", "--write-tree", before, head).stdout.split()
+    if not auto:
+        return False
+    changed = git(path, "diff", "--name-only", auto[0], "HEAD").stdout.split()
+    if not set(changed) <= set(conflicted):
+        return False
+    git(path, "clean", "-fdxq")
+    return True
 
 
 def _missing(repo, commit, revs) -> list:
