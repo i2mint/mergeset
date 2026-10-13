@@ -123,6 +123,7 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li><a class="reference internal" href="#mergeset.log.Known"><code class="docutils literal notranslate"><span class="pre">Known</span></code></a><ul>
+<li><a class="reference internal" href="#mergeset.log.Known.answer"><code class="docutils literal notranslate"><span class="pre">Known.answer()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.log.Known.exact"><code class="docutils literal notranslate"><span class="pre">Known.exact</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.log.Known.witness"><code class="docutils literal notranslate"><span class="pre">Known.witness</span></code></a></li>
 </ul>
@@ -534,6 +535,17 @@ in-memory list, a <code class="docutils literal notranslate"><span class="pre">d
 <p>What the log already knows about a set, without re-evaluating it.</p>
 <dl class="field-list simple">
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.log.Known.answer">
+<span class="sig-name descname"><span class="pre">answer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/log.html#Known.answer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.log.Known.answer" title="Link to this definition">#</a></dt>
+<dd><p>The evaluation this knowledge stands for, as a cache hit returns it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="mergeset.base.html#mergeset.base.Evaluation" title="mergeset.base.Evaluation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Evaluation</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mergeset.log.Known.exact">
 <span class="sig-name descname"><span class="pre">exact</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="mergeset.base.html#mergeset.base.Evaluation" title="mergeset.base.Evaluation"><span class="pre">Evaluation</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.log.Known.exact" title="Link to this definition">#</a></dt>
@@ -764,7 +776,7 @@ same seam as everything else.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=565bc8c8"></script>
+      <script src="../_static/documentation_options.js?v=9dd25805"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

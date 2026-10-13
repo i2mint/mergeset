@@ -288,6 +288,13 @@ Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 What the log already knows about a set, without re-evaluating it.
 
+#### answer(subset)
+
+The evaluation this knowledge stands for, as a cache hit returns it.
+
+* **Return type:**
+  [`Evaluation`](mergeset.base.html.md#mergeset.base.Evaluation)
+
 #### exact *: [Evaluation](mergeset.base.html.md#mergeset.base.Evaluation) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
 
 The recorded evaluation, when the set itself was evaluated.

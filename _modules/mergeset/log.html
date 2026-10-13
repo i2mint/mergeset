@@ -303,556 +303,563 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="153">    <span class="n">witness</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span data-line="154">
 </span><span data-line="155">    <span class="k">def</span><span class="w"> </span><span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="156">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
-
+</span><span data-line="156">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 </span><span data-line="157">
-</span><span data-line="158">
+<div class="viewcode-block" id="Known.answer">
+<a class="viewcode-back" href="../../_autosummary/mergeset.log.html#mergeset.Known.answer">[docs]</a>
+</span><span data-line="158">    <span class="k">def</span><span class="w"> </span><span class="nf">answer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Evaluation</span><span class="p">:</span>
+</span><span data-line="159"><span class="w">        </span><span class="sd">"""The evaluation this knowledge stands for, as a cache hit returns it."""</span>
+</span><span data-line="160">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exact</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="161">            <span class="k">return</span> <span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exact</span><span class="p">,</span> <span class="n">cached</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="162">        <span class="k">return</span> <span class="n">Evaluation</span><span class="p">(</span>
+</span><span data-line="163">            <span class="n">subset</span><span class="o">=</span><span class="n">subset</span><span class="p">,</span>
+</span><span data-line="164">            <span class="n">verdict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verdict</span><span class="p">,</span>
+</span><span data-line="165">            <span class="n">note</span><span class="o">=</span><span class="sa">f</span><span class="s2">"inferred from </span><span class="si">{</span><span class="n">set_key</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">witness</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+</span><span data-line="166">            <span class="n">cached</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="167">        <span class="p">)</span></div>
+</div>
+
+</span><span data-line="168">
+</span><span data-line="169">
 <div class="viewcode-block" id="Pins">
 <a class="viewcode-back" href="../../_autosummary/mergeset.log.html#mergeset.Pins">[docs]</a>
-</span><span data-line="159"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="160"><span class="k">class</span><span class="w"> </span><span class="nc">Pins</span><span class="p">:</span>
-</span><span data-line="161"><span class="w">    </span><span class="sd">"""What a question is about: the base, each change's head sha, the validator.</span>
-</span><span data-line="162">
-</span><span data-line="163"><span class="sd">    A row *matches* when it was merged onto the same base and every change it</span>
-</span><span data-line="164"><span class="sd">    holds is in play with the same head. A row holding a change that is not in</span>
-</span><span data-line="165"><span class="sd">    play does not match: its head for that change is unchecked, and such a row</span>
-</span><span data-line="166"><span class="sd">    would otherwise surface as an "established" set recommending a change</span>
-</span><span data-line="167"><span class="sd">    nobody asked about, or as a monotonicity violation between two heads of it.</span>
-</span><span data-line="168">
-</span><span data-line="169"><span class="sd">    &gt;&gt;&gt; from mergeset.base import Evaluation, Verdict</span>
-</span><span data-line="170"><span class="sd">    &gt;&gt;&gt; pins = Pins('B', {'a': 'A1', 'b': 'B1'})</span>
-</span><span data-line="171"><span class="sd">    &gt;&gt;&gt; row = Evaluation(frozenset('ab'), Verdict.PASS,</span>
-</span><span data-line="172"><span class="sd">    ...                  base_sha='B', heads={'a': 'A1', 'b': 'B1'})</span>
-</span><span data-line="173"><span class="sd">    &gt;&gt;&gt; pins.matches(row)</span>
-</span><span data-line="174"><span class="sd">    True</span>
-</span><span data-line="175"><span class="sd">    &gt;&gt;&gt; pins.matches(replace(row, heads={'a': 'A0', 'b': 'B1'}))  # a rewritten</span>
-</span><span data-line="176"><span class="sd">    False</span>
-</span><span data-line="177"><span class="sd">    &gt;&gt;&gt; pins.matches(replace(row, base_sha='B0'))                 # base moved</span>
-</span><span data-line="178"><span class="sd">    False</span>
-</span><span data-line="179"><span class="sd">    &gt;&gt;&gt; Pins('B', {'a': 'A1'}).matches(row)          # b is not in play</span>
-</span><span data-line="180"><span class="sd">    False</span>
-</span><span data-line="181">
-</span><span data-line="182"><span class="sd">    With a ``validator`` fingerprint, a row must also have been judged by that</span>
-</span><span data-line="183"><span class="sd">    validator. A row recording none (written before i2mint/mergeset#32) is not</span>
-</span><span data-line="184"><span class="sd">    refuted, only incomplete: see :attr:`EvaluationLog.unpinned`.</span>
-</span><span data-line="185">
-</span><span data-line="186"><span class="sd">    &gt;&gt;&gt; pins = Pins('B', {'a': 'A1', 'b': 'B1'}, validator='command:1')</span>
-</span><span data-line="187"><span class="sd">    &gt;&gt;&gt; pins.matches(replace(row, validator='command:1'))</span>
-</span><span data-line="188"><span class="sd">    True</span>
-</span><span data-line="189"><span class="sd">    &gt;&gt;&gt; pins.refutes(replace(row, validator='command:2'))   # the command changed</span>
-</span><span data-line="190"><span class="sd">    True</span>
-</span><span data-line="191"><span class="sd">    &gt;&gt;&gt; pins.matches(row), pins.refutes(row)                # recorded no validator</span>
-</span><span data-line="192"><span class="sd">    (False, False)</span>
-</span><span data-line="193"><span class="sd">    """</span>
-</span><span data-line="194">
-</span><span data-line="195">    <span class="n">base</span><span class="p">:</span> <span class="nb">str</span>
-</span><span data-line="196">    <span class="n">heads</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
-</span><span data-line="197">    <span class="c1">#: Fingerprint of the validator the question is asked of (``'unknown'``</span>
-</span><span data-line="198">    <span class="c1">#: when it cannot say what it runs). ``None`` compares no validator at all.</span>
-</span><span data-line="199">    <span class="n">validator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="200">    <span class="c1">#: How the question's sets are merged: ``'none'`` (conflicts stand), or the</span>
-</span><span data-line="201">    <span class="c1">#: resolver's fingerprint (i2mint/mergeset#34). ``None`` compares none.</span>
-</span><span data-line="202">    <span class="n">resolver</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="203">
-</span><span data-line="204">    <span class="k">def</span><span class="w"> </span><span class="nf">_resolved_alike</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-</span><span data-line="205"><span class="w">        </span><span class="sd">"""Whether ``evaluation`` was merged the way these pins merge.</span>
-</span><span data-line="206">
-</span><span data-line="207"><span class="sd">        ``None`` when the row cannot tell (it records no resolver and its</span>
-</span><span data-line="208"><span class="sd">        outcome depends on one). A clean merge is merged alike by every</span>
-</span><span data-line="209"><span class="sd">        resolver; a conflict no resolver resolved stands when none is used,</span>
-</span><span data-line="210"><span class="sd">        whoever recorded it; an assisted merge or a conflict a resolver</span>
-</span><span data-line="211"><span class="sd">        declined answers only that resolver.</span>
-</span><span data-line="212">
-</span><span data-line="213"><span class="sd">        &gt;&gt;&gt; from mergeset.base import MergeOutcome</span>
-</span><span data-line="214"><span class="sd">        &gt;&gt;&gt; conflict = Evaluation(frozenset('ab'), Verdict.FAIL,</span>
-</span><span data-line="215"><span class="sd">        ...     merge=MergeOutcome(False, 'conflict'), resolver='claude-code:1')</span>
-</span><span data-line="216"><span class="sd">        &gt;&gt;&gt; Pins('B', {}, resolver='none')._resolved_alike(conflict)</span>
-</span><span data-line="217"><span class="sd">        True</span>
-</span><span data-line="218"><span class="sd">        &gt;&gt;&gt; Pins('B', {}, resolver='claude-code:2')._resolved_alike(conflict)</span>
-</span><span data-line="219"><span class="sd">        False</span>
-</span><span data-line="220"><span class="sd">        """</span>
-</span><span data-line="221">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolver</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">merge_dependent</span><span class="p">:</span>
-</span><span data-line="222">            <span class="k">return</span> <span class="kc">True</span>
-</span><span data-line="223">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolver</span> <span class="o">==</span> <span class="n">NO_RESOLVER</span><span class="p">:</span>
-</span><span data-line="224">            <span class="c1"># Known without the row saying who resolved it: a conflict stands</span>
-</span><span data-line="225">            <span class="c1"># without a resolver, and an assisted merge cannot happen without</span>
-</span><span data-line="226">            <span class="c1"># one -- so even an old row (``trust_unpinned``) is decided here.</span>
-</span><span data-line="227">            <span class="k">return</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">unresolved_conflict</span>
-</span><span data-line="228">        <span class="k">if</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">resolver</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="229">            <span class="k">return</span> <span class="kc">None</span>
-</span><span data-line="230">        <span class="k">return</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">resolver</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolver</span>
-</span><span data-line="231">
-</span><span data-line="232">    <span class="k">def</span><span class="w"> </span><span class="nf">_same_commits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="233">        <span class="k">if</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">base_sha</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">:</span>
-</span><span data-line="234">            <span class="k">return</span> <span class="kc">False</span>
-</span><span data-line="235">        <span class="n">recorded</span> <span class="o">=</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">heads</span>
-</span><span data-line="236">        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span>
-</span><span data-line="237">            <span class="n">cid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">heads</span> <span class="ow">and</span> <span class="n">recorded</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cid</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">heads</span><span class="p">[</span><span class="n">cid</span><span class="p">]</span>
-</span><span data-line="238">            <span class="k">for</span> <span class="n">cid</span> <span class="ow">in</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">subset</span>
-</span><span data-line="239">        <span class="p">)</span>
-</span><span data-line="240">
+</span><span data-line="170"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="171"><span class="k">class</span><span class="w"> </span><span class="nc">Pins</span><span class="p">:</span>
+</span><span data-line="172"><span class="w">    </span><span class="sd">"""What a question is about: the base, each change's head sha, the validator.</span>
+</span><span data-line="173">
+</span><span data-line="174"><span class="sd">    A row *matches* when it was merged onto the same base and every change it</span>
+</span><span data-line="175"><span class="sd">    holds is in play with the same head. A row holding a change that is not in</span>
+</span><span data-line="176"><span class="sd">    play does not match: its head for that change is unchecked, and such a row</span>
+</span><span data-line="177"><span class="sd">    would otherwise surface as an "established" set recommending a change</span>
+</span><span data-line="178"><span class="sd">    nobody asked about, or as a monotonicity violation between two heads of it.</span>
+</span><span data-line="179">
+</span><span data-line="180"><span class="sd">    &gt;&gt;&gt; from mergeset.base import Evaluation, Verdict</span>
+</span><span data-line="181"><span class="sd">    &gt;&gt;&gt; pins = Pins('B', {'a': 'A1', 'b': 'B1'})</span>
+</span><span data-line="182"><span class="sd">    &gt;&gt;&gt; row = Evaluation(frozenset('ab'), Verdict.PASS,</span>
+</span><span data-line="183"><span class="sd">    ...                  base_sha='B', heads={'a': 'A1', 'b': 'B1'})</span>
+</span><span data-line="184"><span class="sd">    &gt;&gt;&gt; pins.matches(row)</span>
+</span><span data-line="185"><span class="sd">    True</span>
+</span><span data-line="186"><span class="sd">    &gt;&gt;&gt; pins.matches(replace(row, heads={'a': 'A0', 'b': 'B1'}))  # a rewritten</span>
+</span><span data-line="187"><span class="sd">    False</span>
+</span><span data-line="188"><span class="sd">    &gt;&gt;&gt; pins.matches(replace(row, base_sha='B0'))                 # base moved</span>
+</span><span data-line="189"><span class="sd">    False</span>
+</span><span data-line="190"><span class="sd">    &gt;&gt;&gt; Pins('B', {'a': 'A1'}).matches(row)          # b is not in play</span>
+</span><span data-line="191"><span class="sd">    False</span>
+</span><span data-line="192">
+</span><span data-line="193"><span class="sd">    With a ``validator`` fingerprint, a row must also have been judged by that</span>
+</span><span data-line="194"><span class="sd">    validator. A row recording none (written before i2mint/mergeset#32) is not</span>
+</span><span data-line="195"><span class="sd">    refuted, only incomplete: see :attr:`EvaluationLog.unpinned`.</span>
+</span><span data-line="196">
+</span><span data-line="197"><span class="sd">    &gt;&gt;&gt; pins = Pins('B', {'a': 'A1', 'b': 'B1'}, validator='command:1')</span>
+</span><span data-line="198"><span class="sd">    &gt;&gt;&gt; pins.matches(replace(row, validator='command:1'))</span>
+</span><span data-line="199"><span class="sd">    True</span>
+</span><span data-line="200"><span class="sd">    &gt;&gt;&gt; pins.refutes(replace(row, validator='command:2'))   # the command changed</span>
+</span><span data-line="201"><span class="sd">    True</span>
+</span><span data-line="202"><span class="sd">    &gt;&gt;&gt; pins.matches(row), pins.refutes(row)                # recorded no validator</span>
+</span><span data-line="203"><span class="sd">    (False, False)</span>
+</span><span data-line="204"><span class="sd">    """</span>
+</span><span data-line="205">
+</span><span data-line="206">    <span class="n">base</span><span class="p">:</span> <span class="nb">str</span>
+</span><span data-line="207">    <span class="n">heads</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
+</span><span data-line="208">    <span class="c1">#: Fingerprint of the validator the question is asked of (``'unknown'``</span>
+</span><span data-line="209">    <span class="c1">#: when it cannot say what it runs). ``None`` compares no validator at all.</span>
+</span><span data-line="210">    <span class="n">validator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="211">    <span class="c1">#: How the question's sets are merged: ``'none'`` (conflicts stand), or the</span>
+</span><span data-line="212">    <span class="c1">#: resolver's fingerprint (i2mint/mergeset#34). ``None`` compares none.</span>
+</span><span data-line="213">    <span class="n">resolver</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="214">
+</span><span data-line="215">    <span class="k">def</span><span class="w"> </span><span class="nf">_resolved_alike</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
+</span><span data-line="216"><span class="w">        </span><span class="sd">"""Whether ``evaluation`` was merged the way these pins merge.</span>
+</span><span data-line="217">
+</span><span data-line="218"><span class="sd">        ``None`` when the row cannot tell (it records no resolver and its</span>
+</span><span data-line="219"><span class="sd">        outcome depends on one). A clean merge is merged alike by every</span>
+</span><span data-line="220"><span class="sd">        resolver; a conflict no resolver resolved stands when none is used,</span>
+</span><span data-line="221"><span class="sd">        whoever recorded it; an assisted merge or a conflict a resolver</span>
+</span><span data-line="222"><span class="sd">        declined answers only that resolver.</span>
+</span><span data-line="223">
+</span><span data-line="224"><span class="sd">        &gt;&gt;&gt; from mergeset.base import MergeOutcome</span>
+</span><span data-line="225"><span class="sd">        &gt;&gt;&gt; conflict = Evaluation(frozenset('ab'), Verdict.FAIL,</span>
+</span><span data-line="226"><span class="sd">        ...     merge=MergeOutcome(False, 'conflict'), resolver='claude-code:1')</span>
+</span><span data-line="227"><span class="sd">        &gt;&gt;&gt; Pins('B', {}, resolver='none')._resolved_alike(conflict)</span>
+</span><span data-line="228"><span class="sd">        True</span>
+</span><span data-line="229"><span class="sd">        &gt;&gt;&gt; Pins('B', {}, resolver='claude-code:2')._resolved_alike(conflict)</span>
+</span><span data-line="230"><span class="sd">        False</span>
+</span><span data-line="231"><span class="sd">        """</span>
+</span><span data-line="232">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolver</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">merge_dependent</span><span class="p">:</span>
+</span><span data-line="233">            <span class="k">return</span> <span class="kc">True</span>
+</span><span data-line="234">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolver</span> <span class="o">==</span> <span class="n">NO_RESOLVER</span><span class="p">:</span>
+</span><span data-line="235">            <span class="c1"># Known without the row saying who resolved it: a conflict stands</span>
+</span><span data-line="236">            <span class="c1"># without a resolver, and an assisted merge cannot happen without</span>
+</span><span data-line="237">            <span class="c1"># one -- so even an old row (``trust_unpinned``) is decided here.</span>
+</span><span data-line="238">            <span class="k">return</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">unresolved_conflict</span>
+</span><span data-line="239">        <span class="k">if</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">resolver</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="240">            <span class="k">return</span> <span class="kc">None</span>
+</span><span data-line="241">        <span class="k">return</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">resolver</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolver</span>
+</span><span data-line="242">
+</span><span data-line="243">    <span class="k">def</span><span class="w"> </span><span class="nf">_same_commits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="244">        <span class="k">if</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">base_sha</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">:</span>
+</span><span data-line="245">            <span class="k">return</span> <span class="kc">False</span>
+</span><span data-line="246">        <span class="n">recorded</span> <span class="o">=</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">heads</span>
+</span><span data-line="247">        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span>
+</span><span data-line="248">            <span class="n">cid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">heads</span> <span class="ow">and</span> <span class="n">recorded</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cid</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">heads</span><span class="p">[</span><span class="n">cid</span><span class="p">]</span>
+</span><span data-line="249">            <span class="k">for</span> <span class="n">cid</span> <span class="ow">in</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">subset</span>
+</span><span data-line="250">        <span class="p">)</span>
+</span><span data-line="251">
 <div class="viewcode-block" id="Pins.refutes">
 <a class="viewcode-back" href="../../_autosummary/mergeset.log.html#mergeset.Pins.refutes">[docs]</a>
-</span><span data-line="241">    <span class="k">def</span><span class="w"> </span><span class="nf">refutes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="242"><span class="w">        </span><span class="sd">"""True iff what ``evaluation`` records shows it answers another question.</span>
-</span><span data-line="243">
-</span><span data-line="244"><span class="sd">        Other commits, or another validator. A row that records too little to</span>
-</span><span data-line="245"><span class="sd">        tell is not refuted -- it is incomplete (see :meth:`complete`).</span>
-</span><span data-line="246"><span class="sd">        """</span>
-</span><span data-line="247">        <span class="k">if</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">pinned</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_same_commits</span><span class="p">(</span><span class="n">evaluation</span><span class="p">):</span>
-</span><span data-line="248">            <span class="k">return</span> <span class="kc">True</span>
-</span><span data-line="249">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolved_alike</span><span class="p">(</span><span class="n">evaluation</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
-</span><span data-line="250">            <span class="k">return</span> <span class="kc">True</span>
-</span><span data-line="251">        <span class="k">return</span> <span class="p">(</span>
-</span><span data-line="252">            <span class="bp">self</span><span class="o">.</span><span class="n">validator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-</span><span data-line="253">            <span class="ow">and</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">validator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-</span><span data-line="254">            <span class="ow">and</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">validator</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span>
-</span><span data-line="255">        <span class="p">)</span></div>
+</span><span data-line="252">    <span class="k">def</span><span class="w"> </span><span class="nf">refutes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="253"><span class="w">        </span><span class="sd">"""True iff what ``evaluation`` records shows it answers another question.</span>
+</span><span data-line="254">
+</span><span data-line="255"><span class="sd">        Other commits, or another validator. A row that records too little to</span>
+</span><span data-line="256"><span class="sd">        tell is not refuted -- it is incomplete (see :meth:`complete`).</span>
+</span><span data-line="257"><span class="sd">        """</span>
+</span><span data-line="258">        <span class="k">if</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">pinned</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_same_commits</span><span class="p">(</span><span class="n">evaluation</span><span class="p">):</span>
+</span><span data-line="259">            <span class="k">return</span> <span class="kc">True</span>
+</span><span data-line="260">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolved_alike</span><span class="p">(</span><span class="n">evaluation</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+</span><span data-line="261">            <span class="k">return</span> <span class="kc">True</span>
+</span><span data-line="262">        <span class="k">return</span> <span class="p">(</span>
+</span><span data-line="263">            <span class="bp">self</span><span class="o">.</span><span class="n">validator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span data-line="264">            <span class="ow">and</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">validator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span data-line="265">            <span class="ow">and</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">validator</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span>
+</span><span data-line="266">        <span class="p">)</span></div>
 
-</span><span data-line="256">
+</span><span data-line="267">
 <div class="viewcode-block" id="Pins.complete">
 <a class="viewcode-back" href="../../_autosummary/mergeset.log.html#mergeset.Pins.complete">[docs]</a>
-</span><span data-line="257">    <span class="k">def</span><span class="w"> </span><span class="nf">complete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="258"><span class="w">        </span><span class="sd">"""True iff ``evaluation`` records everything these pins compare."""</span>
-</span><span data-line="259">        <span class="k">return</span> <span class="p">(</span>
-</span><span data-line="260">            <span class="n">evaluation</span><span class="o">.</span><span class="n">pinned</span>
-</span><span data-line="261">            <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">validator</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">validator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="262">            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolved_alike</span><span class="p">(</span><span class="n">evaluation</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-</span><span data-line="263">        <span class="p">)</span></div>
+</span><span data-line="268">    <span class="k">def</span><span class="w"> </span><span class="nf">complete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="269"><span class="w">        </span><span class="sd">"""True iff ``evaluation`` records everything these pins compare."""</span>
+</span><span data-line="270">        <span class="k">return</span> <span class="p">(</span>
+</span><span data-line="271">            <span class="n">evaluation</span><span class="o">.</span><span class="n">pinned</span>
+</span><span data-line="272">            <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">validator</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">validator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="273">            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolved_alike</span><span class="p">(</span><span class="n">evaluation</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span data-line="274">        <span class="p">)</span></div>
 
-</span><span data-line="264">
+</span><span data-line="275">
 <div class="viewcode-block" id="Pins.matches">
 <a class="viewcode-back" href="../../_autosummary/mergeset.log.html#mergeset.Pins.matches">[docs]</a>
-</span><span data-line="265">    <span class="k">def</span><span class="w"> </span><span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="266"><span class="w">        </span><span class="sd">"""True iff ``evaluation`` was run against these commits, by this validator."""</span>
-</span><span data-line="267">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">evaluation</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">refutes</span><span class="p">(</span><span class="n">evaluation</span><span class="p">)</span></div>
+</span><span data-line="276">    <span class="k">def</span><span class="w"> </span><span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="277"><span class="w">        </span><span class="sd">"""True iff ``evaluation`` was run against these commits, by this validator."""</span>
+</span><span data-line="278">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">evaluation</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">refutes</span><span class="p">(</span><span class="n">evaluation</span><span class="p">)</span></div>
 
-</span><span data-line="268">
+</span><span data-line="279">
 <div class="viewcode-block" id="Pins.stamp">
 <a class="viewcode-back" href="../../_autosummary/mergeset.log.html#mergeset.Pins.stamp">[docs]</a>
-</span><span data-line="269">    <span class="k">def</span><span class="w"> </span><span class="nf">stamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Evaluation</span><span class="p">:</span>
-</span><span data-line="270"><span class="w">        </span><span class="sd">"""``evaluation`` pinned to these commits and validator, where it is not.</span>
-</span><span data-line="271">
-</span><span data-line="272"><span class="sd">        Pins naming no validator stamp :data:`~mergeset.base.UNKNOWN_FINGERPRINT`,</span>
-</span><span data-line="273"><span class="sd">        never nothing: a row recording no validator reads as written before</span>
-</span><span data-line="274"><span class="sd">        validators were recorded, and ``trust_unpinned`` would adopt it.</span>
-</span><span data-line="275"><span class="sd">        """</span>
-</span><span data-line="276">        <span class="k">if</span> <span class="ow">not</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">pinned</span><span class="p">:</span>
-</span><span data-line="277">            <span class="n">heads</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">heads</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">subset</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">heads</span><span class="p">}</span>
-</span><span data-line="278">            <span class="n">evaluation</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">evaluation</span><span class="p">,</span> <span class="n">base_sha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">heads</span><span class="o">=</span><span class="n">heads</span><span class="p">)</span>
-</span><span data-line="279">        <span class="k">if</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">validator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="280">            <span class="n">evaluation</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span>
-</span><span data-line="281">                <span class="n">evaluation</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">validator</span> <span class="ow">or</span> <span class="n">UNKNOWN_FINGERPRINT</span>
-</span><span data-line="282">            <span class="p">)</span>
-</span><span data-line="283">        <span class="k">if</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">resolver</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="284">            <span class="n">evaluation</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span>
-</span><span data-line="285">                <span class="n">evaluation</span><span class="p">,</span> <span class="n">resolver</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolver</span> <span class="ow">or</span> <span class="n">UNKNOWN_FINGERPRINT</span>
-</span><span data-line="286">            <span class="p">)</span>
-</span><span data-line="287">        <span class="k">return</span> <span class="n">evaluation</span></div>
+</span><span data-line="280">    <span class="k">def</span><span class="w"> </span><span class="nf">stamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Evaluation</span><span class="p">:</span>
+</span><span data-line="281"><span class="w">        </span><span class="sd">"""``evaluation`` pinned to these commits and validator, where it is not.</span>
+</span><span data-line="282">
+</span><span data-line="283"><span class="sd">        Pins naming no validator stamp :data:`~mergeset.base.UNKNOWN_FINGERPRINT`,</span>
+</span><span data-line="284"><span class="sd">        never nothing: a row recording no validator reads as written before</span>
+</span><span data-line="285"><span class="sd">        validators were recorded, and ``trust_unpinned`` would adopt it.</span>
+</span><span data-line="286"><span class="sd">        """</span>
+</span><span data-line="287">        <span class="k">if</span> <span class="ow">not</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">pinned</span><span class="p">:</span>
+</span><span data-line="288">            <span class="n">heads</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">heads</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">subset</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">heads</span><span class="p">}</span>
+</span><span data-line="289">            <span class="n">evaluation</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">evaluation</span><span class="p">,</span> <span class="n">base_sha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">heads</span><span class="o">=</span><span class="n">heads</span><span class="p">)</span>
+</span><span data-line="290">        <span class="k">if</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">validator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="291">            <span class="n">evaluation</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span>
+</span><span data-line="292">                <span class="n">evaluation</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">validator</span> <span class="ow">or</span> <span class="n">UNKNOWN_FINGERPRINT</span>
+</span><span data-line="293">            <span class="p">)</span>
+</span><span data-line="294">        <span class="k">if</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">resolver</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="295">            <span class="n">evaluation</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span>
+</span><span data-line="296">                <span class="n">evaluation</span><span class="p">,</span> <span class="n">resolver</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolver</span> <span class="ow">or</span> <span class="n">UNKNOWN_FINGERPRINT</span>
+</span><span data-line="297">            <span class="p">)</span>
+</span><span data-line="298">        <span class="k">return</span> <span class="n">evaluation</span></div>
 </div>
 
-</span><span data-line="288">
-</span><span data-line="289">
+</span><span data-line="299">
+</span><span data-line="300">
 <div class="viewcode-block" id="EvaluationLog">
 <a class="viewcode-back" href="../../_autosummary/mergeset.log.html#mergeset.EvaluationLog">[docs]</a>
-</span><span data-line="290"><span class="k">class</span><span class="w"> </span><span class="nc">EvaluationLog</span><span class="p">:</span>
-</span><span data-line="291"><span class="w">    </span><span class="sd">"""Append-only record of evaluations, plus the monotone closure over it.</span>
-</span><span data-line="292">
-</span><span data-line="293"><span class="sd">    Args:</span>
-</span><span data-line="294"><span class="sd">        store: Persistence seam. A path (str/PathLike) is wrapped in</span>
-</span><span data-line="295"><span class="sd">            :class:`JsonlLines`; pass :class:`StoreLines` to put the log in an</span>
-</span><span data-line="296"><span class="sd">            artifact store (S3 and friends), or :class:`MemoryLines` for an</span>
-</span><span data-line="297"><span class="sd">            ephemeral log. With no argument at all the log goes to the artifact</span>
-</span><span data-line="298"><span class="sd">            store's ``evaluations/adhoc.jsonl`` — never the working directory.</span>
-</span><span data-line="299"><span class="sd">        pins: The commits the questions are about (see :class:`Pins` and</span>
-</span><span data-line="300"><span class="sd">            :meth:`pin`). Unpinned, every row counts, as before pinning existed;</span>
-</span><span data-line="301"><span class="sd">            :func:`mergeset.analyze` always pins.</span>
-</span><span data-line="302"><span class="sd">        trust_unpinned: Let rows that record no commits at all (written before</span>
-</span><span data-line="303"><span class="sd">            i2mint/mergeset#23, or by an unpinned log), or no validator while</span>
-</span><span data-line="304"><span class="sd">            the pins name one (written before i2mint/mergeset#32), count as</span>
-</span><span data-line="305"><span class="sd">            matches once the log is pinned. Off by default, because such a row</span>
-</span><span data-line="306"><span class="sd">            may be about a head that has since moved, or judged by a command</span>
-</span><span data-line="307"><span class="sd">            that has since changed — which is the defect pinning exists to</span>
-</span><span data-line="308"><span class="sd">            close. Turn it on only when you know neither has changed since those</span>
-</span><span data-line="309"><span class="sd">            rows were written; it is the migration path for an old log. A row</span>
-</span><span data-line="310"><span class="sd">            whose recorded commits or validator differ never counts.</span>
-</span><span data-line="311">
-</span><span data-line="312"><span class="sd">    &gt;&gt;&gt; log = EvaluationLog(MemoryLines())</span>
-</span><span data-line="313"><span class="sd">    &gt;&gt;&gt; from mergeset.base import Evaluation, Verdict</span>
-</span><span data-line="314"><span class="sd">    &gt;&gt;&gt; _ = log.record(Evaluation(frozenset({'a', 'b'}), Verdict.PASS))</span>
-</span><span data-line="315"><span class="sd">    &gt;&gt;&gt; bool(log.known(frozenset({'a'})))          # subset of a passing set</span>
-</span><span data-line="316"><span class="sd">    True</span>
-</span><span data-line="317"><span class="sd">    &gt;&gt;&gt; log.known(frozenset({'a'})).verdict.value</span>
-</span><span data-line="318"><span class="sd">    'pass'</span>
-</span><span data-line="319"><span class="sd">    &gt;&gt;&gt; _ = log.record(Evaluation(frozenset({'c', 'd'}), Verdict.FAIL))</span>
-</span><span data-line="320"><span class="sd">    &gt;&gt;&gt; log.known(frozenset({'a', 'c', 'd'})).verdict.value   # superset of a failing set</span>
-</span><span data-line="321"><span class="sd">    'fail'</span>
-</span><span data-line="322"><span class="sd">    &gt;&gt;&gt; log.known(frozenset({'a', 'c'})).verdict is None</span>
-</span><span data-line="323"><span class="sd">    True</span>
-</span><span data-line="324"><span class="sd">    """</span>
-</span><span data-line="325">
-</span><span data-line="326">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-</span><span data-line="327">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="328">        <span class="n">store</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="329">        <span class="o">*</span><span class="p">,</span>
-</span><span data-line="330">        <span class="n">pins</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Pins</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="331">        <span class="n">trust_unpinned</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="332">    <span class="p">):</span>
-</span><span data-line="333">        <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="334">            <span class="c1"># Never ``./evaluations.jsonl``: that writes derived data into</span>
-</span><span data-line="335">            <span class="c1"># whatever repository the caller happens to be standing in, which is</span>
-</span><span data-line="336">            <span class="c1"># the default this package exists to have removed.</span>
-</span><span data-line="337">            <span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">artifact_path</span>
-</span><span data-line="338">
-</span><span data-line="339">            <span class="n">store</span> <span class="o">=</span> <span class="n">JsonlLines</span><span class="p">(</span><span class="n">artifact_path</span><span class="p">(</span><span class="s2">"evaluations"</span><span class="p">,</span> <span class="s2">"adhoc.jsonl"</span><span class="p">))</span>
-</span><span data-line="340">        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">)):</span>
-</span><span data-line="341">            <span class="n">store</span> <span class="o">=</span> <span class="n">JsonlLines</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">store</span><span class="p">))</span>
-</span><span data-line="342">        <span class="bp">self</span><span class="o">.</span><span class="n">store</span> <span class="o">=</span> <span class="n">store</span>
-</span><span data-line="343">        <span class="bp">self</span><span class="o">.</span><span class="n">_trust_unpinned</span> <span class="o">=</span> <span class="n">trust_unpinned</span>
-</span><span data-line="344">        <span class="c1">#: Every row, in log order, whatever commits it is about. Shared with</span>
-</span><span data-line="345">        <span class="c1">#: every view made by :meth:`pinned`, so a row recorded through one</span>
-</span><span data-line="346">        <span class="c1">#: is in all of them, and each decides for itself whether it counts.</span>
-</span><span data-line="347">        <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">Evaluation</span><span class="o">.</span><span class="n">from_jdict</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">]</span>
-</span><span data-line="348">        <span class="bp">self</span><span class="o">.</span><span class="n">pins</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Pins</span><span class="p">]</span> <span class="o">=</span> <span class="n">pins</span>
-</span><span data-line="349">        <span class="bp">self</span><span class="o">.</span><span class="n">_view</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="350">        <span class="bp">self</span><span class="o">.</span><span class="n">_view_of</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># len(self._rows) when _view was computed</span>
-</span><span data-line="351">
-</span><span data-line="352">    <span class="c1"># -- pinning -----------------------------------------------------------</span>
-</span><span data-line="353">
+</span><span data-line="301"><span class="k">class</span><span class="w"> </span><span class="nc">EvaluationLog</span><span class="p">:</span>
+</span><span data-line="302"><span class="w">    </span><span class="sd">"""Append-only record of evaluations, plus the monotone closure over it.</span>
+</span><span data-line="303">
+</span><span data-line="304"><span class="sd">    Args:</span>
+</span><span data-line="305"><span class="sd">        store: Persistence seam. A path (str/PathLike) is wrapped in</span>
+</span><span data-line="306"><span class="sd">            :class:`JsonlLines`; pass :class:`StoreLines` to put the log in an</span>
+</span><span data-line="307"><span class="sd">            artifact store (S3 and friends), or :class:`MemoryLines` for an</span>
+</span><span data-line="308"><span class="sd">            ephemeral log. With no argument at all the log goes to the artifact</span>
+</span><span data-line="309"><span class="sd">            store's ``evaluations/adhoc.jsonl`` — never the working directory.</span>
+</span><span data-line="310"><span class="sd">        pins: The commits the questions are about (see :class:`Pins` and</span>
+</span><span data-line="311"><span class="sd">            :meth:`pin`). Unpinned, every row counts, as before pinning existed;</span>
+</span><span data-line="312"><span class="sd">            :func:`mergeset.analyze` always pins.</span>
+</span><span data-line="313"><span class="sd">        trust_unpinned: Let rows that record no commits at all (written before</span>
+</span><span data-line="314"><span class="sd">            i2mint/mergeset#23, or by an unpinned log), or no validator while</span>
+</span><span data-line="315"><span class="sd">            the pins name one (written before i2mint/mergeset#32), count as</span>
+</span><span data-line="316"><span class="sd">            matches once the log is pinned. Off by default, because such a row</span>
+</span><span data-line="317"><span class="sd">            may be about a head that has since moved, or judged by a command</span>
+</span><span data-line="318"><span class="sd">            that has since changed — which is the defect pinning exists to</span>
+</span><span data-line="319"><span class="sd">            close. Turn it on only when you know neither has changed since those</span>
+</span><span data-line="320"><span class="sd">            rows were written; it is the migration path for an old log. A row</span>
+</span><span data-line="321"><span class="sd">            whose recorded commits or validator differ never counts.</span>
+</span><span data-line="322">
+</span><span data-line="323"><span class="sd">    &gt;&gt;&gt; log = EvaluationLog(MemoryLines())</span>
+</span><span data-line="324"><span class="sd">    &gt;&gt;&gt; from mergeset.base import Evaluation, Verdict</span>
+</span><span data-line="325"><span class="sd">    &gt;&gt;&gt; _ = log.record(Evaluation(frozenset({'a', 'b'}), Verdict.PASS))</span>
+</span><span data-line="326"><span class="sd">    &gt;&gt;&gt; bool(log.known(frozenset({'a'})))          # subset of a passing set</span>
+</span><span data-line="327"><span class="sd">    True</span>
+</span><span data-line="328"><span class="sd">    &gt;&gt;&gt; log.known(frozenset({'a'})).verdict.value</span>
+</span><span data-line="329"><span class="sd">    'pass'</span>
+</span><span data-line="330"><span class="sd">    &gt;&gt;&gt; _ = log.record(Evaluation(frozenset({'c', 'd'}), Verdict.FAIL))</span>
+</span><span data-line="331"><span class="sd">    &gt;&gt;&gt; log.known(frozenset({'a', 'c', 'd'})).verdict.value   # superset of a failing set</span>
+</span><span data-line="332"><span class="sd">    'fail'</span>
+</span><span data-line="333"><span class="sd">    &gt;&gt;&gt; log.known(frozenset({'a', 'c'})).verdict is None</span>
+</span><span data-line="334"><span class="sd">    True</span>
+</span><span data-line="335"><span class="sd">    """</span>
+</span><span data-line="336">
+</span><span data-line="337">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+</span><span data-line="338">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="339">        <span class="n">store</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="340">        <span class="o">*</span><span class="p">,</span>
+</span><span data-line="341">        <span class="n">pins</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Pins</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="342">        <span class="n">trust_unpinned</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="343">    <span class="p">):</span>
+</span><span data-line="344">        <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="345">            <span class="c1"># Never ``./evaluations.jsonl``: that writes derived data into</span>
+</span><span data-line="346">            <span class="c1"># whatever repository the caller happens to be standing in, which is</span>
+</span><span data-line="347">            <span class="c1"># the default this package exists to have removed.</span>
+</span><span data-line="348">            <span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">artifact_path</span>
+</span><span data-line="349">
+</span><span data-line="350">            <span class="n">store</span> <span class="o">=</span> <span class="n">JsonlLines</span><span class="p">(</span><span class="n">artifact_path</span><span class="p">(</span><span class="s2">"evaluations"</span><span class="p">,</span> <span class="s2">"adhoc.jsonl"</span><span class="p">))</span>
+</span><span data-line="351">        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">)):</span>
+</span><span data-line="352">            <span class="n">store</span> <span class="o">=</span> <span class="n">JsonlLines</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">store</span><span class="p">))</span>
+</span><span data-line="353">        <span class="bp">self</span><span class="o">.</span><span class="n">store</span> <span class="o">=</span> <span class="n">store</span>
+</span><span data-line="354">        <span class="bp">self</span><span class="o">.</span><span class="n">_trust_unpinned</span> <span class="o">=</span> <span class="n">trust_unpinned</span>
+</span><span data-line="355">        <span class="c1">#: Every row, in log order, whatever commits it is about. Shared with</span>
+</span><span data-line="356">        <span class="c1">#: every view made by :meth:`pinned`, so a row recorded through one</span>
+</span><span data-line="357">        <span class="c1">#: is in all of them, and each decides for itself whether it counts.</span>
+</span><span data-line="358">        <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">Evaluation</span><span class="o">.</span><span class="n">from_jdict</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">]</span>
+</span><span data-line="359">        <span class="bp">self</span><span class="o">.</span><span class="n">pins</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Pins</span><span class="p">]</span> <span class="o">=</span> <span class="n">pins</span>
+</span><span data-line="360">        <span class="bp">self</span><span class="o">.</span><span class="n">_view</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="361">        <span class="bp">self</span><span class="o">.</span><span class="n">_view_of</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># len(self._rows) when _view was computed</span>
+</span><span data-line="362">
+</span><span data-line="363">    <span class="c1"># -- pinning -----------------------------------------------------------</span>
+</span><span data-line="364">
 <div class="viewcode-block" id="EvaluationLog.pinned">
 <a class="viewcode-back" href="../../_autosummary/mergeset.log.html#mergeset.EvaluationLog.pinned">[docs]</a>
-</span><span data-line="354">    <span class="k">def</span><span class="w"> </span><span class="nf">pinned</span><span class="p">(</span>
-</span><span data-line="355">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="356">        <span class="o">*</span><span class="p">,</span>
-</span><span data-line="357">        <span class="n">base</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="358">        <span class="n">heads</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
-</span><span data-line="359">        <span class="n">validator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="360">        <span class="n">resolver</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="361">        <span class="n">trust_unpinned</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="362">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"EvaluationLog"</span><span class="p">:</span>
-</span><span data-line="363"><span class="w">        </span><span class="sd">"""A view of this log scoped to ``base``, these heads and ``validator``.</span>
-</span><span data-line="364">
-</span><span data-line="365"><span class="sd">        Same store, same rows; this log itself is left as it was, so a caller</span>
-</span><span data-line="366"><span class="sd">        that hands one log to two analyses keeps its own view of it.</span>
-</span><span data-line="367">
-</span><span data-line="368"><span class="sd">        &gt;&gt;&gt; from mergeset.base import Evaluation, Verdict</span>
-</span><span data-line="369"><span class="sd">        &gt;&gt;&gt; log = EvaluationLog(MemoryLines())</span>
-</span><span data-line="370"><span class="sd">        &gt;&gt;&gt; view = log.pinned(base='B', heads={'a': 'A1'})</span>
-</span><span data-line="371"><span class="sd">        &gt;&gt;&gt; _ = view.record(Evaluation(frozenset('a'), Verdict.PASS))</span>
-</span><span data-line="372"><span class="sd">        &gt;&gt;&gt; log.pins is None, len(log), len(view)</span>
-</span><span data-line="373"><span class="sd">        (True, 1, 1)</span>
-</span><span data-line="374"><span class="sd">        &gt;&gt;&gt; len(log.pinned(base='B', heads={'a': 'A2'}))</span>
-</span><span data-line="375"><span class="sd">        0</span>
-</span><span data-line="376"><span class="sd">        """</span>
-</span><span data-line="377">        <span class="n">view</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-</span><span data-line="378">        <span class="n">view</span><span class="o">.</span><span class="n">_view_of</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-</span><span data-line="379">        <span class="k">if</span> <span class="n">trust_unpinned</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="380">            <span class="n">view</span><span class="o">.</span><span class="n">trust_unpinned</span> <span class="o">=</span> <span class="n">trust_unpinned</span>
-</span><span data-line="381">        <span class="k">return</span> <span class="n">view</span><span class="o">.</span><span class="n">pin</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span> <span class="n">heads</span><span class="o">=</span><span class="n">heads</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">validator</span><span class="p">,</span> <span class="n">resolver</span><span class="o">=</span><span class="n">resolver</span><span class="p">)</span></div>
+</span><span data-line="365">    <span class="k">def</span><span class="w"> </span><span class="nf">pinned</span><span class="p">(</span>
+</span><span data-line="366">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="367">        <span class="o">*</span><span class="p">,</span>
+</span><span data-line="368">        <span class="n">base</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="369">        <span class="n">heads</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+</span><span data-line="370">        <span class="n">validator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="371">        <span class="n">resolver</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="372">        <span class="n">trust_unpinned</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="373">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"EvaluationLog"</span><span class="p">:</span>
+</span><span data-line="374"><span class="w">        </span><span class="sd">"""A view of this log scoped to ``base``, these heads and ``validator``.</span>
+</span><span data-line="375">
+</span><span data-line="376"><span class="sd">        Same store, same rows; this log itself is left as it was, so a caller</span>
+</span><span data-line="377"><span class="sd">        that hands one log to two analyses keeps its own view of it.</span>
+</span><span data-line="378">
+</span><span data-line="379"><span class="sd">        &gt;&gt;&gt; from mergeset.base import Evaluation, Verdict</span>
+</span><span data-line="380"><span class="sd">        &gt;&gt;&gt; log = EvaluationLog(MemoryLines())</span>
+</span><span data-line="381"><span class="sd">        &gt;&gt;&gt; view = log.pinned(base='B', heads={'a': 'A1'})</span>
+</span><span data-line="382"><span class="sd">        &gt;&gt;&gt; _ = view.record(Evaluation(frozenset('a'), Verdict.PASS))</span>
+</span><span data-line="383"><span class="sd">        &gt;&gt;&gt; log.pins is None, len(log), len(view)</span>
+</span><span data-line="384"><span class="sd">        (True, 1, 1)</span>
+</span><span data-line="385"><span class="sd">        &gt;&gt;&gt; len(log.pinned(base='B', heads={'a': 'A2'}))</span>
+</span><span data-line="386"><span class="sd">        0</span>
+</span><span data-line="387"><span class="sd">        """</span>
+</span><span data-line="388">        <span class="n">view</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</span><span data-line="389">        <span class="n">view</span><span class="o">.</span><span class="n">_view_of</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+</span><span data-line="390">        <span class="k">if</span> <span class="n">trust_unpinned</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="391">            <span class="n">view</span><span class="o">.</span><span class="n">trust_unpinned</span> <span class="o">=</span> <span class="n">trust_unpinned</span>
+</span><span data-line="392">        <span class="k">return</span> <span class="n">view</span><span class="o">.</span><span class="n">pin</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span> <span class="n">heads</span><span class="o">=</span><span class="n">heads</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">validator</span><span class="p">,</span> <span class="n">resolver</span><span class="o">=</span><span class="n">resolver</span><span class="p">)</span></div>
 
-</span><span data-line="382">
+</span><span data-line="393">
 <div class="viewcode-block" id="EvaluationLog.pin">
 <a class="viewcode-back" href="../../_autosummary/mergeset.log.html#mergeset.EvaluationLog.pin">[docs]</a>
-</span><span data-line="383">    <span class="k">def</span><span class="w"> </span><span class="nf">pin</span><span class="p">(</span>
-</span><span data-line="384">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="385">        <span class="o">*</span><span class="p">,</span>
-</span><span data-line="386">        <span class="n">base</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="387">        <span class="n">heads</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
-</span><span data-line="388">        <span class="n">validator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="389">        <span class="n">resolver</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="390">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"EvaluationLog"</span><span class="p">:</span>
-</span><span data-line="391"><span class="w">        </span><span class="sd">"""Scope *this* log to ``base``, these heads and ``validator``; returns ``self``.</span>
-</span><span data-line="392">
-</span><span data-line="393"><span class="sd">        ``validator`` is the fingerprint of what the questions will be asked of</span>
-</span><span data-line="394"><span class="sd">        (:func:`mergeset.validation.fingerprint_of`); ``None`` matches rows on</span>
-</span><span data-line="395"><span class="sd">        commits alone. ``resolver`` is how their sets are merged</span>
-</span><span data-line="396"><span class="sd">        (:func:`mergeset.oracle.resolver_fingerprint_of`): rows whose outcome a</span>
-</span><span data-line="397"><span class="sd">        different resolver decided stop counting; ``None`` ignores it.</span>
-</span><span data-line="398">
-</span><span data-line="399"><span class="sd">        :meth:`pinned` is the same without changing this object.</span>
-</span><span data-line="400">
-</span><span data-line="401"><span class="sd">        From here on, reading (:meth:`known`, :meth:`exact`, the closure,</span>
-</span><span data-line="402"><span class="sd">        iteration, ``len``) sees only rows evaluated against these commits, and</span>
-</span><span data-line="403"><span class="sd">        :meth:`record` stamps new rows with them. Nothing is removed: the other</span>
-</span><span data-line="404"><span class="sd">        rows stay in the store and in :attr:`rows`, and are reported by</span>
-</span><span data-line="405"><span class="sd">        :attr:`stale` and :attr:`unpinned`.</span>
-</span><span data-line="406">
-</span><span data-line="407"><span class="sd">        &gt;&gt;&gt; from mergeset.base import Evaluation, Verdict</span>
-</span><span data-line="408"><span class="sd">        &gt;&gt;&gt; log = EvaluationLog(MemoryLines()).pin(base='B', heads={'a': 'A1'})</span>
-</span><span data-line="409"><span class="sd">        &gt;&gt;&gt; _ = log.record(Evaluation(frozenset('a'), Verdict.PASS))</span>
-</span><span data-line="410"><span class="sd">        &gt;&gt;&gt; log.known(frozenset('a')).verdict.value</span>
-</span><span data-line="411"><span class="sd">        'pass'</span>
-</span><span data-line="412"><span class="sd">        &gt;&gt;&gt; _ = log.pin(base='B', heads={'a': 'A2'})   # branch a was rewritten</span>
-</span><span data-line="413"><span class="sd">        &gt;&gt;&gt; log.known(frozenset('a')).verdict is None, len(log.rows), len(log.stale)</span>
-</span><span data-line="414"><span class="sd">        (True, 1, 1)</span>
-</span><span data-line="415"><span class="sd">        """</span>
-</span><span data-line="416">        <span class="bp">self</span><span class="o">.</span><span class="n">pins</span> <span class="o">=</span> <span class="n">Pins</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">heads</span><span class="p">),</span> <span class="n">validator</span><span class="p">,</span> <span class="n">resolver</span><span class="p">)</span>
-</span><span data-line="417">        <span class="bp">self</span><span class="o">.</span><span class="n">_view_of</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-</span><span data-line="418">        <span class="k">return</span> <span class="bp">self</span></div>
+</span><span data-line="394">    <span class="k">def</span><span class="w"> </span><span class="nf">pin</span><span class="p">(</span>
+</span><span data-line="395">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="396">        <span class="o">*</span><span class="p">,</span>
+</span><span data-line="397">        <span class="n">base</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="398">        <span class="n">heads</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">ChangeId</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+</span><span data-line="399">        <span class="n">validator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="400">        <span class="n">resolver</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="401">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"EvaluationLog"</span><span class="p">:</span>
+</span><span data-line="402"><span class="w">        </span><span class="sd">"""Scope *this* log to ``base``, these heads and ``validator``; returns ``self``.</span>
+</span><span data-line="403">
+</span><span data-line="404"><span class="sd">        ``validator`` is the fingerprint of what the questions will be asked of</span>
+</span><span data-line="405"><span class="sd">        (:func:`mergeset.validation.fingerprint_of`); ``None`` matches rows on</span>
+</span><span data-line="406"><span class="sd">        commits alone. ``resolver`` is how their sets are merged</span>
+</span><span data-line="407"><span class="sd">        (:func:`mergeset.oracle.resolver_fingerprint_of`): rows whose outcome a</span>
+</span><span data-line="408"><span class="sd">        different resolver decided stop counting; ``None`` ignores it.</span>
+</span><span data-line="409">
+</span><span data-line="410"><span class="sd">        :meth:`pinned` is the same without changing this object.</span>
+</span><span data-line="411">
+</span><span data-line="412"><span class="sd">        From here on, reading (:meth:`known`, :meth:`exact`, the closure,</span>
+</span><span data-line="413"><span class="sd">        iteration, ``len``) sees only rows evaluated against these commits, and</span>
+</span><span data-line="414"><span class="sd">        :meth:`record` stamps new rows with them. Nothing is removed: the other</span>
+</span><span data-line="415"><span class="sd">        rows stay in the store and in :attr:`rows`, and are reported by</span>
+</span><span data-line="416"><span class="sd">        :attr:`stale` and :attr:`unpinned`.</span>
+</span><span data-line="417">
+</span><span data-line="418"><span class="sd">        &gt;&gt;&gt; from mergeset.base import Evaluation, Verdict</span>
+</span><span data-line="419"><span class="sd">        &gt;&gt;&gt; log = EvaluationLog(MemoryLines()).pin(base='B', heads={'a': 'A1'})</span>
+</span><span data-line="420"><span class="sd">        &gt;&gt;&gt; _ = log.record(Evaluation(frozenset('a'), Verdict.PASS))</span>
+</span><span data-line="421"><span class="sd">        &gt;&gt;&gt; log.known(frozenset('a')).verdict.value</span>
+</span><span data-line="422"><span class="sd">        'pass'</span>
+</span><span data-line="423"><span class="sd">        &gt;&gt;&gt; _ = log.pin(base='B', heads={'a': 'A2'})   # branch a was rewritten</span>
+</span><span data-line="424"><span class="sd">        &gt;&gt;&gt; log.known(frozenset('a')).verdict is None, len(log.rows), len(log.stale)</span>
+</span><span data-line="425"><span class="sd">        (True, 1, 1)</span>
+</span><span data-line="426"><span class="sd">        """</span>
+</span><span data-line="427">        <span class="bp">self</span><span class="o">.</span><span class="n">pins</span> <span class="o">=</span> <span class="n">Pins</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">heads</span><span class="p">),</span> <span class="n">validator</span><span class="p">,</span> <span class="n">resolver</span><span class="p">)</span>
+</span><span data-line="428">        <span class="bp">self</span><span class="o">.</span><span class="n">_view_of</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+</span><span data-line="429">        <span class="k">return</span> <span class="bp">self</span></div>
 
-</span><span data-line="419">
-</span><span data-line="420">    <span class="nd">@property</span>
-</span><span data-line="421">    <span class="k">def</span><span class="w"> </span><span class="nf">_evaluations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
-</span><span data-line="422"><span class="w">        </span><span class="sd">"""The rows that count, recomputed when rows were added (by any view)."""</span>
-</span><span data-line="423">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_view_of</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">):</span>
-</span><span data-line="424">            <span class="bp">self</span><span class="o">.</span><span class="n">_view</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_counts</span><span class="p">(</span><span class="n">e</span><span class="p">)]</span>
-</span><span data-line="425">            <span class="bp">self</span><span class="o">.</span><span class="n">_view_of</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">)</span>
-</span><span data-line="426">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_view</span>
-</span><span data-line="427">
-</span><span data-line="428">    <span class="k">def</span><span class="w"> </span><span class="nf">_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="429">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="430">            <span class="k">return</span> <span class="kc">True</span>
-</span><span data-line="431">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span><span class="o">.</span><span class="n">refutes</span><span class="p">(</span><span class="n">evaluation</span><span class="p">):</span>
-</span><span data-line="432">            <span class="k">return</span> <span class="kc">False</span>
-</span><span data-line="433">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">evaluation</span><span class="p">):</span>
-</span><span data-line="434">            <span class="k">return</span> <span class="kc">True</span>
-</span><span data-line="435">        <span class="c1"># It records less than the pins compare (written before #23 or #32).</span>
-</span><span data-line="436">        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">trust_unpinned</span><span class="p">:</span>
-</span><span data-line="437">            <span class="k">return</span> <span class="kc">False</span>
-</span><span data-line="438">        <span class="c1"># Even trusted, an old row can only speak for changes in play: one</span>
-</span><span data-line="439">        <span class="c1"># holding another change would surface it in a fallback set.</span>
-</span><span data-line="440">        <span class="k">return</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">pinned</span> <span class="ow">or</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">subset</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span><span class="o">.</span><span class="n">heads</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-</span><span data-line="441">
-</span><span data-line="442">    <span class="nd">@property</span>
-</span><span data-line="443">    <span class="k">def</span><span class="w"> </span><span class="nf">trust_unpinned</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="444"><span class="w">        </span><span class="sd">"""Whether rows recording no commits count once the log is pinned."""</span>
-</span><span data-line="445">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trust_unpinned</span>
-</span><span data-line="446">
-</span><span data-line="447">    <span class="nd">@trust_unpinned</span><span class="o">.</span><span class="n">setter</span>
-</span><span data-line="448">    <span class="k">def</span><span class="w"> </span><span class="nf">trust_unpinned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="449">        <span class="bp">self</span><span class="o">.</span><span class="n">_trust_unpinned</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-</span><span data-line="450">        <span class="bp">self</span><span class="o">.</span><span class="n">_view_of</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-</span><span data-line="451">
-</span><span data-line="452">    <span class="nd">@property</span>
-</span><span data-line="453">    <span class="k">def</span><span class="w"> </span><span class="nf">rows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
-</span><span data-line="454"><span class="w">        </span><span class="sd">"""Every row in the log, matching the pins or not, in log order."""</span>
-</span><span data-line="455">        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">)</span>
-</span><span data-line="456">
-</span><span data-line="457">    <span class="nd">@property</span>
-</span><span data-line="458">    <span class="k">def</span><span class="w"> </span><span class="nf">stale</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
-</span><span data-line="459"><span class="w">        </span><span class="sd">"""Rows evaluated against other commits, or by another validator.</span>
-</span><span data-line="460">
-</span><span data-line="461"><span class="sd">        Not wrong — about a different question — so kept, and not matched.</span>
-</span><span data-line="462"><span class="sd">        """</span>
-</span><span data-line="463">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="464">            <span class="k">return</span> <span class="p">[]</span>
-</span><span data-line="465">        <span class="k">return</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span><span class="o">.</span><span class="n">refutes</span><span class="p">(</span><span class="n">e</span><span class="p">)]</span>
-</span><span data-line="466">
-</span><span data-line="467">    <span class="nd">@property</span>
-</span><span data-line="468">    <span class="k">def</span><span class="w"> </span><span class="nf">other_validator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
-</span><span data-line="469"><span class="w">        </span><span class="sd">"""The :attr:`stale` rows judged by a validator other than the pinned one.</span>
-</span><span data-line="470">
-</span><span data-line="471"><span class="sd">        Usually a tier or ``--validate-command`` whose command was edited.</span>
-</span><span data-line="472"><span class="sd">        """</span>
-</span><span data-line="473">        <span class="n">pinned</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span><span class="o">.</span><span class="n">validator</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
-</span><span data-line="474">        <span class="k">if</span> <span class="n">pinned</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="430">
+</span><span data-line="431">    <span class="nd">@property</span>
+</span><span data-line="432">    <span class="k">def</span><span class="w"> </span><span class="nf">_evaluations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
+</span><span data-line="433"><span class="w">        </span><span class="sd">"""The rows that count, recomputed when rows were added (by any view)."""</span>
+</span><span data-line="434">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_view_of</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">):</span>
+</span><span data-line="435">            <span class="bp">self</span><span class="o">.</span><span class="n">_view</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_counts</span><span class="p">(</span><span class="n">e</span><span class="p">)]</span>
+</span><span data-line="436">            <span class="bp">self</span><span class="o">.</span><span class="n">_view_of</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">)</span>
+</span><span data-line="437">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_view</span>
+</span><span data-line="438">
+</span><span data-line="439">    <span class="k">def</span><span class="w"> </span><span class="nf">_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="440">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="441">            <span class="k">return</span> <span class="kc">True</span>
+</span><span data-line="442">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span><span class="o">.</span><span class="n">refutes</span><span class="p">(</span><span class="n">evaluation</span><span class="p">):</span>
+</span><span data-line="443">            <span class="k">return</span> <span class="kc">False</span>
+</span><span data-line="444">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">evaluation</span><span class="p">):</span>
+</span><span data-line="445">            <span class="k">return</span> <span class="kc">True</span>
+</span><span data-line="446">        <span class="c1"># It records less than the pins compare (written before #23 or #32).</span>
+</span><span data-line="447">        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">trust_unpinned</span><span class="p">:</span>
+</span><span data-line="448">            <span class="k">return</span> <span class="kc">False</span>
+</span><span data-line="449">        <span class="c1"># Even trusted, an old row can only speak for changes in play: one</span>
+</span><span data-line="450">        <span class="c1"># holding another change would surface it in a fallback set.</span>
+</span><span data-line="451">        <span class="k">return</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">pinned</span> <span class="ow">or</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">subset</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span><span class="o">.</span><span class="n">heads</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+</span><span data-line="452">
+</span><span data-line="453">    <span class="nd">@property</span>
+</span><span data-line="454">    <span class="k">def</span><span class="w"> </span><span class="nf">trust_unpinned</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="455"><span class="w">        </span><span class="sd">"""Whether rows recording no commits count once the log is pinned."""</span>
+</span><span data-line="456">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trust_unpinned</span>
+</span><span data-line="457">
+</span><span data-line="458">    <span class="nd">@trust_unpinned</span><span class="o">.</span><span class="n">setter</span>
+</span><span data-line="459">    <span class="k">def</span><span class="w"> </span><span class="nf">trust_unpinned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="460">        <span class="bp">self</span><span class="o">.</span><span class="n">_trust_unpinned</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+</span><span data-line="461">        <span class="bp">self</span><span class="o">.</span><span class="n">_view_of</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+</span><span data-line="462">
+</span><span data-line="463">    <span class="nd">@property</span>
+</span><span data-line="464">    <span class="k">def</span><span class="w"> </span><span class="nf">rows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
+</span><span data-line="465"><span class="w">        </span><span class="sd">"""Every row in the log, matching the pins or not, in log order."""</span>
+</span><span data-line="466">        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">)</span>
+</span><span data-line="467">
+</span><span data-line="468">    <span class="nd">@property</span>
+</span><span data-line="469">    <span class="k">def</span><span class="w"> </span><span class="nf">stale</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
+</span><span data-line="470"><span class="w">        </span><span class="sd">"""Rows evaluated against other commits, or by another validator.</span>
+</span><span data-line="471">
+</span><span data-line="472"><span class="sd">        Not wrong — about a different question — so kept, and not matched.</span>
+</span><span data-line="473"><span class="sd">        """</span>
+</span><span data-line="474">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="475">            <span class="k">return</span> <span class="p">[]</span>
-</span><span data-line="476">        <span class="k">return</span> <span class="p">[</span>
-</span><span data-line="477">            <span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">validator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">validator</span> <span class="o">!=</span> <span class="n">pinned</span>
-</span><span data-line="478">        <span class="p">]</span>
-</span><span data-line="479">
-</span><span data-line="480">    <span class="nd">@property</span>
-</span><span data-line="481">    <span class="k">def</span><span class="w"> </span><span class="nf">other_resolver</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
-</span><span data-line="482"><span class="w">        </span><span class="sd">"""The :attr:`stale` rows whose outcome another resolver decided.</span>
-</span><span data-line="483">
-</span><span data-line="484"><span class="sd">        An assisted PASS read by a run without the resolver, or a conflict</span>
-</span><span data-line="485"><span class="sd">        recorded without one read by a run with one (i2mint/mergeset#34).</span>
-</span><span data-line="486"><span class="sd">        """</span>
-</span><span data-line="487">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="488">            <span class="k">return</span> <span class="p">[]</span>
-</span><span data-line="489">        <span class="k">return</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span><span class="o">.</span><span class="n">_resolved_alike</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">]</span>
+</span><span data-line="476">        <span class="k">return</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span><span class="o">.</span><span class="n">refutes</span><span class="p">(</span><span class="n">e</span><span class="p">)]</span>
+</span><span data-line="477">
+</span><span data-line="478">    <span class="nd">@property</span>
+</span><span data-line="479">    <span class="k">def</span><span class="w"> </span><span class="nf">other_validator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
+</span><span data-line="480"><span class="w">        </span><span class="sd">"""The :attr:`stale` rows judged by a validator other than the pinned one.</span>
+</span><span data-line="481">
+</span><span data-line="482"><span class="sd">        Usually a tier or ``--validate-command`` whose command was edited.</span>
+</span><span data-line="483"><span class="sd">        """</span>
+</span><span data-line="484">        <span class="n">pinned</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span><span class="o">.</span><span class="n">validator</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span data-line="485">        <span class="k">if</span> <span class="n">pinned</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="486">            <span class="k">return</span> <span class="p">[]</span>
+</span><span data-line="487">        <span class="k">return</span> <span class="p">[</span>
+</span><span data-line="488">            <span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">validator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">validator</span> <span class="o">!=</span> <span class="n">pinned</span>
+</span><span data-line="489">        <span class="p">]</span>
 </span><span data-line="490">
 </span><span data-line="491">    <span class="nd">@property</span>
-</span><span data-line="492">    <span class="k">def</span><span class="w"> </span><span class="nf">unpinned</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
-</span><span data-line="493"><span class="w">        </span><span class="sd">"""Rows recording too little to match that a pinned log is not counting.</span>
+</span><span data-line="492">    <span class="k">def</span><span class="w"> </span><span class="nf">other_resolver</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
+</span><span data-line="493"><span class="w">        </span><span class="sd">"""The :attr:`stale` rows whose outcome another resolver decided.</span>
 </span><span data-line="494">
-</span><span data-line="495"><span class="sd">        No commits (written before #23), or no validator while the pins name</span>
-</span><span data-line="496"><span class="sd">        one (written before #32). All of them by default; with</span>
-</span><span data-line="497"><span class="sd">        ``trust_unpinned``, only those holding a change that is not in play.</span>
-</span><span data-line="498"><span class="sd">        Empty when the log is unpinned.</span>
-</span><span data-line="499"><span class="sd">        """</span>
-</span><span data-line="500">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="501">            <span class="k">return</span> <span class="p">[]</span>
-</span><span data-line="502">        <span class="k">return</span> <span class="p">[</span>
-</span><span data-line="503">            <span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span><span class="o">.</span><span class="n">refutes</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_counts</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-</span><span data-line="504">        <span class="p">]</span>
+</span><span data-line="495"><span class="sd">        An assisted PASS read by a run without the resolver, or a conflict</span>
+</span><span data-line="496"><span class="sd">        recorded without one read by a run with one (i2mint/mergeset#34).</span>
+</span><span data-line="497"><span class="sd">        """</span>
+</span><span data-line="498">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="499">            <span class="k">return</span> <span class="p">[]</span>
+</span><span data-line="500">        <span class="k">return</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span><span class="o">.</span><span class="n">_resolved_alike</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">]</span>
+</span><span data-line="501">
+</span><span data-line="502">    <span class="nd">@property</span>
+</span><span data-line="503">    <span class="k">def</span><span class="w"> </span><span class="nf">unpinned</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
+</span><span data-line="504"><span class="w">        </span><span class="sd">"""Rows recording too little to match that a pinned log is not counting.</span>
 </span><span data-line="505">
-</span><span data-line="506">    <span class="c1"># -- reading -----------------------------------------------------------</span>
-</span><span data-line="507">
-</span><span data-line="508">    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
-</span><span data-line="509"><span class="w">        </span><span class="sd">"""The rows that count: all of them, or those matching the pins."""</span>
-</span><span data-line="510">        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_evaluations</span><span class="p">))</span>
-</span><span data-line="511">
-</span><span data-line="512">    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span><span data-line="513">        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_evaluations</span><span class="p">)</span>
-</span><span data-line="514">
-</span><span data-line="515">    <span class="k">def</span><span class="w"> </span><span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="516"><span class="w">        </span><span class="sd">"""Always true.</span>
-</span><span data-line="517">
-</span><span data-line="518"><span class="sd">        Without this, ``__len__`` makes an empty log falsy, and every</span>
-</span><span data-line="519"><span class="sd">        ``log = log or EvaluationLog(...)`` silently discards the caller's log</span>
-</span><span data-line="520"><span class="sd">        on the one run where it matters most: the first.</span>
-</span><span data-line="521"><span class="sd">        """</span>
-</span><span data-line="522">        <span class="k">return</span> <span class="kc">True</span>
-</span><span data-line="523">
-</span><span data-line="524">    <span class="nd">@property</span>
-</span><span data-line="525">    <span class="k">def</span><span class="w"> </span><span class="nf">passing</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
-</span><span data-line="526"><span class="w">        </span><span class="sd">"""Sets recorded as good, largest first."""</span>
-</span><span data-line="527">        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
-</span><span data-line="528">            <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">subset</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluations</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">),</span>
-</span><span data-line="529">            <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">,</span>
-</span><span data-line="530">            <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span data-line="531">        <span class="p">)</span>
-</span><span data-line="532">
-</span><span data-line="533">    <span class="nd">@property</span>
-</span><span data-line="534">    <span class="k">def</span><span class="w"> </span><span class="nf">failing</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
-</span><span data-line="535"><span class="w">        </span><span class="sd">"""Sets recorded as bad, smallest first (smallest are the most useful)."""</span>
-</span><span data-line="536">        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
-</span><span data-line="537">            <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">subset</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluations</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">),</span>
-</span><span data-line="538">            <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">,</span>
-</span><span data-line="539">        <span class="p">)</span>
-</span><span data-line="540">
+</span><span data-line="506"><span class="sd">        No commits (written before #23), or no validator while the pins name</span>
+</span><span data-line="507"><span class="sd">        one (written before #32). All of them by default; with</span>
+</span><span data-line="508"><span class="sd">        ``trust_unpinned``, only those holding a change that is not in play.</span>
+</span><span data-line="509"><span class="sd">        Empty when the log is unpinned.</span>
+</span><span data-line="510"><span class="sd">        """</span>
+</span><span data-line="511">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="512">            <span class="k">return</span> <span class="p">[]</span>
+</span><span data-line="513">        <span class="k">return</span> <span class="p">[</span>
+</span><span data-line="514">            <span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span><span class="o">.</span><span class="n">refutes</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_counts</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</span><span data-line="515">        <span class="p">]</span>
+</span><span data-line="516">
+</span><span data-line="517">    <span class="c1"># -- reading -----------------------------------------------------------</span>
+</span><span data-line="518">
+</span><span data-line="519">    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
+</span><span data-line="520"><span class="w">        </span><span class="sd">"""The rows that count: all of them, or those matching the pins."""</span>
+</span><span data-line="521">        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_evaluations</span><span class="p">))</span>
+</span><span data-line="522">
+</span><span data-line="523">    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span data-line="524">        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_evaluations</span><span class="p">)</span>
+</span><span data-line="525">
+</span><span data-line="526">    <span class="k">def</span><span class="w"> </span><span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="527"><span class="w">        </span><span class="sd">"""Always true.</span>
+</span><span data-line="528">
+</span><span data-line="529"><span class="sd">        Without this, ``__len__`` makes an empty log falsy, and every</span>
+</span><span data-line="530"><span class="sd">        ``log = log or EvaluationLog(...)`` silently discards the caller's log</span>
+</span><span data-line="531"><span class="sd">        on the one run where it matters most: the first.</span>
+</span><span data-line="532"><span class="sd">        """</span>
+</span><span data-line="533">        <span class="k">return</span> <span class="kc">True</span>
+</span><span data-line="534">
+</span><span data-line="535">    <span class="nd">@property</span>
+</span><span data-line="536">    <span class="k">def</span><span class="w"> </span><span class="nf">passing</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+</span><span data-line="537"><span class="w">        </span><span class="sd">"""Sets recorded as good, largest first."""</span>
+</span><span data-line="538">        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+</span><span data-line="539">            <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">subset</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluations</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">),</span>
+</span><span data-line="540">            <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">,</span>
+</span><span data-line="541">            <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="542">        <span class="p">)</span>
+</span><span data-line="543">
+</span><span data-line="544">    <span class="nd">@property</span>
+</span><span data-line="545">    <span class="k">def</span><span class="w"> </span><span class="nf">failing</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+</span><span data-line="546"><span class="w">        </span><span class="sd">"""Sets recorded as bad, smallest first (smallest are the most useful)."""</span>
+</span><span data-line="547">        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+</span><span data-line="548">            <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">subset</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluations</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">),</span>
+</span><span data-line="549">            <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">,</span>
+</span><span data-line="550">        <span class="p">)</span>
+</span><span data-line="551">
 <div class="viewcode-block" id="EvaluationLog.exact">
 <a class="viewcode-back" href="../../_autosummary/mergeset.log.html#mergeset.EvaluationLog.exact">[docs]</a>
-</span><span data-line="541">    <span class="k">def</span><span class="w"> </span><span class="nf">exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
-</span><span data-line="542"><span class="w">        </span><span class="sd">"""The most recent evaluation of exactly this set, if any."""</span>
-</span><span data-line="543">        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_evaluations</span><span class="p">):</span>
-</span><span data-line="544">            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">subset</span> <span class="o">==</span> <span class="n">subset</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">in</span> <span class="p">(</span><span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">,</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">):</span>
-</span><span data-line="545">                <span class="k">return</span> <span class="n">e</span>
-</span><span data-line="546">        <span class="k">return</span> <span class="kc">None</span></div>
+</span><span data-line="552">    <span class="k">def</span><span class="w"> </span><span class="nf">exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
+</span><span data-line="553"><span class="w">        </span><span class="sd">"""The most recent evaluation of exactly this set, if any."""</span>
+</span><span data-line="554">        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_evaluations</span><span class="p">):</span>
+</span><span data-line="555">            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">subset</span> <span class="o">==</span> <span class="n">subset</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">in</span> <span class="p">(</span><span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">,</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">):</span>
+</span><span data-line="556">                <span class="k">return</span> <span class="n">e</span>
+</span><span data-line="557">        <span class="k">return</span> <span class="kc">None</span></div>
 
-</span><span data-line="547">
+</span><span data-line="558">
 <div class="viewcode-block" id="EvaluationLog.known">
 <a class="viewcode-back" href="../../_autosummary/mergeset.log.html#mergeset.EvaluationLog.known">[docs]</a>
-</span><span data-line="548">    <span class="k">def</span><span class="w"> </span><span class="nf">known</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Known</span><span class="p">:</span>
-</span><span data-line="549"><span class="w">        </span><span class="sd">"""What we know about ``subset`` without evaluating it.</span>
-</span><span data-line="550">
-</span><span data-line="551"><span class="sd">        Exact hits win; otherwise the monotone closure decides, preferring the</span>
-</span><span data-line="552"><span class="sd">        cheapest witness (the largest passing superset, the smallest failing</span>
-</span><span data-line="553"><span class="sd">        subset).</span>
-</span><span data-line="554"><span class="sd">        """</span>
-</span><span data-line="555">        <span class="n">exact</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exact</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
-</span><span data-line="556">        <span class="k">if</span> <span class="n">exact</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="557">            <span class="k">return</span> <span class="n">Known</span><span class="p">(</span><span class="n">exact</span><span class="o">.</span><span class="n">verdict</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="n">exact</span><span class="p">)</span>
-</span><span data-line="558">        <span class="k">for</span> <span class="n">good</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">passing</span><span class="p">:</span>  <span class="c1"># largest first</span>
-</span><span data-line="559">            <span class="k">if</span> <span class="n">subset</span> <span class="o">&lt;=</span> <span class="n">good</span><span class="p">:</span>
-</span><span data-line="560">                <span class="k">return</span> <span class="n">Known</span><span class="p">(</span><span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">,</span> <span class="n">witness</span><span class="o">=</span><span class="n">good</span><span class="p">)</span>
-</span><span data-line="561">        <span class="k">for</span> <span class="n">bad</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">failing</span><span class="p">:</span>  <span class="c1"># smallest first</span>
-</span><span data-line="562">            <span class="k">if</span> <span class="n">bad</span> <span class="o">&lt;=</span> <span class="n">subset</span><span class="p">:</span>
-</span><span data-line="563">                <span class="k">return</span> <span class="n">Known</span><span class="p">(</span><span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">,</span> <span class="n">witness</span><span class="o">=</span><span class="n">bad</span><span class="p">)</span>
-</span><span data-line="564">        <span class="k">return</span> <span class="n">Known</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span></div>
+</span><span data-line="559">    <span class="k">def</span><span class="w"> </span><span class="nf">known</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Known</span><span class="p">:</span>
+</span><span data-line="560"><span class="w">        </span><span class="sd">"""What we know about ``subset`` without evaluating it.</span>
+</span><span data-line="561">
+</span><span data-line="562"><span class="sd">        Exact hits win; otherwise the monotone closure decides, preferring the</span>
+</span><span data-line="563"><span class="sd">        cheapest witness (the largest passing superset, the smallest failing</span>
+</span><span data-line="564"><span class="sd">        subset).</span>
+</span><span data-line="565"><span class="sd">        """</span>
+</span><span data-line="566">        <span class="n">exact</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exact</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
+</span><span data-line="567">        <span class="k">if</span> <span class="n">exact</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="568">            <span class="k">return</span> <span class="n">Known</span><span class="p">(</span><span class="n">exact</span><span class="o">.</span><span class="n">verdict</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="n">exact</span><span class="p">)</span>
+</span><span data-line="569">        <span class="k">for</span> <span class="n">good</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">passing</span><span class="p">:</span>  <span class="c1"># largest first</span>
+</span><span data-line="570">            <span class="k">if</span> <span class="n">subset</span> <span class="o">&lt;=</span> <span class="n">good</span><span class="p">:</span>
+</span><span data-line="571">                <span class="k">return</span> <span class="n">Known</span><span class="p">(</span><span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">,</span> <span class="n">witness</span><span class="o">=</span><span class="n">good</span><span class="p">)</span>
+</span><span data-line="572">        <span class="k">for</span> <span class="n">bad</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">failing</span><span class="p">:</span>  <span class="c1"># smallest first</span>
+</span><span data-line="573">            <span class="k">if</span> <span class="n">bad</span> <span class="o">&lt;=</span> <span class="n">subset</span><span class="p">:</span>
+</span><span data-line="574">                <span class="k">return</span> <span class="n">Known</span><span class="p">(</span><span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">,</span> <span class="n">witness</span><span class="o">=</span><span class="n">bad</span><span class="p">)</span>
+</span><span data-line="575">        <span class="k">return</span> <span class="n">Known</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span></div>
 
-</span><span data-line="565">
+</span><span data-line="576">
 <div class="viewcode-block" id="EvaluationLog.minimal_failing_sets">
 <a class="viewcode-back" href="../../_autosummary/mergeset.log.html#mergeset.EvaluationLog.minimal_failing_sets">[docs]</a>
-</span><span data-line="566">    <span class="k">def</span><span class="w"> </span><span class="nf">minimal_failing_sets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
-</span><span data-line="567"><span class="w">        </span><span class="sd">"""Recorded failing sets with no recorded failing proper subset.</span>
-</span><span data-line="568">
-</span><span data-line="569"><span class="sd">        These are the *conflicts* the solver hits. They are minimal with respect</span>
-</span><span data-line="570"><span class="sd">        to what has been observed, which is not necessarily globally minimal —</span>
-</span><span data-line="571"><span class="sd">        the solver shrinks them further with QuickXplain as it goes.</span>
-</span><span data-line="572"><span class="sd">        """</span>
-</span><span data-line="573">        <span class="n">failing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">failing</span>
-</span><span data-line="574">        <span class="k">return</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">failing</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">other</span> <span class="o">&lt;</span> <span class="n">s</span> <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">failing</span><span class="p">)]</span></div>
+</span><span data-line="577">    <span class="k">def</span><span class="w"> </span><span class="nf">minimal_failing_sets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+</span><span data-line="578"><span class="w">        </span><span class="sd">"""Recorded failing sets with no recorded failing proper subset.</span>
+</span><span data-line="579">
+</span><span data-line="580"><span class="sd">        These are the *conflicts* the solver hits. They are minimal with respect</span>
+</span><span data-line="581"><span class="sd">        to what has been observed, which is not necessarily globally minimal —</span>
+</span><span data-line="582"><span class="sd">        the solver shrinks them further with QuickXplain as it goes.</span>
+</span><span data-line="583"><span class="sd">        """</span>
+</span><span data-line="584">        <span class="n">failing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">failing</span>
+</span><span data-line="585">        <span class="k">return</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">failing</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">other</span> <span class="o">&lt;</span> <span class="n">s</span> <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">failing</span><span class="p">)]</span></div>
 
-</span><span data-line="575">
+</span><span data-line="586">
 <div class="viewcode-block" id="EvaluationLog.maximal_passing_sets">
 <a class="viewcode-back" href="../../_autosummary/mergeset.log.html#mergeset.EvaluationLog.maximal_passing_sets">[docs]</a>
-</span><span data-line="576">    <span class="k">def</span><span class="w"> </span><span class="nf">maximal_passing_sets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
-</span><span data-line="577"><span class="w">        </span><span class="sd">"""Recorded passing sets with no recorded passing proper superset."""</span>
-</span><span data-line="578">        <span class="n">passing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">passing</span>
-</span><span data-line="579">        <span class="k">return</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">passing</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="o">&lt;</span> <span class="n">other</span> <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">passing</span><span class="p">)]</span></div>
+</span><span data-line="587">    <span class="k">def</span><span class="w"> </span><span class="nf">maximal_passing_sets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+</span><span data-line="588"><span class="w">        </span><span class="sd">"""Recorded passing sets with no recorded passing proper superset."""</span>
+</span><span data-line="589">        <span class="n">passing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">passing</span>
+</span><span data-line="590">        <span class="k">return</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">passing</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="o">&lt;</span> <span class="n">other</span> <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">passing</span><span class="p">)]</span></div>
 
-</span><span data-line="580">
+</span><span data-line="591">
 <div class="viewcode-block" id="EvaluationLog.monotonicity_violations">
 <a class="viewcode-back" href="../../_autosummary/mergeset.log.html#mergeset.EvaluationLog.monotonicity_violations">[docs]</a>
-</span><span data-line="581">    <span class="k">def</span><span class="w"> </span><span class="nf">monotonicity_violations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">,</span> <span class="n">ChangeSet</span><span class="p">]]:</span>
-</span><span data-line="582"><span class="w">        </span><span class="sd">"""``(good, bad)`` pairs where a *subset* of a good set was seen failing.</span>
-</span><span data-line="583">
-</span><span data-line="584"><span class="sd">        A non-empty result means the downward-closure assumption broke here:</span>
-</span><span data-line="585"><span class="sd">        a flaky test, a non-deterministic build, or a change that *fixes*</span>
-</span><span data-line="586"><span class="sd">        another. Reported, never silently smoothed over.</span>
-</span><span data-line="587"><span class="sd">        """</span>
-</span><span data-line="588">        <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="589">        <span class="k">for</span> <span class="n">good</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">passing</span><span class="p">:</span>
-</span><span data-line="590">            <span class="k">for</span> <span class="n">bad</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">failing</span><span class="p">:</span>
-</span><span data-line="591">                <span class="k">if</span> <span class="n">bad</span> <span class="o">&lt;</span> <span class="n">good</span> <span class="ow">or</span> <span class="n">bad</span> <span class="o">==</span> <span class="n">good</span><span class="p">:</span>
-</span><span data-line="592">                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">good</span><span class="p">,</span> <span class="n">bad</span><span class="p">))</span>
-</span><span data-line="593">        <span class="k">return</span> <span class="n">out</span></div>
-
+</span><span data-line="592">    <span class="k">def</span><span class="w"> </span><span class="nf">monotonicity_violations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">,</span> <span class="n">ChangeSet</span><span class="p">]]:</span>
+</span><span data-line="593"><span class="w">        </span><span class="sd">"""``(good, bad)`` pairs where a *subset* of a good set was seen failing.</span>
 </span><span data-line="594">
-</span><span data-line="595">    <span class="c1"># -- writing -----------------------------------------------------------</span>
-</span><span data-line="596">
+</span><span data-line="595"><span class="sd">        A non-empty result means the downward-closure assumption broke here:</span>
+</span><span data-line="596"><span class="sd">        a flaky test, a non-deterministic build, or a change that *fixes*</span>
+</span><span data-line="597"><span class="sd">        another. Reported, never silently smoothed over.</span>
+</span><span data-line="598"><span class="sd">        """</span>
+</span><span data-line="599">        <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="600">        <span class="k">for</span> <span class="n">good</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">passing</span><span class="p">:</span>
+</span><span data-line="601">            <span class="k">for</span> <span class="n">bad</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">failing</span><span class="p">:</span>
+</span><span data-line="602">                <span class="k">if</span> <span class="n">bad</span> <span class="o">&lt;</span> <span class="n">good</span> <span class="ow">or</span> <span class="n">bad</span> <span class="o">==</span> <span class="n">good</span><span class="p">:</span>
+</span><span data-line="603">                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">good</span><span class="p">,</span> <span class="n">bad</span><span class="p">))</span>
+</span><span data-line="604">        <span class="k">return</span> <span class="n">out</span></div>
+
+</span><span data-line="605">
+</span><span data-line="606">    <span class="c1"># -- writing -----------------------------------------------------------</span>
+</span><span data-line="607">
 <div class="viewcode-block" id="EvaluationLog.record">
 <a class="viewcode-back" href="../../_autosummary/mergeset.log.html#mergeset.EvaluationLog.record">[docs]</a>
-</span><span data-line="597">    <span class="k">def</span><span class="w"> </span><span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Evaluation</span><span class="p">:</span>
-</span><span data-line="598"><span class="w">        </span><span class="sd">"""Append ``evaluation`` and return it.</span>
-</span><span data-line="599">
-</span><span data-line="600"><span class="sd">        ``at`` is stamped if absent, and so are the pinned commits: a row that</span>
-</span><span data-line="601"><span class="sd">        does not say what it was run against cannot be told apart from one</span>
-</span><span data-line="602"><span class="sd">        about a branch that has since been rewritten.</span>
-</span><span data-line="603"><span class="sd">        """</span>
-</span><span data-line="604">        <span class="k">if</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">at</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="605">            <span class="n">evaluation</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">evaluation</span><span class="p">,</span> <span class="n">at</span><span class="o">=</span><span class="n">_now</span><span class="p">())</span>
-</span><span data-line="606">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="607">            <span class="n">evaluation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span><span class="o">.</span><span class="n">stamp</span><span class="p">(</span><span class="n">evaluation</span><span class="p">)</span>
-</span><span data-line="608">        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluation</span><span class="o">.</span><span class="n">to_jdict</span><span class="p">())</span>
-</span><span data-line="609">        <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluation</span><span class="p">)</span>
-</span><span data-line="610">        <span class="k">return</span> <span class="n">evaluation</span></div>
+</span><span data-line="608">    <span class="k">def</span><span class="w"> </span><span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">Evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Evaluation</span><span class="p">:</span>
+</span><span data-line="609"><span class="w">        </span><span class="sd">"""Append ``evaluation`` and return it.</span>
+</span><span data-line="610">
+</span><span data-line="611"><span class="sd">        ``at`` is stamped if absent, and so are the pinned commits: a row that</span>
+</span><span data-line="612"><span class="sd">        does not say what it was run against cannot be told apart from one</span>
+</span><span data-line="613"><span class="sd">        about a branch that has since been rewritten.</span>
+</span><span data-line="614"><span class="sd">        """</span>
+</span><span data-line="615">        <span class="k">if</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">at</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="616">            <span class="n">evaluation</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">evaluation</span><span class="p">,</span> <span class="n">at</span><span class="o">=</span><span class="n">_now</span><span class="p">())</span>
+</span><span data-line="617">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="618">            <span class="n">evaluation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pins</span><span class="o">.</span><span class="n">stamp</span><span class="p">(</span><span class="n">evaluation</span><span class="p">)</span>
+</span><span data-line="619">        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluation</span><span class="o">.</span><span class="n">to_jdict</span><span class="p">())</span>
+</span><span data-line="620">        <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluation</span><span class="p">)</span>
+</span><span data-line="621">        <span class="k">return</span> <span class="n">evaluation</span></div>
 
-</span><span data-line="611">
+</span><span data-line="622">
 <div class="viewcode-block" id="EvaluationLog.caching">
 <a class="viewcode-back" href="../../_autosummary/mergeset.log.html#mergeset.EvaluationLog.caching">[docs]</a>
-</span><span data-line="612">    <span class="k">def</span><span class="w"> </span><span class="nf">caching</span><span class="p">(</span>
-</span><span data-line="613">        <span class="bp">self</span><span class="p">,</span> <span class="n">evaluate</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">ChangeSet</span><span class="p">],</span> <span class="n">Evaluation</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">infer_pass</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span data-line="614">    <span class="p">):</span>
-</span><span data-line="615"><span class="w">        </span><span class="sd">"""Wrap ``evaluate`` so known sets are answered from the log.</span>
-</span><span data-line="616">
-</span><span data-line="617"><span class="sd">        The returned callable is what the solver should be handed: it never</span>
-</span><span data-line="618"><span class="sd">        spends a real evaluation on a set the log can already decide.</span>
-</span><span data-line="619">
-</span><span data-line="620"><span class="sd">        ``infer_pass=False`` runs a set whose PASS would only be *inferred*</span>
-</span><span data-line="621"><span class="sd">        from a passing superset, and records it: for a caller that needs an</span>
-</span><span data-line="622"><span class="sd">        exact PASS behind every claim (a cheaper tier on the way to a deeper</span>
-</span><span data-line="623"><span class="sd">        one). Exact rows and inferred FAILs are still answered from the log.</span>
-</span><span data-line="624">
-</span><span data-line="625"><span class="sd">        &gt;&gt;&gt; log = EvaluationLog(MemoryLines())</span>
-</span><span data-line="626"><span class="sd">        &gt;&gt;&gt; _ = log.record(Evaluation(frozenset('ab'), Verdict.PASS))</span>
-</span><span data-line="627"><span class="sd">        &gt;&gt;&gt; runs = []</span>
-</span><span data-line="628"><span class="sd">        &gt;&gt;&gt; def run(s):</span>
-</span><span data-line="629"><span class="sd">        ...     runs.append(set_key(s))</span>
-</span><span data-line="630"><span class="sd">        ...     return Evaluation(s, Verdict.PASS)</span>
-</span><span data-line="631"><span class="sd">        &gt;&gt;&gt; log.caching(run)(frozenset('a')).cached, runs</span>
-</span><span data-line="632"><span class="sd">        (True, [])</span>
-</span><span data-line="633"><span class="sd">        &gt;&gt;&gt; log.caching(run, infer_pass=False)(frozenset('a')).cached, runs</span>
-</span><span data-line="634"><span class="sd">        (False, [('a',)])</span>
-</span><span data-line="635"><span class="sd">        """</span>
-</span><span data-line="636">
-</span><span data-line="637">        <span class="k">def</span><span class="w"> </span><span class="nf">cached</span><span class="p">(</span><span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Evaluation</span><span class="p">:</span>
-</span><span data-line="638">            <span class="n">known</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">known</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
-</span><span data-line="639">            <span class="n">inferred_pass</span> <span class="o">=</span> <span class="n">known</span><span class="o">.</span><span class="n">exact</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">known</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span>
-</span><span data-line="640">            <span class="k">if</span> <span class="n">known</span> <span class="ow">and</span> <span class="p">(</span><span class="n">infer_pass</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">inferred_pass</span><span class="p">):</span>
-</span><span data-line="641">                <span class="k">if</span> <span class="n">known</span><span class="o">.</span><span class="n">exact</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="642">                    <span class="k">return</span> <span class="n">replace</span><span class="p">(</span><span class="n">known</span><span class="o">.</span><span class="n">exact</span><span class="p">,</span> <span class="n">cached</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="643">                <span class="k">return</span> <span class="n">Evaluation</span><span class="p">(</span>
-</span><span data-line="644">                    <span class="n">subset</span><span class="o">=</span><span class="n">subset</span><span class="p">,</span>
-</span><span data-line="645">                    <span class="n">verdict</span><span class="o">=</span><span class="n">known</span><span class="o">.</span><span class="n">verdict</span><span class="p">,</span>
-</span><span data-line="646">                    <span class="n">note</span><span class="o">=</span><span class="sa">f</span><span class="s2">"inferred from </span><span class="si">{</span><span class="n">set_key</span><span class="p">(</span><span class="n">known</span><span class="o">.</span><span class="n">witness</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-</span><span data-line="647">                    <span class="n">cached</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span data-line="648">                <span class="p">)</span>
-</span><span data-line="649">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">evaluate</span><span class="p">(</span><span class="n">subset</span><span class="p">))</span>
-</span><span data-line="650">
-</span><span data-line="651">        <span class="k">return</span> <span class="n">cached</span></div>
+</span><span data-line="623">    <span class="k">def</span><span class="w"> </span><span class="nf">caching</span><span class="p">(</span>
+</span><span data-line="624">        <span class="bp">self</span><span class="p">,</span> <span class="n">evaluate</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">ChangeSet</span><span class="p">],</span> <span class="n">Evaluation</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">infer_pass</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span data-line="625">    <span class="p">):</span>
+</span><span data-line="626"><span class="w">        </span><span class="sd">"""Wrap ``evaluate`` so known sets are answered from the log.</span>
+</span><span data-line="627">
+</span><span data-line="628"><span class="sd">        The returned callable is what the solver should be handed: it never</span>
+</span><span data-line="629"><span class="sd">        spends a real evaluation on a set the log can already decide.</span>
+</span><span data-line="630">
+</span><span data-line="631"><span class="sd">        ``infer_pass=False`` runs a set whose PASS would only be *inferred*</span>
+</span><span data-line="632"><span class="sd">        from a passing superset, and records it: for a caller that needs an</span>
+</span><span data-line="633"><span class="sd">        exact PASS behind every claim (a cheaper tier on the way to a deeper</span>
+</span><span data-line="634"><span class="sd">        one). Exact rows and inferred FAILs are still answered from the log.</span>
+</span><span data-line="635">
+</span><span data-line="636"><span class="sd">        &gt;&gt;&gt; log = EvaluationLog(MemoryLines())</span>
+</span><span data-line="637"><span class="sd">        &gt;&gt;&gt; _ = log.record(Evaluation(frozenset('ab'), Verdict.PASS))</span>
+</span><span data-line="638"><span class="sd">        &gt;&gt;&gt; runs = []</span>
+</span><span data-line="639"><span class="sd">        &gt;&gt;&gt; def run(s):</span>
+</span><span data-line="640"><span class="sd">        ...     runs.append(set_key(s))</span>
+</span><span data-line="641"><span class="sd">        ...     return Evaluation(s, Verdict.PASS)</span>
+</span><span data-line="642"><span class="sd">        &gt;&gt;&gt; log.caching(run)(frozenset('a')).cached, runs</span>
+</span><span data-line="643"><span class="sd">        (True, [])</span>
+</span><span data-line="644"><span class="sd">        &gt;&gt;&gt; log.caching(run, infer_pass=False)(frozenset('a')).cached, runs</span>
+</span><span data-line="645"><span class="sd">        (False, [('a',)])</span>
+</span><span data-line="646"><span class="sd">        """</span>
+</span><span data-line="647">
+</span><span data-line="648">        <span class="k">def</span><span class="w"> </span><span class="nf">cached</span><span class="p">(</span><span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Evaluation</span><span class="p">:</span>
+</span><span data-line="649">            <span class="n">known</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">known</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
+</span><span data-line="650">            <span class="n">inferred_pass</span> <span class="o">=</span> <span class="n">known</span><span class="o">.</span><span class="n">exact</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">known</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span>
+</span><span data-line="651">            <span class="k">if</span> <span class="n">known</span> <span class="ow">and</span> <span class="p">(</span><span class="n">infer_pass</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">inferred_pass</span><span class="p">):</span>
+</span><span data-line="652">                <span class="k">return</span> <span class="n">known</span><span class="o">.</span><span class="n">answer</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
+</span><span data-line="653">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">evaluate</span><span class="p">(</span><span class="n">subset</span><span class="p">))</span>
+</span><span data-line="654">
+</span><span data-line="655">        <span class="k">return</span> <span class="n">cached</span></div>
 </div>
 
-</span><span data-line="652">
-</span><span data-line="653">
+</span><span data-line="656">
+</span><span data-line="657">
 <div class="viewcode-block" id="sets_evaluated">
 <a class="viewcode-back" href="../../_autosummary/mergeset.log.html#mergeset.sets_evaluated">[docs]</a>
-</span><span data-line="654"><span class="k">def</span><span class="w"> </span><span class="nf">sets_evaluated</span><span class="p">(</span><span class="n">log</span><span class="p">:</span> <span class="n">EvaluationLog</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]:</span>
-</span><span data-line="655"><span class="w">    </span><span class="sd">"""Yield ``(sorted ids, verdict)`` for every row — handy for reports."""</span>
-</span><span data-line="656">    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">log</span><span class="p">:</span>
-</span><span data-line="657">        <span class="k">yield</span> <span class="n">set_key</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">subset</span><span class="p">),</span> <span class="n">e</span><span class="o">.</span><span class="n">verdict</span><span class="o">.</span><span class="n">value</span></div>
+</span><span data-line="658"><span class="k">def</span><span class="w"> </span><span class="nf">sets_evaluated</span><span class="p">(</span><span class="n">log</span><span class="p">:</span> <span class="n">EvaluationLog</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]:</span>
+</span><span data-line="659"><span class="w">    </span><span class="sd">"""Yield ``(sorted ids, verdict)`` for every row — handy for reports."""</span>
+</span><span data-line="660">    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">log</span><span class="p">:</span>
+</span><span data-line="661">        <span class="k">yield</span> <span class="n">set_key</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">subset</span><span class="p">),</span> <span class="n">e</span><span class="o">.</span><span class="n">verdict</span><span class="o">.</span><span class="n">value</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -881,7 +888,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=565bc8c8"></script>
+      <script src="../../_static/documentation_options.js?v=9dd25805"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
