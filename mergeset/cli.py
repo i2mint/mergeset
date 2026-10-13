@@ -19,7 +19,12 @@ from mergeset.base import CapabilityError, MergesetError
 from mergeset.gitops import create_integration_branch
 from mergeset.oracle import claude_code_resolver
 from mergeset.log import EvaluationLog
-from mergeset.report import REPORT_FORMATS, markdown_report, write_reports
+from mergeset.report import (
+    REPORT_FORMATS,
+    markdown_report,
+    stage_breakdown,
+    write_reports,
+)
 from mergeset.storage import (
     artifact_store,
     evaluation_log_path,
@@ -537,6 +542,8 @@ def show_log(*, log_path: Optional[str] = None, repo: str = ".") -> str:
             f"{e.verdict.value:6} {e.duration:7.1f}s {on:9}  "
             f"{', '.join(sorted(e.subset))}"
         )
+        if stage_breakdown(e):
+            lines.append(f"{'':26}{stage_breakdown(e)}")
     moved = _moved_commits(log)
     if moved:
         lines += [
