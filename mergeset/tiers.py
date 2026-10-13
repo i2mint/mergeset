@@ -1171,9 +1171,7 @@ def analyze_tiered(
             # this tier only inferred from a bigger one it had run is run now,
             # and if it fails, the search refines around the failure.
             pending = {
-                s
-                for s in state.maximal_good_sets
-                if logs[tier.name].exact(s) is None
+                s for s in state.maximal_good_sets if logs[tier.name].exact(s) is None
             }
             if not pending or pending <= run_exactly:
                 break  # nothing to run, or running it again would change nothing
