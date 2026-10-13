@@ -260,10 +260,18 @@ def _try_assisted(repo, base, heads, outcome, resolver, worktree_root, emit):
             resolved, diff = resolver(
                 path, conflicted or list(outcome.conflicting_files)
             )
-        except Exception:  # noqa: BLE001 - a resolver that gives up (a timeout)
-            # is a resolver that declined: the conflict is real, and an ERROR
-            # would abort the whole search over one slow call.
-            resolved, diff = False, ""
+        except Exception as exc:  # noqa: BLE001 - any failure of the resolver
+            # The experiment could not be run (ADR 0017, 0036): a timeout says
+            # nothing about whether the conflict is resolvable, and a FAIL row
+            # would be reused by every later run, which would never ask again.
+            _remove_worktree(repo, path)
+            return None, MergeOutcome(
+                ok=False,
+                reason="error",
+                conflicting_files=outcome.conflicting_files,
+                order=outcome.order,
+                detail=f"the conflict resolver raised {type(exc).__name__}: {exc}",
+            )
         if not (resolved and _vouches_for(path, before, head, merged, conflicted)):
             _remove_worktree(repo, path)
             return None, outcome

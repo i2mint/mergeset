@@ -10,7 +10,7 @@ import os
 
 import pytest
 
-from mergeset.base import Change, MergeOutcome, Verdict
+from mergeset.base import Change, MergeOutcome, Stage, Verdict
 from mergeset.gitops import git, is_ancestor, resolve
 from mergeset.oracle import git_oracle
 from mergeset.tiers import Tier, analyze_tiered
@@ -283,9 +283,11 @@ def test_a_resolver_that_keeps_a_heads_commit_but_not_its_work_has_declined(
     assert frozenset({"feat-a", "feat-c"}) not in analysis.maximal_sets
 
 
-def test_a_resolver_that_raises_has_declined_and_leaks_nothing(repo, tmp_path):
-    """A timeout is a resolver giving up: a conflict, not an ERROR that would
-    abort the whole search over one slow call."""
+def test_a_resolver_that_raises_could_not_run_the_experiment_and_leaks_nothing(
+    repo, tmp_path
+):
+    """A timeout says nothing about the conflict: an ERROR, never a FAIL row that
+    a later run would reuse as a decline (#48)."""
 
     def broken(worktree, files):
         raise TimeoutError("resolver timed out")
@@ -297,8 +299,50 @@ def test_a_resolver_that_raises_has_declined_and_leaks_nothing(repo, tmp_path):
         validate=command_validation(py_command(tmp_path, "pass", _PASS)),
         resolver=broken,
     )(frozenset({"feat-a", "feat-c"}))
-    assert row.verdict is Verdict.FAIL and row.note == "textual merge conflict"
+    assert row.verdict is Verdict.ERROR and row.stage is Stage.MERGE
+    assert row.merge.reason == "error"
+    assert "TimeoutError" in row.note and "timed out" in row.note
     assert len(git(repo, "worktree", "list").stdout.strip().splitlines()) == 1
+
+
+def test_a_resolver_that_declines_is_still_a_fail(repo, tmp_path):
+    row = git_oracle(
+        repo,
+        resolve(repo, "main"),
+        _changes(["feat-a", "feat-c"]),
+        validate=command_validation(py_command(tmp_path, "pass", _PASS)),
+        resolver=lambda worktree, files: (False, ""),
+    )(frozenset({"feat-a", "feat-c"}))
+    assert row.verdict is Verdict.FAIL and row.note == "textual merge conflict"
+
+
+def test_a_later_run_asks_again_after_a_resolver_raised(repo, tmp_path):
+    from mergeset.log import EvaluationLog, MemoryLines
+
+    log = EvaluationLog(MemoryLines())
+    both = frozenset({"feat-a", "feat-c"})
+    calls = []
+
+    def build(resolver):
+        return log.caching(
+            git_oracle(
+                repo,
+                resolve(repo, "main"),
+                _changes(["feat-a", "feat-c"]),
+                validate=command_validation(py_command(tmp_path, "pass", _PASS)),
+                resolver=resolver,
+            )
+        )
+
+    def slow(worktree, files):
+        calls.append("slow")
+        raise TimeoutError("resolver timed out")
+
+    assert build(slow)(both).verdict is Verdict.ERROR
+    healthy = _scripted_resolver(calls)
+    again = build(healthy)(both)
+    assert calls[0] == "slow" and len(calls) == 2
+    assert again.verdict is Verdict.PASS and not again.cached
 
 
 def test_only_the_resolution_namespace_is_written(repo, tmp_path):
