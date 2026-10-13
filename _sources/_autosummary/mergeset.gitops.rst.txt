@@ -1,0 +1,37 @@
+mergeset.gitops
+===============
+
+.. automodule:: mergeset.gitops
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      MIN_GIT_VERSION
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      changed_files
+      check_git_capability
+      create_integration_branch
+      git
+      git_version
+      merge_base
+      merge_sequence
+      merged_worktree
+      pairwise_textual_conflicts
+      persistent_worktree
+      resolve
+      singleton_textual_conflicts
+      textual_conflict
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      GitResult
+      SequenceMerge
+   

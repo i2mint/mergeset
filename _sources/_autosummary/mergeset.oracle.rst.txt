@@ -1,0 +1,20 @@
+mergeset.oracle
+===============
+
+.. automodule:: mergeset.oracle
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      Resolver
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      claude_code_resolver
+      git_oracle
+      merge_order
+   

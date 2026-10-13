@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="lime" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>mergeset.analysis - mergeset</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="mergeset.attribution" href="mergeset.attribution.html" /><link rel="prev" title="mergeset" href="mergeset.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="mergeset.analysis"/>
+    <meta name="twitter:card" content="summary"/>
+  
+<link rel="alternate" type="text/markdown" href="mergeset.analysis.html.md">
+<link rel="describedby" href="../llms.txt" type="text/markdown">
+</head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>mergeset</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/i2mint/mergeset" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="mergeset.html">mergeset</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">mergeset.analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.base.html">mergeset.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.cli.html">mergeset.cli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.cost.html">mergeset.cost</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.log.html">mergeset.log</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.report.html">mergeset.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.skills.html">mergeset.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.solve.html">mergeset.solve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.sources.html">mergeset.sources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.storage.html">mergeset.storage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.tiers.html">mergeset.tiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.validation.html">mergeset.validation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ai-agents.html">For AI agents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#mergeset.analysis.Analysis"><code class="docutils literal notranslate"><span class="pre">Analysis</span></code></a><ul>
+<li><a class="reference internal" href="#mergeset.analysis.Analysis.by_id"><code class="docutils literal notranslate"><span class="pre">Analysis.by_id</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.analysis.Analysis.components_combined"><code class="docutils literal notranslate"><span class="pre">Analysis.components_combined</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.analysis.Analysis.evaluations"><code class="docutils literal notranslate"><span class="pre">Analysis.evaluations</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.analysis.Analysis.evaluations_this_run"><code class="docutils literal notranslate"><span class="pre">Analysis.evaluations_this_run</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.analysis.Analysis.exhausted"><code class="docutils literal notranslate"><span class="pre">Analysis.exhausted</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.analysis.Analysis.merge_plan"><code class="docutils literal notranslate"><span class="pre">Analysis.merge_plan()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.analysis.Analysis.own_weights"><code class="docutils literal notranslate"><span class="pre">Analysis.own_weights</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.analysis.Analysis.singleton_conflicts"><code class="docutils literal notranslate"><span class="pre">Analysis.singleton_conflicts</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.analysis.Analysis.unverified_sets"><code class="docutils literal notranslate"><span class="pre">Analysis.unverified_sets</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.analysis.Analysis.weights"><code class="docutils literal notranslate"><span class="pre">Analysis.weights</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mergeset.analysis.analyze"><code class="docutils literal notranslate"><span class="pre">analyze()</span></code></a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">mergeset</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../api.html"><span itemprop="name">API reference</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="mergeset.html"><span itemprop="name">mergeset</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="3" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">mergeset.analysis</strong>
+        <meta itemprop="position" content="4" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <section id="module-mergeset.analysis">
+<span id="mergeset-analysis"></span><h1>mergeset.analysis<a class="headerlink" href="#module-mergeset.analysis" title="Link to this heading">#</a></h1>
+<p>The facade: one call that goes from a repository to a merge plan.</p>
+<p><code class="docutils literal notranslate"><span class="pre">analyze</span></code> is the “simple thing made simple” entry point. It wires together the
+pieces — sources, cheap pre-oracles, file-overlap decomposition, the expensive
+oracle, the log, the search — with defaults that work out of the box, and every
+piece stays replaceable by one keyword argument.</p>
+<p>The order of operations is the whole point, because it is the order of <em>cost</em>:</p>
+<ol class="arabic simple">
+<li><p>free: per-change CI status (a red singleton is a conflict of size one);</p></li>
+<li><p>milliseconds: pairwise <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge-tree</span></code> textual conflicts;</p></li>
+<li><p>milliseconds: file-overlap components — independent subproblems;</p></li>
+<li><p>minutes each: the real merge-and-test oracle, only on what is left.</p></li>
+</ol>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.analysis.analyze" title="mergeset.analysis.analyze"><code class="xref py py-obj docutils literal notranslate"><span class="pre">analyze</span></code></a>(repo, changes, *[, base, validate, ...])</p></td>
+<td><p>Find the maximal sets of <code class="docutils literal notranslate"><span class="pre">changes</span></code> that merge and validate on <code class="docutils literal notranslate"><span class="pre">base</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.analysis.Analysis" title="mergeset.analysis.Analysis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Analysis</span></code></a>(repo, base, base_sha, changes[, ...])</p></td>
+<td><p>Everything a run learned.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.analysis.Analysis">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.analysis.</span></span><span class="sig-name descname"><span class="pre">Analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_sha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">changes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maximal_sets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conflicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">textual_conflicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files_by_change</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stacks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">own_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">singleton_conflicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components_combined</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unverified_sets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">searches</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/analysis.html#Analysis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.analysis.Analysis" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Everything a run learned. Every field is derivable from <code class="docutils literal notranslate"><span class="pre">log</span></code> + git.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="mergeset.analysis.Analysis.by_id">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">by_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.15)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="mergeset.base.html#mergeset.base.Change" title="mergeset.base.Change"><span class="pre">Change</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#mergeset.analysis.Analysis.by_id" title="Link to this definition">#</a></dt>
+<dd><p>Changes keyed by id.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.analysis.Analysis.components_combined">
+<span class="sig-name descname"><span class="pre">components_combined</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#mergeset.analysis.Analysis.components_combined" title="Link to this definition">#</a></dt>
+<dd><p>Whether the per-component answers were trusted to combine, or whether a
+global search had to verify them. See <code class="docutils literal notranslate"><span class="pre">analyze(component_local=...)</span></code>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mergeset.analysis.Analysis.evaluations">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">evaluations</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#mergeset.analysis.Analysis.evaluations" title="Link to this definition">#</a></dt>
+<dd><p>How many expensive evaluations this analysis rests on.</p>
+<p>Counted from the <strong>log</strong>, which is the source of truth, not from the
+search state, which only knows what <em>this process</em> ran. Regenerating a
+report from a complete log spends nothing, and the search-state number
+then reads 0 — so the better the cache worked, the more the archived
+report understated the work. A real 18-candidate run that cost 9
+evaluations and 344 s reported “0 expensive evaluations spent”.</p>
+<p>Rows are counted when they decided something about this candidate set:
+a recorded PASS or FAIL (an ERROR established nothing) over a subset of
+the changes in play (so an older run’s rows for a different candidate
+set in the same log are not claimed as this analysis’s work). The base
+check counts — it is an evaluation, and on a real project it is one of
+the slowest.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mergeset.analysis.Analysis.evaluations_this_run">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">evaluations_this_run</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#mergeset.analysis.Analysis.evaluations_this_run" title="Link to this definition">#</a></dt>
+<dd><p>How many expensive evaluations <em>this process</em> spent.</p>
+<p>The number a progress display wants — 0 on a re-run is correct here and
+misleading in a report. See <a class="reference internal" href="#mergeset.analysis.Analysis.evaluations" title="mergeset.analysis.Analysis.evaluations"><code class="xref py py-attr docutils literal notranslate"><span class="pre">evaluations</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mergeset.analysis.Analysis.exhausted">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">exhausted</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><a class="headerlink" href="#mergeset.analysis.Analysis.exhausted" title="Link to this definition">#</a></dt>
+<dd><p>True iff every component’s search finished rather than hit a budget.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.analysis.Analysis.merge_plan">
+<span class="sig-name descname"><span class="pre">merge_plan</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/analysis.html#Analysis.merge_plan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.analysis.Analysis.merge_plan" title="Link to this definition">#</a></dt>
+<dd><p>One entry per maximal set: what to merge, in what order, what it drops.</p>
+<p>This is the deliverable — “merge these, in this order, and you lose these”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.analysis.Analysis.own_weights">
+<span class="sig-name descname"><span class="pre">own_weights</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.15)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#mergeset.analysis.Analysis.own_weights" title="Link to this definition">#</a></dt>
+<dd><p>Cost of the change on its own, before the cone is accounted for.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.analysis.Analysis.singleton_conflicts">
+<span class="sig-name descname"><span class="pre">singleton_conflicts</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.15)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#mergeset.analysis.Analysis.singleton_conflicts" title="Link to this definition">#</a></dt>
+<dd><p>Changes that will not even merge onto base alone -&gt; conflicting files.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.analysis.Analysis.unverified_sets">
+<span class="sig-name descname"><span class="pre">unverified_sets</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#frozenset" title="(in Python v3.15)"><span class="pre">frozenset</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#mergeset.analysis.Analysis.unverified_sets" title="Link to this definition">#</a></dt>
+<dd><p>Sets reported without ever having been evaluated as a whole. Empty is the
+normal case. See <a class="reference internal" href="#mergeset.analysis.Analysis.merge_plan" title="mergeset.analysis.Analysis.merge_plan"><code class="xref py py-meth docutils literal notranslate"><span class="pre">merge_plan()</span></code></a>’s <code class="docutils literal notranslate"><span class="pre">verified</span></code> and ADR 0025.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.analysis.Analysis.weights">
+<span class="sig-name descname"><span class="pre">weights</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.15)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#mergeset.analysis.Analysis.weights" title="Link to this definition">#</a></dt>
+<dd><p>Cost of dropping each change <em>including its descendant cone</em>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.analysis.analyze">
+<span class="sig-prename descclassname"><span class="pre">mergeset.analysis.</span></span><span class="sig-name descname"><span class="pre">analyze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">changes</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifacts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pairwise_preoracle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decompose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component_local</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_ci_status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_base</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_evaluations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seconds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_sets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worktree_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reuse_worktree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/analysis.html#analyze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.analysis.analyze" title="Link to this definition">#</a></dt>
+<dd><p>Find the maximal sets of <code class="docutils literal notranslate"><span class="pre">changes</span></code> that merge and validate on <code class="docutils literal notranslate"><span class="pre">base</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>repo</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Path to the git repository.</p></li>
+<li><p><strong>changes</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference internal" href="mergeset.base.html#mergeset.base.Change" title="mergeset.base.Change"><code class="xref py py-class docutils literal notranslate"><span class="pre">Change</span></code></a>]</span>) – Candidate changes (see <a class="reference internal" href="mergeset.sources.html#module-mergeset.sources" title="mergeset.sources"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mergeset.sources</span></code></a>).</p></li>
+<li><p><strong>base</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – What to merge onto. Default: the merge base of every change’s own
+base, which is the only choice that is fair to all of them.</p></li>
+<li><p><strong>validate</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>], <a class="reference internal" href="mergeset.base.html#mergeset.base.ValidationOutcome" title="mergeset.base.ValidationOutcome"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValidationOutcome</span></code></a>]]</span>) – <code class="docutils literal notranslate"><span class="pre">worktree</span> <span class="pre">-&gt;</span> <span class="pre">ValidationOutcome</span></code>; default is a fail-fast
+pytest run. Pass <code class="docutils literal notranslate"><span class="pre">merge_only_validation()</span></code> for a free first pass.</p></li>
+<li><p><strong>resolver</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]]</span>) – Optional AI-assisted conflict resolver (results are flagged).</p></li>
+<li><p><strong>artifacts</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">MutableMapping</span></code></a>]]</span>) – The artifact stores, as a <code class="docutils literal notranslate"><span class="pre">{kind:</span> <span class="pre">MutableMapping}</span></code> mall (see
+<a class="reference internal" href="mergeset.storage.html#mergeset.storage.artifact_mall" title="mergeset.storage.artifact_mall"><code class="xref py py-func docutils literal notranslate"><span class="pre">mergeset.storage.artifact_mall()</span></code></a>). This is the storage seam:
+pass a mall over S3 and the evaluation log goes to S3 with no other
+change. Default: local files under <code class="docutils literal notranslate"><span class="pre">~/.local/share/mergeset/</span></code>.</p></li>
+<li><p><strong>log_path</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – The evaluation log — the single source of truth. Defaults
+to <code class="docutils literal notranslate"><span class="pre">&lt;artifact</span> <span class="pre">root&gt;/evaluations/&lt;repo-slug&gt;.jsonl</span></code> (see
+<a class="reference internal" href="mergeset.storage.html#module-mergeset.storage" title="mergeset.storage"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mergeset.storage</span></code></a>), <em>outside</em> the analysed repository. Reusing
+an existing one makes a re-run nearly free.</p></li>
+<li><p><strong>weight</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference internal" href="mergeset.base.html#mergeset.base.Change" title="mergeset.base.Change"><code class="xref py py-class docutils literal notranslate"><span class="pre">Change</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]]</span>) – <code class="docutils literal notranslate"><span class="pre">Change</span> <span class="pre">-&gt;</span> <span class="pre">cost</span> <span class="pre">of</span> <span class="pre">dropping</span> <span class="pre">it</span></code>; default is size-based.</p></li>
+<li><p><strong>pairwise_preoracle</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Use <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge-tree</span></code> to find textual conflicts for
+free before spending any evaluation.</p></li>
+<li><p><strong>decompose</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Use file-overlap components to find conflicts cheaply. The
+components are always searched first, because a conflict found
+inside a small component is a conflict found for a fraction of the
+price; whether their answers are then <em>trusted</em> to combine is
+<code class="docutils literal notranslate"><span class="pre">component_local</span></code>.</p></li>
+<li><p><strong>component_local</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]</span>) – Assert that the validator cannot see across
+components — i.e. that two changes touching disjoint files can never
+fail together. True for a merge-only or per-file validator; **false
+for any whole-repo test run**, which can fail on generated
+artifacts, barrel exports, snapshots, type checks or project-wide
+lint that no changed-file overlap predicts. When false (the
+default), the combined result is verified by a global search seeded
+with every conflict the components found. <code class="docutils literal notranslate"><span class="pre">None</span></code> (the default)
+asks the validator: one may set <code class="docutils literal notranslate"><span class="pre">validate.component_local</span> <span class="pre">=</span> <span class="pre">True</span></code>
+to declare it, as <a class="reference internal" href="mergeset.validation.html#mergeset.validation.merge_only_validation" title="mergeset.validation.merge_only_validation"><code class="xref py py-func docutils literal notranslate"><span class="pre">merge_only_validation()</span></code></a>
+does.</p></li>
+<li><p><strong>check_base</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Evaluate the base commit on its own before anything else, so
+a broken base or a misconfigured validator is a refusal rather than
+15 confident failures.</p></li>
+<li><p><strong>use_ci_status</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Treat a change whose own CI is red as a size-1 conflict.</p></li>
+<li><p><strong>max_evaluations</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>) – Budgets; partial results are
+always returned.</p></li>
+<li><p><strong>max_seconds</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]</span>) – Budgets; partial results are
+always returned.</p></li>
+<li><p><strong>max_sets</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>) – Budgets; partial results are
+always returned.</p></li>
+<li><p><strong>reuse_worktree</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – Reuse one worktree for every evaluation instead of a
+fresh one, so an expensive setup step (<code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">install</span></code>, a build
+cache) is paid once rather than per evaluation. Pair it with
+<a class="reference internal" href="mergeset.validation.html#mergeset.validation.staged_validation" title="mergeset.validation.staged_validation"><code class="xref py py-func docutils literal notranslate"><span class="pre">mergeset.validation.staged_validation()</span></code></a>.</p></li>
+<li><p><strong>on_event</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]]</span>) – <code class="docutils literal notranslate"><span class="pre">(event,</span> <span class="pre">payload)</span></code> progress callback.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#mergeset.analysis.Analysis" title="mergeset.analysis.Analysis"><code class="xref py py-class docutils literal notranslate"><span class="pre">Analysis</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An <a class="reference internal" href="#mergeset.analysis.Analysis" title="mergeset.analysis.Analysis"><code class="xref py py-class docutils literal notranslate"><span class="pre">Analysis</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="mergeset.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">mergeset</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="mergeset.attribution.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">mergeset.attribution</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/i2mint/mergeset" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=c7cdf6fe"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=fd10adb8"></script>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
+</html>

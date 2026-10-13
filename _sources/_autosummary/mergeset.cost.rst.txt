@@ -1,0 +1,27 @@
+mergeset.cost
+=============
+
+.. automodule:: mergeset.cost
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      UNMEASURED_TIER_SECONDS
+      Seconds
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      cost_from_log
+      set_cost
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      CostModel
+      MeasuredCost
+   

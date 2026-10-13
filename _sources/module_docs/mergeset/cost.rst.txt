@@ -1,4 +1,0 @@
-mergeset.cost
-=============
-.. automodule:: mergeset.cost
-   :members:

@@ -1,0 +1,36 @@
+# mergeset
+
+> Find which branches/PRs can be merged together: maximal conflict-free, test-passing subsets of changes.
+
+
+## Pages
+
+- [mergeset](index.html.md): Which of these branches can be merged together?
+- [API reference](api.html.md): | &#96;mergeset&#96;   | Which of these branches can be merged together?   |
+- [mergeset](_autosummary/mergeset.html.md): Which of these branches can be merged together?
+- [mergeset.analysis](_autosummary/mergeset.analysis.html.md): The facade: one call that goes from a repository to a merge plan.
+- [mergeset.attribution](_autosummary/mergeset.attribution.html.md): From a failure to the changes that probably caused it.
+- [mergeset.base](_autosummary/mergeset.base.html.md): Core data structures and vocabulary of &#96;mergeset&#96;.
+- [mergeset.cli](_autosummary/mergeset.cli.html.md): Command line surface.
+- [mergeset.cost](_autosummary/mergeset.cost.html.md): What an evaluation costs — per validation tier, and per change.
+- [mergeset.gitops](_autosummary/mergeset.gitops.html.md): Git primitives: the cheap pre-oracles and the isolated merge.
+- [mergeset.log](_autosummary/mergeset.log.html.md): The evaluation log: append-only JSONL, and the single source of truth.
+- [mergeset.oracle](_autosummary/mergeset.oracle.html.md): The oracle: turn a change set into a verdict by merging, then validating.
+- [mergeset.report](_autosummary/mergeset.report.html.md): Rendering an &#96;Analysis&#96; for humans.
+- [mergeset.skills](_autosummary/mergeset.skills.html.md): The agent skill that ships inside the package, and how to install it.
+- [mergeset.solve](_autosummary/mergeset.solve.html.md): The search: from expensive yes/no evaluations to maximal good sets.
+- [mergeset.sources](_autosummary/mergeset.sources.html.md): Change sources: where the candidate changes come from.
+- [mergeset.stacks](_autosummary/mergeset.stacks.html.md): Stacked changes: when the candidates are not independent.
+- [mergeset.storage](_autosummary/mergeset.storage.html.md): Where mergeset’s artifacts live, and how code reaches them.
+- [mergeset.tiers](_autosummary/mergeset.tiers.html.md): Tiered validation: a cheap oracle screens, an expensive one confirms.
+- [mergeset.validation](_autosummary/mergeset.validation.html.md): Validation functions: does this merged tree actually work?
+- [For AI agents](ai-agents.html.md): &#96;mergeset&#96; ships artifacts for coding agents alongside its code. This page lists
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-10-13 03:03 UTC&#42;&#42; from commit &lt;a href="https://github.com/i2m...
+
+## Optional
+
+- [mergeset.md](mergeset.md): Complete documentation in a single file.
+
+## Build
+
+- [build_info.json](build_info.json): build provenance (commit, version, tool versions, whether the docs match the package)

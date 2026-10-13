@@ -1,0 +1,23 @@
+mergeset.solve
+==============
+
+.. automodule:: mergeset.solve
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      combine_components
+      find_maximal_good_sets
+      independent_components
+      minimal_hitting_sets
+      quickxplain
+      shrink_linear
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      SearchState
+   

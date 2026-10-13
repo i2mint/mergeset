@@ -1,4 +1,0 @@
-mergeset.tiers
-==============
-.. automodule:: mergeset.tiers
-   :members:

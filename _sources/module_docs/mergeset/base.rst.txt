@@ -1,4 +1,0 @@
-mergeset.base
-=============
-.. automodule:: mergeset.base
-   :members:

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="lime" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>mergeset.gitops - mergeset</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="mergeset.log" href="mergeset.log.html" /><link rel="prev" title="mergeset.cost" href="mergeset.cost.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="mergeset.gitops"/>
+    <meta name="twitter:card" content="summary"/>
+  
+<link rel="alternate" type="text/markdown" href="mergeset.gitops.html.md">
+<link rel="describedby" href="../llms.txt" type="text/markdown">
+</head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>mergeset</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/i2mint/mergeset" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="mergeset.html">mergeset</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mergeset.analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.base.html">mergeset.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.cli.html">mergeset.cli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.cost.html">mergeset.cost</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">mergeset.gitops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.log.html">mergeset.log</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.report.html">mergeset.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.skills.html">mergeset.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.solve.html">mergeset.solve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.sources.html">mergeset.sources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.storage.html">mergeset.storage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.tiers.html">mergeset.tiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.validation.html">mergeset.validation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ai-agents.html">For AI agents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#mergeset.gitops.GitResult"><code class="docutils literal notranslate"><span class="pre">GitResult</span></code></a><ul>
+<li><a class="reference internal" href="#mergeset.gitops.GitResult.ok"><code class="docutils literal notranslate"><span class="pre">GitResult.ok</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mergeset.gitops.MIN_GIT_VERSION"><code class="docutils literal notranslate"><span class="pre">MIN_GIT_VERSION</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.gitops.SequenceMerge"><code class="docutils literal notranslate"><span class="pre">SequenceMerge</span></code></a><ul>
+<li><a class="reference internal" href="#mergeset.gitops.SequenceMerge.commit"><code class="docutils literal notranslate"><span class="pre">SequenceMerge.commit</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.gitops.SequenceMerge.order"><code class="docutils literal notranslate"><span class="pre">SequenceMerge.order</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mergeset.gitops.changed_files"><code class="docutils literal notranslate"><span class="pre">changed_files()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.gitops.check_git_capability"><code class="docutils literal notranslate"><span class="pre">check_git_capability()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.gitops.create_integration_branch"><code class="docutils literal notranslate"><span class="pre">create_integration_branch()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.gitops.git"><code class="docutils literal notranslate"><span class="pre">git()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.gitops.git_version"><code class="docutils literal notranslate"><span class="pre">git_version()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.gitops.merge_base"><code class="docutils literal notranslate"><span class="pre">merge_base()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.gitops.merge_sequence"><code class="docutils literal notranslate"><span class="pre">merge_sequence()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.gitops.merged_worktree"><code class="docutils literal notranslate"><span class="pre">merged_worktree()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.gitops.pairwise_textual_conflicts"><code class="docutils literal notranslate"><span class="pre">pairwise_textual_conflicts()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.gitops.persistent_worktree"><code class="docutils literal notranslate"><span class="pre">persistent_worktree()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.gitops.resolve"><code class="docutils literal notranslate"><span class="pre">resolve()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.gitops.singleton_textual_conflicts"><code class="docutils literal notranslate"><span class="pre">singleton_textual_conflicts()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.gitops.textual_conflict"><code class="docutils literal notranslate"><span class="pre">textual_conflict()</span></code></a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">mergeset</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../api.html"><span itemprop="name">API reference</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="mergeset.html"><span itemprop="name">mergeset</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="3" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">mergeset.gitops</strong>
+        <meta itemprop="position" content="4" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <section id="module-mergeset.gitops">
+<span id="mergeset-gitops"></span><h1>mergeset.gitops<a class="headerlink" href="#module-mergeset.gitops" title="Link to this heading">#</a></h1>
+<p>Git primitives: the cheap pre-oracles and the isolated merge.</p>
+<p>Two very different costs live here, and keeping them apart is the point:</p>
+<ul class="simple">
+<li><p><strong>Cheap</strong> (milliseconds, no working tree): <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge-tree</span> <span class="pre">--write-tree</span></code>
+answers “do these two changes conflict textually?” and <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">diff</span> <span class="pre">--name-only</span></code>
+answers “which files does this change touch?”. Everything these two can decide
+must never reach the expensive oracle.</p></li>
+<li><p><strong>Expensive</strong> (seconds to minutes): actually materializing a merged tree in a
+throwaway worktree so a test suite can run on it.</p></li>
+</ul>
+<p class="rubric">Module Attributes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.gitops.MIN_GIT_VERSION" title="mergeset.gitops.MIN_GIT_VERSION"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MIN_GIT_VERSION</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge-tree</span> <span class="pre">--write-tree</span></code> needs this; it is also when <code class="docutils literal notranslate"><span class="pre">--merge-base</span></code> landed.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.gitops.changed_files" title="mergeset.gitops.changed_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">changed_files</span></code></a>(repo, base, head)</p></td>
+<td><p>Files a change touches, as <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">diff</span> <span class="pre">--name-only</span> <span class="pre">base...head</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.gitops.check_git_capability" title="mergeset.gitops.check_git_capability"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_git_capability</span></code></a>()</p></td>
+<td><p>Raise a fixable error if git is missing or too old for <code class="docutils literal notranslate"><span class="pre">merge-tree</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.gitops.create_integration_branch" title="mergeset.gitops.create_integration_branch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_integration_branch</span></code></a>(repo, name, base, ...)</p></td>
+<td><p>Create a local branch holding <code class="docutils literal notranslate"><span class="pre">base</span></code> + all heads, for manual testing.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.gitops.git" title="mergeset.gitops.git"><code class="xref py py-obj docutils literal notranslate"><span class="pre">git</span></code></a>(repo, *args[, check, timeout])</p></td>
+<td><p>Run <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">-C</span> <span class="pre">repo</span> <span class="pre">*args</span></code> and capture its output.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.gitops.git_version" title="mergeset.gitops.git_version"><code class="xref py py-obj docutils literal notranslate"><span class="pre">git_version</span></code></a>()</p></td>
+<td><p>The installed git version as a tuple, e.g. <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">50,</span> <span class="pre">1)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.gitops.merge_base" title="mergeset.gitops.merge_base"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_base</span></code></a>(repo, a, b)</p></td>
+<td><p>Best common ancestor of <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.gitops.merge_sequence" title="mergeset.gitops.merge_sequence"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_sequence</span></code></a>(repo, base, heads)</p></td>
+<td><p>Merge every head onto <code class="docutils literal notranslate"><span class="pre">base</span></code>, one at a time, without any worktree.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.gitops.merged_worktree" title="mergeset.gitops.merged_worktree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merged_worktree</span></code></a>(repo, base, heads, *[, ...])</p></td>
+<td><p>Materialize <code class="docutils literal notranslate"><span class="pre">base</span></code> plus every head in a worktree, ready for validation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.gitops.pairwise_textual_conflicts" title="mergeset.gitops.pairwise_textual_conflicts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pairwise_textual_conflicts</span></code></a>(repo, base, heads)</p></td>
+<td><p>Yield <code class="docutils literal notranslate"><span class="pre">(id_a,</span> <span class="pre">id_b,</span> <span class="pre">files)</span></code> for every pair that conflicts textually.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.gitops.persistent_worktree" title="mergeset.gitops.persistent_worktree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">persistent_worktree</span></code></a>(repo, base, path)</p></td>
+<td><p>Create (once) a worktree meant to be reused across many evaluations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.gitops.resolve" title="mergeset.gitops.resolve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code></a>(repo, rev)</p></td>
+<td><p>Full sha of <code class="docutils literal notranslate"><span class="pre">rev</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.gitops.singleton_textual_conflicts" title="mergeset.gitops.singleton_textual_conflicts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">singleton_textual_conflicts</span></code></a>(repo, base, heads)</p></td>
+<td><p>Yield <code class="docutils literal notranslate"><span class="pre">(id,</span> <span class="pre">files)</span></code> for every change that will not even merge onto base.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.gitops.textual_conflict" title="mergeset.gitops.textual_conflict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">textual_conflict</span></code></a>(repo, base, head_a, head_b)</p></td>
+<td><p>Conflicting files if merging both heads onto <code class="docutils literal notranslate"><span class="pre">base</span></code> clashes textually.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.gitops.GitResult" title="mergeset.gitops.GitResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GitResult</span></code></a>(returncode, stdout, stderr)</p></td>
+<td><p>Raw result of one git invocation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.gitops.SequenceMerge" title="mergeset.gitops.SequenceMerge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SequenceMerge</span></code></a>(ok[, commit, ...])</p></td>
+<td><p>Result of merging changes onto a base entirely in the object database.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.gitops.GitResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.gitops.</span></span><span class="sig-name descname"><span class="pre">GitResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">returncode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stdout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stderr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/gitops.html#GitResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.gitops.GitResult" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Raw result of one git invocation.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="mergeset.gitops.GitResult.ok">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ok</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><a class="headerlink" href="#mergeset.gitops.GitResult.ok" title="Link to this definition">#</a></dt>
+<dd><p>True iff git exited 0.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mergeset.gitops.MIN_GIT_VERSION">
+<span class="sig-prename descclassname"><span class="pre">mergeset.gitops.</span></span><span class="sig-name descname"><span class="pre">MIN_GIT_VERSION</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(2,</span> <span class="pre">38)</span></span><a class="headerlink" href="#mergeset.gitops.MIN_GIT_VERSION" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge-tree</span> <span class="pre">--write-tree</span></code> needs this; it is also when <code class="docutils literal notranslate"><span class="pre">--merge-base</span></code> landed.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.gitops.SequenceMerge">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.gitops.</span></span><span class="sig-name descname"><span class="pre">SequenceMerge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ok</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">commit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conflicting_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/gitops.html#SequenceMerge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.gitops.SequenceMerge" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Result of merging changes onto a base entirely in the object database.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.gitops.SequenceMerge.commit">
+<span class="sig-name descname"><span class="pre">commit</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.gitops.SequenceMerge.commit" title="Link to this definition">#</a></dt>
+<dd><p>Commit holding base + every merged head, when the whole sequence was clean.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.gitops.SequenceMerge.order">
+<span class="sig-name descname"><span class="pre">order</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.15)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">()</span></span><a class="headerlink" href="#mergeset.gitops.SequenceMerge.order" title="Link to this definition">#</a></dt>
+<dd><p>The changes merged so far; the last one is the one that conflicted.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.gitops.changed_files">
+<span class="sig-prename descclassname"><span class="pre">mergeset.gitops.</span></span><span class="sig-name descname"><span class="pre">changed_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">head</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/gitops.html#changed_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.gitops.changed_files" title="Link to this definition">#</a></dt>
+<dd><p>Files a change touches, as <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">diff</span> <span class="pre">--name-only</span> <span class="pre">base...head</span></code>.</p>
+<p>The three-dot form is deliberate: it compares against the merge base, so a
+change is measured by what <em>it</em> did, not by what happened on base meanwhile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.gitops.check_git_capability">
+<span class="sig-prename descclassname"><span class="pre">mergeset.gitops.</span></span><span class="sig-name descname"><span class="pre">check_git_capability</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/gitops.html#check_git_capability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.gitops.check_git_capability" title="Link to this definition">#</a></dt>
+<dd><p>Raise a fixable error if git is missing or too old for <code class="docutils literal notranslate"><span class="pre">merge-tree</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.gitops.create_integration_branch">
+<span class="sig-prename descclassname"><span class="pre">mergeset.gitops.</span></span><span class="sig-name descname"><span class="pre">create_integration_branch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/gitops.html#create_integration_branch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.gitops.create_integration_branch" title="Link to this definition">#</a></dt>
+<dd><p>Create a local branch holding <code class="docutils literal notranslate"><span class="pre">base</span></code> + all heads, for manual testing.</p>
+<p>Only ever creates <em>new</em> local branches. Never touches an existing branch
+unless <code class="docutils literal notranslate"><span class="pre">force</span></code> is passed explicitly, and never pushes anything.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">(created,</span> <span class="pre">message)</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.gitops.git">
+<span class="sig-prename descclassname"><span class="pre">mergeset.gitops.</span></span><span class="sig-name descname"><span class="pre">git</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/gitops.html#git"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.gitops.git" title="Link to this definition">#</a></dt>
+<dd><p>Run <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">-C</span> <span class="pre">repo</span> <span class="pre">*args</span></code> and capture its output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#mergeset.gitops.GitResult" title="mergeset.gitops.GitResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">GitResult</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">git</span><span class="p">(</span><span class="s1">'.'</span><span class="p">,</span> <span class="s1">'rev-parse'</span><span class="p">,</span> <span class="s1">'--git-dir'</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">True</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.gitops.git_version">
+<span class="sig-prename descclassname"><span class="pre">mergeset.gitops.</span></span><span class="sig-name descname"><span class="pre">git_version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/gitops.html#git_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.gitops.git_version" title="Link to this definition">#</a></dt>
+<dd><p>The installed git version as a tuple, e.g. <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">50,</span> <span class="pre">1)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#Ellipsis" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.gitops.merge_base">
+<span class="sig-prename descclassname"><span class="pre">mergeset.gitops.</span></span><span class="sig-name descname"><span class="pre">merge_base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/gitops.html#merge_base"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.gitops.merge_base" title="Link to this definition">#</a></dt>
+<dd><p>Best common ancestor of <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.gitops.merge_sequence">
+<span class="sig-prename descclassname"><span class="pre">mergeset.gitops.</span></span><span class="sig-name descname"><span class="pre">merge_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/gitops.html#merge_sequence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.gitops.merge_sequence" title="Link to this definition">#</a></dt>
+<dd><p>Merge every head onto <code class="docutils literal notranslate"><span class="pre">base</span></code>, one at a time, without any worktree.</p>
+<p>The mechanic, which is the cheap heart of the whole tool:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">acc</span> <span class="o">=</span> <span class="n">base</span>
+</span><span data-line="2"><span class="k">for</span> <span class="n">each</span> <span class="n">head</span><span class="p">:</span>
+</span><span data-line="3">    <span class="n">tree</span> <span class="o">=</span> <span class="n">git</span> <span class="n">merge</span><span class="o">-</span><span class="n">tree</span> <span class="o">--</span><span class="n">write</span><span class="o">-</span><span class="n">tree</span> <span class="n">acc</span> <span class="n">head</span>   <span class="c1"># conflict -&gt; non-zero</span>
+</span><span data-line="4">    <span class="n">acc</span>  <span class="o">=</span> <span class="n">git</span> <span class="n">commit</span><span class="o">-</span><span class="n">tree</span> <span class="n">tree</span> <span class="o">-</span><span class="n">p</span> <span class="n">acc</span> <span class="o">-</span><span class="n">p</span> <span class="n">head</span>
+</span></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">n</span></code> <code class="docutils literal notranslate"><span class="pre">merge-tree</span></code> calls of a few milliseconds each, no checkout, no
+working tree, and — when it comes out clean — a real commit that a worktree
+can be checked out from only if we actually intend to run tests on it.</p>
+<p>Every merge is measured against the accumulated result rather than pairwise,
+which is what keeps a stale branch from manufacturing false conflicts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#mergeset.gitops.SequenceMerge" title="mergeset.gitops.SequenceMerge"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequenceMerge</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.gitops.merged_worktree">
+<span class="sig-prename descclassname"><span class="pre">mergeset.gitops.</span></span><span class="sig-name descname"><span class="pre">merged_worktree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reuse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/gitops.html#merged_worktree"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.gitops.merged_worktree" title="Link to this definition">#</a></dt>
+<dd><p>Materialize <code class="docutils literal notranslate"><span class="pre">base</span></code> plus every head in a worktree, ready for validation.</p>
+<p>The merge itself happens in the object database (<a class="reference internal" href="#mergeset.gitops.merge_sequence" title="mergeset.gitops.merge_sequence"><code class="xref py py-func docutils literal notranslate"><span class="pre">merge_sequence()</span></code></a>), so
+a conflicted set costs milliseconds and never touches the filesystem at all.
+Only a <em>clean</em> set gets checked out — which is the only case where anything
+wanted to run tests anyway.</p>
+<p>Yields <code class="docutils literal notranslate"><span class="pre">(worktree_path,</span> <span class="pre">outcome)</span></code>. On a conflict the path is <code class="docutils literal notranslate"><span class="pre">None</span></code> and
+the outcome names the change that failed (<code class="docutils literal notranslate"><span class="pre">outcome.order[-1]</span></code>) and the
+conflicting files — that attribution is what lets the solver shrink straight
+to the suspects instead of halving blindly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reuse</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – An existing worktree to check the merge commit out into, instead
+of creating a fresh one. This is the seam that makes expensive
+per-tree setup (<code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">install</span></code>, a virtualenv, a build cache)
+survive across evaluations; see
+<a class="reference internal" href="mergeset.validation.html#mergeset.validation.staged_validation" title="mergeset.validation.staged_validation"><code class="xref py py-func docutils literal notranslate"><span class="pre">mergeset.validation.staged_validation()</span></code></a>.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterator" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>], <a class="reference internal" href="mergeset.base.html#mergeset.base.MergeOutcome" title="mergeset.base.MergeOutcome"><code class="xref py py-class docutils literal notranslate"><span class="pre">MergeOutcome</span></code></a>]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.gitops.pairwise_textual_conflicts">
+<span class="sig-prename descclassname"><span class="pre">mergeset.gitops.</span></span><span class="sig-name descname"><span class="pre">pairwise_textual_conflicts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/gitops.html#pairwise_textual_conflicts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.gitops.pairwise_textual_conflicts" title="Link to this definition">#</a></dt>
+<dd><p>Yield <code class="docutils literal notranslate"><span class="pre">(id_a,</span> <span class="pre">id_b,</span> <span class="pre">files)</span></code> for every pair that conflicts textually.</p>
+<p><code class="docutils literal notranslate"><span class="pre">heads</span></code> maps change id -&gt; commit-ish. This is the pre-oracle that buys the
+most: every pair it finds is a size-2 conflict known before any test runs.
+Each pair is merged <em>onto base</em>, never against each other — see
+<a class="reference internal" href="#mergeset.gitops.textual_conflict" title="mergeset.gitops.textual_conflict"><code class="xref py py-func docutils literal notranslate"><span class="pre">textual_conflict()</span></code></a> for why that distinction is not cosmetic.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterator" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.gitops.persistent_worktree">
+<span class="sig-prename descclassname"><span class="pre">mergeset.gitops.</span></span><span class="sig-name descname"><span class="pre">persistent_worktree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/gitops.html#persistent_worktree"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.gitops.persistent_worktree" title="Link to this definition">#</a></dt>
+<dd><p>Create (once) a worktree meant to be reused across many evaluations.</p>
+<p>Reusing one tree is what makes an expensive setup step amortizable: install
+dependencies once, then check out each candidate merge into the same
+directory. Returns <code class="docutils literal notranslate"><span class="pre">path</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.gitops.resolve">
+<span class="sig-prename descclassname"><span class="pre">mergeset.gitops.</span></span><span class="sig-name descname"><span class="pre">resolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rev</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/gitops.html#resolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.gitops.resolve" title="Link to this definition">#</a></dt>
+<dd><p>Full sha of <code class="docutils literal notranslate"><span class="pre">rev</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="mergeset.html#mergeset.CapabilityError" title="mergeset.CapabilityError"><strong>CapabilityError</strong></a> – if the revision cannot be resolved in <code class="docutils literal notranslate"><span class="pre">repo</span></code>.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.gitops.singleton_textual_conflicts">
+<span class="sig-prename descclassname"><span class="pre">mergeset.gitops.</span></span><span class="sig-name descname"><span class="pre">singleton_textual_conflicts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/gitops.html#singleton_textual_conflicts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.gitops.singleton_textual_conflicts" title="Link to this definition">#</a></dt>
+<dd><p>Yield <code class="docutils literal notranslate"><span class="pre">(id,</span> <span class="pre">files)</span></code> for every change that will not even merge onto base.</p>
+<p>The cheapest check there is, and on real PR sets it fires more than you would
+expect: a PR opened against a base branch that has since moved on is green on
+GitHub and still unmergeable onto the base you actually care about.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterator" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.gitops.textual_conflict">
+<span class="sig-prename descclassname"><span class="pre">mergeset.gitops.</span></span><span class="sig-name descname"><span class="pre">textual_conflict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">head_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">head_b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/gitops.html#textual_conflict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.gitops.textual_conflict" title="Link to this definition">#</a></dt>
+<dd><p>Conflicting files if merging both heads onto <code class="docutils literal notranslate"><span class="pre">base</span></code> clashes textually.</p>
+<p>**This chains through <code class="docutils literal notranslate"><span class="pre">base</span></code> on purpose.** Plain <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge-tree</span> <span class="pre">A</span> <span class="pre">B</span></code>
+merges using <code class="docutils literal notranslate"><span class="pre">merge-base(A,</span> <span class="pre">B)</span></code>, which is <em>not</em> <code class="docutils literal notranslate"><span class="pre">base</span></code> whenever the two
+branches were cut at different times — and then it reports base’s own
+commits as conflicts. On a real 15-PR set that mistake produced 13
+“conflicting” pairs where only 2 were real (measured by TEST on
+a real trial). So we merge A onto base first, in the object database, and ask
+whether B then conflicts with <em>that</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code> when the merge is clean, otherwise the list of conflicted paths
+(possibly empty if git reported a conflict it could not attribute).</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="mergeset.cost.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">mergeset.cost</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="mergeset.log.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">mergeset.log</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/i2mint/mergeset" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=c7cdf6fe"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=fd10adb8"></script>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
+</html>

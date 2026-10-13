@@ -1,0 +1,26 @@
+mergeset.stacks
+===============
+
+.. automodule:: mergeset.stacks
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      Dependencies
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      ancestors
+      close_down
+      close_up
+      cone_weights
+      count_closed_subsets
+      descendants
+      largest_closed_subset
+      stack_roots
+      tips
+   

@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="lime" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>mergeset.base - mergeset</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="mergeset.cli" href="mergeset.cli.html" /><link rel="prev" title="mergeset.attribution" href="mergeset.attribution.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="mergeset.base"/>
+    <meta name="twitter:card" content="summary"/>
+  
+<link rel="alternate" type="text/markdown" href="mergeset.base.html.md">
+<link rel="describedby" href="../llms.txt" type="text/markdown">
+</head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>mergeset</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/i2mint/mergeset" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="mergeset.html">mergeset</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mergeset.analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">mergeset.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.cli.html">mergeset.cli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.cost.html">mergeset.cost</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.log.html">mergeset.log</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.report.html">mergeset.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.skills.html">mergeset.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.solve.html">mergeset.solve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.sources.html">mergeset.sources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.storage.html">mergeset.storage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.tiers.html">mergeset.tiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mergeset.validation.html">mergeset.validation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ai-agents.html">For AI agents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#mergeset.base.CapabilityError"><code class="docutils literal notranslate"><span class="pre">CapabilityError</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.Change"><code class="docutils literal notranslate"><span class="pre">Change</span></code></a><ul>
+<li><a class="reference internal" href="#mergeset.base.Change.from_jdict"><code class="docutils literal notranslate"><span class="pre">Change.from_jdict()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.Change.to_jdict"><code class="docutils literal notranslate"><span class="pre">Change.to_jdict()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.Change.with_weight"><code class="docutils literal notranslate"><span class="pre">Change.with_weight()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mergeset.base.Evaluation"><code class="docutils literal notranslate"><span class="pre">Evaluation</span></code></a><ul>
+<li><a class="reference internal" href="#mergeset.base.Evaluation.cached"><code class="docutils literal notranslate"><span class="pre">Evaluation.cached</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.Evaluation.from_jdict"><code class="docutils literal notranslate"><span class="pre">Evaluation.from_jdict()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.Evaluation.ok"><code class="docutils literal notranslate"><span class="pre">Evaluation.ok</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.Evaluation.to_jdict"><code class="docutils literal notranslate"><span class="pre">Evaluation.to_jdict()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mergeset.base.Evaluator"><code class="docutils literal notranslate"><span class="pre">Evaluator</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.MergeFn"><code class="docutils literal notranslate"><span class="pre">MergeFn</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.MergeOutcome"><code class="docutils literal notranslate"><span class="pre">MergeOutcome</span></code></a><ul>
+<li><a class="reference internal" href="#mergeset.base.MergeOutcome.reason"><code class="docutils literal notranslate"><span class="pre">MergeOutcome.reason</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.MergeOutcome.to_jdict"><code class="docutils literal notranslate"><span class="pre">MergeOutcome.to_jdict()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mergeset.base.MergesetError"><code class="docutils literal notranslate"><span class="pre">MergesetError</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.Stage"><code class="docutils literal notranslate"><span class="pre">Stage</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.ValidateFn"><code class="docutils literal notranslate"><span class="pre">ValidateFn</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.ValidationOutcome"><code class="docutils literal notranslate"><span class="pre">ValidationOutcome</span></code></a><ul>
+<li><a class="reference internal" href="#mergeset.base.ValidationOutcome.to_jdict"><code class="docutils literal notranslate"><span class="pre">ValidationOutcome.to_jdict()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mergeset.base.Verdict"><code class="docutils literal notranslate"><span class="pre">Verdict</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.change_set"><code class="docutils literal notranslate"><span class="pre">change_set()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.set_key"><code class="docutils literal notranslate"><span class="pre">set_key()</span></code></a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">mergeset</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../api.html"><span itemprop="name">API reference</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="mergeset.html"><span itemprop="name">mergeset</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="3" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">mergeset.base</strong>
+        <meta itemprop="position" content="4" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <section id="module-mergeset.base">
+<span id="mergeset-base"></span><h1>mergeset.base<a class="headerlink" href="#module-mergeset.base" title="Link to this heading">#</a></h1>
+<p>Core data structures and vocabulary of <code class="docutils literal notranslate"><span class="pre">mergeset</span></code>.</p>
+<p>The unit of work is a <strong>change</strong>: a commit range <code class="docutils literal notranslate"><span class="pre">base..head</span></code>. Branches, pull
+requests and explicit commit lists are merely <em>sources</em> that produce changes
+(see <a class="reference internal" href="mergeset.sources.html#module-mergeset.sources" title="mergeset.sources"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mergeset.sources</span></code></a>). Everything downstream — the evaluation log, the
+solver, the report — speaks only of changes, identified by their string <code class="docutils literal notranslate"><span class="pre">id</span></code>.</p>
+<p>A <strong>change set</strong> is a <code class="docutils literal notranslate"><span class="pre">frozenset</span></code> of change ids. Sets are the atoms the solver
+reasons about; they are serialized as sorted lists so the JSONL log is stable
+and diffable.</p>
+<p class="rubric">Module Attributes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.base.MergeFn" title="mergeset.base.MergeFn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MergeFn</span></code></a></p></td>
+<td><p>(changes to merge, in order) -&gt; outcome + a tree to validate.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.base.ValidateFn" title="mergeset.base.ValidateFn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ValidateFn</span></code></a></p></td>
+<td><p>(path to a merged worktree) -&gt; outcome.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.base.change_set" title="mergeset.base.change_set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_set</span></code></a>(ids)</p></td>
+<td><p>Normalize any iterable of change ids into a <code class="docutils literal notranslate"><span class="pre">frozenset</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.base.set_key" title="mergeset.base.set_key"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_key</span></code></a>(ids)</p></td>
+<td><p>A stable, hashable, JSON-friendly key for a change set.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.base.Change" title="mergeset.base.Change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Change</span></code></a>(id, head, base[, source, weight, meta])</p></td>
+<td><p>One candidate change: everything between <code class="docutils literal notranslate"><span class="pre">base</span></code> and <code class="docutils literal notranslate"><span class="pre">head</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.base.Evaluation" title="mergeset.base.Evaluation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Evaluation</span></code></a>(subset, verdict[, stage, merge, ...])</p></td>
+<td><p>One row of the evaluation log — the single source of truth.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.base.Evaluator" title="mergeset.base.Evaluator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Evaluator</span></code></a>(*args, **kwargs)</p></td>
+<td><p>Callable that decides whether a change set is good.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.base.MergeOutcome" title="mergeset.base.MergeOutcome"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MergeOutcome</span></code></a>(ok[, reason, ...])</p></td>
+<td><p>Result of merging a change set onto its base.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.base.Stage" title="mergeset.base.Stage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Stage</span></code></a>(*values)</p></td>
+<td><p>Where an evaluation ended.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.base.ValidationOutcome" title="mergeset.base.ValidationOutcome"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ValidationOutcome</span></code></a>(ok[, failing_tests, ...])</p></td>
+<td><p>Result of validating a merged tree.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.base.Verdict" title="mergeset.base.Verdict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Verdict</span></code></a>(*values)</p></td>
+<td><p>Outcome of evaluating a change set.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Exceptions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mergeset.base.CapabilityError" title="mergeset.base.CapabilityError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CapabilityError</span></code></a></p></td>
+<td><p>A required external capability is missing; the message says how to fix it.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mergeset.base.MergesetError" title="mergeset.base.MergesetError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MergesetError</span></code></a></p></td>
+<td><p>Base class for errors this package raises deliberately.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py exception">
+<dt class="sig sig-object py" id="mergeset.base.CapabilityError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">CapabilityError</span></span><a class="reference internal" href="../_modules/mergeset/base.html#CapabilityError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.CapabilityError" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mergeset.base.MergesetError" title="mergeset.base.MergesetError"><code class="xref py py-class docutils literal notranslate"><span class="pre">MergesetError</span></code></a></p>
+<p>A required external capability is missing; the message says how to fix it.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.base.Change">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">Change</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">head</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'branch'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Change"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.Change" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>One candidate change: everything between <code class="docutils literal notranslate"><span class="pre">base</span></code> and <code class="docutils literal notranslate"><span class="pre">head</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Short stable identifier, used everywhere else (log, report, CLI).</p></li>
+<li><p><strong>head</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Commit-ish holding the change (branch name, sha, PR head).</p></li>
+<li><p><strong>base</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Commit-ish the change is measured against.</p></li>
+<li><p><strong>source</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Which source produced it (<code class="docutils literal notranslate"><span class="pre">'branch'</span></code>, <code class="docutils literal notranslate"><span class="pre">'pr'</span></code>, <code class="docutils literal notranslate"><span class="pre">'commit'</span></code>).</p></li>
+<li><p><strong>weight</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]</span>) – Cost of <em>dropping</em> this change. The solver drops the cheapest
+changes it can when it must drop something, so a high weight means
+“keep me”. <code class="docutils literal notranslate"><span class="pre">None</span></code> means “let the weighting policy decide”.</p></li>
+<li><p><strong>meta</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Mapping" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span>) – Source-specific extras (PR number, author, CI status, draft flag…).</p></li>
+</ul>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Change</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">'fix-a'</span><span class="p">,</span> <span class="n">head</span><span class="o">=</span><span class="s1">'origin/fix-a'</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="s1">'origin/main'</span><span class="p">)</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">source</span>
+</span><span data-line="3"><span class="go">('fix-a', 'branch')</span>
+</span></pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.base.Change.from_jdict">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_jdict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Change.from_jdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.Change.from_jdict" title="Link to this definition">#</a></dt>
+<dd><p>Inverse of <a class="reference internal" href="#mergeset.base.Change.to_jdict" title="mergeset.base.Change.to_jdict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_jdict()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#mergeset.base.Change" title="mergeset.base.Change"><code class="xref py py-class docutils literal notranslate"><span class="pre">Change</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.base.Change.to_jdict">
+<span class="sig-name descname"><span class="pre">to_jdict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Change.to_jdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.Change.to_jdict" title="Link to this definition">#</a></dt>
+<dd><p>JSON-able view of the change.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.base.Change.with_weight">
+<span class="sig-name descname"><span class="pre">with_weight</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weight</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Change.with_weight"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.Change.with_weight" title="Link to this definition">#</a></dt>
+<dd><p>A copy of this change carrying <code class="docutils literal notranslate"><span class="pre">weight</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#mergeset.base.Change" title="mergeset.base.Change"><code class="xref py py-class docutils literal notranslate"><span class="pre">Change</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.base.Evaluation">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">Evaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Evaluation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.Evaluation" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>One row of the evaluation log — the single source of truth.</p>
+<p>Everything else (conflict set, known-good/known-bad closure, merge plan,
+reports) is <em>derived</em> from a sequence of these and is re-derivable.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.base.Evaluation.cached">
+<span class="sig-name descname"><span class="pre">cached</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#mergeset.base.Evaluation.cached" title="Link to this definition">#</a></dt>
+<dd><p>True when this came from the log rather than from a real run. Not
+serialized: it is a fact about <em>this</em> lookup, not about the evaluation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.base.Evaluation.from_jdict">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_jdict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Evaluation.from_jdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.Evaluation.from_jdict" title="Link to this definition">#</a></dt>
+<dd><p>Inverse of <a class="reference internal" href="#mergeset.base.Evaluation.to_jdict" title="mergeset.base.Evaluation.to_jdict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_jdict()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#mergeset.base.Evaluation" title="mergeset.base.Evaluation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Evaluation</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mergeset.base.Evaluation.ok">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ok</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><a class="headerlink" href="#mergeset.base.Evaluation.ok" title="Link to this definition">#</a></dt>
+<dd><p>True iff the set evaluated as good.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.base.Evaluation.to_jdict">
+<span class="sig-name descname"><span class="pre">to_jdict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Evaluation.to_jdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.Evaluation.to_jdict" title="Link to this definition">#</a></dt>
+<dd><p>JSON-able view; <code class="docutils literal notranslate"><span class="pre">subset</span></code> becomes a sorted list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.base.Evaluator">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">Evaluator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Evaluator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.Evaluator" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Protocol" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></a></p>
+<p>Callable that decides whether a change set is good.</p>
+<p>This is <em>the</em> expensive seam: one call is typically a merge plus a test run.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mergeset.base.MergeFn">
+<span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">MergeFn</span></span><a class="headerlink" href="#mergeset.base.MergeFn" title="Link to this definition">#</a></dt>
+<dd><p>(changes to merge, in order) -&gt; outcome + a tree to validate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A merge function</p>
+</dd>
+</dl>
+<p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>[[…], <a class="reference internal" href="#mergeset.base.MergeOutcome" title="mergeset.base.MergeOutcome"><code class="xref py py-class docutils literal notranslate"><span class="pre">MergeOutcome</span></code></a>]</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.base.MergeOutcome">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">MergeOutcome</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ok</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reason</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'conflict'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conflicting_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assisted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assist_diff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#MergeOutcome"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.MergeOutcome" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Result of merging a change set onto its base.</p>
+<p><code class="docutils literal notranslate"><span class="pre">reason</span></code> is load-bearing. “These changes conflict with each other” and “we
+could not run the experiment” are completely different facts, and conflating
+them is how a run reports <em>0 of 15 mergeable, complete</em> with total
+confidence when the real problem was a bad worktree path. Only
+<code class="docutils literal notranslate"><span class="pre">reason</span> <span class="pre">==</span> <span class="pre">'conflict'</span></code> may ever enter the conflict set; an <code class="docutils literal notranslate"><span class="pre">'error'</span></code>
+aborts, because a set that was never tested has told us nothing.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.base.MergeOutcome.reason">
+<span class="sig-name descname"><span class="pre">reason</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'conflict'</span></span><a class="headerlink" href="#mergeset.base.MergeOutcome.reason" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">'conflict'</span></code> (a real textual conflict) or <code class="docutils literal notranslate"><span class="pre">'error'</span></code> (the merge could
+not be attempted: bad path, missing ref, unusable worktree).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.base.MergeOutcome.to_jdict">
+<span class="sig-name descname"><span class="pre">to_jdict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#MergeOutcome.to_jdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.MergeOutcome.to_jdict" title="Link to this definition">#</a></dt>
+<dd><p>JSON-able view.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="mergeset.base.MergesetError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">MergesetError</span></span><a class="reference internal" href="../_modules/mergeset/base.html#MergesetError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.MergesetError" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#Exception" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
+<p>Base class for errors this package raises deliberately.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.base.Stage">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">Stage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Stage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.Stage" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
+<p>Where an evaluation ended.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mergeset.base.ValidateFn">
+<span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">ValidateFn</span></span><a class="headerlink" href="#mergeset.base.ValidateFn" title="Link to this definition">#</a></dt>
+<dd><p>(path to a merged worktree) -&gt; outcome.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A validation function</p>
+</dd>
+</dl>
+<p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>[[…], <a class="reference internal" href="#mergeset.base.ValidationOutcome" title="mergeset.base.ValidationOutcome"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValidationOutcome</span></code></a>]</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.base.ValidationOutcome">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">ValidationOutcome</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ok</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">failing_tests</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">failing_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stdout_tail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">returncode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#ValidationOutcome"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.ValidationOutcome" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Result of validating a merged tree.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.base.ValidationOutcome.to_jdict">
+<span class="sig-name descname"><span class="pre">to_jdict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#ValidationOutcome.to_jdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.ValidationOutcome.to_jdict" title="Link to this definition">#</a></dt>
+<dd><p>JSON-able view.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mergeset.base.Verdict">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">Verdict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#Verdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.Verdict" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
+<p>Outcome of evaluating a change set.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.base.change_set">
+<span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">change_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ids</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#change_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.change_set" title="Link to this definition">#</a></dt>
+<dd><p>Normalize any iterable of change ids into a <code class="docutils literal notranslate"><span class="pre">frozenset</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#frozenset" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">frozenset</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">change_set</span><span class="p">([</span><span class="s1">'b'</span><span class="p">,</span> <span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">])</span> <span class="o">==</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">})</span>
+</span><span data-line="2"><span class="go">True</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mergeset.base.set_key">
+<span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">set_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ids</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#set_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.set_key" title="Link to this definition">#</a></dt>
+<dd><p>A stable, hashable, JSON-friendly key for a change set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">set_key</span><span class="p">({</span><span class="s1">'b'</span><span class="p">,</span> <span class="s1">'a'</span><span class="p">})</span>
+</span><span data-line="2"><span class="go">('a', 'b')</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="mergeset.attribution.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">mergeset.attribution</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="mergeset.cli.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">mergeset.cli</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/i2mint/mergeset" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=c7cdf6fe"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=fd10adb8"></script>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
+</html>

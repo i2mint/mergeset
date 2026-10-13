@@ -1,0 +1,124 @@
+﻿mergeset
+========
+
+.. automodule:: mergeset
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      analyze
+      skills_dir
+      install_skills
+      bundled_skills
+      analyze_tiered
+      anytime_answer
+      best_set_including
+      chained_evaluate
+      tier_lines
+      cost_from_log
+      set_cost
+      change_set
+      set_key
+      branch_changes
+      commit_changes
+      pr_changes
+      fetch_pull_requests
+      local_branch_names
+      detect_stacks
+      pytest_validation
+      command_validation
+      act_validation
+      callable_validation
+      merge_only_validation
+      flake_tolerant
+      staged_validation
+      js_validation
+      file_fingerprint
+      tips
+      close_down
+      close_up
+      largest_closed_subset
+      cone_weights
+      ancestors
+      descendants
+      count_closed_subsets
+      git_oracle
+      merge_order
+      claude_code_resolver
+      find_maximal_good_sets
+      quickxplain
+      minimal_hitting_sets
+      independent_components
+      combine_components
+      textual_conflict
+      pairwise_textual_conflicts
+      singleton_textual_conflicts
+      changed_files
+      merge_sequence
+      merged_worktree
+      persistent_worktree
+      create_integration_branch
+      markdown_report
+      html_report
+      artifact_store
+      artifact_mall
+      artifact_path
+      app_data_rootdir
+      evaluation_log_path
+      evaluation_lines
+      run_key
+      slash_separated_keys
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Analysis
+      TieredAnalysis
+      Tier
+      AnytimeAnswer
+      CostModel
+      MeasuredCost
+      Change
+      ChangeSet
+      Evaluation
+      Verdict
+      MergeOutcome
+      ValidationOutcome
+      EvaluationLog
+      JsonlLines
+      MemoryLines
+      ValidationStage
+      StoreLines
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      MergesetError
+      CapabilityError
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   analysis
+   attribution
+   base
+   cli
+   cost
+   gitops
+   log
+   oracle
+   report
+   skills
+   solve
+   sources
+   stacks
+   storage
+   tiers
+   validation

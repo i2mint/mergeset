@@ -1,4 +1,0 @@
-mergeset.storage
-================
-.. automodule:: mergeset.storage
-   :members:

@@ -1,0 +1,18 @@
+mergeset.analysis
+=================
+
+.. automodule:: mergeset.analysis
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      analyze
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Analysis
+   

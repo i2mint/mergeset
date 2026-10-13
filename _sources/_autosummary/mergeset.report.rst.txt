@@ -1,0 +1,21 @@
+mergeset.report
+===============
+
+.. automodule:: mergeset.report
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      REPORT_FORMATS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      html_report
+      markdown_report
+      pdf_report
+      write_reports
+   

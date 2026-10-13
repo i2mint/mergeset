@@ -1,4 +1,0 @@
-mergeset.gitops
-===============
-.. automodule:: mergeset.gitops
-   :members:

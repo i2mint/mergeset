@@ -1,4 +1,0 @@
-mergeset.sources
-================
-.. automodule:: mergeset.sources
-   :members:

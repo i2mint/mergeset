@@ -1,0 +1,20 @@
+mergeset.skills
+===============
+
+.. automodule:: mergeset.skills
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DEFAULT_TARGET
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      bundled_skills
+      install_skills
+      skills_dir
+   

@@ -1,0 +1,28 @@
+# mergeset
+
+> Find which branches/PRs can be merged together: maximal conflict-free, test-passing subsets of changes.
+
+
+## Pages in this subsection
+
+- [mergeset](mergeset.html.md): Which of these branches can be merged together?
+- [mergeset.analysis](mergeset.analysis.html.md): The facade: one call that goes from a repository to a merge plan.
+- [mergeset.attribution](mergeset.attribution.html.md): From a failure to the changes that probably caused it.
+- [mergeset.base](mergeset.base.html.md): Core data structures and vocabulary of &#96;mergeset&#96;.
+- [mergeset.cli](mergeset.cli.html.md): Command line surface.
+- [mergeset.cost](mergeset.cost.html.md): What an evaluation costs — per validation tier, and per change.
+- [mergeset.gitops](mergeset.gitops.html.md): Git primitives: the cheap pre-oracles and the isolated merge.
+- [mergeset.log](mergeset.log.html.md): The evaluation log: append-only JSONL, and the single source of truth.
+- [mergeset.oracle](mergeset.oracle.html.md): The oracle: turn a change set into a verdict by merging, then validating.
+- [mergeset.report](mergeset.report.html.md): Rendering an &#96;Analysis&#96; for humans.
+- [mergeset.skills](mergeset.skills.html.md): The agent skill that ships inside the package, and how to install it.
+- [mergeset.solve](mergeset.solve.html.md): The search: from expensive yes/no evaluations to maximal good sets.
+- [mergeset.sources](mergeset.sources.html.md): Change sources: where the candidate changes come from.
+- [mergeset.stacks](mergeset.stacks.html.md): Stacked changes: when the candidates are not independent.
+- [mergeset.storage](mergeset.storage.html.md): Where mergeset’s artifacts live, and how code reaches them.
+- [mergeset.tiers](mergeset.tiers.html.md): Tiered validation: a cheap oracle screens, an expensive one confirms.
+- [mergeset.validation](mergeset.validation.html.md): Validation functions: does this merged tree actually work?
+
+## Optional
+
+- [Top-level llms.txt](../llms.txt): Complete documentation index.

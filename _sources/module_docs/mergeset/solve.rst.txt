@@ -1,4 +1,0 @@
-mergeset.solve
-==============
-.. automodule:: mergeset.solve
-   :members:

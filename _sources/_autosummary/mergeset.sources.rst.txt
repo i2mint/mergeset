@@ -1,0 +1,25 @@
+mergeset.sources
+================
+
+.. automodule:: mergeset.sources
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      PR_FIELDS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      branch_changes
+      check_gh_capability
+      commit_changes
+      detect_stacks
+      fetch_pull_requests
+      local_branch_names
+      pr_changes
+      size_weight
+   

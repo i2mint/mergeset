@@ -1,0 +1,22 @@
+mergeset.log
+============
+
+.. automodule:: mergeset.log
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      sets_evaluated
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      EvaluationLog
+      JsonlLines
+      Known
+      MemoryLines
+      StoreLines
+   

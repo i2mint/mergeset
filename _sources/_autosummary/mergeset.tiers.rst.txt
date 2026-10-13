@@ -1,0 +1,25 @@
+mergeset.tiers
+==============
+
+.. automodule:: mergeset.tiers
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      analyze_tiered
+      anytime_answer
+      best_set_including
+      chained_evaluate
+      tier_key
+      tier_lines
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      AnytimeAnswer
+      Tier
+      TieredAnalysis
+   

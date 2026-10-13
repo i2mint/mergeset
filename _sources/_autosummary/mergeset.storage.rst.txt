@@ -1,0 +1,27 @@
+mergeset.storage
+================
+
+.. automodule:: mergeset.storage
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      ARTIFACT_KINDS
+      StoreFactory
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      app_data_rootdir
+      artifact_mall
+      artifact_path
+      artifact_store
+      evaluation_lines
+      evaluation_log_path
+      run_key
+      slash_separated_keys
+      slugify
+   

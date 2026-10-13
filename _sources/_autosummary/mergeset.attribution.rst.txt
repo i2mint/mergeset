@@ -1,0 +1,16 @@
+mergeset.attribution
+====================
+
+.. automodule:: mergeset.attribution
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      failure_text
+      git_diff_reader
+      identifiers_in
+      paths_in
+      suspects
+   

@@ -1,0 +1,39 @@
+mergeset.base
+=============
+
+.. automodule:: mergeset.base
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      MergeFn
+      ValidateFn
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      change_set
+      set_key
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Change
+      Evaluation
+      Evaluator
+      MergeOutcome
+      Stage
+      ValidationOutcome
+      Verdict
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      CapabilityError
+      MergesetError
+   

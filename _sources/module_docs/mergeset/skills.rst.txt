@@ -1,4 +1,0 @@
-mergeset.skills
-===============
-.. automodule:: mergeset.skills
-   :members:

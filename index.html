@@ -1,402 +1,337 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="./">
+<html lang="en" data-accent-color="lime" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to mergeset’s documentation! &mdash; mergeset 0.0.15 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
-
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>mergeset</title><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="API reference" href="api.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="mergeset"/>
+    <meta name="twitter:card" content="summary"/>
   
-      <script src="_static/jquery.js?v=5d32c60e"></script>
-      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=f0357c94"></script>
+<link rel="alternate" type="text/markdown" href="index.html.md">
+<link rel="describedby" href="llms.txt" type="text/markdown">
+</head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="#">
+      
+      
+      <strong>mergeset</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/i2mint/mergeset" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/mergeset.html">mergeset</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/mergeset.analysis.html">mergeset.analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/mergeset.attribution.html">mergeset.attribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/mergeset.base.html">mergeset.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/mergeset.cli.html">mergeset.cli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/mergeset.cost.html">mergeset.cost</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/mergeset.gitops.html">mergeset.gitops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/mergeset.log.html">mergeset.log</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/mergeset.oracle.html">mergeset.oracle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/mergeset.report.html">mergeset.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/mergeset.skills.html">mergeset.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/mergeset.solve.html">mergeset.solve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/mergeset.sources.html">mergeset.sources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/mergeset.stacks.html">mergeset.stacks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/mergeset.storage.html">mergeset.storage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/mergeset.tiers.html">mergeset.tiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/mergeset.validation.html">mergeset.validation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ai-agents.html">For AI agents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#why-it-is-not-just-try-every-subset">Why it is not just &#8220;try every subset&#8221;</a></li>
+<li><a class="reference internal" href="#where-the-output-goes">Where the output goes</a></li>
+<li><a class="reference internal" href="#progressive-disclosure">Progressive disclosure</a></li>
+<li><a class="reference internal" href="#real-repositories-are-messier-than-the-theory">Real repositories are messier than the theory</a></li>
+<li><a class="reference internal" href="#validation-is-a-sequence-not-a-command">Validation is a sequence, not a command</a></li>
+<li><a class="reference internal" href="#output">Output</a></li>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#reading-further">Reading further</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="#"><span itemprop="name">mergeset</span></a>
+        <meta itemprop="position" content="1" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <!-- generated by epythet -->
+<section id="mergeset">
+<h1>mergeset<a class="headerlink" href="#mergeset" title="Link to this heading">#</a></h1>
+<p>Which of these branches can be merged together?</p>
+<p>Given a base commit and <em>n</em> candidate changes — branches, pull requests, commits — <code class="docutils literal notranslate"><span class="pre">mergeset</span></code> finds the <strong>maximal sets</strong> that merge cleanly and still pass validation, and the minimal <strong>conflicts</strong> that stop the rest.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>mergeset
+</span><span data-line="2">python<span class="w"> </span>-m<span class="w"> </span>mergeset<span class="w"> </span>branches<span class="w"> </span>feat-a<span class="w"> </span>feat-b<span class="w"> </span>feat-c<span class="w"> </span>--base<span class="w"> </span>main
+</span></pre></div>
+</div>
+<p><strong>Driving it from an agent?</strong> <code class="docutils literal notranslate"><span class="pre">mergeset</span></code> ships the skill an agent needs to drive it well — ask the free oracles before spending a test run, what a green report does <em>not</em> mean, and why a run’s output never goes into a repository.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">gh<span class="w"> </span>skill<span class="w"> </span>install<span class="w"> </span>i2mint/mergeset<span class="w"> </span>mergeset<span class="w"> </span>--agent<span class="w"> </span>claude-code<span class="w">   </span><span class="c1"># or copilot, cursor, codex, gemini</span>
+</span></pre></div>
+</div>
+<p>The same skill is inside the wheel, so <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">mergeset</span></code> already has it — <code class="docutils literal notranslate"><span class="pre">mergeset</span> <span class="pre">install-skills</span></code> links it into an agent’s directory, offline.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">mergeset</span><span class="w"> </span><span class="kn">import</span> <span class="n">analyze</span><span class="p">,</span> <span class="n">branch_changes</span><span class="p">,</span> <span class="n">markdown_report</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">changes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">branch_changes</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span> <span class="p">[</span><span class="s2">"feat-a"</span><span class="p">,</span> <span class="s2">"feat-b"</span><span class="p">,</span> <span class="s2">"feat-c"</span><span class="p">],</span> <span class="n">base</span><span class="o">=</span><span class="s2">"main"</span><span class="p">))</span>
+</span><span data-line="4"><span class="nb">print</span><span class="p">(</span><span class="n">markdown_report</span><span class="p">(</span><span class="n">analyze</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span> <span class="n">changes</span><span class="p">)))</span>
+</span></pre></div>
+</div>
+<p>You get a merge plan: merge these, in this order, and here is what you lose — plus, for everything dropped, whether it was a textual conflict (and in which files) or a test failure (and which tests).</p>
+<section id="why-it-is-not-just-try-every-subset">
+<h2>Why it is not just “try every subset”<a class="headerlink" href="#why-it-is-not-just-try-every-subset" title="Link to this heading">#</a></h2>
+<p>Evaluating a subset means merging it and running a test suite. That is minutes, and there are <code class="docutils literal notranslate"><span class="pre">2**n</span></code> subsets. So <code class="docutils literal notranslate"><span class="pre">mergeset</span></code> spends its evaluations the way a person would if each one cost real money.</p>
+<p><strong>Ask the cheap oracles first.</strong> Nothing expensive runs until everything free has had its say: a change whose own CI is red is a conflict of size one; <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge-tree</span> <span class="pre">--write-tree</span></code> finds textual conflicts in milliseconds without ever creating a working tree; and changes touching disjoint files form independent subproblems that are solved separately and combined.</p>
+<p><strong>Never evaluate the same set twice.</strong> Every evaluation is appended to <code class="docutils literal notranslate"><span class="pre">~/.local/share/mergeset/evaluations/&lt;repo&gt;.jsonl</span></code>, which is the single source of truth. Re-running is nearly free, a crashed run resumes, and reports regenerate without re-running anything. The log also propagates monotonicity: a passing set marks all its subsets good, a failing set marks all its supersets bad.</p>
+<p><strong>Search like a SAT solver, not like a loop.</strong> A failure is shrunk to a minimal conflict by QuickXplain (<code class="docutils literal notranslate"><span class="pre">O(k</span> <span class="pre">log</span> <span class="pre">n)</span></code> evaluations instead of <code class="docutils literal notranslate"><span class="pre">O(n)</span></code>), and the next candidate to try is the complement of the cheapest minimal hitting set of all conflicts found so far — Reiter’s hitting-set duality, which says exactly that complements of maximal good sets <em>are</em> the minimal hitting sets of the conflicts.</p>
+<p><strong>Weights mean “cost of dropping this”.</strong> When something has to go, the tool drops the cheapest work, not the first thing it thought of.</p>
+</section>
+<section id="where-the-output-goes">
+<h2>Where the output goes<a class="headerlink" href="#where-the-output-goes" title="Link to this heading">#</a></h2>
+<p>Reports, evaluation logs, raw validation output and captured fixtures all land in an <strong>artifact store</strong>, never in a repository:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="o">~/.</span><span class="n">local</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">mergeset</span><span class="o">/</span>            <span class="c1"># $MERGESET_DATA_DIR overrides the root</span>
+</span><span data-line="2">    <span class="n">reports</span><span class="o">/&lt;</span><span class="n">repo</span><span class="o">&gt;/&lt;</span><span class="n">timestamp</span><span class="o">&gt;/</span>     <span class="c1"># REPORT.md, report.html — one key per run</span>
+</span><span data-line="3">    <span class="n">evaluations</span><span class="o">/&lt;</span><span class="n">repo</span><span class="o">&gt;.</span><span class="n">jsonl</span>        <span class="c1"># the append-only log — the source of truth</span>
+</span><span data-line="4">    <span class="n">logs</span><span class="o">/</span>                           <span class="c1"># raw build/test/lint output</span>
+</span><span data-line="5">    <span class="n">fixtures</span><span class="o">/</span>                       <span class="c1"># captured failures kept as regression tests</span>
+</span></pre></div>
+</div>
+<p>This is not tidiness. Everything <code class="docutils literal notranslate"><span class="pre">mergeset</span></code> produces is <strong>captured from the repository it analysed</strong> — source paths, symbol names, stack traces with verbatim code, branch names, PR metadata. Written into that repository (or into <code class="docutils literal notranslate"><span class="pre">mergeset</span></code>’s own), one <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">add</span> <span class="pre">.</span></code> publishes it. This project has already published a private repository’s internals to a public one exactly that way, so the default is now a location no <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">add</span></code> can reach.</p>
+<p>Each kind is a plain <code class="docutils literal notranslate"><span class="pre">MutableMapping[str,</span> <span class="pre">str]</span></code>, so the backend is one keyword argument:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">mergeset</span><span class="w"> </span><span class="kn">import</span> <span class="n">analyze</span><span class="p">,</span> <span class="n">artifact_mall</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Local files, the default:</span>
+</span><span data-line="4"><span class="n">analyze</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">changes</span><span class="p">)</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="c1"># The same run, with every artifact in S3 — one keyword argument, no other change:</span>
+</span><span data-line="7"><span class="n">s3</span> <span class="o">=</span> <span class="n">artifact_mall</span><span class="p">(</span><span class="n">store_factory</span><span class="o">=</span><span class="k">lambda</span> <span class="n">kind</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="n">S3Store</span><span class="p">(</span><span class="n">bucket</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">kind</span><span class="p">))</span>
+</span><span data-line="8"><span class="n">analyze</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">changes</span><span class="p">,</span> <span class="n">artifacts</span><span class="o">=</span><span class="n">s3</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>A factory is handed the <strong>kind and the root separately</strong>, never a joined filesystem path: a backend with no filesystem should not have to parse one out.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--report-dir</span></code> still writes wherever you point it — an explicit choice, not a default. Without it, each run gets its own key, so re-analysing a repository never overwrites the answer you are comparing against.</p>
+<p>Reports render as Markdown and HTML by default, and PDF on request:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>-m<span class="w"> </span>mergeset<span class="w"> </span>prs<span class="w"> </span>OWNER/REPO<span class="w"> </span>--report-format<span class="w"> </span>markdown<span class="w"> </span>html<span class="w"> </span>pdf<span class="w">   </span><span class="c1"># needs mergeset[pdf]</span>
+</span></pre></div>
+</div>
+<p>The PDF is rendered from the Markdown, not the HTML — the HTML report draws itself from an embedded JSON blob at load time, so a print pipeline that does not run JavaScript would give you a blank page that looks fine until someone opens it.</p>
+</section>
+<section id="progressive-disclosure">
+<h2>Progressive disclosure<a class="headerlink" href="#progressive-disclosure" title="Link to this heading">#</a></h2>
+<p>The call above takes no configuration and works. Every piece of it is one keyword argument away from being replaced.</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>you want to change</p></th>
+<th class="head"><p>keyword</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>where changes come from</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mergeset.sources</span></code> — <code class="docutils literal notranslate"><span class="pre">branch_changes</span></code>, <code class="docutils literal notranslate"><span class="pre">pr_changes</span></code>, <code class="docutils literal notranslate"><span class="pre">commit_changes</span></code>, or any iterable of <code class="docutils literal notranslate"><span class="pre">Change</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>where artifacts are kept</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mergeset.storage</span></code> — <code class="docutils literal notranslate"><span class="pre">artifact_store(kind,</span> <span class="pre">store_factory=...)</span></code>; local files by default, S3 by passing a different factory</p></td>
+</tr>
+<tr class="row-even"><td><p>what counts as “works”</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">validate=</span></code> — <code class="docutils literal notranslate"><span class="pre">pytest_validation()</span></code>, <code class="docutils literal notranslate"><span class="pre">command_validation('make</span> <span class="pre">test')</span></code>, <code class="docutils literal notranslate"><span class="pre">js_validation(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">staged_validation([...])</span></code>, <code class="docutils literal notranslate"><span class="pre">act_validation()</span></code>, <code class="docutils literal notranslate"><span class="pre">callable_validation(my_func)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>how much it may spend</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">max_evaluations=</span></code>, <code class="docutils literal notranslate"><span class="pre">max_seconds=</span></code>, <code class="docutils literal notranslate"><span class="pre">max_sets=</span></code> — partial results are always returned and labelled partial</p></td>
+</tr>
+<tr class="row-even"><td><p>what dropping a change costs</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">weight=</span></code> — any <code class="docutils literal notranslate"><span class="pre">Change</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>where the log lives</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">log=</span></code> / <code class="docutils literal notranslate"><span class="pre">log_path=</span></code> — anything with <code class="docutils literal notranslate"><span class="pre">append</span></code> and <code class="docutils literal notranslate"><span class="pre">__iter__</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>conflict resolution</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">resolver=claude_code_resolver()</span></code> — flagged, never silent</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="real-repositories-are-messier-than-the-theory">
+<h2>Real repositories are messier than the theory<a class="headerlink" href="#real-repositories-are-messier-than-the-theory" title="Link to this heading">#</a></h2>
+<p>Three things break the clean picture, and <code class="docutils literal notranslate"><span class="pre">mergeset</span></code> handles each explicitly rather than pretending.</p>
+<p><strong>Stacked PRs.</strong> A PR opened against another PR’s branch already contains it, so subsets are not free: a valid set must be <em>downward-closed</em> under the parent relation — and stacks branch, so this is a forest, not a chain. <code class="docutils literal notranslate"><span class="pre">mergeset</span></code> closes sets before evaluating them, merges only the <em>tips</em> (merging a tip brings its ancestors), and charges the cost of a change’s whole descendant cone when deciding what to drop. On a 15-PR forest this also cuts the search space from 32768 subsets to 576.</p>
+<p><strong>A green PR that will not land.</strong> GitHub’s <code class="docutils literal notranslate"><span class="pre">mergeable</span></code> and CI status are computed against the PR’s <em>own</em> base branch. If that branch has moved on, a PR can be green and “CLEAN” on GitHub and still refuse to merge onto <code class="docutils literal notranslate"><span class="pre">main</span></code>. <code class="docutils literal notranslate"><span class="pre">mergeset</span></code> ignores the forge’s verdict whenever the bases disagree, and checks by actually merging.</p>
+<p><strong>Monotonicity is a prior, not a law.</strong> A change can contain the fix that makes another one work, and flaky tests break closure outright. Violations are detected and reported loudly rather than silently trusted; <code class="docutils literal notranslate"><span class="pre">flake_tolerant(validate,</span> <span class="pre">retries=1)</span></code> is the cheap mitigation.</p>
+</section>
+<section id="validation-is-a-sequence-not-a-command">
+<h2>Validation is a sequence, not a command<a class="headerlink" href="#validation-is-a-sequence-not-a-command" title="Link to this heading">#</a></h2>
+<p>Real projects do not have “the test command”. They have an install step (slow, and only needed when the lockfile moved), a build step that is a <em>prerequisite</em> of testing rather than part of it, then tests, then lint. A single pass/fail bit throws away the distinction you most need — “failed to build” is not “tests failed”.</p>
+<p>From the CLI, the same thing, repeatable and ordered:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>-m<span class="w"> </span>mergeset<span class="w"> </span>prs<span class="w"> </span>OWNER/REPO<span class="w"> </span>--repo<span class="w"> </span>.<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">    </span>--validate-stage<span class="w"> </span><span class="s1">'setup:pnpm install --frozen-lockfile'</span><span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">                     </span><span class="s1">'build:pnpm run build'</span><span class="w"> </span><span class="se">\</span>
+</span><span data-line="4"><span class="w">                     </span><span class="s1">'test:pnpm run test'</span><span class="w"> </span><span class="se">\</span>
+</span><span data-line="5"><span class="w">                     </span><span class="s1">'lint:pnpm run lint'</span><span class="w"> </span><span class="se">\</span>
+</span><span data-line="6"><span class="w">    </span>--validate-fingerprint<span class="w"> </span><span class="s1">'setup:pnpm-lock.yaml'</span><span class="w"> </span><span class="se">\</span>
+</span><span data-line="7"><span class="w">    </span>--validate-optional<span class="w"> </span>lint<span class="w"> </span><span class="se">\</span>
+</span><span data-line="8"><span class="w">    </span>--reuse-worktree<span class="w"> </span>/tmp/mergeset-wt
+</span></pre></div>
+</div>
+<p>An optional stage’s failure is recorded but does not veto the set — for a lint the project runs as a separate job rather than a gate. From the library:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">mergeset</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationStage</span><span class="p">,</span> <span class="n">staged_validation</span><span class="p">,</span> <span class="n">file_fingerprint</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">validate</span> <span class="o">=</span> <span class="n">staged_validation</span><span class="p">(</span>
+</span><span data-line="4">    <span class="p">[</span>
+</span><span data-line="5">        <span class="n">ValidationStage</span><span class="p">(</span>
+</span><span data-line="6">            <span class="s2">"setup"</span><span class="p">,</span>
+</span><span data-line="7">            <span class="s2">"pnpm install --frozen-lockfile"</span><span class="p">,</span>
+</span><span data-line="8">            <span class="n">fingerprint</span><span class="o">=</span><span class="n">file_fingerprint</span><span class="p">(</span><span class="s2">"pnpm-lock.yaml"</span><span class="p">),</span>
+</span><span data-line="9">        <span class="p">),</span>
+</span><span data-line="10">        <span class="n">ValidationStage</span><span class="p">(</span><span class="s2">"build"</span><span class="p">,</span> <span class="s2">"pnpm run build"</span><span class="p">),</span>
+</span><span data-line="11">        <span class="n">ValidationStage</span><span class="p">(</span><span class="s2">"test"</span><span class="p">,</span> <span class="s2">"pnpm run test"</span><span class="p">),</span>
+</span><span data-line="12">        <span class="n">ValidationStage</span><span class="p">(</span><span class="s2">"lint"</span><span class="p">,</span> <span class="s2">"pnpm run lint"</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+</span><span data-line="13">    <span class="p">]</span>
+</span><span data-line="14"><span class="p">)</span>
+</span><span data-line="15"><span class="n">analyze</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">changes</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">,</span> <span class="n">reuse_worktree</span><span class="o">=</span><span class="s2">"/tmp/scratch-wt"</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>The fingerprinted stage runs only when its inputs actually change, and <code class="docutils literal notranslate"><span class="pre">reuse_worktree</span></code> keeps one tree across the whole run — so an expensive install is paid once, not once per evaluation.</p>
+</section>
+<section id="output">
+<h2>Output<a class="headerlink" href="#output" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Markdown report</strong> — the merge plans first, then what stops the rest, then the evidence.</p></li>
+<li><p><strong>Self-contained HTML</strong> — one file, no build step, no network: the conflict graph (textual vs validation conflicts distinguished), the plans, and the evaluation log.</p></li>
+<li><p><strong>Integration branches</strong> — <code class="docutils literal notranslate"><span class="pre">--integration-branches</span></code> creates a local <code class="docutils literal notranslate"><span class="pre">integration/&lt;date&gt;-&lt;k&gt;</span></code> per maximal set so you can test one by hand. It only ever creates <em>new local</em> branches; it never touches an existing branch and never pushes.</p></li>
+</ul>
+</section>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Python ≥ 3.10, git ≥ 2.38 (for <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge-tree</span> <span class="pre">--write-tree</span></code>; checked at startup with a message telling you how to fix it).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gh</span></code>, authenticated, only if you use the pull-request source.</p></li>
+<li><p>Whatever your validation command needs. Capabilities are checked up front rather than failing halfway through a long run.</p></li>
+</ul>
+</section>
+<section id="reading-further">
+<h2>Reading further<a class="headerlink" href="#reading-further" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="#docs/adr/README.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">docs/adr/</span></code></span></a> records every non-obvious design choice and why — one numbered ADR per decision, with an index. <a class="reference internal" href="#docs/RESEARCH.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">docs/RESEARCH.md</span></code></span></a> covers the MUS/MSS literature this is built on, the merge-queue prior art, and what was deliberately not depended on.</p>
+<p class="epythet-aggregates">This documentation as a single file: <a href="mergeset.md">mergeset.md</a> (Markdown, for agents).</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+</section>
+
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-13 03:03 UTC from <a href="https://github.com/i2mint/mergeset/commit/82137dfc9a7a0f43a1958b059e52a1d7dffb832d">82137df</a> (main) · mergeset 0.0.16 · <a href="about-this-build.html">about this build</a></p>
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-next">
+    <a href="api.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">API reference</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/i2mint/mergeset" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
+  </div>
+</footer>
+      <script src="_static/documentation_options.js?v=c7cdf6fe"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-      <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
-      <script src="_static/copybutton.js?v=f281be69"></script>
-    <script src="_static/js/theme.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="mergeset" href="module_docs/mergeset.html" /> 
-</head>
-
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-
-          
-          
-          <a href="#" class="icon icon-home">
-            mergeset
-          </a>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset.html">mergeset</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/__main__.html">mergeset.__main__</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/analysis.html">mergeset.analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/attribution.html">mergeset.attribution</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/base.html">mergeset.base</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/cli.html">mergeset.cli</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/cost.html">mergeset.cost</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/gitops.html">mergeset.gitops</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/log.html">mergeset.log</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/oracle.html">mergeset.oracle</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/report.html">mergeset.report</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/skills.html">mergeset.skills</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/solve.html">mergeset.solve</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/sources.html">mergeset.sources</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/stacks.html">mergeset.stacks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/storage.html">mergeset.storage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/tiers.html">mergeset.tiers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/validation.html">mergeset.validation</a></li>
-</ul>
-
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">mergeset</a>
-      </nav>
-
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Welcome to mergeset’s documentation!</li>
-      <li class="wy-breadcrumbs-aside">
-            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
-      </li>
-  </ul>
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
-  <section id="welcome-to-mergeset-s-documentation">
-<h1>Welcome to mergeset’s documentation!<a class="headerlink" href="#welcome-to-mergeset-s-documentation" title="Link to this heading"></a></h1>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset.html">mergeset</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.Analysis"><code class="docutils literal notranslate"><span class="pre">Analysis</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.AnytimeAnswer"><code class="docutils literal notranslate"><span class="pre">AnytimeAnswer</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.CapabilityError"><code class="docutils literal notranslate"><span class="pre">CapabilityError</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.Change"><code class="docutils literal notranslate"><span class="pre">Change</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.ChangeSet"><code class="docutils literal notranslate"><span class="pre">ChangeSet</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.CostModel"><code class="docutils literal notranslate"><span class="pre">CostModel</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.Evaluation"><code class="docutils literal notranslate"><span class="pre">Evaluation</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.EvaluationLog"><code class="docutils literal notranslate"><span class="pre">EvaluationLog</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.JsonlLines"><code class="docutils literal notranslate"><span class="pre">JsonlLines</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.MeasuredCost"><code class="docutils literal notranslate"><span class="pre">MeasuredCost</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.MemoryLines"><code class="docutils literal notranslate"><span class="pre">MemoryLines</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.MergeOutcome"><code class="docutils literal notranslate"><span class="pre">MergeOutcome</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.MergesetError"><code class="docutils literal notranslate"><span class="pre">MergesetError</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.StoreLines"><code class="docutils literal notranslate"><span class="pre">StoreLines</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.Tier"><code class="docutils literal notranslate"><span class="pre">Tier</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.TieredAnalysis"><code class="docutils literal notranslate"><span class="pre">TieredAnalysis</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.ValidationOutcome"><code class="docutils literal notranslate"><span class="pre">ValidationOutcome</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.ValidationStage"><code class="docutils literal notranslate"><span class="pre">ValidationStage</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.Verdict"><code class="docutils literal notranslate"><span class="pre">Verdict</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.act_validation"><code class="docutils literal notranslate"><span class="pre">act_validation()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.analyze"><code class="docutils literal notranslate"><span class="pre">analyze()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.analyze_tiered"><code class="docutils literal notranslate"><span class="pre">analyze_tiered()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.ancestors"><code class="docutils literal notranslate"><span class="pre">ancestors()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.anytime_answer"><code class="docutils literal notranslate"><span class="pre">anytime_answer()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.app_data_rootdir"><code class="docutils literal notranslate"><span class="pre">app_data_rootdir()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.artifact_mall"><code class="docutils literal notranslate"><span class="pre">artifact_mall()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.artifact_path"><code class="docutils literal notranslate"><span class="pre">artifact_path()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.artifact_store"><code class="docutils literal notranslate"><span class="pre">artifact_store()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.best_set_including"><code class="docutils literal notranslate"><span class="pre">best_set_including()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.branch_changes"><code class="docutils literal notranslate"><span class="pre">branch_changes()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.bundled_skills"><code class="docutils literal notranslate"><span class="pre">bundled_skills()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.callable_validation"><code class="docutils literal notranslate"><span class="pre">callable_validation()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.chained_evaluate"><code class="docutils literal notranslate"><span class="pre">chained_evaluate()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.change_set"><code class="docutils literal notranslate"><span class="pre">change_set()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.changed_files"><code class="docutils literal notranslate"><span class="pre">changed_files()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.claude_code_resolver"><code class="docutils literal notranslate"><span class="pre">claude_code_resolver()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.close_down"><code class="docutils literal notranslate"><span class="pre">close_down()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.close_up"><code class="docutils literal notranslate"><span class="pre">close_up()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.combine_components"><code class="docutils literal notranslate"><span class="pre">combine_components()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.command_validation"><code class="docutils literal notranslate"><span class="pre">command_validation()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.commit_changes"><code class="docutils literal notranslate"><span class="pre">commit_changes()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.cone_weights"><code class="docutils literal notranslate"><span class="pre">cone_weights()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.cost_from_log"><code class="docutils literal notranslate"><span class="pre">cost_from_log()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.count_closed_subsets"><code class="docutils literal notranslate"><span class="pre">count_closed_subsets()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.create_integration_branch"><code class="docutils literal notranslate"><span class="pre">create_integration_branch()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.descendants"><code class="docutils literal notranslate"><span class="pre">descendants()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.detect_stacks"><code class="docutils literal notranslate"><span class="pre">detect_stacks()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.evaluation_lines"><code class="docutils literal notranslate"><span class="pre">evaluation_lines()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.evaluation_log_path"><code class="docutils literal notranslate"><span class="pre">evaluation_log_path()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.fetch_pull_requests"><code class="docutils literal notranslate"><span class="pre">fetch_pull_requests()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.file_fingerprint"><code class="docutils literal notranslate"><span class="pre">file_fingerprint()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.find_maximal_good_sets"><code class="docutils literal notranslate"><span class="pre">find_maximal_good_sets()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.flake_tolerant"><code class="docutils literal notranslate"><span class="pre">flake_tolerant()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.git_oracle"><code class="docutils literal notranslate"><span class="pre">git_oracle()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.html_report"><code class="docutils literal notranslate"><span class="pre">html_report()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.independent_components"><code class="docutils literal notranslate"><span class="pre">independent_components()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.install_skills"><code class="docutils literal notranslate"><span class="pre">install_skills()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.js_validation"><code class="docutils literal notranslate"><span class="pre">js_validation()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.largest_closed_subset"><code class="docutils literal notranslate"><span class="pre">largest_closed_subset()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.local_branch_names"><code class="docutils literal notranslate"><span class="pre">local_branch_names()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.markdown_report"><code class="docutils literal notranslate"><span class="pre">markdown_report()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.merge_only_validation"><code class="docutils literal notranslate"><span class="pre">merge_only_validation()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.merge_order"><code class="docutils literal notranslate"><span class="pre">merge_order()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.merge_sequence"><code class="docutils literal notranslate"><span class="pre">merge_sequence()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.merged_worktree"><code class="docutils literal notranslate"><span class="pre">merged_worktree()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.minimal_hitting_sets"><code class="docutils literal notranslate"><span class="pre">minimal_hitting_sets()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.pairwise_textual_conflicts"><code class="docutils literal notranslate"><span class="pre">pairwise_textual_conflicts()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.persistent_worktree"><code class="docutils literal notranslate"><span class="pre">persistent_worktree()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.pr_changes"><code class="docutils literal notranslate"><span class="pre">pr_changes()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.pytest_validation"><code class="docutils literal notranslate"><span class="pre">pytest_validation()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.quickxplain"><code class="docutils literal notranslate"><span class="pre">quickxplain()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.run_key"><code class="docutils literal notranslate"><span class="pre">run_key()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.set_cost"><code class="docutils literal notranslate"><span class="pre">set_cost()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.set_key"><code class="docutils literal notranslate"><span class="pre">set_key()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.singleton_textual_conflicts"><code class="docutils literal notranslate"><span class="pre">singleton_textual_conflicts()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.skills_dir"><code class="docutils literal notranslate"><span class="pre">skills_dir()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.slash_separated_keys"><code class="docutils literal notranslate"><span class="pre">slash_separated_keys()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.staged_validation"><code class="docutils literal notranslate"><span class="pre">staged_validation()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.textual_conflict"><code class="docutils literal notranslate"><span class="pre">textual_conflict()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.tier_lines"><code class="docutils literal notranslate"><span class="pre">tier_lines()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset.html#mergeset.tips"><code class="docutils literal notranslate"><span class="pre">tips()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/__main__.html">mergeset.__main__</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/analysis.html">mergeset.analysis</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/analysis.html#mergeset.analysis.Analysis"><code class="docutils literal notranslate"><span class="pre">Analysis</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/analysis.html#mergeset.analysis.analyze"><code class="docutils literal notranslate"><span class="pre">analyze()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/attribution.html">mergeset.attribution</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/attribution.html#mergeset.attribution.failure_text"><code class="docutils literal notranslate"><span class="pre">failure_text()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/attribution.html#mergeset.attribution.git_diff_reader"><code class="docutils literal notranslate"><span class="pre">git_diff_reader()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/attribution.html#mergeset.attribution.identifiers_in"><code class="docutils literal notranslate"><span class="pre">identifiers_in()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/attribution.html#mergeset.attribution.paths_in"><code class="docutils literal notranslate"><span class="pre">paths_in()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/attribution.html#mergeset.attribution.suspects"><code class="docutils literal notranslate"><span class="pre">suspects()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/base.html">mergeset.base</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/base.html#mergeset.base.CapabilityError"><code class="docutils literal notranslate"><span class="pre">CapabilityError</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/base.html#mergeset.base.Change"><code class="docutils literal notranslate"><span class="pre">Change</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/base.html#mergeset.base.Evaluation"><code class="docutils literal notranslate"><span class="pre">Evaluation</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/base.html#mergeset.base.Evaluator"><code class="docutils literal notranslate"><span class="pre">Evaluator</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/base.html#mergeset.base.MergeFn"><code class="docutils literal notranslate"><span class="pre">MergeFn</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/base.html#mergeset.base.MergeOutcome"><code class="docutils literal notranslate"><span class="pre">MergeOutcome</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/base.html#mergeset.base.MergesetError"><code class="docutils literal notranslate"><span class="pre">MergesetError</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/base.html#mergeset.base.Stage"><code class="docutils literal notranslate"><span class="pre">Stage</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/base.html#mergeset.base.ValidateFn"><code class="docutils literal notranslate"><span class="pre">ValidateFn</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/base.html#mergeset.base.ValidationOutcome"><code class="docutils literal notranslate"><span class="pre">ValidationOutcome</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/base.html#mergeset.base.Verdict"><code class="docutils literal notranslate"><span class="pre">Verdict</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/base.html#mergeset.base.change_set"><code class="docutils literal notranslate"><span class="pre">change_set()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/base.html#mergeset.base.set_key"><code class="docutils literal notranslate"><span class="pre">set_key()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/cli.html">mergeset.cli</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/cli.html#mergeset.cli.branches"><code class="docutils literal notranslate"><span class="pre">branches()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/cli.html#mergeset.cli.install_skills"><code class="docutils literal notranslate"><span class="pre">install_skills()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/cli.html#mergeset.cli.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/cli.html#mergeset.cli.prs"><code class="docutils literal notranslate"><span class="pre">prs()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/cli.html#mergeset.cli.show_log"><code class="docutils literal notranslate"><span class="pre">show_log()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/cost.html">mergeset.cost</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/cost.html#mergeset.cost.CostModel"><code class="docutils literal notranslate"><span class="pre">CostModel</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/cost.html#mergeset.cost.MeasuredCost"><code class="docutils literal notranslate"><span class="pre">MeasuredCost</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/cost.html#mergeset.cost.Seconds"><code class="docutils literal notranslate"><span class="pre">Seconds</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/cost.html#mergeset.cost.UNMEASURED_TIER_SECONDS"><code class="docutils literal notranslate"><span class="pre">UNMEASURED_TIER_SECONDS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/cost.html#mergeset.cost.cost_from_log"><code class="docutils literal notranslate"><span class="pre">cost_from_log()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/cost.html#mergeset.cost.set_cost"><code class="docutils literal notranslate"><span class="pre">set_cost()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/gitops.html">mergeset.gitops</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/gitops.html#mergeset.gitops.GitResult"><code class="docutils literal notranslate"><span class="pre">GitResult</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/gitops.html#mergeset.gitops.MIN_GIT_VERSION"><code class="docutils literal notranslate"><span class="pre">MIN_GIT_VERSION</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/gitops.html#mergeset.gitops.SequenceMerge"><code class="docutils literal notranslate"><span class="pre">SequenceMerge</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/gitops.html#mergeset.gitops.changed_files"><code class="docutils literal notranslate"><span class="pre">changed_files()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/gitops.html#mergeset.gitops.check_git_capability"><code class="docutils literal notranslate"><span class="pre">check_git_capability()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/gitops.html#mergeset.gitops.create_integration_branch"><code class="docutils literal notranslate"><span class="pre">create_integration_branch()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/gitops.html#mergeset.gitops.git"><code class="docutils literal notranslate"><span class="pre">git()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/gitops.html#mergeset.gitops.git_version"><code class="docutils literal notranslate"><span class="pre">git_version()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/gitops.html#mergeset.gitops.merge_base"><code class="docutils literal notranslate"><span class="pre">merge_base()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/gitops.html#mergeset.gitops.merge_sequence"><code class="docutils literal notranslate"><span class="pre">merge_sequence()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/gitops.html#mergeset.gitops.merged_worktree"><code class="docutils literal notranslate"><span class="pre">merged_worktree()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/gitops.html#mergeset.gitops.pairwise_textual_conflicts"><code class="docutils literal notranslate"><span class="pre">pairwise_textual_conflicts()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/gitops.html#mergeset.gitops.persistent_worktree"><code class="docutils literal notranslate"><span class="pre">persistent_worktree()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/gitops.html#mergeset.gitops.resolve"><code class="docutils literal notranslate"><span class="pre">resolve()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/gitops.html#mergeset.gitops.singleton_textual_conflicts"><code class="docutils literal notranslate"><span class="pre">singleton_textual_conflicts()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/gitops.html#mergeset.gitops.textual_conflict"><code class="docutils literal notranslate"><span class="pre">textual_conflict()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/log.html">mergeset.log</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/log.html#mergeset.log.EvaluationLog"><code class="docutils literal notranslate"><span class="pre">EvaluationLog</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/log.html#mergeset.log.JsonlLines"><code class="docutils literal notranslate"><span class="pre">JsonlLines</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/log.html#mergeset.log.Known"><code class="docutils literal notranslate"><span class="pre">Known</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/log.html#mergeset.log.MemoryLines"><code class="docutils literal notranslate"><span class="pre">MemoryLines</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/log.html#mergeset.log.StoreLines"><code class="docutils literal notranslate"><span class="pre">StoreLines</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/log.html#mergeset.log.sets_evaluated"><code class="docutils literal notranslate"><span class="pre">sets_evaluated()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/oracle.html">mergeset.oracle</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/oracle.html#mergeset.oracle.Resolver"><code class="docutils literal notranslate"><span class="pre">Resolver</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/oracle.html#mergeset.oracle.claude_code_resolver"><code class="docutils literal notranslate"><span class="pre">claude_code_resolver()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/oracle.html#mergeset.oracle.git_oracle"><code class="docutils literal notranslate"><span class="pre">git_oracle()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/oracle.html#mergeset.oracle.merge_order"><code class="docutils literal notranslate"><span class="pre">merge_order()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/report.html">mergeset.report</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/report.html#mergeset.report.REPORT_FORMATS"><code class="docutils literal notranslate"><span class="pre">REPORT_FORMATS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/report.html#mergeset.report.html_report"><code class="docutils literal notranslate"><span class="pre">html_report()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/report.html#mergeset.report.markdown_report"><code class="docutils literal notranslate"><span class="pre">markdown_report()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/report.html#mergeset.report.pdf_report"><code class="docutils literal notranslate"><span class="pre">pdf_report()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/report.html#mergeset.report.write_reports"><code class="docutils literal notranslate"><span class="pre">write_reports()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/skills.html">mergeset.skills</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/skills.html#mergeset.skills.DEFAULT_TARGET"><code class="docutils literal notranslate"><span class="pre">DEFAULT_TARGET</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/skills.html#mergeset.skills.bundled_skills"><code class="docutils literal notranslate"><span class="pre">bundled_skills()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/skills.html#mergeset.skills.install_skills"><code class="docutils literal notranslate"><span class="pre">install_skills()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/skills.html#mergeset.skills.skills_dir"><code class="docutils literal notranslate"><span class="pre">skills_dir()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/solve.html">mergeset.solve</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/solve.html#mergeset.solve.SearchState"><code class="docutils literal notranslate"><span class="pre">SearchState</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/solve.html#mergeset.solve.combine_components"><code class="docutils literal notranslate"><span class="pre">combine_components()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/solve.html#mergeset.solve.find_maximal_good_sets"><code class="docutils literal notranslate"><span class="pre">find_maximal_good_sets()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/solve.html#mergeset.solve.independent_components"><code class="docutils literal notranslate"><span class="pre">independent_components()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/solve.html#mergeset.solve.minimal_hitting_sets"><code class="docutils literal notranslate"><span class="pre">minimal_hitting_sets()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/solve.html#mergeset.solve.quickxplain"><code class="docutils literal notranslate"><span class="pre">quickxplain()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/solve.html#mergeset.solve.shrink_linear"><code class="docutils literal notranslate"><span class="pre">shrink_linear()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/sources.html">mergeset.sources</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/sources.html#mergeset.sources.PR_FIELDS"><code class="docutils literal notranslate"><span class="pre">PR_FIELDS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/sources.html#mergeset.sources.branch_changes"><code class="docutils literal notranslate"><span class="pre">branch_changes()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/sources.html#mergeset.sources.check_gh_capability"><code class="docutils literal notranslate"><span class="pre">check_gh_capability()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/sources.html#mergeset.sources.commit_changes"><code class="docutils literal notranslate"><span class="pre">commit_changes()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/sources.html#mergeset.sources.detect_stacks"><code class="docutils literal notranslate"><span class="pre">detect_stacks()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/sources.html#mergeset.sources.fetch_pull_requests"><code class="docutils literal notranslate"><span class="pre">fetch_pull_requests()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/sources.html#mergeset.sources.local_branch_names"><code class="docutils literal notranslate"><span class="pre">local_branch_names()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/sources.html#mergeset.sources.pr_changes"><code class="docutils literal notranslate"><span class="pre">pr_changes()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/sources.html#mergeset.sources.size_weight"><code class="docutils literal notranslate"><span class="pre">size_weight()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/stacks.html">mergeset.stacks</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/stacks.html#mergeset.stacks.Dependencies"><code class="docutils literal notranslate"><span class="pre">Dependencies</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/stacks.html#mergeset.stacks.ancestors"><code class="docutils literal notranslate"><span class="pre">ancestors()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/stacks.html#mergeset.stacks.close_down"><code class="docutils literal notranslate"><span class="pre">close_down()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/stacks.html#mergeset.stacks.close_up"><code class="docutils literal notranslate"><span class="pre">close_up()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/stacks.html#mergeset.stacks.cone_weights"><code class="docutils literal notranslate"><span class="pre">cone_weights()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/stacks.html#mergeset.stacks.count_closed_subsets"><code class="docutils literal notranslate"><span class="pre">count_closed_subsets()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/stacks.html#mergeset.stacks.descendants"><code class="docutils literal notranslate"><span class="pre">descendants()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/stacks.html#mergeset.stacks.largest_closed_subset"><code class="docutils literal notranslate"><span class="pre">largest_closed_subset()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/stacks.html#mergeset.stacks.stack_roots"><code class="docutils literal notranslate"><span class="pre">stack_roots()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/stacks.html#mergeset.stacks.tips"><code class="docutils literal notranslate"><span class="pre">tips()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/storage.html">mergeset.storage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/storage.html#mergeset.storage.ARTIFACT_KINDS"><code class="docutils literal notranslate"><span class="pre">ARTIFACT_KINDS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/storage.html#mergeset.storage.StoreFactory"><code class="docutils literal notranslate"><span class="pre">StoreFactory</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/storage.html#mergeset.storage.app_data_rootdir"><code class="docutils literal notranslate"><span class="pre">app_data_rootdir()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/storage.html#mergeset.storage.artifact_mall"><code class="docutils literal notranslate"><span class="pre">artifact_mall()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/storage.html#mergeset.storage.artifact_path"><code class="docutils literal notranslate"><span class="pre">artifact_path()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/storage.html#mergeset.storage.artifact_store"><code class="docutils literal notranslate"><span class="pre">artifact_store()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/storage.html#mergeset.storage.evaluation_lines"><code class="docutils literal notranslate"><span class="pre">evaluation_lines()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/storage.html#mergeset.storage.evaluation_log_path"><code class="docutils literal notranslate"><span class="pre">evaluation_log_path()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/storage.html#mergeset.storage.run_key"><code class="docutils literal notranslate"><span class="pre">run_key()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/storage.html#mergeset.storage.slash_separated_keys"><code class="docutils literal notranslate"><span class="pre">slash_separated_keys()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/storage.html#mergeset.storage.slugify"><code class="docutils literal notranslate"><span class="pre">slugify()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/tiers.html">mergeset.tiers</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/tiers.html#mergeset.tiers.AnytimeAnswer"><code class="docutils literal notranslate"><span class="pre">AnytimeAnswer</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/tiers.html#mergeset.tiers.Tier"><code class="docutils literal notranslate"><span class="pre">Tier</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/tiers.html#mergeset.tiers.TieredAnalysis"><code class="docutils literal notranslate"><span class="pre">TieredAnalysis</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/tiers.html#mergeset.tiers.analyze_tiered"><code class="docutils literal notranslate"><span class="pre">analyze_tiered()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/tiers.html#mergeset.tiers.anytime_answer"><code class="docutils literal notranslate"><span class="pre">anytime_answer()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/tiers.html#mergeset.tiers.best_set_including"><code class="docutils literal notranslate"><span class="pre">best_set_including()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/tiers.html#mergeset.tiers.chained_evaluate"><code class="docutils literal notranslate"><span class="pre">chained_evaluate()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/tiers.html#mergeset.tiers.tier_key"><code class="docutils literal notranslate"><span class="pre">tier_key()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/tiers.html#mergeset.tiers.tier_lines"><code class="docutils literal notranslate"><span class="pre">tier_lines()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/mergeset/validation.html">mergeset.validation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/validation.html#mergeset.validation.DEFAULT_PYTEST_ARGS"><code class="docutils literal notranslate"><span class="pre">DEFAULT_PYTEST_ARGS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/validation.html#mergeset.validation.ValidationStage"><code class="docutils literal notranslate"><span class="pre">ValidationStage</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/validation.html#mergeset.validation.act_validation"><code class="docutils literal notranslate"><span class="pre">act_validation()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/validation.html#mergeset.validation.callable_validation"><code class="docutils literal notranslate"><span class="pre">callable_validation()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/validation.html#mergeset.validation.check_validation_capability"><code class="docutils literal notranslate"><span class="pre">check_validation_capability()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/validation.html#mergeset.validation.command_validation"><code class="docutils literal notranslate"><span class="pre">command_validation()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/validation.html#mergeset.validation.detect_runner"><code class="docutils literal notranslate"><span class="pre">detect_runner()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/validation.html#mergeset.validation.file_fingerprint"><code class="docutils literal notranslate"><span class="pre">file_fingerprint()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/validation.html#mergeset.validation.flake_tolerant"><code class="docutils literal notranslate"><span class="pre">flake_tolerant()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/validation.html#mergeset.validation.js_validation"><code class="docutils literal notranslate"><span class="pre">js_validation()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/validation.html#mergeset.validation.merge_only_validation"><code class="docutils literal notranslate"><span class="pre">merge_only_validation()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/validation.html#mergeset.validation.pytest_validation"><code class="docutils literal notranslate"><span class="pre">pytest_validation()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/mergeset/validation.html#mergeset.validation.staged_validation"><code class="docutils literal notranslate"><span class="pre">staged_validation()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</div>
-</section>
-<section id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h1>
-<ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
-</ul>
-<p>Release: 0.0.15</p>
-<p>Last change: Sep 09, 2026</p>
-</section>
-
-
-           </div>
-          </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="module_docs/mergeset.html" class="btn btn-neutral float-right" title="mergeset" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p></p>
-  </div>
-
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
-
-</footer>
-        </div>
-      </div>
-    </section>
-  </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
-
-</body>
+      <script src="_static/copybutton.js?v=fd10adb8"></script>
+      <script src="_static/shibuya.js?v=50760d75"></script></body>
 </html>

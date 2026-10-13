@@ -1,4 +1,0 @@
-mergeset.stacks
-===============
-.. automodule:: mergeset.stacks
-   :members:
