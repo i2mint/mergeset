@@ -10,17 +10,27 @@ Every validator returns a *structured* result, not a bit: which tests failed,
 which files they live in, how long it took. The solver uses that to aim its
 conflict shrinking at the changes actually implicated, rather than halving
 blindly.
+
+A validator may also say *what* it runs: a ``validator_fingerprint`` attribute,
+a short digest of its command, stages, timeout and environment. Every shipped
+validator carries one, and the evaluation log stamps it on each row, so a row
+recorded by ``pytest -x`` never answers a question asked of ``pytest -m e2e``
+(i2mint/mergeset#32). A user callable has none unless it sets one, since only its
+author knows what changes its verdicts:
+``my_validator.validator_fingerprint = 'smoke-v2'``.
 """
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 import re
 import shutil
 import subprocess
 import time
 from dataclasses import dataclass
-from typing import Callable, Dict, Iterable, List, Optional, Sequence
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
 from mergeset.base import CapabilityError, StageRun, ValidationOutcome
 
@@ -39,6 +49,46 @@ _RUNNER_EVIDENCE = (
     ("npm", ("package.json",)),
     ("make", ("Makefile",)),
 )
+
+
+#: The attribute a validator carries to say what it runs (i2mint/mergeset#32).
+FINGERPRINT_ATTR = "validator_fingerprint"
+
+
+def fingerprint_of(validate: Optional[Callable]) -> Optional[str]:
+    """What ``validate`` runs, as a short string -- or ``None`` when it cannot say.
+
+    Two validators with the same fingerprint give the same verdict on the same
+    tree, so an evaluation log may answer one with the other's rows. ``None``
+    means unknown: the log then matches rows on commits alone, as it did
+    before fingerprints existed.
+
+    >>> fingerprint_of(command_validation('make test')) == fingerprint_of(
+    ...     command_validation('make test'))
+    True
+    >>> fingerprint_of(command_validation('make test')) == fingerprint_of(
+    ...     command_validation('make check'))
+    False
+    >>> fingerprint_of(command_validation('make test')).startswith('command:')
+    True
+    >>> fingerprint_of(lambda worktree: True) is None
+    True
+    """
+    value = getattr(validate, FINGERPRINT_ATTR, None)
+    return None if value is None else str(value)
+
+
+def _fingerprinted(validate: Callable, kind: str, **spec: Any) -> Callable:
+    """Attach the fingerprint of ``kind`` and ``spec`` to ``validate``; return it.
+
+    The digest is over everything that can change a verdict: the command, the
+    timeout (a timeout is a FAIL), the environment, the retries. ``kind`` stays
+    readable in front of it, for a person looking at a log row.
+    """
+    payload = json.dumps({"kind": kind, **spec}, sort_keys=True, default=str)
+    digest = hashlib.sha256(payload.encode()).hexdigest()[:16]
+    setattr(validate, FINGERPRINT_ATTR, f"{kind}:{digest}")
+    return validate
 
 
 def detect_runner(path: str) -> Optional[str]:
@@ -173,7 +223,13 @@ def pytest_validation(
         paths = list(select_paths(worktree)) if select_paths else []
         return _run(["pytest", *args, *paths], worktree, timeout=timeout, env=env)
 
-    return validate
+    if select_paths is not None:
+        # Which tests run is now decided by a callable, and a callable's name
+        # says nothing about what it selects: leave the fingerprint unknown.
+        return validate
+    return _fingerprinted(
+        validate, "pytest", args=list(args), timeout=timeout, env=env
+    )
 
 
 def command_validation(
@@ -187,7 +243,9 @@ def command_validation(
     def validate(worktree: str) -> ValidationOutcome:
         return _run([command], worktree, timeout=timeout, env=env, shell=True)
 
-    return validate
+    return _fingerprinted(
+        validate, "command", command=command, timeout=timeout, env=env
+    )
 
 
 def act_validation(
@@ -203,7 +261,7 @@ def act_validation(
         cmd = ["act", "-q"] + (["-j", job] if job else [])
         return _run(cmd, worktree, timeout=timeout, env=env)
 
-    return validate
+    return _fingerprinted(validate, "act", job=job, timeout=timeout, env=env)
 
 
 def callable_validation(
@@ -240,7 +298,7 @@ def merge_only_validation() -> Callable[[str], ValidationOutcome]:
     # combine freely here -- which is exactly the claim a whole-repo test run
     # cannot make. See `analyze(component_local=...)`.
     validate.component_local = True
-    return validate
+    return _fingerprinted(validate, "merge-only")
 
 
 def flake_tolerant(
@@ -261,7 +319,12 @@ def flake_tolerant(
             outcome = validate(worktree)
         return outcome
 
-    return validate_with_retries
+    inner = fingerprint_of(validate)
+    if inner is None:
+        return validate_with_retries
+    return _fingerprinted(
+        validate_with_retries, "retried", inner=inner, retries=retries
+    )
 
 
 # --------------------------------------------------------------------------
@@ -384,7 +447,16 @@ def staged_validation(
             stages=runs,
         )
 
-    return validate
+    # A stage's own `fingerprint` is left out: it decides whether a setup step
+    # that already ran in this worktree runs again, not what the verdict is.
+    return _fingerprinted(
+        validate,
+        "staged",
+        stages=[
+            [s.name, s.command, s.timeout, s.required] for s in stages
+        ],
+        env=env,
+    )
 
 
 def js_validation(

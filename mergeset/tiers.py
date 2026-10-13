@@ -90,6 +90,7 @@ from mergeset.oracle import git_oracle
 from mergeset.solve import find_maximal_good_sets, minimal_hitting_sets, quickxplain
 from mergeset.stacks import close_down, largest_closed_subset
 from mergeset.storage import evaluation_log_path, slugify
+from mergeset.validation import fingerprint_of
 
 
 @dataclass(frozen=True)
@@ -910,6 +911,9 @@ def analyze_tiered(
         logs[tier.name] = logs[tier.name].pinned(
             base=analysis.base_sha,
             heads=analysis.head_shas,
+            # A tier whose command was edited asks a new question (#32): its
+            # log keeps the old rows, and stops answering with them.
+            validator=fingerprint_of(tier.validate),
             trust_unpinned=analyze_kwargs.get("trust_unpinned"),
         )
         analysis.notes.extend(unmatched_log_notes(logs[tier.name], label=tier.name))

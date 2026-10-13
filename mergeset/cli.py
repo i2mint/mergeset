@@ -460,7 +460,8 @@ def branches(
             ``~/.local/share/mergeset/evaluations/<repo-slug>.jsonl`` —
             outside the analysed repository, always.
         trust_unpinned_log: Reuse rows of an old log that predate rows
-            recording their commits. Only when no head has moved since.
+            recording their commits or their validator. Only when no head has
+            moved and the validation is unchanged since.
         report_dir: Write ``REPORT.md`` and ``report.html`` into this
             directory. By default they go to the artifact store
             (``<artifact root>/reports/<repo-slug>/``), never into the
@@ -576,7 +577,8 @@ def prs(
             ``~/.local/share/mergeset/evaluations/<repo-slug>.jsonl`` — outside
             the analysed repository, always.
         trust_unpinned_log: Reuse rows of an old log that predate rows
-            recording their commits. Only when no head has moved since.
+            recording their commits or their validator. Only when no head has
+            moved and the validation is unchanged since.
         report_dir: Write ``REPORT.md`` and ``report.html`` into this directory.
             By default they go to the artifact store, under
             ``reports/<repo-slug>/<timestamp>/``, so a re-run never overwrites
@@ -846,7 +848,7 @@ def show_log(*, log_path: Optional[str] = None, repo: str = ".") -> str:
     if moved:
         lines += [
             "",
-            "! The rows below are about different commits ("
+            "! The rows below are about different commits or validators ("
             + "; ".join(moved)
             + "), so the sets mix answers to different questions. A run of "
             "`branches`/`prs` pins the log to the current heads and uses only "
@@ -876,6 +878,9 @@ def _moved_commits(log) -> list:
         for cid, shas in sorted(heads.items())
         if len(shas) > 1
     ]
+    validators = {e.validator for e in log if e.validator}
+    if len(validators) > 1:
+        out.append(f"{len(validators)} validators")
     unpinned = sum(1 for e in log if not e.pinned)
     if unpinned and (bases or heads):
         out.append(f"{unpinned} rows record no commits")

@@ -268,7 +268,9 @@ class Evaluation:
     written before a branch was rewritten is never mistaken for an answer about
     the rewritten branch (i2mint/mergeset#23). Rows written before pinning
     existed carry neither and read back as *unpinned*; see
-    :class:`mergeset.log.EvaluationLog`.
+    :class:`mergeset.log.EvaluationLog`. ``validator`` pins it to what was run
+    on that tree, the same way (i2mint/mergeset#32): the same commits under a
+    different test command are a different question.
     """
 
     subset: ChangeSet
@@ -283,6 +285,10 @@ class Evaluation:
     base_sha: Optional[str] = None
     #: Full head sha of each change in ``subset`` when it was evaluated.
     heads: Mapping[ChangeId, str] = field(default_factory=dict)
+    #: Fingerprint of the validator that judged the tree (see
+    #: :func:`mergeset.validation.fingerprint_of`). ``None`` on rows written
+    #: before fingerprints, and on rows judged by a validator that has none.
+    validator: Optional[str] = None
     #: True when this came from the log rather than from a real run. Not
     #: serialized: it is a fact about *this* lookup, not about the evaluation.
     cached: bool = False
@@ -313,6 +319,7 @@ class Evaluation:
             "note": self.note,
             "base_sha": self.base_sha,
             "heads": dict(sorted(self.heads.items())),
+            "validator": self.validator,
         }
 
     def _validation_jdict(self) -> Optional[dict]:
@@ -342,6 +349,9 @@ class Evaluation:
             # never dropped (i2mint/mergeset#23).
             base_sha=d.get("base_sha"),
             heads=dict(d.get("heads") or {}),
+            # Absent on rows written before i2mint/mergeset#32: read back as
+            # judged by an unknown validator, never dropped.
+            validator=d.get("validator"),
         )
 
     @property

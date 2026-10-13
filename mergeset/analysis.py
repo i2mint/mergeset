@@ -57,6 +57,7 @@ from mergeset.solve import (
 )
 from mergeset.sources import detect_stacks, size_weight
 from mergeset.storage import evaluation_lines
+from mergeset.validation import fingerprint_of, pytest_validation
 from mergeset.stacks import (
     close_up,
     cone_weights,
@@ -252,10 +253,12 @@ def analyze(
             to ``<artifact root>/evaluations/<repo-slug>.jsonl`` (see
             :mod:`mergeset.storage`), *outside* the analysed repository. Reusing
             an existing one makes a re-run nearly free. Only rows evaluated
-            against the same base and heads are reused (see ADR 0028).
+            against the same base and heads, by the same validator, are reused
+            (see ADR 0028 and :func:`mergeset.validation.fingerprint_of`).
         trust_unpinned: Reuse log rows written before rows recorded their
-            commits (an old log). Default: the log's own setting, which is off.
-            Only when the heads have not moved since those rows were written.
+            commits or their validator (an old log). Default: the log's own
+            setting, which is off. Only when neither the heads nor the
+            validator have changed since those rows were written.
         weight: ``Change -> cost of dropping it``; default is size-based.
         pairwise_preoracle: Use ``git merge-tree`` to find textual conflicts for
             free before spending any evaluation.
@@ -312,7 +315,15 @@ def analyze(
     # A row counts only if it was evaluated against these very commits: the
     # same ids over rewritten branches are a different question (#23). A view,
     # so a log the caller hands to several analyses is not re-scoped under it.
-    log = log.pinned(base=base_sha, heads=head_shas, trust_unpinned=trust_unpinned)
+    # ... and only if it was judged by this very validator: the same commits
+    # under an edited test command are a different question too (#32).
+    validate = validate or pytest_validation()
+    log = log.pinned(
+        base=base_sha,
+        heads=head_shas,
+        validator=fingerprint_of(validate),
+        trust_unpinned=trust_unpinned,
+    )
 
     # A validator may declare that it cannot see across components (the
     # merge-only one does); otherwise assume it can, which is the safe default.
@@ -559,19 +570,27 @@ def unmatched_log_notes(log: EvaluationLog, *, label: str = "") -> List[str]:
     where = f"The {label} evaluation log" if label else "The evaluation log"
     notes = []
     if log.stale:
+        by_validator = len(log.other_validator)
+        why = (
+            f" {by_validator} of them were judged by a different validator "
+            "(its command, stages, timeout or environment changed)."
+            if by_validator
+            else ""
+        )
         notes.append(
             f"{where} holds {len(log.stale)} row(s) evaluated against other "
-            "commits or other changes (a base or a head has moved, or the row "
-            "holds a change not in play). They are kept, and not used: they "
-            "answer a different question."
+            "commits, other changes or by another validator (a base or a head "
+            "has moved, the row holds a change not in play, or the validation "
+            f"was edited).{why} They are kept, and not used: they answer a "
+            "different question."
         )
     if log.unpinned:
         notes.append(
             f"{where} holds {len(log.unpinned)} row(s) written before evaluations "
-            "recorded their commits, so which heads they are about is unknown. "
-            "They are kept, and not used. If the heads have not moved since, "
-            "pass `trust_unpinned=True` (`--trust-unpinned-log` on the command "
-            "line) to use them."
+            "recorded their commits or their validator, so what they are about "
+            "is unknown. They are kept, and not used. If neither the heads nor "
+            "the validation have changed since, pass `trust_unpinned=True` "
+            "(`--trust-unpinned-log` on the command line) to use them."
         )
     return notes
 
