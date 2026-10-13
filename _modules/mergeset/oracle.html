@@ -364,233 +364,241 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="226">            <span class="n">note</span><span class="o">=</span><span class="p">(</span>
 </span><span data-line="227">                <span class="s2">"assisted resolution"</span>
 </span><span data-line="228">                <span class="k">if</span> <span class="n">outcome</span><span class="o">.</span><span class="n">assisted</span>
-</span><span data-line="229">                <span class="k">else</span> <span class="s2">"base alone"</span>
-</span><span data-line="230">                <span class="k">if</span> <span class="ow">not</span> <span class="n">subset</span>
-</span><span data-line="231">                <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="232">            <span class="p">),</span>
-</span><span data-line="233">        <span class="p">)</span>
-</span><span data-line="234">
-</span><span data-line="235">    <span class="k">return</span> <span class="n">evaluate</span></div>
+</span><span data-line="229">                <span class="k">else</span> <span class="s2">"base alone"</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">subset</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="230">            <span class="p">),</span>
+</span><span data-line="231">        <span class="p">)</span>
+</span><span data-line="232">
+</span><span data-line="233">    <span class="k">return</span> <span class="n">evaluate</span></div>
 
-</span><span data-line="236">
-</span><span data-line="237">
-</span><span data-line="238"><span class="k">def</span><span class="w"> </span><span class="nf">_try_assisted</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">heads</span><span class="p">,</span> <span class="n">outcome</span><span class="p">,</span> <span class="n">resolver</span><span class="p">,</span> <span class="n">worktree_root</span><span class="p">,</span> <span class="n">emit</span><span class="p">):</span>
-</span><span data-line="239"><span class="w">    </span><span class="sd">"""Second attempt at a conflicted merge, offering each conflict to ``resolver``.</span>
-</span><span data-line="240">
-</span><span data-line="241"><span class="sd">    Every head is merged, in order, and each one that conflicts is offered to</span>
-</span><span data-line="242"><span class="sd">    the resolver in turn. An earlier version stopped at the first conflict and</span>
-</span><span data-line="243"><span class="sd">    handed that half-merged tree to the resolver: the heads after it were never</span>
-</span><span data-line="244"><span class="sd">    merged, yet the row claimed the whole set. The resolved merge commit is</span>
-</span><span data-line="245"><span class="sd">    kept, so a deeper tier can validate the same tree (#30).</span>
-</span><span data-line="246"><span class="sd">    """</span>
-</span><span data-line="247">    <span class="n">emit</span><span class="p">(</span><span class="s2">"assisted_merge"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"files"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">outcome</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">)})</span>
-</span><span data-line="248">    <span class="n">path</span> <span class="o">=</span> <span class="n">_new_worktree</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">worktree_root</span><span class="p">)</span>
-</span><span data-line="249">    <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="250">        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">outcome</span>
-</span><span data-line="251">    <span class="n">diffs</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="252">    <span class="n">merged</span> <span class="o">=</span> <span class="p">[</span><span class="n">base</span><span class="p">]</span>
-</span><span data-line="253">    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">head</span> <span class="ow">in</span> <span class="n">heads</span><span class="p">:</span>
-</span><span data-line="254">        <span class="n">merged</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
-</span><span data-line="255">        <span class="n">before</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">)</span>
-</span><span data-line="256">        <span class="k">if</span> <span class="n">_merge_into</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">head</span><span class="p">):</span>
-</span><span data-line="257">            <span class="k">continue</span>
-</span><span data-line="258">        <span class="n">conflicted</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"diff"</span><span class="p">,</span> <span class="s2">"--name-only"</span><span class="p">,</span> <span class="s2">"--diff-filter=U"</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
-</span><span data-line="259">        <span class="k">try</span><span class="p">:</span>
-</span><span data-line="260">            <span class="n">resolved</span><span class="p">,</span> <span class="n">diff</span> <span class="o">=</span> <span class="n">resolver</span><span class="p">(</span>
-</span><span data-line="261">                <span class="n">path</span><span class="p">,</span> <span class="n">conflicted</span> <span class="ow">or</span> <span class="nb">list</span><span class="p">(</span><span class="n">outcome</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">)</span>
-</span><span data-line="262">            <span class="p">)</span>
-</span><span data-line="263">        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 - a resolver that gives up (a timeout)</span>
-</span><span data-line="264">            <span class="c1"># is a resolver that declined: the conflict is real, and an ERROR</span>
-</span><span data-line="265">            <span class="c1"># would abort the whole search over one slow call.</span>
-</span><span data-line="266">            <span class="n">resolved</span><span class="p">,</span> <span class="n">diff</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">""</span>
-</span><span data-line="267">        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">resolved</span> <span class="ow">and</span> <span class="n">_vouches_for</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">head</span><span class="p">,</span> <span class="n">merged</span><span class="p">,</span> <span class="n">conflicted</span><span class="p">)):</span>
-</span><span data-line="268">            <span class="n">_remove_worktree</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
-</span><span data-line="269">            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">outcome</span>
-</span><span data-line="270">        <span class="n">diffs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
-</span><span data-line="271">    <span class="n">sha</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">)</span>
-</span><span data-line="272">    <span class="c1"># Reachable from a ref, or `git gc` prunes it once the worktree is gone and</span>
-</span><span data-line="273">    <span class="c1"># every deep tier after that refuses the set. A new hidden ref, never a</span>
-</span><span data-line="274">    <span class="c1"># branch, and never one that existed before (D12, widened by ADR 0031).</span>
-</span><span data-line="275">    <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"update-ref"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">RESOLVED_REF_PREFIX</span><span class="si">}{</span><span class="n">sha</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">sha</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="276">    <span class="k">return</span> <span class="n">path</span><span class="p">,</span> <span class="n">MergeOutcome</span><span class="p">(</span>
-</span><span data-line="277">        <span class="n">ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span data-line="278">        <span class="n">conflicting_files</span><span class="o">=</span><span class="n">outcome</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">,</span>
-</span><span data-line="279">        <span class="n">assisted</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span data-line="280">        <span class="n">assist_diff</span><span class="o">=</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">diffs</span><span class="p">),</span>
-</span><span data-line="281">        <span class="n">order</span><span class="o">=</span><span class="n">outcome</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
-</span><span data-line="282">        <span class="n">detail</span><span class="o">=</span><span class="s2">"conflict resolved by assisted merge; review the diff"</span><span class="p">,</span>
-</span><span data-line="283">        <span class="n">resolved_commit</span><span class="o">=</span><span class="n">sha</span><span class="p">,</span>
-</span><span data-line="284">    <span class="p">)</span>
-</span><span data-line="285">
-</span><span data-line="286">
-</span><span data-line="287"><span class="k">def</span><span class="w"> </span><span class="nf">_vouches_for</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">head</span><span class="p">,</span> <span class="n">merged</span><span class="p">,</span> <span class="n">conflicted</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="288"><span class="w">    </span><span class="sd">"""Whether the resolver's commit is a resolution of *this* conflict, and only that.</span>
-</span><span data-line="289">
-</span><span data-line="290"><span class="sd">    What gets validated must be exactly the commit that is recorded, holding</span>
-</span><span data-line="291"><span class="sd">    everything merged so far, and differing from git's own merge of ``head``</span>
-</span><span data-line="292"><span class="sd">    only in the files that conflicted. A resolver that took one side wholesale</span>
-</span><span data-line="293"><span class="sd">    (dropping earlier heads, or ``merge -s ours`` keeping a head's commit but</span>
-</span><span data-line="294"><span class="sd">    not its work) or left the merge unfinished has declined, whatever it says.</span>
-</span><span data-line="295"><span class="sd">    Files it left outside the commit (``__pycache__``, a build) are not a</span>
-</span><span data-line="296"><span class="sd">    decline -- they are removed, ignored ones too, so the tree validated here</span>
-</span><span data-line="297"><span class="sd">    is the one a deeper tier checks out.</span>
-</span><span data-line="298"><span class="sd">    """</span>
-</span><span data-line="299">    <span class="n">unfinished</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">"--verify"</span><span class="p">,</span> <span class="s2">"MERGE_HEAD"</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span>
-</span><span data-line="300">    <span class="n">tracked</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">,</span> <span class="s2">"--porcelain"</span><span class="p">,</span> <span class="s2">"--untracked-files=no"</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span>
-</span><span data-line="301">    <span class="k">if</span> <span class="n">unfinished</span> <span class="ow">or</span> <span class="n">tracked</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="n">_missing</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">,</span> <span class="n">merged</span><span class="p">):</span>
-</span><span data-line="302">        <span class="k">return</span> <span class="kc">False</span>
-</span><span data-line="303">    <span class="n">auto</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"merge-tree"</span><span class="p">,</span> <span class="s2">"--write-tree"</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">head</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
-</span><span data-line="304">    <span class="k">if</span> <span class="ow">not</span> <span class="n">auto</span><span class="p">:</span>
-</span><span data-line="305">        <span class="k">return</span> <span class="kc">False</span>
-</span><span data-line="306">    <span class="n">changed</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"diff"</span><span class="p">,</span> <span class="s2">"--name-only"</span><span class="p">,</span> <span class="n">auto</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"HEAD"</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
-</span><span data-line="307">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">changed</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">set</span><span class="p">(</span><span class="n">conflicted</span><span class="p">):</span>
+</span><span data-line="234">
+</span><span data-line="235">
+</span><span data-line="236"><span class="k">def</span><span class="w"> </span><span class="nf">_try_assisted</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">heads</span><span class="p">,</span> <span class="n">outcome</span><span class="p">,</span> <span class="n">resolver</span><span class="p">,</span> <span class="n">worktree_root</span><span class="p">,</span> <span class="n">emit</span><span class="p">):</span>
+</span><span data-line="237"><span class="w">    </span><span class="sd">"""Second attempt at a conflicted merge, offering each conflict to ``resolver``.</span>
+</span><span data-line="238">
+</span><span data-line="239"><span class="sd">    Every head is merged, in order, and each one that conflicts is offered to</span>
+</span><span data-line="240"><span class="sd">    the resolver in turn. An earlier version stopped at the first conflict and</span>
+</span><span data-line="241"><span class="sd">    handed that half-merged tree to the resolver: the heads after it were never</span>
+</span><span data-line="242"><span class="sd">    merged, yet the row claimed the whole set. The resolved merge commit is</span>
+</span><span data-line="243"><span class="sd">    kept, so a deeper tier can validate the same tree (#30).</span>
+</span><span data-line="244"><span class="sd">    """</span>
+</span><span data-line="245">    <span class="n">emit</span><span class="p">(</span><span class="s2">"assisted_merge"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"files"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">outcome</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">)})</span>
+</span><span data-line="246">    <span class="n">path</span> <span class="o">=</span> <span class="n">_new_worktree</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">worktree_root</span><span class="p">)</span>
+</span><span data-line="247">    <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="248">        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">outcome</span>
+</span><span data-line="249">    <span class="n">diffs</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="250">    <span class="n">merged</span> <span class="o">=</span> <span class="p">[</span><span class="n">base</span><span class="p">]</span>
+</span><span data-line="251">    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">head</span> <span class="ow">in</span> <span class="n">heads</span><span class="p">:</span>
+</span><span data-line="252">        <span class="n">merged</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
+</span><span data-line="253">        <span class="n">before</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">)</span>
+</span><span data-line="254">        <span class="k">if</span> <span class="n">_merge_into</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">head</span><span class="p">):</span>
+</span><span data-line="255">            <span class="k">continue</span>
+</span><span data-line="256">        <span class="n">conflicted</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"diff"</span><span class="p">,</span> <span class="s2">"--name-only"</span><span class="p">,</span> <span class="s2">"--diff-filter=U"</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+</span><span data-line="257">        <span class="k">try</span><span class="p">:</span>
+</span><span data-line="258">            <span class="n">resolved</span><span class="p">,</span> <span class="n">diff</span> <span class="o">=</span> <span class="n">resolver</span><span class="p">(</span>
+</span><span data-line="259">                <span class="n">path</span><span class="p">,</span> <span class="n">conflicted</span> <span class="ow">or</span> <span class="nb">list</span><span class="p">(</span><span class="n">outcome</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">)</span>
+</span><span data-line="260">            <span class="p">)</span>
+</span><span data-line="261">        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 - any failure of the resolver</span>
+</span><span data-line="262">            <span class="c1"># The experiment could not be run (ADR 0017, 0036): a timeout says</span>
+</span><span data-line="263">            <span class="c1"># nothing about whether the conflict is resolvable, and a FAIL row</span>
+</span><span data-line="264">            <span class="c1"># would be reused by every later run, which would never ask again.</span>
+</span><span data-line="265">            <span class="n">_remove_worktree</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+</span><span data-line="266">            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">MergeOutcome</span><span class="p">(</span>
+</span><span data-line="267">                <span class="n">ok</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span data-line="268">                <span class="n">reason</span><span class="o">=</span><span class="s2">"error"</span><span class="p">,</span>
+</span><span data-line="269">                <span class="n">conflicting_files</span><span class="o">=</span><span class="n">outcome</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">,</span>
+</span><span data-line="270">                <span class="n">order</span><span class="o">=</span><span class="n">outcome</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
+</span><span data-line="271">                <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"the conflict resolver raised </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+</span><span data-line="272">            <span class="p">)</span>
+</span><span data-line="273">        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">resolved</span> <span class="ow">and</span> <span class="n">_vouches_for</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">head</span><span class="p">,</span> <span class="n">merged</span><span class="p">,</span> <span class="n">conflicted</span><span class="p">)):</span>
+</span><span data-line="274">            <span class="n">_remove_worktree</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+</span><span data-line="275">            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">outcome</span>
+</span><span data-line="276">        <span class="n">diffs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+</span><span data-line="277">    <span class="n">sha</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">)</span>
+</span><span data-line="278">    <span class="c1"># Reachable from a ref, or `git gc` prunes it once the worktree is gone and</span>
+</span><span data-line="279">    <span class="c1"># every deep tier after that refuses the set. A new hidden ref, never a</span>
+</span><span data-line="280">    <span class="c1"># branch, and never one that existed before (D12, widened by ADR 0031).</span>
+</span><span data-line="281">    <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"update-ref"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">RESOLVED_REF_PREFIX</span><span class="si">}{</span><span class="n">sha</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">sha</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="282">    <span class="k">return</span> <span class="n">path</span><span class="p">,</span> <span class="n">MergeOutcome</span><span class="p">(</span>
+</span><span data-line="283">        <span class="n">ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="284">        <span class="n">conflicting_files</span><span class="o">=</span><span class="n">outcome</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">,</span>
+</span><span data-line="285">        <span class="n">assisted</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="286">        <span class="n">assist_diff</span><span class="o">=</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">diffs</span><span class="p">),</span>
+</span><span data-line="287">        <span class="n">order</span><span class="o">=</span><span class="n">outcome</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
+</span><span data-line="288">        <span class="n">detail</span><span class="o">=</span><span class="s2">"conflict resolved by assisted merge; review the diff"</span><span class="p">,</span>
+</span><span data-line="289">        <span class="n">resolved_commit</span><span class="o">=</span><span class="n">sha</span><span class="p">,</span>
+</span><span data-line="290">    <span class="p">)</span>
+</span><span data-line="291">
+</span><span data-line="292">
+</span><span data-line="293"><span class="k">def</span><span class="w"> </span><span class="nf">_vouches_for</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">head</span><span class="p">,</span> <span class="n">merged</span><span class="p">,</span> <span class="n">conflicted</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="294"><span class="w">    </span><span class="sd">"""Whether the resolver's commit is a resolution of *this* conflict, and only that.</span>
+</span><span data-line="295">
+</span><span data-line="296"><span class="sd">    What gets validated must be exactly the commit that is recorded, holding</span>
+</span><span data-line="297"><span class="sd">    everything merged so far, and differing from git's own merge of ``head``</span>
+</span><span data-line="298"><span class="sd">    only in the files that conflicted. A resolver that took one side wholesale</span>
+</span><span data-line="299"><span class="sd">    (dropping earlier heads, or ``merge -s ours`` keeping a head's commit but</span>
+</span><span data-line="300"><span class="sd">    not its work) or left the merge unfinished has declined, whatever it says.</span>
+</span><span data-line="301"><span class="sd">    Files it left outside the commit (``__pycache__``, a build) are not a</span>
+</span><span data-line="302"><span class="sd">    decline -- they are removed, ignored ones too, so the tree validated here</span>
+</span><span data-line="303"><span class="sd">    is the one a deeper tier checks out.</span>
+</span><span data-line="304"><span class="sd">    """</span>
+</span><span data-line="305">    <span class="n">unfinished</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">"--verify"</span><span class="p">,</span> <span class="s2">"MERGE_HEAD"</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span>
+</span><span data-line="306">    <span class="n">tracked</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">,</span> <span class="s2">"--porcelain"</span><span class="p">,</span> <span class="s2">"--untracked-files=no"</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span>
+</span><span data-line="307">    <span class="k">if</span> <span class="n">unfinished</span> <span class="ow">or</span> <span class="n">tracked</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="n">_missing</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">,</span> <span class="n">merged</span><span class="p">):</span>
 </span><span data-line="308">        <span class="k">return</span> <span class="kc">False</span>
-</span><span data-line="309">    <span class="n">git</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"clean"</span><span class="p">,</span> <span class="s2">"-fdxq"</span><span class="p">)</span>
-</span><span data-line="310">    <span class="k">return</span> <span class="kc">True</span>
-</span><span data-line="311">
-</span><span data-line="312">
-</span><span data-line="313"><span class="k">def</span><span class="w"> </span><span class="nf">_missing</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">commit</span><span class="p">,</span> <span class="n">revs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
-</span><span data-line="314"><span class="w">    </span><span class="sd">"""The revisions in ``revs`` that ``commit`` does not hold."""</span>
-</span><span data-line="315">    <span class="k">return</span> <span class="p">[</span><span class="n">rev</span> <span class="k">for</span> <span class="n">rev</span> <span class="ow">in</span> <span class="n">revs</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_ancestor</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">commit</span><span class="p">)]</span>
-</span><span data-line="316">
+</span><span data-line="309">    <span class="n">auto</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"merge-tree"</span><span class="p">,</span> <span class="s2">"--write-tree"</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">head</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+</span><span data-line="310">    <span class="k">if</span> <span class="ow">not</span> <span class="n">auto</span><span class="p">:</span>
+</span><span data-line="311">        <span class="k">return</span> <span class="kc">False</span>
+</span><span data-line="312">    <span class="n">changed</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"diff"</span><span class="p">,</span> <span class="s2">"--name-only"</span><span class="p">,</span> <span class="n">auto</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"HEAD"</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+</span><span data-line="313">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">changed</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">set</span><span class="p">(</span><span class="n">conflicted</span><span class="p">):</span>
+</span><span data-line="314">        <span class="k">return</span> <span class="kc">False</span>
+</span><span data-line="315">    <span class="n">git</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"clean"</span><span class="p">,</span> <span class="s2">"-fdxq"</span><span class="p">)</span>
+</span><span data-line="316">    <span class="k">return</span> <span class="kc">True</span>
 </span><span data-line="317">
-</span><span data-line="318"><span class="k">def</span><span class="w"> </span><span class="nf">_reuse_resolution</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">heads</span><span class="p">,</span> <span class="n">outcome</span><span class="p">,</span> <span class="n">recorded</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">worktree_root</span><span class="p">,</span> <span class="n">reuse</span><span class="p">):</span>
-</span><span data-line="319"><span class="w">    </span><span class="sd">"""Check out a recorded assisted resolution, once it is shown to still apply.</span>
-</span><span data-line="320">
-</span><span data-line="321"><span class="sd">    It applies when the commit still exists and holds the base and every head</span>
-</span><span data-line="322"><span class="sd">    being merged now: then it is the merge of exactly this set, conflicts</span>
-</span><span data-line="323"><span class="sd">    resolved the way the first tier's resolver resolved them. Anything else is</span>
-</span><span data-line="324"><span class="sd">    refused as an ``error`` -- a set that was never validated has told us</span>
-</span><span data-line="325"><span class="sd">    nothing, and resolving it again would validate a different tree.</span>
-</span><span data-line="326"><span class="sd">    """</span>
-</span><span data-line="327">    <span class="n">sha</span> <span class="o">=</span> <span class="n">recorded</span><span class="o">.</span><span class="n">resolved_commit</span> <span class="k">if</span> <span class="n">recorded</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
-</span><span data-line="328">
-</span><span data-line="329">    <span class="k">def</span><span class="w"> </span><span class="nf">refuse</span><span class="p">(</span><span class="n">why</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span data-line="330">        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">MergeOutcome</span><span class="p">(</span>
-</span><span data-line="331">            <span class="n">ok</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span data-line="332">            <span class="n">reason</span><span class="o">=</span><span class="s2">"error"</span><span class="p">,</span>
-</span><span data-line="333">            <span class="n">conflicting_files</span><span class="o">=</span><span class="n">outcome</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">,</span>
-</span><span data-line="334">            <span class="n">order</span><span class="o">=</span><span class="n">outcome</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
-</span><span data-line="335">            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"conflict, and </span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-</span><span data-line="336">        <span class="p">)</span>
-</span><span data-line="337">
-</span><span data-line="338">    <span class="k">if</span> <span class="ow">not</span> <span class="n">sha</span><span class="p">:</span>
-</span><span data-line="339">        <span class="k">return</span> <span class="n">refuse</span><span class="p">(</span>
-</span><span data-line="340">            <span class="s2">"no assisted resolution of it was recorded to reuse (rows written "</span>
-</span><span data-line="341">            <span class="s2">"before resolutions were kept record none; re-run the first tier "</span>
-</span><span data-line="342">            <span class="s2">"with a fresh log)"</span>
-</span><span data-line="343">        <span class="p">)</span>
-</span><span data-line="344">    <span class="n">exists</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"cat-file"</span><span class="p">,</span> <span class="s2">"-e"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">sha</span><span class="si">}</span><span class="s2">^</span><span class="se">{{</span><span class="s2">commit</span><span class="se">}}</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span>
-</span><span data-line="345">    <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">:</span>
-</span><span data-line="346">        <span class="k">return</span> <span class="n">refuse</span><span class="p">(</span><span class="sa">f</span><span class="s2">"its recorded resolution </span><span class="si">{</span><span class="n">sha</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2"> no longer exists"</span><span class="p">)</span>
-</span><span data-line="347">    <span class="n">missing</span> <span class="o">=</span> <span class="n">_missing</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">sha</span><span class="p">,</span> <span class="p">[</span><span class="n">base</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">h</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">heads</span><span class="p">)])</span>
-</span><span data-line="348">    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
-</span><span data-line="349">        <span class="k">return</span> <span class="n">refuse</span><span class="p">(</span>
-</span><span data-line="350">            <span class="sa">f</span><span class="s2">"its recorded resolution </span><span class="si">{</span><span class="n">sha</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2"> no longer applies: it does not "</span>
-</span><span data-line="351">            <span class="sa">f</span><span class="s2">"hold </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">m</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="352">        <span class="p">)</span>
-</span><span data-line="353">    <span class="k">if</span> <span class="n">reuse</span><span class="p">:</span>
-</span><span data-line="354">        <span class="k">if</span> <span class="ow">not</span> <span class="n">git</span><span class="p">(</span><span class="n">reuse</span><span class="p">,</span> <span class="s2">"checkout"</span><span class="p">,</span> <span class="s2">"--force"</span><span class="p">,</span> <span class="s2">"--detach"</span><span class="p">,</span> <span class="n">sha</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
-</span><span data-line="355">            <span class="k">return</span> <span class="n">refuse</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">sha</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2"> could not be checked out into </span><span class="si">{</span><span class="n">reuse</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="356">        <span class="n">git</span><span class="p">(</span><span class="n">reuse</span><span class="p">,</span> <span class="s2">"clean"</span><span class="p">,</span> <span class="s2">"-fd"</span><span class="p">)</span>
-</span><span data-line="357">        <span class="n">path</span> <span class="o">=</span> <span class="n">reuse</span>
-</span><span data-line="358">    <span class="k">else</span><span class="p">:</span>
-</span><span data-line="359">        <span class="n">path</span> <span class="o">=</span> <span class="n">_new_worktree</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">sha</span><span class="p">,</span> <span class="n">worktree_root</span><span class="p">)</span>
-</span><span data-line="360">        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="361">            <span class="k">return</span> <span class="n">refuse</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no worktree could be created at </span><span class="si">{</span><span class="n">sha</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="362">    <span class="k">return</span> <span class="n">path</span><span class="p">,</span> <span class="n">replace</span><span class="p">(</span>
-</span><span data-line="363">        <span class="n">recorded</span><span class="p">,</span>
-</span><span data-line="364">        <span class="n">order</span><span class="o">=</span><span class="n">outcome</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
-</span><span data-line="365">        <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"reused the assisted resolution </span><span class="si">{</span><span class="n">sha</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2"> recorded earlier"</span><span class="p">,</span>
-</span><span data-line="366">    <span class="p">)</span>
-</span><span data-line="367">
-</span><span data-line="368">
-</span><span data-line="369"><span class="k">def</span><span class="w"> </span><span class="nf">_new_worktree</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">commit</span><span class="p">,</span> <span class="n">worktree_root</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-</span><span data-line="370"><span class="w">    </span><span class="sd">"""A fresh detached worktree at ``commit``, under ``worktree_root``."""</span>
-</span><span data-line="371">    <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
-</span><span data-line="372">
-</span><span data-line="373">    <span class="n">root</span> <span class="o">=</span> <span class="n">worktree_root</span> <span class="ow">or</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"mergeset-"</span><span class="p">)</span>
-</span><span data-line="374">    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="375">    <span class="n">path</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"assist-"</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
-</span><span data-line="376">    <span class="n">os</span><span class="o">.</span><span class="n">rmdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="377">    <span class="k">if</span> <span class="ow">not</span> <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"worktree"</span><span class="p">,</span> <span class="s2">"add"</span><span class="p">,</span> <span class="s2">"--detach"</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">commit</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
-</span><span data-line="378">        <span class="k">return</span> <span class="kc">None</span>
-</span><span data-line="379">    <span class="k">return</span> <span class="n">path</span>
-</span><span data-line="380">
-</span><span data-line="381">
-</span><span data-line="382"><span class="k">def</span><span class="w"> </span><span class="nf">_merge_into</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">head</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="383"><span class="w">    </span><span class="sd">"""Merge ``head`` into the worktree at ``path``; False leaves it conflicted."""</span>
-</span><span data-line="384">    <span class="k">return</span> <span class="n">git</span><span class="p">(</span>
-</span><span data-line="385">        <span class="n">path</span><span class="p">,</span>
-</span><span data-line="386">        <span class="s2">"-c"</span><span class="p">,</span>
-</span><span data-line="387">        <span class="s2">"user.email=mergeset@localhost"</span><span class="p">,</span>
-</span><span data-line="388">        <span class="s2">"-c"</span><span class="p">,</span>
-</span><span data-line="389">        <span class="s2">"user.name=mergeset"</span><span class="p">,</span>
-</span><span data-line="390">        <span class="s2">"merge"</span><span class="p">,</span>
-</span><span data-line="391">        <span class="s2">"--no-edit"</span><span class="p">,</span>
-</span><span data-line="392">        <span class="s2">"--no-ff"</span><span class="p">,</span>
-</span><span data-line="393">        <span class="n">head</span><span class="p">,</span>
-</span><span data-line="394">    <span class="p">)</span><span class="o">.</span><span class="n">ok</span>
-</span><span data-line="395">
-</span><span data-line="396">
-</span><span data-line="397"><span class="k">def</span><span class="w"> </span><span class="nf">_remove_worktree</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="398">    <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"worktree"</span><span class="p">,</span> <span class="s2">"remove"</span><span class="p">,</span> <span class="s2">"--force"</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
-</span><span data-line="399">    <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"worktree"</span><span class="p">,</span> <span class="s2">"prune"</span><span class="p">)</span>
-</span><span data-line="400">
+</span><span data-line="318">
+</span><span data-line="319"><span class="k">def</span><span class="w"> </span><span class="nf">_missing</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">commit</span><span class="p">,</span> <span class="n">revs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+</span><span data-line="320"><span class="w">    </span><span class="sd">"""The revisions in ``revs`` that ``commit`` does not hold."""</span>
+</span><span data-line="321">    <span class="k">return</span> <span class="p">[</span><span class="n">rev</span> <span class="k">for</span> <span class="n">rev</span> <span class="ow">in</span> <span class="n">revs</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_ancestor</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">commit</span><span class="p">)]</span>
+</span><span data-line="322">
+</span><span data-line="323">
+</span><span data-line="324"><span class="k">def</span><span class="w"> </span><span class="nf">_reuse_resolution</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">heads</span><span class="p">,</span> <span class="n">outcome</span><span class="p">,</span> <span class="n">recorded</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">worktree_root</span><span class="p">,</span> <span class="n">reuse</span><span class="p">):</span>
+</span><span data-line="325"><span class="w">    </span><span class="sd">"""Check out a recorded assisted resolution, once it is shown to still apply.</span>
+</span><span data-line="326">
+</span><span data-line="327"><span class="sd">    It applies when the commit still exists and holds the base and every head</span>
+</span><span data-line="328"><span class="sd">    being merged now: then it is the merge of exactly this set, conflicts</span>
+</span><span data-line="329"><span class="sd">    resolved the way the first tier's resolver resolved them. Anything else is</span>
+</span><span data-line="330"><span class="sd">    refused as an ``error`` -- a set that was never validated has told us</span>
+</span><span data-line="331"><span class="sd">    nothing, and resolving it again would validate a different tree.</span>
+</span><span data-line="332"><span class="sd">    """</span>
+</span><span data-line="333">    <span class="n">sha</span> <span class="o">=</span> <span class="n">recorded</span><span class="o">.</span><span class="n">resolved_commit</span> <span class="k">if</span> <span class="n">recorded</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span data-line="334">
+</span><span data-line="335">    <span class="k">def</span><span class="w"> </span><span class="nf">refuse</span><span class="p">(</span><span class="n">why</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span data-line="336">        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">MergeOutcome</span><span class="p">(</span>
+</span><span data-line="337">            <span class="n">ok</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span data-line="338">            <span class="n">reason</span><span class="o">=</span><span class="s2">"error"</span><span class="p">,</span>
+</span><span data-line="339">            <span class="n">conflicting_files</span><span class="o">=</span><span class="n">outcome</span><span class="o">.</span><span class="n">conflicting_files</span><span class="p">,</span>
+</span><span data-line="340">            <span class="n">order</span><span class="o">=</span><span class="n">outcome</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
+</span><span data-line="341">            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"conflict, and </span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+</span><span data-line="342">        <span class="p">)</span>
+</span><span data-line="343">
+</span><span data-line="344">    <span class="k">if</span> <span class="ow">not</span> <span class="n">sha</span><span class="p">:</span>
+</span><span data-line="345">        <span class="k">return</span> <span class="n">refuse</span><span class="p">(</span>
+</span><span data-line="346">            <span class="s2">"no assisted resolution of it was recorded to reuse (rows written "</span>
+</span><span data-line="347">            <span class="s2">"before resolutions were kept record none; re-run the first tier "</span>
+</span><span data-line="348">            <span class="s2">"with a fresh log)"</span>
+</span><span data-line="349">        <span class="p">)</span>
+</span><span data-line="350">    <span class="n">exists</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"cat-file"</span><span class="p">,</span> <span class="s2">"-e"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">sha</span><span class="si">}</span><span class="s2">^</span><span class="se">{{</span><span class="s2">commit</span><span class="se">}}</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span>
+</span><span data-line="351">    <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">:</span>
+</span><span data-line="352">        <span class="k">return</span> <span class="n">refuse</span><span class="p">(</span><span class="sa">f</span><span class="s2">"its recorded resolution </span><span class="si">{</span><span class="n">sha</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2"> no longer exists"</span><span class="p">)</span>
+</span><span data-line="353">    <span class="n">missing</span> <span class="o">=</span> <span class="n">_missing</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">sha</span><span class="p">,</span> <span class="p">[</span><span class="n">base</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">h</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">heads</span><span class="p">)])</span>
+</span><span data-line="354">    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+</span><span data-line="355">        <span class="k">return</span> <span class="n">refuse</span><span class="p">(</span>
+</span><span data-line="356">            <span class="sa">f</span><span class="s2">"its recorded resolution </span><span class="si">{</span><span class="n">sha</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2"> no longer applies: it does not "</span>
+</span><span data-line="357">            <span class="sa">f</span><span class="s2">"hold </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">m</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="358">        <span class="p">)</span>
+</span><span data-line="359">    <span class="k">if</span> <span class="n">reuse</span><span class="p">:</span>
+</span><span data-line="360">        <span class="k">if</span> <span class="ow">not</span> <span class="n">git</span><span class="p">(</span><span class="n">reuse</span><span class="p">,</span> <span class="s2">"checkout"</span><span class="p">,</span> <span class="s2">"--force"</span><span class="p">,</span> <span class="s2">"--detach"</span><span class="p">,</span> <span class="n">sha</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+</span><span data-line="361">            <span class="k">return</span> <span class="n">refuse</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">sha</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2"> could not be checked out into </span><span class="si">{</span><span class="n">reuse</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="362">        <span class="n">git</span><span class="p">(</span><span class="n">reuse</span><span class="p">,</span> <span class="s2">"clean"</span><span class="p">,</span> <span class="s2">"-fd"</span><span class="p">)</span>
+</span><span data-line="363">        <span class="n">path</span> <span class="o">=</span> <span class="n">reuse</span>
+</span><span data-line="364">    <span class="k">else</span><span class="p">:</span>
+</span><span data-line="365">        <span class="n">path</span> <span class="o">=</span> <span class="n">_new_worktree</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">sha</span><span class="p">,</span> <span class="n">worktree_root</span><span class="p">)</span>
+</span><span data-line="366">        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="367">            <span class="k">return</span> <span class="n">refuse</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no worktree could be created at </span><span class="si">{</span><span class="n">sha</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="368">    <span class="k">return</span> <span class="n">path</span><span class="p">,</span> <span class="n">replace</span><span class="p">(</span>
+</span><span data-line="369">        <span class="n">recorded</span><span class="p">,</span>
+</span><span data-line="370">        <span class="n">order</span><span class="o">=</span><span class="n">outcome</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
+</span><span data-line="371">        <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"reused the assisted resolution </span><span class="si">{</span><span class="n">sha</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2"> recorded earlier"</span><span class="p">,</span>
+</span><span data-line="372">    <span class="p">)</span>
+</span><span data-line="373">
+</span><span data-line="374">
+</span><span data-line="375"><span class="k">def</span><span class="w"> </span><span class="nf">_new_worktree</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">commit</span><span class="p">,</span> <span class="n">worktree_root</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span><span data-line="376"><span class="w">    </span><span class="sd">"""A fresh detached worktree at ``commit``, under ``worktree_root``."""</span>
+</span><span data-line="377">    <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+</span><span data-line="378">
+</span><span data-line="379">    <span class="n">root</span> <span class="o">=</span> <span class="n">worktree_root</span> <span class="ow">or</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"mergeset-"</span><span class="p">)</span>
+</span><span data-line="380">    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="381">    <span class="n">path</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"assist-"</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+</span><span data-line="382">    <span class="n">os</span><span class="o">.</span><span class="n">rmdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="383">    <span class="k">if</span> <span class="ow">not</span> <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"worktree"</span><span class="p">,</span> <span class="s2">"add"</span><span class="p">,</span> <span class="s2">"--detach"</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">commit</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+</span><span data-line="384">        <span class="k">return</span> <span class="kc">None</span>
+</span><span data-line="385">    <span class="k">return</span> <span class="n">path</span>
+</span><span data-line="386">
+</span><span data-line="387">
+</span><span data-line="388"><span class="k">def</span><span class="w"> </span><span class="nf">_merge_into</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">head</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="389"><span class="w">    </span><span class="sd">"""Merge ``head`` into the worktree at ``path``; False leaves it conflicted."""</span>
+</span><span data-line="390">    <span class="k">return</span> <span class="n">git</span><span class="p">(</span>
+</span><span data-line="391">        <span class="n">path</span><span class="p">,</span>
+</span><span data-line="392">        <span class="s2">"-c"</span><span class="p">,</span>
+</span><span data-line="393">        <span class="s2">"user.email=mergeset@localhost"</span><span class="p">,</span>
+</span><span data-line="394">        <span class="s2">"-c"</span><span class="p">,</span>
+</span><span data-line="395">        <span class="s2">"user.name=mergeset"</span><span class="p">,</span>
+</span><span data-line="396">        <span class="s2">"merge"</span><span class="p">,</span>
+</span><span data-line="397">        <span class="s2">"--no-edit"</span><span class="p">,</span>
+</span><span data-line="398">        <span class="s2">"--no-ff"</span><span class="p">,</span>
+</span><span data-line="399">        <span class="n">head</span><span class="p">,</span>
+</span><span data-line="400">    <span class="p">)</span><span class="o">.</span><span class="n">ok</span>
 </span><span data-line="401">
+</span><span data-line="402">
+</span><span data-line="403"><span class="k">def</span><span class="w"> </span><span class="nf">_remove_worktree</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="404">    <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"worktree"</span><span class="p">,</span> <span class="s2">"remove"</span><span class="p">,</span> <span class="s2">"--force"</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+</span><span data-line="405">    <span class="n">git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"worktree"</span><span class="p">,</span> <span class="s2">"prune"</span><span class="p">)</span>
+</span><span data-line="406">
+</span><span data-line="407">
 <div class="viewcode-block" id="claude_code_resolver">
 <a class="viewcode-back" href="../../_autosummary/mergeset.oracle.html#mergeset.claude_code_resolver">[docs]</a>
-</span><span data-line="402"><span class="k">def</span><span class="w"> </span><span class="nf">claude_code_resolver</span><span class="p">(</span>
-</span><span data-line="403">    <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">300.0</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"claude"</span>
-</span><span data-line="404"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Resolver</span><span class="p">:</span>
-</span><span data-line="405"><span class="w">    </span><span class="sd">"""Resolve conflicts with a Claude Code subagent, under a strict policy.</span>
-</span><span data-line="406">
-</span><span data-line="407"><span class="sd">    The policy is in the prompt and is deliberately narrow: mechanical conflicts</span>
-</span><span data-line="408"><span class="sd">    only (import blocks, changelog entries, adjacent independent edits, lockfile</span>
-</span><span data-line="409"><span class="sd">    regeneration), and an explicit refusal whenever the resolution requires</span>
-</span><span data-line="410"><span class="sd">    guessing intent. Anything it does resolve is flagged and its diff kept.</span>
-</span><span data-line="411"><span class="sd">    """</span>
-</span><span data-line="412">    <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
-</span><span data-line="413">
-</span><span data-line="414">    <span class="n">policy</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="415">        <span class="s2">"You are resolving a git merge conflict inside a throwaway worktree.</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="416">        <span class="s2">"POLICY — follow exactly:</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="417">        <span class="s2">"1. Resolve ONLY mechanical conflicts: both sides added imports, both "</span>
-</span><span data-line="418">        <span class="s2">"appended to a list/changelog, edits to adjacent but independent lines, "</span>
-</span><span data-line="419">        <span class="s2">"regenerable lockfiles.</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="420">        <span class="s2">"2. NEVER guess intent. If resolving requires deciding which behaviour is "</span>
-</span><span data-line="421">        <span class="s2">"correct, STOP and print exactly: UNRESOLVED</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="422">        <span class="s2">"3. Do not modify anything that is not conflicted.</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="423">        <span class="s2">"4. When done, `git add` the resolved files and `git commit --no-edit`, "</span>
-</span><span data-line="424">        <span class="s2">"then print exactly: RESOLVED</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="425">        <span class="s2">"Conflicted files: </span><span class="si">{files}</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="426">    <span class="p">)</span>
-</span><span data-line="427">
-</span><span data-line="428">    <span class="k">def</span><span class="w"> </span><span class="nf">resolve</span><span class="p">(</span><span class="n">worktree</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">files</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-</span><span data-line="429">        <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-</span><span data-line="430">            <span class="p">[</span><span class="n">command</span><span class="p">,</span> <span class="s2">"-p"</span><span class="p">,</span> <span class="n">policy</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">files</span><span class="o">=</span><span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">files</span><span class="p">))],</span>
-</span><span data-line="431">            <span class="n">cwd</span><span class="o">=</span><span class="n">worktree</span><span class="p">,</span>
-</span><span data-line="432">            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span data-line="433">            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span data-line="434">            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-</span><span data-line="435">        <span class="p">)</span>
-</span><span data-line="436">        <span class="n">output</span> <span class="o">=</span> <span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stdout</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stderr</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="437">        <span class="k">if</span> <span class="s2">"UNRESOLVED"</span> <span class="ow">in</span> <span class="n">output</span> <span class="ow">or</span> <span class="s2">"RESOLVED"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
-</span><span data-line="438">            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">output</span><span class="p">[</span><span class="o">-</span><span class="mi">2000</span><span class="p">:]</span>
-</span><span data-line="439">        <span class="n">unmerged</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span>
-</span><span data-line="440">            <span class="n">worktree</span><span class="p">,</span> <span class="s2">"diff"</span><span class="p">,</span> <span class="s2">"--name-only"</span><span class="p">,</span> <span class="s2">"--diff-filter=U"</span>
-</span><span data-line="441">        <span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-</span><span data-line="442">        <span class="k">if</span> <span class="n">unmerged</span><span class="p">:</span>
-</span><span data-line="443">            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"resolver claimed success but left conflicts: </span><span class="si">{</span><span class="n">unmerged</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="444">        <span class="n">diff</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">worktree</span><span class="p">,</span> <span class="s2">"show"</span><span class="p">,</span> <span class="s2">"--stat"</span><span class="p">,</span> <span class="s2">"--patch"</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span>
-</span><span data-line="445">        <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="n">diff</span><span class="p">[:</span><span class="mi">20000</span><span class="p">]</span>
-</span><span data-line="446">
-</span><span data-line="447">    <span class="c1"># What decides which conflicts it resolves: the policy, the command that</span>
-</span><span data-line="448">    <span class="c1"># runs it, and how long it may take (a timeout is a decline).</span>
-</span><span data-line="449">    <span class="n">spec</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">policy</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">timeout</span><span class="p">)])</span>
-</span><span data-line="450">    <span class="n">digest</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">16</span><span class="p">]</span>
-</span><span data-line="451">    <span class="nb">setattr</span><span class="p">(</span><span class="n">resolve</span><span class="p">,</span> <span class="n">RESOLVER_FINGERPRINT_ATTR</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"claude-code:</span><span class="si">{</span><span class="n">digest</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="452">    <span class="k">return</span> <span class="n">resolve</span></div>
+</span><span data-line="408"><span class="k">def</span><span class="w"> </span><span class="nf">claude_code_resolver</span><span class="p">(</span>
+</span><span data-line="409">    <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">300.0</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"claude"</span>
+</span><span data-line="410"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Resolver</span><span class="p">:</span>
+</span><span data-line="411"><span class="w">    </span><span class="sd">"""Resolve conflicts with a Claude Code subagent, under a strict policy.</span>
+</span><span data-line="412">
+</span><span data-line="413"><span class="sd">    The policy is in the prompt and is deliberately narrow: mechanical conflicts</span>
+</span><span data-line="414"><span class="sd">    only (import blocks, changelog entries, adjacent independent edits, lockfile</span>
+</span><span data-line="415"><span class="sd">    regeneration), and an explicit refusal whenever the resolution requires</span>
+</span><span data-line="416"><span class="sd">    guessing intent. Anything it does resolve is flagged and its diff kept.</span>
+</span><span data-line="417"><span class="sd">    """</span>
+</span><span data-line="418">    <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+</span><span data-line="419">
+</span><span data-line="420">    <span class="n">policy</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="421">        <span class="s2">"You are resolving a git merge conflict inside a throwaway worktree.</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="422">        <span class="s2">"POLICY — follow exactly:</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="423">        <span class="s2">"1. Resolve ONLY mechanical conflicts: both sides added imports, both "</span>
+</span><span data-line="424">        <span class="s2">"appended to a list/changelog, edits to adjacent but independent lines, "</span>
+</span><span data-line="425">        <span class="s2">"regenerable lockfiles.</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="426">        <span class="s2">"2. NEVER guess intent. If resolving requires deciding which behaviour is "</span>
+</span><span data-line="427">        <span class="s2">"correct, STOP and print exactly: UNRESOLVED</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="428">        <span class="s2">"3. Do not modify anything that is not conflicted.</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="429">        <span class="s2">"4. When done, `git add` the resolved files and `git commit --no-edit`, "</span>
+</span><span data-line="430">        <span class="s2">"then print exactly: RESOLVED</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="431">        <span class="s2">"Conflicted files: </span><span class="si">{files}</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="432">    <span class="p">)</span>
+</span><span data-line="433">
+</span><span data-line="434">    <span class="k">def</span><span class="w"> </span><span class="nf">resolve</span><span class="p">(</span><span class="n">worktree</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">files</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+</span><span data-line="435">        <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+</span><span data-line="436">            <span class="p">[</span><span class="n">command</span><span class="p">,</span> <span class="s2">"-p"</span><span class="p">,</span> <span class="n">policy</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">files</span><span class="o">=</span><span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">files</span><span class="p">))],</span>
+</span><span data-line="437">            <span class="n">cwd</span><span class="o">=</span><span class="n">worktree</span><span class="p">,</span>
+</span><span data-line="438">            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="439">            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="440">            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+</span><span data-line="441">        <span class="p">)</span>
+</span><span data-line="442">        <span class="n">output</span> <span class="o">=</span> <span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stdout</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stderr</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="443">        <span class="k">if</span> <span class="s2">"UNRESOLVED"</span> <span class="ow">in</span> <span class="n">output</span> <span class="ow">or</span> <span class="s2">"RESOLVED"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+</span><span data-line="444">            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">output</span><span class="p">[</span><span class="o">-</span><span class="mi">2000</span><span class="p">:]</span>
+</span><span data-line="445">        <span class="n">unmerged</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span>
+</span><span data-line="446">            <span class="n">worktree</span><span class="p">,</span> <span class="s2">"diff"</span><span class="p">,</span> <span class="s2">"--name-only"</span><span class="p">,</span> <span class="s2">"--diff-filter=U"</span>
+</span><span data-line="447">        <span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span data-line="448">        <span class="k">if</span> <span class="n">unmerged</span><span class="p">:</span>
+</span><span data-line="449">            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"resolver claimed success but left conflicts: </span><span class="si">{</span><span class="n">unmerged</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="450">        <span class="n">diff</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">worktree</span><span class="p">,</span> <span class="s2">"show"</span><span class="p">,</span> <span class="s2">"--stat"</span><span class="p">,</span> <span class="s2">"--patch"</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span>
+</span><span data-line="451">        <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="n">diff</span><span class="p">[:</span><span class="mi">20000</span><span class="p">]</span>
+</span><span data-line="452">
+</span><span data-line="453">    <span class="c1"># What decides which conflicts it resolves: the policy, the command that</span>
+</span><span data-line="454">    <span class="c1"># runs it, and how long it may take. A timeout is an ERROR now (ADR 0036) and</span>
+</span><span data-line="455">    <span class="c1"># never a recorded row, but the timeout stays in the spec: dropping it would</span>
+</span><span data-line="456">    <span class="c1"># change every existing fingerprint and orphan the logs pinned to it.</span>
+</span><span data-line="457">    <span class="n">spec</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">policy</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">timeout</span><span class="p">)])</span>
+</span><span data-line="458">    <span class="n">digest</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">16</span><span class="p">]</span>
+</span><span data-line="459">    <span class="nb">setattr</span><span class="p">(</span><span class="n">resolve</span><span class="p">,</span> <span class="n">RESOLVER_FINGERPRINT_ATTR</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"claude-code:</span><span class="si">{</span><span class="n">digest</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="460">    <span class="k">return</span> <span class="n">resolve</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -619,7 +627,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=26ffa1e9"></script>
+      <script src="../../_static/documentation_options.js?v=828725f0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
