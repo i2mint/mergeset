@@ -10,13 +10,15 @@ every hint into a string, and the CLI adapter reads the real annotations to
 decide that ``--max-seconds`` is a float rather than the string ``"600"``.
 """
 
+import math
 import os
+import re
 import sys
 from typing import Optional, Sequence
 
 from mergeset.analysis import analyze as _analyze
 from mergeset.base import CapabilityError, MergesetError
-from mergeset.gitops import create_integration_branch
+from mergeset.gitops import create_integration_branch, git
 from mergeset.oracle import claude_code_resolver
 from mergeset.log import EvaluationLog
 from mergeset.report import (
@@ -25,6 +27,7 @@ from mergeset.report import (
     stage_breakdown,
     write_reports,
 )
+from mergeset.tiers import Tier, analyze_tiered as _analyze_tiered
 from mergeset.storage import (
     artifact_store,
     evaluation_log_path,
@@ -128,6 +131,118 @@ def _validator(
     return flake_tolerant(validate, retries=retries) if retries else validate
 
 
+#: What a bare ``--tier NAME`` may look like. Anything with a space in it is far
+#: more likely a ``name:command`` that lost its colon than a name.
+_BARE_TIER = re.compile(r"^[\w.-]+$")
+
+#: Flags that only mean something across tiers, by the keyword the CLI uses.
+_TIER_ONLY_FLAGS = {
+    "tier_cost": "--tier-cost",
+    "confirm_budget_seconds": "--confirm-budget-seconds",
+    "confirm_max_runs": "--confirm-max-runs",
+    "confirm_max_sets": "--confirm-max-sets",
+    "must_include": "--must-include",
+}
+
+#: Flags that describe the one validator a bare ``--tier NAME`` stands for.
+_VALIDATOR_FLAGS = {
+    "validate_command": "--validate-command",
+    "validate_stage": "--validate-stage",
+    "validate_fingerprint": "--validate-fingerprint",
+    "validate_optional": "--validate-optional",
+    "merge_only": "--merge-only",
+}
+
+
+def _tiers(
+    specs: Sequence[str],
+    costs: Sequence[str],
+    *,
+    validator,
+    validator_flags: Sequence[str],
+    timeout: Optional[float],
+    retries: int,
+    is_commit=lambda name: False,
+) -> list:
+    """Build the ordered tiers from ``--tier`` and ``--tier-cost``.
+
+    ``'name:command'`` is a tier that runs one shell command. A bare ``name`` is
+    the tier the ordinary validation flags describe (``--validate-stage`` and
+    friends, or the default pytest run), which is how a staged validator becomes
+    one rung: the stages compose *inside* a tier, the tiers compose *across*
+    validators, each with its own log. At most one tier can be bare, since there
+    is only one set of validation flags. ``'name:'`` (empty command) is the same
+    bare tier, spelled so that it cannot be mistaken for anything else.
+    """
+    tiers, bare = [], []
+    for spec in specs:
+        name, sep, command = spec.partition(":")
+        explicit_bare = bool(sep) and not command.strip()
+        if sep and not explicit_bare:
+            name, command = _split_pair(spec, "--tier")
+            validate = command_validation(command, timeout=timeout)
+            if retries:
+                validate = flake_tolerant(validate, retries=retries)
+        else:
+            name = name.strip()
+            if not _BARE_TIER.match(name):
+                raise ValueError(
+                    f"--tier expects 'name:command', or a bare name for the tier "
+                    f"the --validate-* flags describe; got {spec!r}. For example: "
+                    "--tier 'unit:pytest -x' 'e2e:pnpm run e2e'"
+                )
+            if not explicit_bare and is_commit(name):
+                # `--tier` takes every value after it, so a branch, tag or sha
+                # typed after the flag lands here instead of among the
+                # candidates -- and would silently run as a tier.
+                raise ValueError(
+                    f"`{name}` names a commit in this repository, so it reads as "
+                    "a branch that followed --tier rather than a tier. Put the "
+                    f"branch names before --tier. If `{name}` really is the "
+                    f"tier's name, spell it --tier '{name}:'."
+                )
+            bare.append(name)
+            validate = validator
+        tiers.append(Tier(name, validate))
+    if len(bare) > 1:
+        raise ValueError(
+            f"Only one --tier can be a bare name ({', '.join(bare)} are); a bare "
+            "tier is the one validator the --validate-* flags describe. Give the "
+            "others a command: --tier 'name:command'."
+        )
+    if validator_flags and not bare:
+        # Without a bare tier these flags would describe a validator no tier
+        # runs, and dropping an option in silence is worse than refusing it.
+        raise ValueError(
+            f"{', '.join(validator_flags)} describe one validator, but no tier "
+            "runs it. Name the tier it is with a bare --tier NAME, e.g. "
+            "--validate-stage 'build:make' 'test:make test' --tier unit "
+            "'e2e:make e2e'."
+        )
+    declared = {}
+    for spec in costs:
+        name, value = _split_pair(spec, "--tier-cost")
+        try:
+            seconds = float(value)
+        except ValueError:
+            seconds = -1.0
+        if not (seconds > 0 and math.isfinite(seconds)):
+            raise ValueError(
+                f"--tier-cost expects 'name:seconds' with finite seconds > 0, "
+                f"got {spec!r}."
+            )
+        if name in declared:
+            raise ValueError(f"--tier-cost names `{name}` twice.")
+        declared[name] = seconds
+    unknown = set(declared) - {t.name for t in tiers}
+    if unknown:
+        raise ValueError(
+            f"--tier-cost names no tier: {', '.join(sorted(unknown))}. Declared "
+            f"tiers are: {', '.join(t.name for t in tiers)}."
+        )
+    return [Tier(t.name, t.validate, cost=declared.get(t.name)) for t in tiers]
+
+
 def _progress(event: str, payload: dict) -> None:
     interesting = {
         "merging": lambda p: f"  merging {', '.join(p['subset']) or '(base alone)'}",
@@ -146,6 +261,9 @@ def _progress(event: str, payload: dict) -> None:
         ),
         "component": lambda p: f"component: {', '.join(p['changes'])}",
         "assisted_merge": lambda p: f"  attempting assisted resolution of {p['files']}",
+        "tier": lambda p: f"tier {p['name']} ({p['role']})",
+        "tier_skipped": lambda p: f"  tier {p['name']} skipped: {p['why']}",
+        "anytime": lambda p: f"  anytime: {p['summary']}",
     }
     render = interesting.get(event)
     if render:
@@ -222,6 +340,36 @@ def _where(store, key: str) -> str:
     return os.path.join(rootdir, *key.split("/"))
 
 
+def _repeatable(*params: str):
+    """Make these list flags accumulate across repeats.
+
+    argparse's default for a ``nargs='*'`` option keeps only the *last* use, so
+    ``--tier a:x --tier b:y`` would silently be one tier. ``extend`` makes it
+    two, and ``--tier a:x b:y`` still works. Declared through cw's plain
+    ``_cw`` attribute, so this module still imports no CLI library (``main``
+    keeps the type hints on, which a declaration would otherwise switch off).
+    """
+    params = {p: {"action": "extend", "nargs": "*"} for p in params}
+
+    def mark(func):
+        func._cw = {"params": params}
+        return func
+
+    return mark
+
+
+_LIST_FLAGS = (
+    "validate_stage",
+    "validate_fingerprint",
+    "validate_optional",
+    "tier",
+    "tier_cost",
+    "must_include",
+    "report_format",
+)
+
+
+@_repeatable(*_LIST_FLAGS)
 def branches(
     branch: list[str],
     *,
@@ -232,11 +380,17 @@ def branches(
     validate_fingerprint: list = None,
     validate_optional: list = None,
     merge_only: bool = False,
+    tier: list = None,
+    tier_cost: list = None,
     timeout: Optional[float] = None,
     retries: int = 0,
     max_evaluations: Optional[int] = None,
     max_seconds: Optional[float] = None,
     max_sets: Optional[int] = None,
+    confirm_budget_seconds: Optional[float] = None,
+    confirm_max_runs: Optional[int] = None,
+    confirm_max_sets: Optional[int] = None,
+    must_include: list = None,
     log_path: Optional[str] = None,
     trust_unpinned_log: bool = False,
     report_dir: Optional[str] = None,
@@ -269,11 +423,39 @@ def branches(
             does not veto the set. Use it for a lint pass the project treats as
             advisory.
         merge_only: Skip validation entirely; only textual mergeability counts.
-        timeout: Seconds allowed per validation run.
+        tier: ``'name:command'``, repeatable, ordered cheapest-first — tiered
+            validation: the first tier screens every candidate set, and each
+            later tier only confirms the sets its predecessor left standing, so
+            an expensive suite runs on a handful of sets instead of dozens. A
+            tier is ONE validator with its OWN evaluation log (a cheap PASS is
+            not evidence about an expensive tier). ``--validate-stage``
+            composes stages *inside* one validator; ``--tier`` composes
+            validators. To make the staged validator a tier, give its name
+            bare: ``--validate-stage 'build:make' 'test:make test' --tier
+            unit 'e2e:make e2e'``. Tier logs live in the artifact store next
+            to the default log, one per tier, so --log-path is refused here.
+            --tier takes every value after it: put branch names first.
+        tier_cost: ``'tier:seconds'``, repeatable — the declared cost of one
+            run, used until the tier has been timed. Set it for a tier that has
+            never run, or it is scheduled as if it were cheap.
+        timeout: Seconds allowed per validation run (per tier, with --tier).
         retries: Re-run a failing validation this many times before believing it.
-        max_evaluations: Stop after this many expensive evaluations.
+        max_evaluations: Stop after this many expensive evaluations (with
+            --tier, these three bound the screening tier).
         max_seconds: Stop after this much wall time.
         max_sets: Stop after finding this many maximal sets.
+        confirm_budget_seconds: With --tier: seconds each deeper tier may
+            spend. Runs are admitted on the pessimistic estimate, so the budget
+            is not overrun on a guess.
+        confirm_max_runs: With --tier: at most this many runs per deeper tier;
+            wins over the budget when both are given.
+        confirm_max_sets: With --tier: stop a deeper tier after confirming this
+            many maximal sets (``1``: just the best plan, cheaply).
+        must_include: Change id, repeatable (a branch name, or ``pr12`` for
+            ``prs``), with --tier — also report the best plan that keeps these
+            changes. It answers a different question from the maximal sets and
+            is reported alongside them, never instead. A single bare ``--tier
+            NAME`` is enough to ask it of the ordinary validator.
         log_path: Evaluation log (JSONL). Default:
             ``~/.local/share/mergeset/evaluations/<repo-slug>.jsonl`` —
             outside the analysed repository, always.
@@ -306,11 +488,17 @@ def branches(
         validate_fingerprint=validate_fingerprint or (),
         validate_optional=validate_optional or (),
         merge_only=merge_only,
+        tier=tier,
+        tier_cost=tier_cost,
         timeout=timeout,
         retries=retries,
         max_evaluations=max_evaluations,
         max_seconds=max_seconds,
         max_sets=max_sets,
+        confirm_budget_seconds=confirm_budget_seconds,
+        confirm_max_runs=confirm_max_runs,
+        confirm_max_sets=confirm_max_sets,
+        must_include=must_include,
         log_path=log_path,
         trust_unpinned_log=trust_unpinned_log,
         report_dir=report_dir,
@@ -325,6 +513,7 @@ def branches(
     )
 
 
+@_repeatable(*_LIST_FLAGS)
 def prs(
     repo_spec: str,
     *,
@@ -338,11 +527,17 @@ def prs(
     validate_fingerprint: list = None,
     validate_optional: list = None,
     merge_only: bool = False,
+    tier: list = None,
+    tier_cost: list = None,
     timeout: Optional[float] = None,
     retries: int = 0,
     max_evaluations: Optional[int] = None,
     max_seconds: Optional[float] = None,
     max_sets: Optional[int] = None,
+    confirm_budget_seconds: Optional[float] = None,
+    confirm_max_runs: Optional[int] = None,
+    confirm_max_sets: Optional[int] = None,
+    must_include: list = None,
     log_path: Optional[str] = None,
     trust_unpinned_log: bool = False,
     report_dir: Optional[str] = None,
@@ -368,6 +563,15 @@ def prs(
         validate_fingerprint: ``'stage:path'``, repeatable — skip a stage unless
             that file changed (a lockfile, typically).
         validate_optional: Stage name, repeatable — recorded, but not a veto.
+        tier: ``'name:command'``, repeatable, cheapest-first — tiered validation;
+            a bare name is the tier the --validate-* flags describe. See
+            ``mergeset branches --help`` for how tiers and stages compose.
+        tier_cost: ``'tier:seconds'``, repeatable — declared cost per run.
+        confirm_budget_seconds: With --tier: seconds each deeper tier may spend.
+        confirm_max_runs: With --tier: at most this many runs per deeper tier.
+        confirm_max_sets: With --tier: stop a deeper tier after this many sets.
+        must_include: PR change id (``pr12``), repeatable, with --tier — also
+            report the best plan that keeps these PRs.
         log_path: Evaluation log (JSONL). Default:
             ``~/.local/share/mergeset/evaluations/<repo-slug>.jsonl`` — outside
             the analysed repository, always.
@@ -405,11 +609,17 @@ def prs(
         validate_fingerprint=validate_fingerprint or (),
         validate_optional=validate_optional or (),
         merge_only=merge_only,
+        tier=tier,
+        tier_cost=tier_cost,
         timeout=timeout,
         retries=retries,
         max_evaluations=max_evaluations,
         max_seconds=max_seconds,
         max_sets=max_sets,
+        confirm_budget_seconds=confirm_budget_seconds,
+        confirm_max_runs=confirm_max_runs,
+        confirm_max_sets=confirm_max_sets,
+        must_include=must_include,
         log_path=log_path,
         trust_unpinned_log=trust_unpinned_log,
         report_dir=report_dir,
@@ -434,11 +644,17 @@ def _run(
     validate_fingerprint,
     validate_optional,
     merge_only,
+    tier,
+    tier_cost,
     timeout,
     retries,
     max_evaluations,
     max_seconds,
     max_sets,
+    confirm_budget_seconds,
+    confirm_max_runs,
+    confirm_max_sets,
+    must_include,
     log_path,
     trust_unpinned_log,
     report_dir,
@@ -453,22 +669,74 @@ def _run(
 ) -> str:
     if resolver not in ("none", "claude"):
         return f"Unknown resolver {resolver!r}; expected 'none' or 'claude'."
+    given = locals()
     try:
-        analysis = _analyze(
-            repo,
-            changes,
+        validate = _validator(
+            merge_only=merge_only,
+            validate_command=validate_command,
+            timeout=timeout,
+            retries=retries,
+            validate_stage=validate_stage,
+            validate_fingerprint=validate_fingerprint,
+            validate_optional=validate_optional,
+        )
+        for kw, values in (
+            ("tier", tier),
+            ("tier_cost", tier_cost),
+            ("must_include", must_include),
+        ):
+            if values is not None and not values:
+                flag = "--" + kw.replace("_", "-")
+                raise ValueError(
+                    f"{flag} was given no values. Drop it, or pass at least one "
+                    f"(see --help)."
+                )
+        for kw in ("confirm_budget_seconds", "confirm_max_runs", "confirm_max_sets"):
+            if given[kw] is not None and given[kw] < 0:
+                raise ValueError(
+                    f"{_TIER_ONLY_FLAGS[kw]} cannot be negative (got {given[kw]})."
+                )
+        unknown_formats = set(report_format or ()) - set(REPORT_FORMATS)
+        if unknown_formats:
+            # Checked before the run, not when the reports are written after
+            # it: a branch name typed after --report-format lands here.
+            raise ValueError(
+                f"--report-format names no format: "
+                f"{', '.join(sorted(unknown_formats))}. Formats are: "
+                f"{', '.join(REPORT_FORMATS)}. Put branch names before it."
+            )
+        if not tier:
+            # `is not None`, not truthiness: `--confirm-max-runs 0` is an
+            # instruction, and ignoring it would be the silent drop.
+            stray = [
+                flag
+                for kw, flag in _TIER_ONLY_FLAGS.items()
+                if given[kw] is not None
+            ]
+            if stray:
+                raise ValueError(
+                    f"{', '.join(stray)} only mean something with --tier. To ask "
+                    "them of the ordinary validator, make it the one tier: "
+                    "--tier NAME (a bare name)."
+                )
+        else:
+            unknown = set(must_include or ()) - {c.id for c in changes}
+            if unknown:
+                raise ValueError(
+                    f"--must-include names changes that are not candidates: "
+                    f"{', '.join(sorted(unknown))}. The candidates are: "
+                    f"{', '.join(sorted(c.id for c in changes)) or '(none)'}."
+                )
+        if tier and log_path:
+            raise ValueError(
+                "--log-path cannot be used with --tier: each tier keeps its own "
+                "evaluation log, and one path would merge them into the one "
+                "shared cache this design exists to prevent. The tier logs sit "
+                "next to the default log, one file per tier."
+            )
+        common = dict(
             base=base,
-            validate=_validator(
-                merge_only=merge_only,
-                validate_command=validate_command,
-                timeout=timeout,
-                retries=retries,
-                validate_stage=validate_stage,
-                validate_fingerprint=validate_fingerprint,
-                validate_optional=validate_optional,
-            ),
             resolver=claude_code_resolver() if resolver == "claude" else None,
-            log_path=log_path,
             trust_unpinned=trust_unpinned_log,
             reuse_worktree=(
                 _persistent_worktree(repo, base, reuse_worktree)
@@ -482,6 +750,36 @@ def _run(
             max_sets=max_sets,
             on_event=None if quiet else _progress,
         )
+        if tier:
+            tiered = _analyze_tiered(
+                repo,
+                changes,
+                tiers=_tiers(
+                    tier,
+                    tier_cost or (),
+                    validator=validate,
+                    validator_flags=[
+                        flag for kw, flag in _VALIDATOR_FLAGS.items() if given[kw]
+                    ],
+                    timeout=timeout,
+                    retries=retries,
+                    is_commit=lambda name: name in {c.id for c in changes}
+                    or git(repo, "rev-parse", "--verify", "--quiet", f"{name}^{{commit}}").ok,
+                ),
+                confirm_budget_seconds=confirm_budget_seconds,
+                confirm_max_runs=confirm_max_runs,
+                confirm_max_sets=confirm_max_sets,
+                must_include=must_include or (),
+                **common,
+            )
+            analysis = tiered.analysis
+            # Into the notes, so every report format carries the price list,
+            # not only this command's stdout.
+            analysis.notes.extend(tiered.cost_lines())
+        else:
+            analysis = _analyze(
+                repo, changes, validate=validate, log_path=log_path, **common
+            )
     except ValueError as e:
         return f"mergeset could not read that option:\n\n{e}"
     except CapabilityError as e:
@@ -609,11 +907,20 @@ def install_skills(
 _dispatch_funcs = [branches, prs, show_log, install_skills]
 
 
-def main() -> int:
-    """Entry point: project ``_dispatch_funcs`` onto a command line parser."""
+def main(argv=None) -> int:
+    """Entry point: project ``_dispatch_funcs`` onto a command line parser.
+
+    cw's default convention stops reading a function's annotations as soon as
+    it declares any parameter (argh's rule), which would turn ``--max-seconds
+    60`` into the string ``"60"``. ``hints_when_declared`` keeps the hints and
+    merges the declarations on top.
+    """
+    import dataclasses
+
     import cw
 
-    return cw.dispatch(_dispatch_funcs)
+    convention = dataclasses.replace(cw.ARGH, hints_when_declared=True)
+    return cw.dispatch(_dispatch_funcs, argv=argv, convention=convention)
 
 
 if __name__ == "__main__":
