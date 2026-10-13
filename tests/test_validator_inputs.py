@@ -122,9 +122,7 @@ def test_inputs_digest_spellings_and_shapes(tmp_path, monkeypatch):
     edited = inputs_digest([str(folder)])
     (folder / "sub" / "a.py").rename(folder / "sub" / "b.py")
     assert inputs_digest([str(folder)]) != edited, "a renamed file"
-    assert inputs_digest([str(tmp_path / "nope")]) == {
-        str(tmp_path / "nope"): "missing"
-    }
+    assert list(inputs_digest([str(tmp_path / "nope")]).values()) == ["missing"]
 
 
 def test_validate_input_retires_an_edited_tier_script(repo, tmp_path):

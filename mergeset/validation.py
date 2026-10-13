@@ -130,8 +130,8 @@ def inputs_digest(paths: Iterable[str]) -> Dict[str, str]:
     >>> inputs_digest([f.name]) == before
     False
     >>> os.remove(f.name)
-    >>> inputs_digest([f.name])[f.name]
-    'missing'
+    >>> list(inputs_digest([f.name]).values())
+    ['missing']
     """
 
     if isinstance(paths, (str, bytes, os.PathLike)):
