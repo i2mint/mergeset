@@ -8,6 +8,7 @@ mergeset.oracle
 
    .. autosummary::
    
+      RESOLVED_REF_PREFIX
       Resolver
    
    .. rubric:: Functions

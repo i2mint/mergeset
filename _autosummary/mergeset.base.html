@@ -120,6 +120,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#mergeset.base.MergeFn"><code class="docutils literal notranslate"><span class="pre">MergeFn</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.MergeOutcome"><code class="docutils literal notranslate"><span class="pre">MergeOutcome</span></code></a><ul>
 <li><a class="reference internal" href="#mergeset.base.MergeOutcome.reason"><code class="docutils literal notranslate"><span class="pre">MergeOutcome.reason</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.base.MergeOutcome.resolved_commit"><code class="docutils literal notranslate"><span class="pre">MergeOutcome.resolved_commit</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.base.MergeOutcome.to_jdict"><code class="docutils literal notranslate"><span class="pre">MergeOutcome.to_jdict()</span></code></a></li>
 </ul>
 </li>
@@ -431,7 +432,7 @@ before fingerprints, and on rows judged by a validator that has none.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mergeset.base.MergeOutcome">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">MergeOutcome</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ok</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reason</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'conflict'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conflicting_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assisted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assist_diff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#MergeOutcome"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.MergeOutcome" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.base.</span></span><span class="sig-name descname"><span class="pre">MergeOutcome</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ok</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reason</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'conflict'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conflicting_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assisted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assist_diff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolved_commit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#MergeOutcome"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.MergeOutcome" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Result of merging a change set onto its base.</p>
 <p><code class="docutils literal notranslate"><span class="pre">reason</span></code> is load-bearing. “These changes conflict with each other” and “we
@@ -449,10 +450,25 @@ aborts, because a set that was never tested has told us nothing.</p>
 not be attempted: bad path, missing ref, unusable worktree).</p>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mergeset.base.MergeOutcome.resolved_commit">
+<span class="sig-name descname"><span class="pre">resolved_commit</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.base.MergeOutcome.resolved_commit" title="Link to this definition">#</a></dt>
+<dd><p>base plus every head,
+conflicts resolved. A deeper tier checks this commit out instead of
+asking the resolver again (i2mint/mergeset#30). Not in <a class="reference internal" href="#mergeset.base.MergeOutcome.to_jdict" title="mergeset.base.MergeOutcome.to_jdict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_jdict()</span></code></a>:
+<a class="reference internal" href="#mergeset.base.Evaluation.to_jdict" title="mergeset.base.Evaluation.to_jdict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Evaluation.to_jdict()</span></code></a> stores it beside <code class="docutils literal notranslate"><span class="pre">merge</span></code>, because releases
+before #30 build <code class="docutils literal notranslate"><span class="pre">MergeOutcome(**merge)</span></code> and would refuse the log.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The merge commit an assisted resolution produced</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="mergeset.base.MergeOutcome.to_jdict">
 <span class="sig-name descname"><span class="pre">to_jdict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/base.html#MergeOutcome.to_jdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.base.MergeOutcome.to_jdict" title="Link to this definition">#</a></dt>
-<dd><p>JSON-able view.</p>
+<dd><p>JSON-able view (without <a class="reference internal" href="#mergeset.base.MergeOutcome.resolved_commit" title="mergeset.base.MergeOutcome.resolved_commit"><code class="xref py py-attr docutils literal notranslate"><span class="pre">resolved_commit</span></code></a>; see there).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
@@ -673,7 +689,7 @@ single-command one and on rows written before stages were recorded.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=a11416ff"></script>
+      <script src="../_static/documentation_options.js?v=96ec9c95"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

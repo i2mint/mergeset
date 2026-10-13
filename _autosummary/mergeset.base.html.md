@@ -167,7 +167,7 @@ This is *the* expensive seam: one call is typically a merge plus a test run.
 
 alias of `Callable`[[…], [`MergeOutcome`](#mergeset.base.MergeOutcome)]
 
-### *class* mergeset.base.MergeOutcome(ok, reason='conflict', conflicting_files=(), assisted=False, assist_diff=None, order=(), detail='')
+### *class* mergeset.base.MergeOutcome(ok, reason='conflict', conflicting_files=(), assisted=False, assist_diff=None, order=(), detail='', resolved_commit=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -185,9 +185,20 @@ aborts, because a set that was never tested has told us nothing.
 `'conflict'` (a real textual conflict) or `'error'` (the merge could
 not be attempted: bad path, missing ref, unusable worktree).
 
+#### resolved_commit *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+base plus every head,
+conflicts resolved. A deeper tier checks this commit out instead of
+asking the resolver again (i2mint/mergeset#30). Not in [`to_jdict()`](#mergeset.base.MergeOutcome.to_jdict):
+[`Evaluation.to_jdict()`](#mergeset.base.Evaluation.to_jdict) stores it beside `merge`, because releases
+before #30 build `MergeOutcome(**merge)` and would refuse the log.
+
+* **Type:**
+  The merge commit an assisted resolution produced
+
 #### to_jdict()
 
-JSON-able view.
+JSON-able view (without [`resolved_commit`](#mergeset.base.MergeOutcome.resolved_commit); see there).
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

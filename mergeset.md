@@ -1,4 +1,4 @@
-> built 2026-10-13 08:49 UTC from 3a339da (main) · mergeset 0.0.21. Details: build_info.json
+> built 2026-10-13 09:10 UTC from a75d6c4 (main) · mergeset 0.0.22. Details: build_info.json
 
 # index.html.md
 
@@ -646,7 +646,7 @@ This is *the* expensive seam: one call is typically a merge plus a test run.
 
 alias of `Callable`[[…], [`MergeOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.MergeOutcome)]
 
-### *class* mergeset.base.MergeOutcome(ok, reason='conflict', conflicting_files=(), assisted=False, assist_diff=None, order=(), detail='')
+### *class* mergeset.base.MergeOutcome(ok, reason='conflict', conflicting_files=(), assisted=False, assist_diff=None, order=(), detail='', resolved_commit=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -664,9 +664,20 @@ aborts, because a set that was never tested has told us nothing.
 `'conflict'` (a real textual conflict) or `'error'` (the merge could
 not be attempted: bad path, missing ref, unusable worktree).
 
+#### resolved_commit *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+base plus every head,
+conflicts resolved. A deeper tier checks this commit out instead of
+asking the resolver again (i2mint/mergeset#30). Not in [`to_jdict()`](_autosummary/mergeset.base.html.md#mergeset.base.MergeOutcome.to_jdict):
+[`Evaluation.to_jdict()`](_autosummary/mergeset.base.html.md#mergeset.base.Evaluation.to_jdict) stores it beside `merge`, because releases
+before #30 build `MergeOutcome(**merge)` and would refuse the log.
+
+* **Type:**
+  The merge commit an assisted resolution produced
+
 #### to_jdict()
 
-JSON-able view.
+JSON-able view (without [`resolved_commit`](_autosummary/mergeset.base.html.md#mergeset.base.MergeOutcome.resolved_commit); see there).
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -2400,7 +2411,7 @@ Append object to the end of the list.
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-### *class* mergeset.MergeOutcome(ok, reason='conflict', conflicting_files=(), assisted=False, assist_diff=None, order=(), detail='')
+### *class* mergeset.MergeOutcome(ok, reason='conflict', conflicting_files=(), assisted=False, assist_diff=None, order=(), detail='', resolved_commit=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -2418,9 +2429,20 @@ aborts, because a set that was never tested has told us nothing.
 `'conflict'` (a real textual conflict) or `'error'` (the merge could
 not be attempted: bad path, missing ref, unusable worktree).
 
+#### resolved_commit *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+base plus every head,
+conflicts resolved. A deeper tier checks this commit out instead of
+asking the resolver again (i2mint/mergeset#30). Not in [`to_jdict()`](_autosummary/mergeset.html.md#mergeset.MergeOutcome.to_jdict):
+[`Evaluation.to_jdict()`](_autosummary/mergeset.html.md#mergeset.Evaluation.to_jdict) stores it beside `merge`, because releases
+before #30 build `MergeOutcome(**merge)` and would refuse the log.
+
+* **Type:**
+  The merge commit an assisted resolution produced
+
 #### to_jdict()
 
-JSON-able view.
+JSON-able view (without [`resolved_commit`](_autosummary/mergeset.html.md#mergeset.MergeOutcome.resolved_commit); see there).
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -3340,7 +3362,7 @@ breaks. This is the cheap defense; the honest one is
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]
 
-### mergeset.git_oracle(repo, base, changes, , validate=None, resolver=None, depends_on=None, reuse_worktree=None, worktree_root=None, keep_worktrees=False, on_event=None)
+### mergeset.git_oracle(repo, base, changes, , validate=None, resolver=None, resolution=None, depends_on=None, reuse_worktree=None, worktree_root=None, keep_worktrees=False, on_event=None)
 
 Build the evaluator: merge the set onto `base`, then validate the tree.
 
@@ -3351,8 +3373,17 @@ Build the evaluator: merge the set onto `base`, then validate the tree.
   * **validate** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]]) – `worktree -> ValidationOutcome`. Defaults to a fail-fast
     pytest run; see [`mergeset.validation`](_autosummary/mergeset.validation.html.md#module-mergeset.validation) for the alternatives.
   * **resolver** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]], [`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]]) – Optional AI-assisted conflict resolver. When given, a textual
-    conflict is offered to it once; a success is recorded with
-    `merge.assisted = True` and the diff kept.
+    conflict is offered to it; a success is recorded with
+    `merge.assisted = True`, the diff kept, and the resolved merge
+    commit kept as `merge.resolved_commit`.
+  * **resolution** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)], [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`MergeOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.MergeOutcome)]]]) – `subset -> MergeOutcome` of an earlier assisted
+    resolution of that set, or `None` – the alternative to
+    `resolver` for a deeper tier (i2mint/mergeset#30). A conflicting
+    set is then not resolved again: the recorded commit is checked out,
+    once it is shown to hold the base and every head, so every tier
+    validates the very tree the first one did and the resolver is paid
+    once. A conflict with no usable recorded resolution is an
+    `ERROR`, never a guess.
   * **depends_on** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]) – `child -> parent` for stacked changes. Only the *tips* of
     a set are merged, because merging a tip already brings its
     ancestors; merging them explicitly is wasted work and perturbs the
@@ -4282,8 +4313,9 @@ resolution diff saved. It is never silently reported as a clean merge.
 
 ### Module Attributes
 
-| [`Resolver`](_autosummary/mergeset.oracle.html.md#mergeset.oracle.Resolver)   | `(worktree, conflicting_files) -> (resolved?, diff)`.   |
-|-------------------------------------------------------------|---------------------------------------------------------|
+| [`RESOLVED_REF_PREFIX`](_autosummary/mergeset.oracle.html.md#mergeset.oracle.RESOLVED_REF_PREFIX)   | Where a resolved merge commit is kept reachable (`<prefix><sha>`), so a log that outlives `git gc`'s grace period can still be confirmed.   |
+|------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| [`Resolver`](_autosummary/mergeset.oracle.html.md#mergeset.oracle.Resolver)              | `(worktree, conflicting_files) -> (resolved?, diff)`.                                                                                       |
 
 ### Functions
 
@@ -4291,6 +4323,11 @@ resolution diff saved. It is never silently reported as a clean merge.
 |-------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
 | [`git_oracle`](_autosummary/mergeset.oracle.html.md#mergeset.oracle.git_oracle)(repo, base, changes, \*[, ...])     | Build the evaluator: merge the set onto `base`, then validate the tree. |
 | [`merge_order`](_autosummary/mergeset.oracle.html.md#mergeset.oracle.merge_order)(subset, changes)                   | A deterministic merge order for a change set.                           |
+
+### mergeset.oracle.RESOLVED_REF_PREFIX *= 'refs/mergeset/resolved/'*
+
+Where a resolved merge commit is kept reachable (`<prefix><sha>`), so a
+log that outlives `git gc`’s grace period can still be confirmed.
 
 ### mergeset.oracle.Resolver
 
@@ -4313,7 +4350,7 @@ guessing intent. Anything it does resolve is flagged and its diff kept.
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]], [`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
-### mergeset.oracle.git_oracle(repo, base, changes, , validate=None, resolver=None, depends_on=None, reuse_worktree=None, worktree_root=None, keep_worktrees=False, on_event=None)
+### mergeset.oracle.git_oracle(repo, base, changes, , validate=None, resolver=None, resolution=None, depends_on=None, reuse_worktree=None, worktree_root=None, keep_worktrees=False, on_event=None)
 
 Build the evaluator: merge the set onto `base`, then validate the tree.
 
@@ -4324,8 +4361,17 @@ Build the evaluator: merge the set onto `base`, then validate the tree.
   * **validate** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`ValidationOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.ValidationOutcome)]]) – `worktree -> ValidationOutcome`. Defaults to a fail-fast
     pytest run; see [`mergeset.validation`](_autosummary/mergeset.validation.html.md#module-mergeset.validation) for the alternatives.
   * **resolver** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]], [`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]]) – Optional AI-assisted conflict resolver. When given, a textual
-    conflict is offered to it once; a success is recorded with
-    `merge.assisted = True` and the diff kept.
+    conflict is offered to it; a success is recorded with
+    `merge.assisted = True`, the diff kept, and the resolved merge
+    commit kept as `merge.resolved_commit`.
+  * **resolution** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)], [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`MergeOutcome`](_autosummary/mergeset.base.html.md#mergeset.base.MergeOutcome)]]]) – `subset -> MergeOutcome` of an earlier assisted
+    resolution of that set, or `None` – the alternative to
+    `resolver` for a deeper tier (i2mint/mergeset#30). A conflicting
+    set is then not resolved again: the recorded commit is checked out,
+    once it is shown to hold the base and every head, so every tier
+    validates the very tree the first one did and the resolver is paid
+    once. A conflict with no usable recorded resolution is an
+    `ERROR`, never a guess.
   * **depends_on** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]) – `child -> parent` for stacked changes. Only the *tips* of
     a set are merged, because merging a tip already brings its
     ancestors; merging them explicitly is wasted work and perturbs the
@@ -6120,18 +6166,18 @@ log distinguishes `build: ...` from `test: tests/x.ts::y`.
 
 # About this build
 
-This documentation was built on **2026-10-13 08:49 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/3a339da1ece616cf8865fadd1eb63f70e5d6f622"><code>3a339da</code></a> on branch <code>main</code>, for **mergeset 0.0.21** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 09:10 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/a75d6c4bba7dd61805c0e9157a392d5138064712"><code>a75d6c4</code></a> on branch <code>main</code>, for **mergeset 0.0.22** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.21) is behind the latest release on PyPI (0.0.22): `pip install mergeset` gives newer code than these docs describe.
+- The documented version (0.0.22) is behind the latest release on PyPI (0.0.23): `pip install mergeset` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/mergeset/commit/3a339da1ece616cf8865fadd1eb63f70e5d6f622"><code>3a339da1ece616cf8865fadd1eb63f70e5d6f622</code></a> |
+| Commit              | <a href="https://github.com/i2mint/mergeset/commit/a75d6c4bba7dd61805c0e9157a392d5138064712"><code>a75d6c4bba7dd61805c0e9157a392d5138064712</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -6142,9 +6188,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/mergeset</code>                                                               |
-| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38371805158">38371805158</a>      |
+| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38374225605">38374225605</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>3a339da1ece616cf8865fadd1eb63f70e5d6f622</code> (in the history of the built commit) |
+| Event commit | <code>a75d6c4bba7dd61805c0e9157a392d5138064712</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6169,13 +6215,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/mergeset/0.0.22/">0.0.22</a>, newer than the documented version (0.0.21).
+Latest release: <a href="https://pypi.org/project/mergeset/0.0.23/">0.0.23</a>, newer than the documented version (0.0.22).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/mergeset && cd mergeset
-git checkout 3a339da1ece616cf8865fadd1eb63f70e5d6f622
+git checkout a75d6c4bba7dd61805c0e9157a392d5138064712
 pip install "epythet==0.2.15"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

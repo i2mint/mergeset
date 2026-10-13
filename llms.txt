@@ -25,7 +25,7 @@
 - [mergeset.tiers](_autosummary/mergeset.tiers.html.md): Tiered validation: a cheap oracle screens, an expensive one confirms.
 - [mergeset.validation](_autosummary/mergeset.validation.html.md): Validation functions: does this merged tree actually work?
 - [For AI agents](ai-agents.html.md): &#96;mergeset&#96; ships artifacts for coding agents alongside its code. This page lists
-- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-10-13 08:49 UTC&#42;&#42; from commit &lt;a href="https://github.com/i2m...
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-10-13 09:10 UTC&#42;&#42; from commit &lt;a href="https://github.com/i2m...
 
 ## Optional
 
