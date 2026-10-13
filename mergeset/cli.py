@@ -340,19 +340,16 @@ def _where(store, key: str) -> str:
     return os.path.join(rootdir, *key.split("/"))
 
 
-def _cli_params(*repeatable: str, **positional_nargs: str):
-    """Declare argparse particulars the annotations cannot carry.
+def _repeatable(*params: str):
+    """Make these list flags accumulate across repeats.
 
-    ``repeatable`` list flags accumulate across repeats: argparse's default for
-    a ``nargs='*'`` option keeps only the *last* use, so ``--tier a:x --tier
-    b:y`` would silently be one tier. ``extend`` makes it two, and ``--tier a:x
-    b:y`` still works. ``positional_nargs`` is for a list positional, which the
-    adapter would otherwise read as exactly one value (so ``branches a b`` was
-    refused). Declared through cw's plain ``_cw`` attribute, so this module
-    still imports no CLI library.
+    argparse's default for a ``nargs='*'`` option keeps only the *last* use, so
+    ``--tier a:x --tier b:y`` would silently be one tier. ``extend`` makes it
+    two, and ``--tier a:x b:y`` still works. Declared through cw's plain
+    ``_cw`` attribute, so this module still imports no CLI library (``main``
+    keeps the type hints on, which a declaration would otherwise switch off).
     """
-    params = {p: {"action": "extend", "nargs": "*"} for p in repeatable}
-    params.update({p: {"nargs": n} for p, n in positional_nargs.items()})
+    params = {p: {"action": "extend", "nargs": "*"} for p in params}
 
     def mark(func):
         func._cw = {"params": params}
@@ -372,7 +369,7 @@ _LIST_FLAGS = (
 )
 
 
-@_cli_params(*_LIST_FLAGS, branch="+")
+@_repeatable(*_LIST_FLAGS)
 def branches(
     branch: list[str],
     *,
@@ -516,7 +513,7 @@ def branches(
     )
 
 
-@_cli_params(*_LIST_FLAGS)
+@_repeatable(*_LIST_FLAGS)
 def prs(
     repo_spec: str,
     *,
@@ -694,6 +691,11 @@ def _run(
                     f"{flag} was given no values. Drop it, or pass at least one "
                     f"(see --help)."
                 )
+        for kw in ("confirm_budget_seconds", "confirm_max_runs", "confirm_max_sets"):
+            if given[kw] is not None and given[kw] < 0:
+                raise ValueError(
+                    f"{_TIER_ONLY_FLAGS[kw]} cannot be negative (got {given[kw]})."
+                )
         unknown_formats = set(report_format or ()) - set(REPORT_FORMATS)
         if unknown_formats:
             # Checked before the run, not when the reports are written after
@@ -717,7 +719,15 @@ def _run(
                     "them of the ordinary validator, make it the one tier: "
                     "--tier NAME (a bare name)."
                 )
-        elif log_path:
+        else:
+            unknown = set(must_include or ()) - {c.id for c in changes}
+            if unknown:
+                raise ValueError(
+                    f"--must-include names changes that are not candidates: "
+                    f"{', '.join(sorted(unknown))}. The candidates are: "
+                    f"{', '.join(sorted(c.id for c in changes)) or '(none)'}."
+                )
+        if tier and log_path:
             raise ValueError(
                 "--log-path cannot be used with --tier: each tier keeps its own "
                 "evaluation log, and one path would merge them into the one "
