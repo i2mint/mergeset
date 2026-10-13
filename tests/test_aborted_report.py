@@ -129,6 +129,7 @@ def test_a_deep_tier_abort_does_not_disown_the_screens_answer(
         # `tiers` runs a search only for the confirm tiers; the screen's is
         # `analyze`'s own.
         state = SearchState()
+        state.maximal_good_sets = [frozenset({"feat-b"})]  # partial, unconfirmed
         state.error = "the deep tier's resolution is gone"
         return state
 
@@ -152,3 +153,8 @@ def test_a_deep_tier_abort_does_not_disown_the_screens_answer(
     assert "not an answer" not in text and "this is not a finding" not in text
     assert "No conflicts found by the tiers that finished" in text
     assert any("ran but it aborted" in n for n in analysis.notes)
+    # The aborted tier is not "reached", and its partial sets are not the answer.
+    assert result.depth_reached == "screen"
+    assert analysis.maximal_sets == [frozenset({"feat-b", "feat-d"})]
+    assert any("only reached `screen`" in n for n in analysis.notes)
+    assert not any("confirmed at the deepest tier" in n for n in analysis.notes)

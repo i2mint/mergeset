@@ -1100,14 +1100,18 @@ def analyze_tiered(
         conflicts = conflicts + list(state.conflicts)
         analysis.conflicts = _minimal(analysis.conflicts + state.conflicts)
         sync_every_tier()
+        if state.error:
+            # An aborted tier confirmed nothing: its partial sets do not replace
+            # the previous depth's answer, and the depth is not reached (#55).
+            # The conflicts it did find are evidence, and are kept above.
+            analysis.aborted_tier = tier.name
+            _skip(result, analysis, tier, f"it aborted: {state.error}", emit)
+            refresh_answer()
+            break
         if state.maximal_good_sets:
             analysis.maximal_sets = state.maximal_good_sets
         result.depth_reached = tier.name
         refresh_answer()
-        if state.error:
-            analysis.aborted_tier = tier.name
-            _skip(result, analysis, tier, f"it aborted: {state.error}", emit)
-            break
 
     if must_include and _aborted(analysis) is not None:
         analysis.notes.append(

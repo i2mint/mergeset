@@ -55,8 +55,9 @@ One decision per file. The `decision:` field in each file's front matter carries
 | [0036](0036-a-resolver-that-raises-did-not-run-the-experiment.md) | — | A resolver that raises did not run the experiment |
 | [0037](0037-an-input-is-opened-without-blocking-and-a-missing-program-is-a-refusal.md) | — | An input is opened without blocking, and a missing program is a refusal |
 | [0038](0038-an-aborted-run-says-so-and-exits-3.md) | — | An aborted run says so, and exits 3 |
+| [0039](0039-a-tier-that-aborts-has-not-been-reached.md) | — | A tier that aborts has not been reached |
 
-38 records. Append-only: when a decision is reversed, the old record stays
+39 records. Append-only: when a decision is reversed, the old record stays
 and the new one says what changed.
 
 Records from 0026 on have no `was` identifier: they were written after the split
