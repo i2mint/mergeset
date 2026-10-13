@@ -307,29 +307,27 @@ def test_an_integration_branch_holds_the_validated_commits(repo):
     assert "CCC" in run(repo, "show", f"{name}:shared.txt")
 
 
-def test_a_stacked_child_that_lags_its_parent_is_not_pinned_to_the_parent(
-    repo, tmp_path
-):
-    """The child's tree does not contain the parent's new head, so merge both."""
+def _lagging_stack(repo):
+    """pr2 stacked on pr1 by metadata, but pr1 moved on and pr2 was not rebased.
+
+    pr1's new commit adds ``broken.txt``, which :func:`_no_broken` rejects.
+    """
     from mergeset.base import Change
-    from mergeset.validation import callable_validation
+
+    def commit(name, text):
+        with open(os.path.join(repo, name), "w") as f:
+            f.write(text)
+        run(repo, "add", "-A")
+        run(repo, "commit", "-qm", name)
 
     run(repo, "checkout", "-q", "-b", "stack-a", "main")
-    open(os.path.join(repo, "a1.txt"), "w").write("a1\n")
-    run(repo, "add", "-A")
-    run(repo, "commit", "-qm", "a1")
+    commit("a1.txt", "a1\n")
     run(repo, "checkout", "-q", "-b", "stack-b")
-    open(os.path.join(repo, "b1.txt"), "w").write("b1\n")
-    run(repo, "add", "-A")
-    run(repo, "commit", "-qm", "b1")
-    # The parent moves on; the child is not rebased.
+    commit("b1.txt", "b1\n")
     run(repo, "checkout", "-q", "stack-a")
-    open(os.path.join(repo, "broken.txt"), "w").write("a2\n")
-    run(repo, "add", "-A")
-    run(repo, "commit", "-qm", "a2 breaks things")
+    commit("broken.txt", "a2\n")
     run(repo, "checkout", "-q", "main")
-
-    changes = [
+    return [
         Change(
             "pr1",
             "stack-a",
@@ -345,13 +343,23 @@ def test_a_stacked_child_that_lags_its_parent_is_not_pinned_to_the_parent(
             meta={"head_ref": "stack-b", "base_ref": "stack-a"},
         ),
     ]
+
+
+def _no_broken():
+    from mergeset.validation import callable_validation
+
+    return callable_validation(
+        lambda wt: not os.path.exists(os.path.join(wt, "broken.txt"))
+    )
+
+
+def test_a_stacked_child_that_lags_its_parent_is_not_pinned_to_the_parent(repo):
+    """The child's tree does not contain the parent's new head, so merge both."""
     analysis = analyze(
         repo,
-        changes,
+        _lagging_stack(repo),
         base="main",
-        validate=callable_validation(
-            lambda wt: not os.path.exists(os.path.join(wt, "broken.txt"))
-        ),
+        validate=_no_broken(),
         log=EvaluationLog(MemoryLines()),
         use_ci_status=False,
     )
@@ -359,6 +367,33 @@ def test_a_stacked_child_that_lags_its_parent_is_not_pinned_to_the_parent(
     # pr1 as it is now is broken, and pr2 cannot go without it.
     assert _sets(analysis) == {()}
     assert any("does not contain" in n for n in analysis.notes)
+
+
+def test_a_deep_tier_merges_the_parent_a_lagging_child_lacks(repo, tmp_path):
+    from mergeset.tiers import Tier, analyze_tiered
+
+    result = analyze_tiered(
+        repo,
+        _lagging_stack(repo),
+        base="main",
+        tiers=[Tier("screen", merge_only_validation()), Tier("deep", _no_broken())],
+        use_ci_status=False,
+    )
+    assert result.maximal_sets == [frozenset()]
+
+
+def test_the_merge_plan_names_a_parent_a_lagging_child_lacks(repo):
+    """Following "merge pr2, pr1 comes along" would land pr1's old head."""
+    analysis = analyze(
+        repo,
+        _lagging_stack(repo),
+        base="main",
+        validate=merge_only_validation(),
+        log=EvaluationLog(MemoryLines()),
+        use_ci_status=False,
+    )
+    (plan,) = analysis.merge_plan()
+    assert sorted(plan["merge"]) == ["pr1", "pr2"]
 
 
 def test_a_log_handed_to_two_analyses_is_not_rescoped_under_the_first(repo, tmp_path):
@@ -403,3 +438,62 @@ def test_trust_unpinned_reaches_every_tier(repo):
     trusted = tiered(trust_unpinned=True)
     assert not trusted.logs["deep"].unpinned
     assert not trusted.logs["screen"].unpinned
+
+
+def test_trusted_old_rows_still_speak_only_for_changes_in_play():
+    log = EvaluationLog(MemoryLines())
+    log.record(Evaluation(frozenset("abx"), Verdict.PASS))
+    view = log.pinned(base="B", heads={"a": "A1", "b": "B1"}, trust_unpinned=True)
+    assert not view.maximal_passing_sets()
+    assert len(view.unpinned) == 1
+
+
+def test_trust_unpinned_takes_effect_when_changed_after_reading():
+    log = EvaluationLog(MemoryLines())
+    log.record(Evaluation(frozenset("a"), Verdict.PASS))
+    log.pin(base="B", heads={"a": "A1"})
+    assert len(log) == 0
+    log.trust_unpinned = True
+    assert len(log) == 1
+
+
+def test_every_tier_reports_and_reuses_only_the_rows_that_count(repo, tmp_path):
+    """The screen's pinned view is the one kept, and spent sums only its rows."""
+    from mergeset.tiers import Tier, analyze_tiered
+
+    def tiered():
+        return analyze_tiered(
+            repo,
+            list(branch_changes(repo, ["feat-a", "feat-c"], base="main")),
+            base="main",
+            tiers=[
+                Tier("screen", merge_only_validation()),
+                Tier("deep", merge_only_validation()),
+            ],
+            pairwise_preoracle=False,
+            decompose=False,
+        )
+
+    tiered()
+    _rewrite(repo, "feat-c", "c.txt", "elsewhere\n")
+    result = tiered()
+    for name, log in result.logs.items():
+        assert log.pins is not None and log.stale, name
+        assert result.spent[name] == sum(e.duration or 0 for e in log), name
+        assert result.spent[name] < sum(e.duration or 0 for e in log.rows), name
+
+
+def test_the_cli_passes_trust_unpinned_log_through(repo, monkeypatch):
+    import mergeset.cli as cli
+
+    seen = {}
+
+    def fake_analyze(*args, **kwargs):
+        seen.update(kwargs)
+        raise ValueError("stop here")
+
+    monkeypatch.setattr(cli, "_analyze", fake_analyze)
+    cli.branches(
+        ["feat-a"], repo=repo, base="main", merge_only=True, trust_unpinned_log=True
+    )
+    assert seen.get("trust_unpinned") is True

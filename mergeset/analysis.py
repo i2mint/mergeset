@@ -175,7 +175,10 @@ class Analysis:
         plans = []
         for subset in self.maximal_sets:
             dropped = all_ids - subset
-            merge_these = tips(subset, self.stacks)
+            # Only edges git confirmed: a child that lags its parent does not
+            # bring the parent's current head, so the parent is merged too --
+            # exactly as the oracle did when it validated this set.
+            merge_these = tips(subset, self.merged_through)
             plans.append(
                 {
                     "changes": list(merge_order(subset, by_id)),

@@ -241,7 +241,7 @@ class EvaluationLog:
         elif isinstance(store, (str, os.PathLike)):
             store = JsonlLines(str(store))
         self.store = store
-        self.trust_unpinned = trust_unpinned
+        self._trust_unpinned = trust_unpinned
         #: Every row, in log order, whatever commits it is about. Shared with
         #: every view made by :meth:`pinned`, so a row recorded through one
         #: is in all of them, and each decides for itself whether it counts.
@@ -315,8 +315,20 @@ class EvaluationLog:
         if self.pins is None:
             return True
         if not evaluation.pinned:
-            return self.trust_unpinned
+            # Even trusted, an old row can only speak for changes in play:
+            # one holding another change would surface it in a fallback set.
+            return self.trust_unpinned and evaluation.subset <= self.pins.heads.keys()
         return self.pins.matches(evaluation)
+
+    @property
+    def trust_unpinned(self) -> bool:
+        """Whether rows recording no commits count once the log is pinned."""
+        return self._trust_unpinned
+
+    @trust_unpinned.setter
+    def trust_unpinned(self, value: bool) -> None:
+        self._trust_unpinned = bool(value)
+        self._view_of = -1
 
     @property
     def rows(self) -> List[Evaluation]:
@@ -335,13 +347,14 @@ class EvaluationLog:
 
     @property
     def unpinned(self) -> List[Evaluation]:
-        """Rows recording no commits, which a pinned log does not trust.
+        """Rows recording no commits that a pinned log is not counting.
 
-        Empty when the log is unpinned or ``trust_unpinned`` is on.
+        All of them by default; with ``trust_unpinned``, only those holding a
+        change that is not in play. Empty when the log is unpinned.
         """
-        if self.pins is None or self.trust_unpinned:
+        if self.pins is None:
             return []
-        return [e for e in self._rows if not e.pinned]
+        return [e for e in self._rows if not e.pinned and not self._counts(e)]
 
     # -- reading -----------------------------------------------------------
 
