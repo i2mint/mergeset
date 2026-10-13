@@ -15,6 +15,8 @@ resolution diff saved. It is never silently reported as a clean merge.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 import time
 from dataclasses import dataclass, replace
@@ -25,6 +27,8 @@ from mergeset.base import (
     ChangeId,
     ChangeSet,
     Evaluation,
+    NO_RESOLVER,
+    UNKNOWN_FINGERPRINT,
     MergeOutcome,
     Stage,
     ValidationOutcome,
@@ -41,6 +45,33 @@ RESOLVED_REF_PREFIX = "refs/mergeset/resolved/"
 
 #: A resolver: ``(worktree, conflicting_files) -> (resolved?, diff)``.
 Resolver = Callable[[str, Sequence[str]], Tuple[bool, str]]
+
+#: The attribute a resolver carries to say how it resolves (i2mint/mergeset#34).
+RESOLVER_FINGERPRINT_ATTR = "resolver_fingerprint"
+
+
+def resolver_fingerprint_of(resolver: Optional[Resolver]) -> str:
+    """How ``resolver`` resolves conflicts, as the string a log row records.
+
+    A row whose outcome a resolver decided (an assisted merge, or a conflict
+    left standing) answers only runs that resolve the same way: see
+    :attr:`mergeset.base.Evaluation.merge_dependent`. ``None`` resolves
+    nothing (:data:`~mergeset.base.NO_RESOLVER`); a resolver that cannot say
+    how it resolves records :data:`~mergeset.base.UNKNOWN_FINGERPRINT`, which
+    matches only other such rows. A user resolver may set
+    ``resolver.resolver_fingerprint = 'my-resolver-v2'``.
+
+    >>> resolver_fingerprint_of(None)
+    'none'
+    >>> resolver_fingerprint_of(lambda worktree, files: (False, ''))
+    'unknown'
+    >>> resolver_fingerprint_of(claude_code_resolver()).startswith('claude-code:')
+    True
+    """
+    if resolver is None:
+        return NO_RESOLVER
+    value = getattr(resolver, RESOLVER_FINGERPRINT_ATTR, None)
+    return str(value) if value not in (None, "") else UNKNOWN_FINGERPRINT
 
 
 def merge_order(
@@ -413,4 +444,9 @@ def claude_code_resolver(
         diff = git(worktree, "show", "--stat", "--patch", "HEAD").stdout
         return True, diff[:20000]
 
+    # What decides which conflicts it resolves: the policy, the command that
+    # runs it, and how long it may take (a timeout is a decline).
+    spec = json.dumps([policy, command, float(timeout)])
+    digest = hashlib.sha256(spec.encode()).hexdigest()[:16]
+    setattr(resolve, RESOLVER_FINGERPRINT_ATTR, f"claude-code:{digest}")
     return resolve

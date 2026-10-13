@@ -87,7 +87,7 @@ from mergeset.base import (
 )
 from mergeset.cost import CostModel, MeasuredCost
 from mergeset.log import EvaluationLog, JsonlLines, StoreLines
-from mergeset.oracle import git_oracle
+from mergeset.oracle import git_oracle, resolver_fingerprint_of
 from mergeset.solve import find_maximal_good_sets, minimal_hitting_sets, quickxplain
 from mergeset.stacks import close_down, largest_closed_subset
 from mergeset.storage import evaluation_log_path, slugify
@@ -931,6 +931,9 @@ def analyze_tiered(
             # A tier whose command was edited asks a new question (#32): its
             # log keeps the old rows, and stops answering with them.
             validator=recorded_fingerprint(tier.validate),
+            # A deeper tier merges with the screen's resolutions, so its
+            # assisted rows are about the screen's resolver (#34).
+            resolver=resolver_fingerprint_of(analyze_kwargs.get("resolver")),
             trust_unpinned=analyze_kwargs.get("trust_unpinned"),
         )
         analysis.notes.extend(unmatched_log_notes(logs[tier.name], label=tier.name))

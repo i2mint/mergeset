@@ -40,6 +40,7 @@ from typing import (
 )
 
 from mergeset.base import (
+    NO_RESOLVER,
     UNKNOWN_FINGERPRINT,
     ChangeId,
     ChangeSet,
@@ -196,6 +197,34 @@ class Pins:
     #: Fingerprint of the validator the question is asked of (``'unknown'``
     #: when it cannot say what it runs). ``None`` compares no validator at all.
     validator: Optional[str] = None
+    #: How the question's sets are merged: ``'none'`` (conflicts stand), or the
+    #: resolver's fingerprint (i2mint/mergeset#34). ``None`` compares none.
+    resolver: Optional[str] = None
+
+    def _resolved_alike(self, evaluation: Evaluation) -> Optional[bool]:
+        """Whether ``evaluation`` was merged the way these pins merge.
+
+        ``None`` when the row cannot tell (it records no resolver and its
+        outcome depends on one). A clean merge is merged alike by every
+        resolver; a conflict no resolver resolved stands when none is used,
+        whoever recorded it; an assisted merge or a conflict a resolver
+        declined answers only that resolver.
+
+        >>> from mergeset.base import MergeOutcome
+        >>> conflict = Evaluation(frozenset('ab'), Verdict.FAIL,
+        ...     merge=MergeOutcome(False, 'conflict'), resolver='claude-code:1')
+        >>> Pins('B', {}, resolver='none')._resolved_alike(conflict)
+        True
+        >>> Pins('B', {}, resolver='claude-code:2')._resolved_alike(conflict)
+        False
+        """
+        if self.resolver is None or not evaluation.merge_dependent:
+            return True
+        if evaluation.unresolved_conflict and self.resolver == NO_RESOLVER:
+            return True
+        if evaluation.resolver is None:
+            return None
+        return evaluation.resolver == self.resolver
 
     def _same_commits(self, evaluation: Evaluation) -> bool:
         if evaluation.base_sha != self.base:
@@ -214,6 +243,8 @@ class Pins:
         """
         if evaluation.pinned and not self._same_commits(evaluation):
             return True
+        if self._resolved_alike(evaluation) is False:
+            return True
         return (
             self.validator is not None
             and evaluation.validator is not None
@@ -222,8 +253,10 @@ class Pins:
 
     def complete(self, evaluation: Evaluation) -> bool:
         """True iff ``evaluation`` records everything these pins compare."""
-        return evaluation.pinned and (
-            self.validator is None or evaluation.validator is not None
+        return (
+            evaluation.pinned
+            and (self.validator is None or evaluation.validator is not None)
+            and self._resolved_alike(evaluation) is not None
         )
 
     def matches(self, evaluation: Evaluation) -> bool:
@@ -243,6 +276,10 @@ class Pins:
         if evaluation.validator is None:
             evaluation = replace(
                 evaluation, validator=self.validator or UNKNOWN_FINGERPRINT
+            )
+        if evaluation.resolver is None:
+            evaluation = replace(
+                evaluation, resolver=self.resolver or UNKNOWN_FINGERPRINT
             )
         return evaluation
 
@@ -317,6 +354,7 @@ class EvaluationLog:
         base: str,
         heads: Mapping[ChangeId, str],
         validator: Optional[str] = None,
+        resolver: Optional[str] = None,
         trust_unpinned: Optional[bool] = None,
     ) -> "EvaluationLog":
         """A view of this log scoped to ``base``, these heads and ``validator``.
@@ -337,7 +375,7 @@ class EvaluationLog:
         view._view_of = -1
         if trust_unpinned is not None:
             view.trust_unpinned = trust_unpinned
-        return view.pin(base=base, heads=heads, validator=validator)
+        return view.pin(base=base, heads=heads, validator=validator, resolver=resolver)
 
     def pin(
         self,
@@ -345,12 +383,15 @@ class EvaluationLog:
         base: str,
         heads: Mapping[ChangeId, str],
         validator: Optional[str] = None,
+        resolver: Optional[str] = None,
     ) -> "EvaluationLog":
         """Scope *this* log to ``base``, these heads and ``validator``; returns ``self``.
 
         ``validator`` is the fingerprint of what the questions will be asked of
         (:func:`mergeset.validation.fingerprint_of`); ``None`` matches rows on
-        commits alone.
+        commits alone. ``resolver`` is how their sets are merged
+        (:func:`mergeset.oracle.resolver_fingerprint_of`): rows whose outcome a
+        different resolver decided stop counting; ``None`` ignores it.
 
         :meth:`pinned` is the same without changing this object.
 
@@ -369,7 +410,7 @@ class EvaluationLog:
         >>> log.known(frozenset('a')).verdict is None, len(log.rows), len(log.stale)
         (True, 1, 1)
         """
-        self.pins = Pins(base, dict(heads), validator)
+        self.pins = Pins(base, dict(heads), validator, resolver)
         self._view_of = -1
         return self
 
@@ -432,6 +473,17 @@ class EvaluationLog:
         return [
             e for e in self._rows if e.validator is not None and e.validator != pinned
         ]
+
+    @property
+    def other_resolver(self) -> List[Evaluation]:
+        """The :attr:`stale` rows whose outcome another resolver decided.
+
+        An assisted PASS read by a run without the resolver, or a conflict
+        recorded without one read by a run with one (i2mint/mergeset#34).
+        """
+        if self.pins is None:
+            return []
+        return [e for e in self._rows if self.pins._resolved_alike(e) is False]
 
     @property
     def unpinned(self) -> List[Evaluation]:
