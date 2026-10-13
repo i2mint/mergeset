@@ -220,8 +220,11 @@ class Pins:
         """
         if self.resolver is None or not evaluation.merge_dependent:
             return True
-        if evaluation.unresolved_conflict and self.resolver == NO_RESOLVER:
-            return True
+        if self.resolver == NO_RESOLVER:
+            # Known without the row saying who resolved it: a conflict stands
+            # without a resolver, and an assisted merge cannot happen without
+            # one -- so even an old row (``trust_unpinned``) is decided here.
+            return evaluation.unresolved_conflict
         if evaluation.resolver is None:
             return None
         return evaluation.resolver == self.resolver

@@ -45,7 +45,7 @@ def test_an_assisted_pass_does_not_answer_a_run_without_the_resolver(repo, tmp_p
     second = _analyze(repo, tmp_path, ["feat-a", "feat-c"])
     assert _PAIR not in second.maximal_sets, "the assisted PASS answered"
     assert second.log.other_resolver
-    assert any("different conflict resolver" in n for n in second.notes)
+    assert any("resolves them differently" in n for n in second.notes)
 
 
 def test_a_conflict_without_a_resolver_does_not_answer_a_run_with_one(repo, tmp_path):
@@ -156,3 +156,22 @@ def test_claude_resolver_fingerprint_follows_what_decides_its_answers():
         claude_code_resolver(timeout=10)
     ) != resolver_fingerprint_of(claude_code_resolver())
     assert resolver_fingerprint_of(None) == "none"
+
+
+def test_trusting_old_rows_never_adopts_an_assisted_pass_without_a_resolver():
+    """Review finding: ``trust_unpinned`` must not bring #34 back."""
+    ab = frozenset("ab")
+    assisted = _old_row(
+        Evaluation(
+            ab,
+            Verdict.PASS,
+            merge=MergeOutcome(True, assisted=True),
+            base_sha="B",
+            heads={"a": "A1", "b": "B1"},
+            validator="v",
+        )
+    )
+    log = _log_with(assisted, "none")
+    log.trust_unpinned = True
+    assert log.known(ab).verdict is None
+    assert log.other_resolver

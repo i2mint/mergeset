@@ -603,9 +603,8 @@ def unmatched_log_notes(log: EvaluationLog, *, label: str = "") -> List[str]:
         if by_resolver:
             why += (
                 f" {by_resolver} of them {'was' if by_resolver == 1 else 'were'} "
-                "merged with a different conflict resolver (an assisted merge "
-                "read by a run without that resolver, or a conflict recorded "
-                "without the resolver this run uses)."
+                "decided by how conflicts were resolved, and this run resolves "
+                "them differently (another resolver, or none)."
             )
         notes.append(
             f"{where} holds {len(log.stale)} row(s) evaluated against other "
@@ -617,9 +616,10 @@ def unmatched_log_notes(log: EvaluationLog, *, label: str = "") -> List[str]:
     if log.unpinned:
         notes.append(
             f"{where} holds {len(log.unpinned)} row(s) written before evaluations "
-            "recorded their commits or their validator, so what they are about "
-            "is unknown. They are kept, and not used. If neither the heads nor "
-            "the validation have changed since, pass `trust_unpinned=True` "
+            "recorded their commits, their validator or their conflict "
+            "resolver, so what they are about is unknown. They are kept, and "
+            "not used. If neither the heads, the validation nor the resolver "
+            "have changed since, pass `trust_unpinned=True` "
             "(`--trust-unpinned-log` on the command line) to use them."
         )
     return notes

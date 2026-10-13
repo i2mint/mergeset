@@ -431,8 +431,10 @@ def _sync_costs(
     # recording no validator (written before #32) still price it: they are most
     # often from the same command, and leaving them out would price every tier
     # from the default on the first run after an upgrade -- the over-admission
-    # this function exists to prevent.
-    other = {id(e) for e in log.other_validator}
+    # this function exists to prevent. Not rows another resolver decided
+    # either (#34): an assisted row's time includes the resolver's, and a
+    # conflict's is a merge alone.
+    other = {id(e) for e in [*log.other_validator, *log.other_resolver]}
     durations = [
         (e.subset, e.duration)
         for e in log.rows
@@ -1002,8 +1004,8 @@ def analyze_tiered(
     # multiply its paid calls by the number of tiers, and could hand the deep
     # tier a different resolved tree than the one the screen passed. The chain
     # reaches a deep tier only after the screen recorded an exact PASS (#31),
-    # so that row is there to read -- and it is read with or without a
-    # resolver now, since a log can hold assisted PASSes from an earlier run.
+    # so that row is there to read. Every tier's log is pinned to the screen's
+    # resolver (#34), so the resolution read is always one it made.
     deep_merging = {k: v for k, v in merging.items() if k != "resolver"}
 
     def screen_resolution(subset: ChangeSet) -> Optional[MergeOutcome]:
