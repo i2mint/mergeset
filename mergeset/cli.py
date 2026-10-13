@@ -989,9 +989,16 @@ def _moved_commits(log) -> list:
     # clean merge is the same tree whatever resolves conflicts. A row recording
     # none (written before #34) counts as one more, as for validators -- except
     # an old conflict left standing, which answers a run without a resolver
-    # exactly like a `none` row.
+    # exactly like a `none` row. Unless old rows hold an assisted merge too:
+    # then a resolver was about, and its declines are old conflicts as well.
+    old_assisted = any(
+        e.resolver is None and e.merge_dependent and not e.unresolved_conflict
+        for e in log
+    )
     resolvers = {
-        NO_RESOLVER if e.resolver is None and e.unresolved_conflict else e.resolver
+        NO_RESOLVER
+        if e.resolver is None and e.unresolved_conflict and not old_assisted
+        else e.resolver
         for e in log
         if e.merge_dependent
     }

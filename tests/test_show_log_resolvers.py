@@ -121,3 +121,9 @@ def test_a_resolution_that_failed_validation_under_another_resolver(tmp_path):
 def test_each_pair_is_printed_once(tmp_path):
     out = _show(tmp_path, _assisted(), _assisted(), _conflict(), _conflict())
     assert out.count("bad but") == 1
+
+
+def test_a_log_written_before_resolvers_were_recorded_is_not_a_mix(tmp_path):
+    """Review of #49, round 2: one old run's resolver merged some, declined others."""
+    out = _show(tmp_path, _assisted(resolver=None), _conflict(frozenset("b"), None))
+    assert "conflict resolvers" not in out
