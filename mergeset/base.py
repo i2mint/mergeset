@@ -442,5 +442,21 @@ class MergesetError(Exception):
     """Base class for errors this package raises deliberately."""
 
 
+class EvaluationAborted(MergesetError):
+    """An evaluation could not be performed (``Verdict.ERROR``, ADR 0017).
+
+    Raised by searches that return a plain answer and so have no room to say
+    "unfinished" (``best_set_including``): returning ``None`` there would read
+    as a finding ("no set keeps X") when the experiment never ran. ``why`` is
+    the evaluation's note; ``conflicts`` are the (sound) conflicts established
+    before it.
+    """
+
+    def __init__(self, why: str, conflicts=()):
+        super().__init__(why)
+        self.why = why
+        self.conflicts = list(conflicts)
+
+
 class CapabilityError(MergesetError):
     """A required external capability is missing; the message says how to fix it."""

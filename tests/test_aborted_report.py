@@ -238,3 +238,58 @@ def test_a_set_the_aborted_tier_confirmed_is_not_flagged_unverified(
     for plan_set in analysis.maximal_sets:
         confirmed = result.verified_tier(plan_set) == "deep"
         assert (plan_set in unverified) != confirmed, plan_set
+
+
+def test_best_set_including_raises_on_an_error_instead_of_answering_none():
+    """Review of #52: an ERROR read as 'no set keeps these' (#54)."""
+    from mergeset.base import EvaluationAborted
+    from mergeset.tiers import best_set_including
+
+    def oracle(subset):
+        if {"h", "a"} <= subset:
+            return Evaluation(subset, Verdict.FAIL)
+        if subset == frozenset("bch"):
+            return Evaluation(subset, Verdict.ERROR, note="resolver timed out")
+        return Evaluation(subset, Verdict.PASS)
+
+    with pytest.raises(EvaluationAborted, match="resolver timed out") as stop:
+        best_set_including("abch", oracle, must_include=["h"])
+    # What was established before it is sound and travels with the exception.
+    assert frozenset({"a", "h"}) in stop.value.conflicts
+
+
+def test_an_error_inside_must_include_is_an_abort_not_a_finding(
+    repo, tmp_path, monkeypatch
+):
+    import mergeset.tiers as tiers_module
+    from mergeset.tiers import Tier, analyze_tiered
+    from mergeset.validation import merge_only_validation
+
+    real = tiers_module.best_set_including
+
+    def erroring(change_ids, evaluate, **kwargs):
+        def wrapped(subset):
+            return Evaluation(frozenset(subset), Verdict.ERROR, note="boom")
+
+        return real(change_ids, wrapped, **kwargs)
+
+    monkeypatch.setattr(tiers_module, "best_set_including", erroring)
+    result = analyze_tiered(
+        repo,
+        [Change(id=n, head=n, base="main") for n in ("feat-b", "feat-d")],
+        base="main",
+        tiers=[
+            Tier("screen", merge_only_validation()),
+            Tier("deep", command_validation(py_command(tmp_path, "deep", _PASS))),
+        ],
+        must_include=["feat-b"],
+        pairwise_preoracle=False,
+        use_ci_status=False,
+        decompose=False,
+    )
+    analysis = result.analysis
+    assert analysis.aborted == "boom" and analysis.aborted_tier == "must-include"
+    assert result.best_including is None
+    assert not any("No validated set keeps" in n for n in analysis.notes)
+    assert any("--must-include was not answered: boom" in n for n in analysis.notes)
+    assert "ABORTED at tier `must-include`" in markdown_report(analysis)
