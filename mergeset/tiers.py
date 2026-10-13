@@ -62,7 +62,7 @@ from __future__ import annotations
 import hashlib
 import os
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import (
     Callable,
     Dict,
@@ -939,14 +939,19 @@ def analyze_tiered(
     # from `declared` while a log full of real timings sat on disk is how a
     # 600 s budget admitted 3000 s of work. The docstring promised "measurements
     # from one run price the next"; this is what makes that true.
-    for tier in tiers:
-        result.spent[tier.name] = _sync_costs(
-            cost_model, logs[tier.name], tier.name, ingested
-        )
-        # Evaluations are counted from the tier's log, not from the search
-        # state: a search resumed against a complete log runs nothing and would
-        # report zero spend for work that really happened (i2mint/mergeset#16).
-        result.runs[tier.name] = len(logs[tier.name])
+    def sync_every_tier() -> None:
+        # Every tier, not only the one just searched: a confirm stage runs the
+        # cheaper tiers too, on sets they had only inferred (#31).
+        for tier in tiers:
+            result.spent[tier.name] = _sync_costs(
+                cost_model, logs[tier.name], tier.name, ingested
+            )
+            # Evaluations are counted from the tier's log, not from the search
+            # state: a search resumed against a complete log runs nothing and
+            # would report zero spend for work that really happened (#16).
+            result.runs[tier.name] = len(logs[tier.name])
+
+    sync_every_tier()
 
     change_ids = [c.id for c in changes]
     universe = frozenset(change_ids)
@@ -1065,10 +1070,7 @@ def analyze_tiered(
         analysis.searches.append(state)
         conflicts = conflicts + list(state.conflicts)
         analysis.conflicts = _minimal(analysis.conflicts + state.conflicts)
-        result.spent[tier.name] = _sync_costs(
-            cost_model, logs[tier.name], tier.name, ingested
-        )
-        result.runs[tier.name] = len(logs[tier.name])
+        sync_every_tier()
         if state.maximal_good_sets:
             analysis.maximal_sets = state.maximal_good_sets
         result.depth_reached = tier.name
@@ -1103,11 +1105,7 @@ def analyze_tiered(
         result.best_including = best
         conflicts = _minimal(list(conflicts) + list(found))
         analysis.conflicts = _minimal(list(analysis.conflicts) + list(found))
-        for tier_name in names:
-            result.spent[tier_name] = _sync_costs(
-                cost_model, logs[tier_name], tier_name, ingested
-            )
-            result.runs[tier_name] = len(logs[tier_name])
+        sync_every_tier()
         kept = ", ".join(sorted(result.must_include))
         if best is None:
             analysis.notes.append(
@@ -1123,6 +1121,7 @@ def analyze_tiered(
                 "answer to it is not a worse answer."
             )
 
+    sync_every_tier()  # a skipped tier's base check ran too
     # A cheaper tier runs, on the way to a deeper one, sets it had only
     # inferred from a passing superset (`_confirming_chain`); when one fails,
     # the monotone prior broke at that tier, and the reader must hear it.
@@ -1158,9 +1157,22 @@ def _confirming_chain(
     still infers, as any search does from its own tier's results.
     """
     *cheaper, (log, oracle) = stages
-    return chained_evaluate(
+    chain = chained_evaluate(
         [lg.caching(o, infer_pass=False) for lg, o in cheaper] + [log.caching(oracle)]
     )
+
+    def evaluate(subset: ChangeSet) -> Evaluation:
+        before = len(log.rows)
+        result = chain(subset)
+        # The search spending this chain counts its budget (`max_runs` of the
+        # deepest tier) in uncached results. A set refuted by a cheaper tier
+        # cost the deepest tier nothing -- that run is on the cheaper tier's
+        # own log and counted there -- so it must not use up a deep run.
+        if not result.cached and len(log.rows) == before:
+            result = replace(result, cached=True)
+        return result
+
+    return evaluate
 
 
 def _tier_oracle(

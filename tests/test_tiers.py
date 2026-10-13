@@ -829,6 +829,8 @@ def test_a_deep_exact_pass_verifies_a_set_the_screen_only_inferred(repo, tmp_pat
     assert result.logs["deep"].exact(pair).verdict is Verdict.PASS
     assert result.verified_tier(pair) == "deep"
     assert not result.analysis.unverified_sets
+    # The confirm stage ran the screen too; its count must say so.
+    assert result.runs["screen"] == len(result.logs["screen"])
     assert "nothing validated yet" not in result.answer.summary()
     assert any("confirmed at the deepest tier" in n for n in result.analysis.notes)
 
@@ -872,3 +874,9 @@ def test_a_cheaper_tiers_inference_is_not_a_run(repo, tmp_path):
     assert any(
         "MONOTONICITY VIOLATION at tier `screen`" in n for n in result.analysis.notes
     )
+    assert result.runs["screen"] == len(result.logs["screen"])
+    # The deep search's budget counts deep runs only: the screen FAIL of
+    # {a, b} cost the deep tier nothing. (The deep log's other row is its
+    # base check, which runs before the search.)
+    deep_search = result.analysis.searches[-1]
+    assert deep_search.evaluations == len(result.logs["deep"]) - 1
