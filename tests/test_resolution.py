@@ -52,9 +52,9 @@ def _changes(names):
     return [Change(id=n, head=n, base="main") for n in names]
 
 
-def _tiered(repo, tmp_path, names, deep_code=_PASS, **kwargs):
+def _tiered(repo, tmp_path, names, deep_code=_PASS, deep_name="deep", **kwargs):
     ok = command_validation(py_command(tmp_path, "pass", _PASS))
-    deep = command_validation(py_command(tmp_path, "deep", deep_code))
+    deep = command_validation(py_command(tmp_path, deep_name, deep_code))
     return analyze_tiered(
         repo,
         _changes(names),
@@ -162,3 +162,90 @@ def test_resolver_and_resolution_are_exclusive(repo):
             resolver=_scripted_resolver([]),
             resolution=lambda subset: None,
         )
+
+
+def _commit(worktree):
+    return git(
+        worktree,
+        "-c",
+        "user.email=t@example.com",
+        "-c",
+        "user.name=T",
+        "commit",
+        "--no-edit",
+        "--allow-empty",
+    ).ok
+
+
+def _screen_only(repo, tmp_path, names, resolver):
+    from mergeset.analysis import analyze
+
+    return analyze(
+        repo,
+        _changes(names),
+        base="main",
+        validate=command_validation(py_command(tmp_path, "pass", _PASS)),
+        resolver=resolver,
+        pairwise_preoracle=False,
+        decompose=False,
+        use_ci_status=False,
+    )
+
+
+def test_a_resolver_that_drops_earlier_heads_has_declined(repo, tmp_path):
+    """Review of #38: taking one side wholesale passed the old check."""
+
+    def theirs(worktree, files):
+        git(worktree, "merge", "--abort")
+        git(worktree, "reset", "--hard", "MERGE_HEAD")
+        return True, "took theirs"
+
+    analysis = _screen_only(repo, tmp_path, ["feat-a", "feat-b", "feat-c"], theirs)
+    triple = frozenset({"feat-a", "feat-b", "feat-c"})
+    row = analysis.log.exact(triple)
+    assert row is None or row.verdict is not Verdict.PASS
+    assert triple not in analysis.maximal_sets
+
+
+def test_a_resolver_that_leaves_edits_outside_its_commit_has_declined(repo, tmp_path):
+    """Otherwise the screen validates a tree the recorded commit is not."""
+
+    def sloppy(worktree, files):
+        _scripted_resolver([])(worktree, files)
+        with open(os.path.join(worktree, "lockfile"), "w") as f:
+            f.write("regenerated, never committed\n")
+        return True, "kept both edits"
+
+    analysis = _screen_only(repo, tmp_path, ["feat-a", "feat-c"], sloppy)
+    assert frozenset({"feat-a", "feat-c"}) not in analysis.maximal_sets
+
+
+def test_a_resolver_that_raises_is_an_error_and_leaks_nothing(repo, tmp_path):
+    def broken(worktree, files):
+        raise TimeoutError("resolver timed out")
+
+    row = git_oracle(
+        repo,
+        resolve(repo, "main"),
+        _changes(["feat-a", "feat-c"]),
+        validate=command_validation(py_command(tmp_path, "pass", _PASS)),
+        resolver=broken,
+    )(frozenset({"feat-a", "feat-c"}))
+    assert row.verdict is Verdict.ERROR and "timed out" in row.note
+    assert len(git(repo, "worktree", "list").stdout.strip().splitlines()) == 1
+
+
+def test_a_resolution_survives_garbage_collection(repo, tmp_path):
+    calls = []
+    _tiered(repo, tmp_path, ["feat-a", "feat-c"], resolver=_scripted_resolver(calls))
+    git(repo, "-c", "gc.reflogExpire=now", "reflog", "expire", "--all")
+    git(repo, "gc", "--prune=now", "--quiet")
+    # The screen answers from its log; the deep tier, edited (another command,
+    # so another fingerprint), must re-run and find the screen's resolution
+    # still there. No resolver this time.
+    again = _tiered(repo, tmp_path, ["feat-a", "feat-c"], deep_name="deep-v2")
+    assert again.logs["deep"].other_validator, "the deep tier really re-ran"
+    pair = frozenset({"feat-a", "feat-c"})
+    assert again.logs["deep"].exact(pair).verdict is Verdict.PASS
+    assert again.verified_tier(pair) == "deep"
+    assert len(calls) == 1

@@ -35,6 +35,10 @@ from mergeset.gitops import git, is_ancestor, merged_worktree, resolve
 from mergeset.stacks import Dependencies, tips
 from mergeset.validation import pytest_validation
 
+#: Where a resolved merge commit is kept reachable (``<prefix><sha>``), so a
+#: log that outlives ``git gc``'s grace period can still be confirmed.
+RESOLVED_REF_PREFIX = "refs/mergeset/resolved/"
+
 #: A resolver: ``(worktree, conflicting_files) -> (resolved?, diff)``.
 Resolver = Callable[[str, Sequence[str]], Tuple[bool, str]]
 
@@ -214,16 +218,40 @@ def _try_assisted(repo, base, heads, outcome, resolver, worktree_root, emit):
     if path is None:
         return None, outcome
     diffs = []
-    for _, head in heads:
-        if _merge_into(path, head):
-            continue
-        conflicted = git(path, "diff", "--name-only", "--diff-filter=U").stdout.split()
-        resolved, diff = resolver(path, conflicted or list(outcome.conflicting_files))
-        unmerged = git(path, "diff", "--name-only", "--diff-filter=U").stdout.strip()
-        if not resolved or unmerged or not is_ancestor(path, head, "HEAD"):
-            _remove_worktree(repo, path)
-            return None, outcome
-        diffs.append(diff)
+    merged = [base]
+    try:
+        for _, head in heads:
+            merged.append(head)
+            if _merge_into(path, head):
+                continue
+            conflicted = git(
+                path, "diff", "--name-only", "--diff-filter=U"
+            ).stdout.split()
+            resolved, diff = resolver(
+                path, conflicted or list(outcome.conflicting_files)
+            )
+            # What gets validated must be exactly the commit that is recorded,
+            # and that commit must hold everything merged so far: a resolver
+            # that took one side wholesale, or left edits outside the commit,
+            # declined -- whatever it says.
+            dirty = git(path, "status", "--porcelain", "--untracked-files=all")
+            if not resolved or _missing(path, "HEAD", merged) or dirty.stdout.strip():
+                _remove_worktree(repo, path)
+                return None, outcome
+            diffs.append(diff)
+        sha = resolve(path, "HEAD")
+    except Exception as error:  # a resolver that times out is not a crash
+        _remove_worktree(repo, path)
+        return None, replace(
+            outcome,
+            ok=False,
+            reason="error",
+            detail=f"the assisted resolution failed: {error!r}",
+        )
+    # Reachable from a ref, or `git gc` prunes it once the worktree is gone and
+    # every deep tier after that refuses the set. A new hidden ref, never a
+    # branch, and never one that existed before (D12).
+    git(repo, "update-ref", f"{RESOLVED_REF_PREFIX}{sha}", sha, "")
     return path, MergeOutcome(
         ok=True,
         conflicting_files=outcome.conflicting_files,
@@ -231,8 +259,13 @@ def _try_assisted(repo, base, heads, outcome, resolver, worktree_root, emit):
         assist_diff="\n".join(diffs),
         order=outcome.order,
         detail="conflict resolved by assisted merge; review the diff",
-        resolved_commit=resolve(path, "HEAD"),
+        resolved_commit=sha,
     )
+
+
+def _missing(repo, commit, revs) -> list:
+    """The revisions in ``revs`` that ``commit`` does not hold."""
+    return [rev for rev in revs if not is_ancestor(repo, rev, commit)]
 
 
 def _reuse_resolution(repo, base, heads, outcome, recorded, *, worktree_root, reuse):
@@ -264,9 +297,7 @@ def _reuse_resolution(repo, base, heads, outcome, recorded, *, worktree_root, re
     exists = git(repo, "cat-file", "-e", f"{sha}^{{commit}}").ok
     if not exists:
         return refuse(f"its recorded resolution {sha[:8]} no longer exists")
-    missing = [
-        rev for rev in [base, *(h for _, h in heads)] if not is_ancestor(repo, rev, sha)
-    ]
+    missing = _missing(repo, sha, [base, *(h for _, h in heads)])
     if missing:
         return refuse(
             f"its recorded resolution {sha[:8]} no longer applies: it does not "

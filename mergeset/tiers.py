@@ -996,15 +996,15 @@ def analyze_tiered(
     # multiply its paid calls by the number of tiers, and could hand the deep
     # tier a different resolved tree than the one the screen passed. The chain
     # reaches a deep tier only after the screen recorded an exact PASS (#31),
-    # so that row is there to read.
-    deep_merging = dict(merging)
-    if deep_merging.pop("resolver", None) is not None:
+    # so that row is there to read -- and it is read with or without a
+    # resolver now, since a log can hold assisted PASSes from an earlier run.
+    deep_merging = {k: v for k, v in merging.items() if k != "resolver"}
 
-        def screen_resolution(subset: ChangeSet) -> Optional[MergeOutcome]:
-            row = logs[screen.name].exact(frozenset(subset))
-            return row.merge if row is not None else None
+    def screen_resolution(subset: ChangeSet) -> Optional[MergeOutcome]:
+        row = logs[screen.name].exact(frozenset(subset))
+        return row.merge if row is not None else None
 
-        deep_merging["resolution"] = screen_resolution
+    deep_merging["resolution"] = screen_resolution
     # (log, oracle) per tier entered so far; `_confirming_chain` caches each
     # oracle by its own log and chains them.
     evaluators = [
