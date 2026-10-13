@@ -48,8 +48,9 @@ One decision per file. The `decision:` field in each file's front matter carries
 | [0029](0029-a-row-is-about-what-was-run-too.md) | — | A log row is about what was run too, not only about the commits |
 | [0030](0030-a-cheaper-tier-runs-what-it-only-inferred.md) | — | On the way to a deeper tier, a cheaper tier runs what it had only inferred |
 | [0031](0031-a-resolution-is-made-once-and-kept.md) | — | An assisted resolution is made once, vouched for, and kept |
+| [0032](0032-a-fingerprint-covers-the-inputs-it-is-told.md) | — | A validator's fingerprint covers the files outside the repository it is told it runs |
 
-31 records. Append-only: when a decision is reversed, the old record stays
+32 records. Append-only: when a decision is reversed, the old record stays
 and the new one says what changed.
 
 Records from 0026 on have no `was` identifier: they were written after the split

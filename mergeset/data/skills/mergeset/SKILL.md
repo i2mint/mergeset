@@ -34,6 +34,8 @@ python -m mergeset prs OWNER/REPO --repo . \
     --reuse-worktree /tmp/mergeset-wt --max-seconds 3600
 ```
 
+A verdict is reused only for the same commits and the same validator *text*. If the command runs a script outside the repository, name it with `--validate-input PATH` (library: `inputs=[PATH]`), or editing the script reuses the old script's verdicts.
+
 When the decisive check is too slow to run on every set (browser tests, a container build), make it a deeper tier: the first tier screens, later tiers confirm only what survived, each with its own log.
 
 ```bash

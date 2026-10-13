@@ -68,6 +68,7 @@ def _staged(
     fingerprints: Sequence[str],
     optional: Sequence[str],
     timeout: Optional[float],
+    inputs: Sequence[str] = (),
 ):
     """Build a staged validator from the repeatable CLI flags.
 
@@ -105,7 +106,7 @@ def _staged(
                 required=name not in optional_names,
             )
         )
-    return staged_validation(built)
+    return staged_validation(built, inputs=inputs)
 
 
 def _validator(
@@ -117,17 +118,24 @@ def _validator(
     validate_stage: Sequence[str] = (),
     validate_fingerprint: Sequence[str] = (),
     validate_optional: Sequence[str] = (),
+    validate_input: Sequence[str] = (),
 ):
     if merge_only:
         return merge_only_validation()
     if validate_stage:
         validate = _staged(
-            validate_stage, validate_fingerprint, validate_optional, timeout
+            validate_stage,
+            validate_fingerprint,
+            validate_optional,
+            timeout,
+            inputs=validate_input,
         )
     elif validate_command:
-        validate = command_validation(validate_command, timeout=timeout)
+        validate = command_validation(
+            validate_command, timeout=timeout, inputs=validate_input
+        )
     else:
-        validate = pytest_validation(timeout=timeout)
+        validate = pytest_validation(timeout=timeout, inputs=validate_input)
     return flake_tolerant(validate, retries=retries) if retries else validate
 
 
@@ -162,6 +170,7 @@ def _tiers(
     validator_flags: Sequence[str],
     timeout: Optional[float],
     retries: int,
+    inputs: Sequence[str] = (),
     is_commit=lambda name: False,
 ) -> list:
     """Build the ordered tiers from ``--tier`` and ``--tier-cost``.
@@ -173,6 +182,8 @@ def _tiers(
     validators, each with its own log. At most one tier can be bare, since there
     is only one set of validation flags. ``'name:'`` (empty command) is the same
     bare tier, spelled so that it cannot be mistaken for anything else.
+    ``inputs`` (``--validate-input``) joins every tier's fingerprint: a file a
+    tier does not run only costs that tier a re-run when it changes.
     """
     tiers, bare = [], []
     for spec in specs:
@@ -180,7 +191,7 @@ def _tiers(
         explicit_bare = bool(sep) and not command.strip()
         if sep and not explicit_bare:
             name, command = _split_pair(spec, "--tier")
-            validate = command_validation(command, timeout=timeout)
+            validate = command_validation(command, timeout=timeout, inputs=inputs)
             if retries:
                 validate = flake_tolerant(validate, retries=retries)
         else:
@@ -362,6 +373,7 @@ _LIST_FLAGS = (
     "validate_stage",
     "validate_fingerprint",
     "validate_optional",
+    "validate_input",
     "tier",
     "tier_cost",
     "must_include",
@@ -379,6 +391,7 @@ def branches(
     validate_stage: list = None,
     validate_fingerprint: list = None,
     validate_optional: list = None,
+    validate_input: list = None,
     merge_only: bool = False,
     tier: list = None,
     tier_cost: list = None,
@@ -422,6 +435,13 @@ def branches(
         validate_optional: Stage name, repeatable — its failure is recorded but
             does not veto the set. Use it for a lint pass the project treats as
             advisory.
+        validate_input: Path, repeatable — a file (or directory) outside the
+            repository that the validation runs, such as the script in
+            ``--validate-command 'python ~/checks/smoke.py'``. Its contents join
+            the validator's fingerprint, so editing it retires the verdicts the
+            old version gave; without it, only the command's text counts. Files
+            inside the repository need no flag: the commits pin them. Applies
+            to every tier.
         merge_only: Skip validation entirely; only textual mergeability counts.
         tier: ``'name:command'``, repeatable, ordered cheapest-first — tiered
             validation: the first tier screens every candidate set, and each
@@ -488,6 +508,7 @@ def branches(
         validate_stage=validate_stage or (),
         validate_fingerprint=validate_fingerprint or (),
         validate_optional=validate_optional or (),
+        validate_input=validate_input or (),
         merge_only=merge_only,
         tier=tier,
         tier_cost=tier_cost,
@@ -527,6 +548,7 @@ def prs(
     validate_stage: list = None,
     validate_fingerprint: list = None,
     validate_optional: list = None,
+    validate_input: list = None,
     merge_only: bool = False,
     tier: list = None,
     tier_cost: list = None,
@@ -564,6 +586,9 @@ def prs(
         validate_fingerprint: ``'stage:path'``, repeatable — skip a stage unless
             that file changed (a lockfile, typically).
         validate_optional: Stage name, repeatable — recorded, but not a veto.
+        validate_input: Path, repeatable — a file outside the repository the
+            validation runs; its contents join the fingerprint. See
+            ``mergeset branches --help``.
         tier: ``'name:command'``, repeatable, cheapest-first — tiered validation;
             a bare name is the tier the --validate-* flags describe. See
             ``mergeset branches --help`` for how tiers and stages compose.
@@ -610,6 +635,7 @@ def prs(
         validate_stage=validate_stage or (),
         validate_fingerprint=validate_fingerprint or (),
         validate_optional=validate_optional or (),
+        validate_input=validate_input or (),
         merge_only=merge_only,
         tier=tier,
         tier_cost=tier_cost,
@@ -645,6 +671,7 @@ def _run(
     validate_stage,
     validate_fingerprint,
     validate_optional,
+    validate_input,
     merge_only,
     tier,
     tier_cost,
@@ -681,7 +708,35 @@ def _run(
             validate_stage=validate_stage,
             validate_fingerprint=validate_fingerprint,
             validate_optional=validate_optional,
+            validate_input=validate_input,
         )
+        candidates = {c.id for c in changes}
+        missing = [
+            p
+            for p in validate_input
+            if not os.path.exists(os.path.expanduser(p))
+            or p in candidates
+            or (
+                not os.path.isabs(os.path.expanduser(p))
+                and git(repo, "rev-parse", "--verify", "--quiet", f"{p}^{{commit}}").ok
+            )
+        ]
+        if missing:
+            # `--validate-input` takes every value after it, so a branch typed
+            # after it lands here and silently leaves the candidates.
+            raise ValueError(
+                f"--validate-input names no file, or names a branch: "
+                f"{', '.join(missing)}. It takes every value after it, so put "
+                "branch names before it; it names files outside the repository "
+                "that the validation runs (give a path that is also a branch "
+                "name as ./name or an absolute path)."
+            )
+        if validate_input and merge_only and not tier:
+            # Merge-only runs nothing, so the files would be read and ignored.
+            raise ValueError(
+                "--validate-input names files a validation runs, but --merge-only "
+                "runs none. Drop one of them."
+            )
         for kw, values in (
             ("tier", tier),
             ("tier_cost", tier_cost),
@@ -763,6 +818,7 @@ def _run(
                     ],
                     timeout=timeout,
                     retries=retries,
+                    inputs=validate_input,
                     is_commit=lambda name: (
                         name in {c.id for c in changes}
                         or git(
