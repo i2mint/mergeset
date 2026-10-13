@@ -709,9 +709,7 @@ def _run(
             # `is not None`, not truthiness: `--confirm-max-runs 0` is an
             # instruction, and ignoring it would be the silent drop.
             stray = [
-                flag
-                for kw, flag in _TIER_ONLY_FLAGS.items()
-                if given[kw] is not None
+                flag for kw, flag in _TIER_ONLY_FLAGS.items() if given[kw] is not None
             ]
             if stray:
                 raise ValueError(
@@ -763,8 +761,16 @@ def _run(
                     ],
                     timeout=timeout,
                     retries=retries,
-                    is_commit=lambda name: name in {c.id for c in changes}
-                    or git(repo, "rev-parse", "--verify", "--quiet", f"{name}^{{commit}}").ok,
+                    is_commit=lambda name: (
+                        name in {c.id for c in changes}
+                        or git(
+                            repo,
+                            "rev-parse",
+                            "--verify",
+                            "--quiet",
+                            f"{name}^{{commit}}",
+                        ).ok
+                    ),
                 ),
                 confirm_budget_seconds=confirm_budget_seconds,
                 confirm_max_runs=confirm_max_runs,
