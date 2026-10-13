@@ -16,7 +16,7 @@ The order of operations is the whole point, because it is the order of *cost*:
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from collections.abc import Mapping, MutableMapping
 from typing import (
     Callable,
@@ -73,6 +73,9 @@ class Analysis:
     base: str
     base_sha: str
     changes: List[Change]
+    #: Full head sha of each change, resolved once at the start. Everything that
+    #: merges uses these, never the refs, so what is recorded is what was merged.
+    head_shas: Dict[ChangeId, str] = field(default_factory=dict)
     maximal_sets: List[ChangeSet] = field(default_factory=list)
     conflicts: List[ChangeSet] = field(default_factory=list)
     textual_conflicts: List[Tuple[ChangeId, ChangeId, List[str]]] = field(
@@ -101,6 +104,18 @@ class Analysis:
     def by_id(self) -> Dict[ChangeId, Change]:
         """Changes keyed by id."""
         return {c.id: c for c in self.changes}
+
+    @property
+    def pinned_changes(self) -> List[Change]:
+        """The changes with ``head`` replaced by the sha it resolved to.
+
+        A branch that moves mid-run must not have its new commits merged under
+        a row pinned to the old ones; merging the resolved shas rules that out.
+        """
+        return [
+            replace(c, head=self.head_shas[c.id]) if c.id in self.head_shas else c
+            for c in self.changes
+        ]
 
     @property
     def evaluations(self) -> int:
@@ -269,6 +284,7 @@ def analyze(
 
     base = base or _common_base(repo, changes)
     base_sha = resolve(repo, base)
+    head_shas = {c.id: resolve(repo, c.head) for c in changes}
     if log is None:
         # Default to the artifact store, never inside the repository being
         # analysed: the log captures that repository's internals, and a repo is
@@ -279,6 +295,9 @@ def analyze(
                 repo, store=artifacts["evaluations"] if artifacts else None
             )
         )
+    # A row counts only if it was evaluated against these very commits: the
+    # same ids over rewritten branches are a different question (#23).
+    log.pin(base=base_sha, heads=head_shas)
 
     # A validator may declare that it cannot see across components (the
     # merge-only one does); otherwise assume it can, which is the safe default.
@@ -301,11 +320,13 @@ def analyze(
         base=base,
         base_sha=base_sha,
         changes=changes,
+        head_shas=head_shas,
         weights=weights,
         own_weights=own_weights,
         log=log,
         stacks=stacks,
     )
+    analysis.notes.extend(unmatched_log_notes(log))
     if stacks:
         ids = [c.id for c in changes]
         analysis.notes.append(
@@ -322,7 +343,7 @@ def analyze(
         )
 
     analysis.files_by_change = {
-        c.id: changed_files(repo, base_sha, c.head) for c in changes
+        c.id: changed_files(repo, base_sha, head_shas[c.id]) for c in changes
     }
 
     known_conflicts: List[ChangeSet] = []
@@ -350,7 +371,7 @@ def analyze(
                 )
 
     # The cheapest oracle of all: does each change even merge onto base alone?
-    heads_by_id = {c.id: c.head for c in changes}
+    heads_by_id = dict(head_shas)
     if pairwise_preoracle:
         for change_id, files in singleton_textual_conflicts(
             repo, base_sha, heads_by_id
@@ -387,7 +408,7 @@ def analyze(
         git_oracle(
             repo,
             base_sha,
-            changes,
+            analysis.pinned_changes,
             validate=validate,
             resolver=resolver,
             depends_on=analysis.stacks,
@@ -500,6 +521,30 @@ def analyze(
             "that fixes another. Results below are not fully trustworthy."
         )
     return analysis
+
+
+def unmatched_log_notes(log: EvaluationLog, *, label: str = "") -> List[str]:
+    """Say how many rows a pinned log is keeping but not using, and why.
+
+    Rows about other commits are never dropped, and never silently ignored
+    either: a re-run that is suddenly slow should say it is because heads moved.
+    """
+    where = f"The {label} evaluation log" if label else "The evaluation log"
+    notes = []
+    if log.stale:
+        notes.append(
+            f"{where} holds {len(log.stale)} row(s) evaluated against other "
+            "commits (a base or a branch head has moved since). They are kept, "
+            "and not used: they answer a different question."
+        )
+    if log.unpinned:
+        notes.append(
+            f"{where} holds {len(log.unpinned)} row(s) written before evaluations "
+            "recorded their commits, so which heads they are about is unknown. "
+            "They are kept, and not used. If the heads have not moved since, "
+            "pass `EvaluationLog(..., trust_unpinned=True)` to use them."
+        )
+    return notes
 
 
 def _fallback_sets(

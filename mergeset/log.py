@@ -10,6 +10,12 @@ Monotonicity is a strong prior, not a law: a change may contain the fix that
 makes another change work, and flaky tests break it outright. Violations are
 detected and reported (:meth:`EvaluationLog.monotonicity_violations`) instead of
 being silently trusted.
+
+A row is an answer about *commits*, not about ids. Once the log is pinned
+(:meth:`EvaluationLog.pin`) to the base and the head of each change in play,
+only rows evaluated against those same commits count — rows about an older head
+of a rewritten branch are kept on disk and in :attr:`EvaluationLog.rows`, and
+simply not matched (i2mint/mergeset#23).
 """
 
 from __future__ import annotations
@@ -18,9 +24,19 @@ import json
 import os
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
-from typing import Any, Callable, Iterable, Iterator, List, Optional, Tuple
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+)
 
-from mergeset.base import ChangeSet, Evaluation, Verdict, set_key
+from mergeset.base import ChangeId, ChangeSet, Evaluation, Verdict, set_key
 
 
 def _now() -> str:
@@ -129,6 +145,49 @@ class Known:
         return self.verdict is not None
 
 
+@dataclass(frozen=True)
+class Pins:
+    """The commits a question is about: the base, and each change's head sha.
+
+    A row *matches* when it was merged onto the same base and every change it
+    holds that is in play had the same head. Changes in the row that are not in
+    play do not matter: a passing ``{a, b, x}`` still says ``{a, b}`` is good,
+    and a failing set holding ``x`` is never a subset of a set without it.
+
+    >>> from mergeset.base import Evaluation, Verdict
+    >>> pins = Pins('B', {'a': 'A1', 'b': 'B1'})
+    >>> row = Evaluation(frozenset('ab'), Verdict.PASS,
+    ...                  base_sha='B', heads={'a': 'A1', 'b': 'B1'})
+    >>> pins.matches(row)
+    True
+    >>> pins.matches(replace(row, heads={'a': 'A0', 'b': 'B1'}))  # a rewritten
+    False
+    >>> pins.matches(replace(row, base_sha='B0'))                 # base moved
+    False
+    """
+
+    base: str
+    heads: Mapping[ChangeId, str]
+
+    def matches(self, evaluation: Evaluation) -> bool:
+        """True iff ``evaluation`` was run against these commits."""
+        if evaluation.base_sha != self.base:
+            return False
+        recorded = evaluation.heads
+        return all(
+            recorded.get(cid) == self.heads[cid]
+            for cid in evaluation.subset
+            if cid in self.heads
+        )
+
+    def stamp(self, evaluation: Evaluation) -> Evaluation:
+        """``evaluation`` pinned to these commits (unless it already is)."""
+        if evaluation.pinned:
+            return evaluation
+        heads = {c: self.heads[c] for c in evaluation.subset if c in self.heads}
+        return replace(evaluation, base_sha=self.base, heads=heads)
+
+
 class EvaluationLog:
     """Append-only record of evaluations, plus the monotone closure over it.
 
@@ -138,6 +197,15 @@ class EvaluationLog:
             artifact store (S3 and friends), or :class:`MemoryLines` for an
             ephemeral log. With no argument at all the log goes to the artifact
             store's ``evaluations/adhoc.jsonl`` — never the working directory.
+        pins: The commits the questions are about (see :class:`Pins` and
+            :meth:`pin`). Unpinned, every row counts, as before pinning existed;
+            :func:`mergeset.analyze` always pins.
+        trust_unpinned: Let rows that record no commits at all (written before
+            i2mint/mergeset#23, or by an unpinned log) count as matches once the
+            log is pinned. Off by default, because such a row may be about a head
+            that has since moved — which is the defect pinning exists to close.
+            Turn it on only when you know the heads have not moved since those
+            rows were written; it is the migration path for an old log.
 
     >>> log = EvaluationLog(MemoryLines())
     >>> from mergeset.base import Evaluation, Verdict
@@ -153,7 +221,13 @@ class EvaluationLog:
     True
     """
 
-    def __init__(self, store: Any = None):
+    def __init__(
+        self,
+        store: Any = None,
+        *,
+        pins: Optional[Pins] = None,
+        trust_unpinned: bool = False,
+    ):
         if store is None:
             # Never ``./evaluations.jsonl``: that writes derived data into
             # whatever repository the caller happens to be standing in, which is
@@ -164,13 +238,74 @@ class EvaluationLog:
         elif isinstance(store, (str, os.PathLike)):
             store = JsonlLines(str(store))
         self.store = store
-        self._evaluations: List[Evaluation] = [
-            Evaluation.from_jdict(d) for d in self.store
-        ]
+        self.trust_unpinned = trust_unpinned
+        #: Every row, in log order, whatever commits it is about.
+        self._rows: List[Evaluation] = [Evaluation.from_jdict(d) for d in self.store]
+        self.pins: Optional[Pins] = None
+        self._evaluations: List[Evaluation] = list(self._rows)
+        if pins is not None:
+            self.pin(base=pins.base, heads=pins.heads)
+
+    # -- pinning -----------------------------------------------------------
+
+    def pin(self, *, base: str, heads: Mapping[ChangeId, str]) -> "EvaluationLog":
+        """Scope the log to ``base`` and these heads; returns ``self``.
+
+        From here on, reading (:meth:`known`, :meth:`exact`, the closure,
+        iteration, ``len``) sees only rows evaluated against these commits, and
+        :meth:`record` stamps new rows with them. Nothing is removed: the other
+        rows stay in the store and in :attr:`rows`, and are reported by
+        :attr:`stale` and :attr:`unpinned`.
+
+        >>> from mergeset.base import Evaluation, Verdict
+        >>> log = EvaluationLog(MemoryLines()).pin(base='B', heads={'a': 'A1'})
+        >>> _ = log.record(Evaluation(frozenset('a'), Verdict.PASS))
+        >>> log.known(frozenset('a')).verdict.value
+        'pass'
+        >>> _ = log.pin(base='B', heads={'a': 'A2'})   # branch a was rewritten
+        >>> log.known(frozenset('a')).verdict is None, len(log.rows), len(log.stale)
+        (True, 1, 1)
+        """
+        self.pins = Pins(base, dict(heads))
+        self._evaluations = [e for e in self._rows if self._counts(e)]
+        return self
+
+    def _counts(self, evaluation: Evaluation) -> bool:
+        if self.pins is None:
+            return True
+        if not evaluation.pinned:
+            return self.trust_unpinned
+        return self.pins.matches(evaluation)
+
+    @property
+    def rows(self) -> List[Evaluation]:
+        """Every row in the log, matching the pins or not, in log order."""
+        return list(self._rows)
+
+    @property
+    def stale(self) -> List[Evaluation]:
+        """Rows evaluated against other commits than the pinned ones.
+
+        Not wrong — about a different question — so kept, and not matched.
+        """
+        if self.pins is None:
+            return []
+        return [e for e in self._rows if e.pinned and not self.pins.matches(e)]
+
+    @property
+    def unpinned(self) -> List[Evaluation]:
+        """Rows recording no commits, which a pinned log does not trust.
+
+        Empty when the log is unpinned or ``trust_unpinned`` is on.
+        """
+        if self.pins is None or self.trust_unpinned:
+            return []
+        return [e for e in self._rows if not e.pinned]
 
     # -- reading -----------------------------------------------------------
 
     def __iter__(self) -> Iterator[Evaluation]:
+        """The rows that count: all of them, or those matching the pins."""
         return iter(list(self._evaluations))
 
     def __len__(self) -> int:
@@ -259,20 +394,20 @@ class EvaluationLog:
     # -- writing -----------------------------------------------------------
 
     def record(self, evaluation: Evaluation) -> Evaluation:
-        """Append ``evaluation`` (stamping ``at`` if absent) and return it."""
+        """Append ``evaluation`` and return it.
+
+        ``at`` is stamped if absent, and so are the pinned commits: a row that
+        does not say what it was run against cannot be told apart from one
+        about a branch that has since been rewritten.
+        """
         if evaluation.at is None:
-            evaluation = Evaluation(
-                subset=evaluation.subset,
-                verdict=evaluation.verdict,
-                stage=evaluation.stage,
-                merge=evaluation.merge,
-                validation=evaluation.validation,
-                duration=evaluation.duration,
-                at=_now(),
-                note=evaluation.note,
-            )
+            evaluation = replace(evaluation, at=_now())
+        if self.pins is not None:
+            evaluation = self.pins.stamp(evaluation)
         self.store.append(evaluation.to_jdict())
-        self._evaluations.append(evaluation)
+        self._rows.append(evaluation)
+        if self._counts(evaluation):
+            self._evaluations.append(evaluation)
         return evaluation
 
     def caching(self, evaluate: Callable[[ChangeSet], Evaluation]):
