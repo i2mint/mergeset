@@ -1,4 +1,4 @@
-> built 2026-10-13 03:57 UTC from 7826cea (main) · mergeset 0.0.18. Details: build_info.json
+> built 2026-10-13 08:09 UTC from 0933305 (main) · mergeset 0.0.19. Details: build_info.json
 
 # index.html.md
 
@@ -145,6 +145,22 @@ analyze(repo, changes, validate=validate, reuse_worktree="/tmp/scratch-wt")
 ```
 
 The fingerprinted stage runs only when its inputs actually change, and `reuse_worktree` keeps one tree across the whole run — so an expensive install is paid once, not once per evaluation.
+
+## Tiered validation: screen cheaply, confirm expensively
+
+When the real check is too slow to run on every candidate set (a browser suite, a container build), give `mergeset` a ladder of validators, cheapest first. The first tier screens every set the search touches; each later tier only confirms the sets its predecessor left standing, so the expensive suite runs on a handful of sets instead of dozens. Each tier keeps its own evaluation log, because a cheap PASS is not evidence about an expensive tier.
+
+```bash
+python -m mergeset prs OWNER/REPO --repo . \
+    --validate-stage 'setup:pnpm install --frozen-lockfile' 'test:pnpm run test' \
+    --validate-fingerprint 'setup:pnpm-lock.yaml' \
+    --tier unit 'e2e:pnpm run e2e' \
+    --tier-cost 'e2e:300' \
+    --confirm-budget-seconds 1800 \
+    --must-include pr42
+```
+
+`--tier 'name:command'` is a tier that runs one command. A bare name (`unit` above) is the tier the `--validate-*` flags describe: stages compose *inside* a validator, tiers compose *across* validators. `--tier-cost` declares what an untimed tier costs per run, so it is not scheduled as if it were cheap; `--confirm-budget-seconds` and `--confirm-max-runs` bound what the deeper tiers may spend, admitting runs on the pessimistic estimate. `--must-include` also reports the best plan that keeps a given change, which is a different question from the maximal sets and is answered alongside them. The report says how deep validation got, what each tier spent, and whether each price was measured or declared. The library entry point is `analyze_tiered`.
 
 ## Output
 
@@ -786,11 +802,11 @@ decide that `--max-seconds` is a float rather than the string `"600"`.
 | [`branches`](_autosummary/mergeset.cli.html.md#mergeset.cli.branches)(branch, \*[, repo, base, ...])   | Find maximal mergeable sets among the given branches.                     |
 |--------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
 | [`install_skills`](_autosummary/mergeset.cli.html.md#mergeset.cli.install_skills)([target, copy, overwrite]) | Install the agent skill bundled in this package into an agent host.       |
-| [`main`](_autosummary/mergeset.cli.html.md#mergeset.cli.main)()                                    | Entry point: project `_dispatch_funcs` onto a command line parser.        |
+| [`main`](_autosummary/mergeset.cli.html.md#mergeset.cli.main)([argv])                              | Entry point: project `_dispatch_funcs` onto a command line parser.        |
 | [`prs`](_autosummary/mergeset.cli.html.md#mergeset.cli.prs)(repo_spec, \*[, repo, author, ...])   | Find maximal mergeable sets among a repository's open pull requests.      |
 | [`show_log`](_autosummary/mergeset.cli.html.md#mergeset.cli.show_log)(\*[, log_path, repo])            | Print what the evaluation log already knows, without evaluating anything. |
 
-### mergeset.cli.branches(branch, , repo='.', base='HEAD', validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, merge_only=False, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
+### mergeset.cli.branches(branch, , repo='.', base='HEAD', validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, merge_only=False, tier=None, tier_cost=None, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, confirm_budget_seconds=None, confirm_max_runs=None, confirm_max_sets=None, must_include=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
 
 Find maximal mergeable sets among the given branches.
 
@@ -813,11 +829,39 @@ Find maximal mergeable sets among the given branches.
     does not veto the set. Use it for a lint pass the project treats as
     advisory.
   * **merge_only** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Skip validation entirely; only textual mergeability counts.
-  * **timeout** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – Seconds allowed per validation run.
+  * **tier** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – `'name:command'`, repeatable, ordered cheapest-first — tiered
+    validation: the first tier screens every candidate set, and each
+    later tier only confirms the sets its predecessor left standing, so
+    an expensive suite runs on a handful of sets instead of dozens. A
+    tier is ONE validator with its OWN evaluation log (a cheap PASS is
+    not evidence about an expensive tier). `--validate-stage`
+    composes stages *inside* one validator; `--tier` composes
+    validators. To make the staged validator a tier, give its name
+    bare: `--validate-stage 'build:make' 'test:make test' --tier
+    unit 'e2e:make e2e'`. Tier logs live in the artifact store next
+    to the default log, one per tier, so –log-path is refused here.
+    –tier takes every value after it: put branch names first.
+  * **tier_cost** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – `'tier:seconds'`, repeatable — the declared cost of one
+    run, used until the tier has been timed. Set it for a tier that has
+    never run, or it is scheduled as if it were cheap.
+  * **timeout** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – Seconds allowed per validation run (per tier, with –tier).
   * **retries** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Re-run a failing validation this many times before believing it.
-  * **max_evaluations** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – Stop after this many expensive evaluations.
+  * **max_evaluations** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – Stop after this many expensive evaluations (with
+    –tier, these three bound the screening tier).
   * **max_seconds** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – Stop after this much wall time.
   * **max_sets** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – Stop after finding this many maximal sets.
+  * **confirm_budget_seconds** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – With –tier: seconds each deeper tier may
+    spend. Runs are admitted on the pessimistic estimate, so the budget
+    is not overrun on a guess.
+  * **confirm_max_runs** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – With –tier: at most this many runs per deeper tier;
+    wins over the budget when both are given.
+  * **confirm_max_sets** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – With –tier: stop a deeper tier after confirming this
+    many maximal sets (`1`: just the best plan, cheaply).
+  * **must_include** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – Change id, repeatable (a branch name, or `pr12` for
+    `prs`), with –tier — also report the best plan that keeps these
+    changes. It answers a different question from the maximal sets and
+    is reported alongside them, never instead. A single bare `--tier
+    NAME` is enough to ask it of the ordinary validator.
   * **log_path** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Evaluation log (JSONL). Default:
     `~/.local/share/mergeset/evaluations/<repo-slug>.jsonl` —
     outside the analysed repository, always.
@@ -855,14 +899,19 @@ or filesystems that cannot follow one. An existing skill is left alone;
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### mergeset.cli.main()
+### mergeset.cli.main(argv=None)
 
 Entry point: project `_dispatch_funcs` onto a command line parser.
+
+cw’s default convention stops reading a function’s annotations as soon as
+it declares any parameter (argh’s rule), which would turn `--max-seconds
+60` into the string `"60"`. `hints_when_declared` keeps the hints and
+merges the declarations on top.
 
 * **Return type:**
   [`int`](https://docs.python.org/3/builtins/functions.html#int)
 
-### mergeset.cli.prs(repo_spec, , repo='.', author=None, updated_within_hours=None, base=None, include_drafts=False, validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, merge_only=False, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
+### mergeset.cli.prs(repo_spec, , repo='.', author=None, updated_within_hours=None, base=None, include_drafts=False, validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, merge_only=False, tier=None, tier_cost=None, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, confirm_budget_seconds=None, confirm_max_runs=None, confirm_max_sets=None, must_include=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
 
 Find maximal mergeable sets among a repository’s open pull requests.
 
@@ -878,6 +927,15 @@ Find maximal mergeable sets among a repository’s open pull requests.
   * **validate_fingerprint** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – `'stage:path'`, repeatable — skip a stage unless
     that file changed (a lockfile, typically).
   * **validate_optional** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – Stage name, repeatable — recorded, but not a veto.
+  * **tier** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – `'name:command'`, repeatable, cheapest-first — tiered validation;
+    a bare name is the tier the –validate-\* flags describe. See
+    `mergeset branches --help` for how tiers and stages compose.
+  * **tier_cost** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – `'tier:seconds'`, repeatable — declared cost per run.
+  * **confirm_budget_seconds** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – With –tier: seconds each deeper tier may spend.
+  * **confirm_max_runs** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – With –tier: at most this many runs per deeper tier.
+  * **confirm_max_sets** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – With –tier: stop a deeper tier after this many sets.
+  * **must_include** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – PR change id (`pr12`), repeatable, with –tier — also
+    report the best plan that keeps these PRs.
   * **log_path** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Evaluation log (JSONL). Default:
     `~/.local/share/mergeset/evaluations/<repo-slug>.jsonl` — outside
     the analysed repository, always.
@@ -2428,6 +2486,19 @@ unchanged and says the right thing about tiers.
 Heaviest validated set containing every change in `must_include`.
 `None` when they cannot all be kept together. A second, differently
 constrained answer – never a replacement for the first.
+
+#### cost_lines()
+
+One line per tier: what its log records, and how the tier is priced.
+
+Runs and seconds are read from the tier’s log, so they include earlier
+invocations against the same commits, and the line says so. The price
+says where it came from – `measured` from the log, `declared` by
+the caller, or neither, in which case the model’s default is shown –
+because an estimate with no provenance reads as a fact.
+
+* **Return type:**
+  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 #### depth_reached *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
 
@@ -5391,6 +5462,19 @@ Heaviest validated set containing every change in `must_include`.
 `None` when they cannot all be kept together. A second, differently
 constrained answer – never a replacement for the first.
 
+#### cost_lines()
+
+One line per tier: what its log records, and how the tier is priced.
+
+Runs and seconds are read from the tier’s log, so they include earlier
+invocations against the same commits, and the line says so. The price
+says where it came from – `measured` from the log, `declared` by
+the caller, or neither, in which case the model’s default is shown –
+because an estimate with no provenance reads as a fact.
+
+* **Return type:**
+  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 #### depth_reached *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
 
 How deep validation actually got, as a tier name.
@@ -5839,16 +5923,18 @@ log distinguishes `build: ...` from `test: tests/x.ts::y`.
 
 # About this build
 
-This documentation was built on **2026-10-13 03:57 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/7826ceaf9deebda3f5563755b6f396ebad3cfcf5"><code>7826cea</code></a> on branch <code>main</code>, for **mergeset 0.0.18** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 08:09 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/09333050ee3b69f7e9348b17bddbe370552da973"><code>0933305</code></a> on branch <code>main</code>, for **mergeset 0.0.19** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.19) is behind the latest release on PyPI (0.0.20): `pip install mergeset` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/mergeset/commit/7826ceaf9deebda3f5563755b6f396ebad3cfcf5"><code>7826ceaf9deebda3f5563755b6f396ebad3cfcf5</code></a> |
+| Commit              | <a href="https://github.com/i2mint/mergeset/commit/09333050ee3b69f7e9348b17bddbe370552da973"><code>09333050ee3b69f7e9348b17bddbe370552da973</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -5859,15 +5945,15 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/mergeset</code>                                                               |
-| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38343990023">38343990023</a>      |
+| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38367172523">38367172523</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>7826ceaf9deebda3f5563755b6f396ebad3cfcf5</code> (in the history of the built commit) |
+| Event commit | <code>09333050ee3b69f7e9348b17bddbe370552da973</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.13  |
+| epythet  | 0.2.15  |
 | Sphinx   | 9.1.0   |
 | docutils | 0.22.4  |
 | Python   | 3.12.15 |
@@ -5886,14 +5972,14 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/mergeset/0.0.18/">0.0.18</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/mergeset/0.0.20/">0.0.20</a>, newer than the documented version (0.0.19).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/mergeset && cd mergeset
-git checkout 7826ceaf9deebda3f5563755b6f396ebad3cfcf5
-pip install "epythet==0.2.13"
+git checkout 09333050ee3b69f7e9348b17bddbe370552da973
+pip install "epythet==0.2.15"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

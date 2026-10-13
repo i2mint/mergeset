@@ -103,6 +103,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#progressive-disclosure">Progressive disclosure</a></li>
 <li><a class="reference internal" href="#real-repositories-are-messier-than-the-theory">Real repositories are messier than the theory</a></li>
 <li><a class="reference internal" href="#validation-is-a-sequence-not-a-command">Validation is a sequence, not a command</a></li>
+<li><a class="reference internal" href="#tiered-validation-screen-cheaply-confirm-expensively">Tiered validation: screen cheaply, confirm expensively</a></li>
 <li><a class="reference internal" href="#output">Output</a></li>
 <li><a class="reference internal" href="#requirements">Requirements</a></li>
 <li><a class="reference internal" href="#reading-further">Reading further</a></li>
@@ -268,6 +269,20 @@ data-aria-dark="Switch to auto color mode">
 </div>
 <p>The fingerprinted stage runs only when its inputs actually change, and <code class="docutils literal notranslate"><span class="pre">reuse_worktree</span></code> keeps one tree across the whole run — so an expensive install is paid once, not once per evaluation.</p>
 </section>
+<section id="tiered-validation-screen-cheaply-confirm-expensively">
+<h2>Tiered validation: screen cheaply, confirm expensively<a class="headerlink" href="#tiered-validation-screen-cheaply-confirm-expensively" title="Link to this heading">#</a></h2>
+<p>When the real check is too slow to run on every candidate set (a browser suite, a container build), give <code class="docutils literal notranslate"><span class="pre">mergeset</span></code> a ladder of validators, cheapest first. The first tier screens every set the search touches; each later tier only confirms the sets its predecessor left standing, so the expensive suite runs on a handful of sets instead of dozens. Each tier keeps its own evaluation log, because a cheap PASS is not evidence about an expensive tier.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>-m<span class="w"> </span>mergeset<span class="w"> </span>prs<span class="w"> </span>OWNER/REPO<span class="w"> </span>--repo<span class="w"> </span>.<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">    </span>--validate-stage<span class="w"> </span><span class="s1">'setup:pnpm install --frozen-lockfile'</span><span class="w"> </span><span class="s1">'test:pnpm run test'</span><span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">    </span>--validate-fingerprint<span class="w"> </span><span class="s1">'setup:pnpm-lock.yaml'</span><span class="w"> </span><span class="se">\</span>
+</span><span data-line="4"><span class="w">    </span>--tier<span class="w"> </span>unit<span class="w"> </span><span class="s1">'e2e:pnpm run e2e'</span><span class="w"> </span><span class="se">\</span>
+</span><span data-line="5"><span class="w">    </span>--tier-cost<span class="w"> </span><span class="s1">'e2e:300'</span><span class="w"> </span><span class="se">\</span>
+</span><span data-line="6"><span class="w">    </span>--confirm-budget-seconds<span class="w"> </span><span class="m">1800</span><span class="w"> </span><span class="se">\</span>
+</span><span data-line="7"><span class="w">    </span>--must-include<span class="w"> </span>pr42
+</span></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">--tier</span> <span class="pre">'name:command'</span></code> is a tier that runs one command. A bare name (<code class="docutils literal notranslate"><span class="pre">unit</span></code> above) is the tier the <code class="docutils literal notranslate"><span class="pre">--validate-*</span></code> flags describe: stages compose <em>inside</em> a validator, tiers compose <em>across</em> validators. <code class="docutils literal notranslate"><span class="pre">--tier-cost</span></code> declares what an untimed tier costs per run, so it is not scheduled as if it were cheap; <code class="docutils literal notranslate"><span class="pre">--confirm-budget-seconds</span></code> and <code class="docutils literal notranslate"><span class="pre">--confirm-max-runs</span></code> bound what the deeper tiers may spend, admitting runs on the pessimistic estimate. <code class="docutils literal notranslate"><span class="pre">--must-include</span></code> also reports the best plan that keeps a given change, which is a different question from the maximal sets and is answered alongside them. The report says how deep validation got, what each tier spent, and whether each price was measured or declared. The library entry point is <code class="docutils literal notranslate"><span class="pre">analyze_tiered</span></code>.</p>
+</section>
 <section id="output">
 <h2>Output<a class="headerlink" href="#output" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -293,7 +308,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-13 03:57 UTC from <a href="https://github.com/i2mint/mergeset/commit/7826ceaf9deebda3f5563755b6f396ebad3cfcf5">7826cea</a> (main) · mergeset 0.0.18 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-13 08:09 UTC from <a href="https://github.com/i2mint/mergeset/commit/09333050ee3b69f7e9348b17bddbe370552da973">0933305</a> (main) · mergeset 0.0.19 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -328,7 +343,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=8bafd125"></script>
+      <script src="_static/documentation_options.js?v=2fd7553c"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

@@ -949,6 +949,19 @@ Heaviest validated set containing every change in `must_include`.
 `None` when they cannot all be kept together. A second, differently
 constrained answer – never a replacement for the first.
 
+#### cost_lines()
+
+One line per tier: what its log records, and how the tier is priced.
+
+Runs and seconds are read from the tier’s log, so they include earlier
+invocations against the same commits, and the line says so. The price
+says where it came from – `measured` from the log, `declared` by
+the caller, or neither, in which case the model’s default is shown –
+because an estimate with no provenance reads as a fact.
+
+* **Return type:**
+  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 #### depth_reached *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
 
 How deep validation actually got, as a tier name.

@@ -15,11 +15,11 @@ decide that `--max-seconds` is a float rather than the string `"600"`.
 | [`branches`](#mergeset.cli.branches)(branch, \*[, repo, base, ...])   | Find maximal mergeable sets among the given branches.                     |
 |--------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
 | [`install_skills`](#mergeset.cli.install_skills)([target, copy, overwrite]) | Install the agent skill bundled in this package into an agent host.       |
-| [`main`](#mergeset.cli.main)()                                    | Entry point: project `_dispatch_funcs` onto a command line parser.        |
+| [`main`](#mergeset.cli.main)([argv])                              | Entry point: project `_dispatch_funcs` onto a command line parser.        |
 | [`prs`](#mergeset.cli.prs)(repo_spec, \*[, repo, author, ...])   | Find maximal mergeable sets among a repository's open pull requests.      |
 | [`show_log`](#mergeset.cli.show_log)(\*[, log_path, repo])            | Print what the evaluation log already knows, without evaluating anything. |
 
-### mergeset.cli.branches(branch, , repo='.', base='HEAD', validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, merge_only=False, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
+### mergeset.cli.branches(branch, , repo='.', base='HEAD', validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, merge_only=False, tier=None, tier_cost=None, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, confirm_budget_seconds=None, confirm_max_runs=None, confirm_max_sets=None, must_include=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
 
 Find maximal mergeable sets among the given branches.
 
@@ -42,11 +42,39 @@ Find maximal mergeable sets among the given branches.
     does not veto the set. Use it for a lint pass the project treats as
     advisory.
   * **merge_only** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Skip validation entirely; only textual mergeability counts.
-  * **timeout** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – Seconds allowed per validation run.
+  * **tier** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – `'name:command'`, repeatable, ordered cheapest-first — tiered
+    validation: the first tier screens every candidate set, and each
+    later tier only confirms the sets its predecessor left standing, so
+    an expensive suite runs on a handful of sets instead of dozens. A
+    tier is ONE validator with its OWN evaluation log (a cheap PASS is
+    not evidence about an expensive tier). `--validate-stage`
+    composes stages *inside* one validator; `--tier` composes
+    validators. To make the staged validator a tier, give its name
+    bare: `--validate-stage 'build:make' 'test:make test' --tier
+    unit 'e2e:make e2e'`. Tier logs live in the artifact store next
+    to the default log, one per tier, so –log-path is refused here.
+    –tier takes every value after it: put branch names first.
+  * **tier_cost** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – `'tier:seconds'`, repeatable — the declared cost of one
+    run, used until the tier has been timed. Set it for a tier that has
+    never run, or it is scheduled as if it were cheap.
+  * **timeout** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – Seconds allowed per validation run (per tier, with –tier).
   * **retries** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Re-run a failing validation this many times before believing it.
-  * **max_evaluations** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – Stop after this many expensive evaluations.
+  * **max_evaluations** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – Stop after this many expensive evaluations (with
+    –tier, these three bound the screening tier).
   * **max_seconds** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – Stop after this much wall time.
   * **max_sets** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – Stop after finding this many maximal sets.
+  * **confirm_budget_seconds** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – With –tier: seconds each deeper tier may
+    spend. Runs are admitted on the pessimistic estimate, so the budget
+    is not overrun on a guess.
+  * **confirm_max_runs** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – With –tier: at most this many runs per deeper tier;
+    wins over the budget when both are given.
+  * **confirm_max_sets** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – With –tier: stop a deeper tier after confirming this
+    many maximal sets (`1`: just the best plan, cheaply).
+  * **must_include** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – Change id, repeatable (a branch name, or `pr12` for
+    `prs`), with –tier — also report the best plan that keeps these
+    changes. It answers a different question from the maximal sets and
+    is reported alongside them, never instead. A single bare `--tier
+    NAME` is enough to ask it of the ordinary validator.
   * **log_path** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Evaluation log (JSONL). Default:
     `~/.local/share/mergeset/evaluations/<repo-slug>.jsonl` —
     outside the analysed repository, always.
@@ -84,14 +112,19 @@ or filesystems that cannot follow one. An existing skill is left alone;
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### mergeset.cli.main()
+### mergeset.cli.main(argv=None)
 
 Entry point: project `_dispatch_funcs` onto a command line parser.
+
+cw’s default convention stops reading a function’s annotations as soon as
+it declares any parameter (argh’s rule), which would turn `--max-seconds
+60` into the string `"60"`. `hints_when_declared` keeps the hints and
+merges the declarations on top.
 
 * **Return type:**
   [`int`](https://docs.python.org/3/builtins/functions.html#int)
 
-### mergeset.cli.prs(repo_spec, , repo='.', author=None, updated_within_hours=None, base=None, include_drafts=False, validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, merge_only=False, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
+### mergeset.cli.prs(repo_spec, , repo='.', author=None, updated_within_hours=None, base=None, include_drafts=False, validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, merge_only=False, tier=None, tier_cost=None, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, confirm_budget_seconds=None, confirm_max_runs=None, confirm_max_sets=None, must_include=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
 
 Find maximal mergeable sets among a repository’s open pull requests.
 
@@ -107,6 +140,15 @@ Find maximal mergeable sets among a repository’s open pull requests.
   * **validate_fingerprint** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – `'stage:path'`, repeatable — skip a stage unless
     that file changed (a lockfile, typically).
   * **validate_optional** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – Stage name, repeatable — recorded, but not a veto.
+  * **tier** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – `'name:command'`, repeatable, cheapest-first — tiered validation;
+    a bare name is the tier the –validate-\* flags describe. See
+    `mergeset branches --help` for how tiers and stages compose.
+  * **tier_cost** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – `'tier:seconds'`, repeatable — declared cost per run.
+  * **confirm_budget_seconds** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – With –tier: seconds each deeper tier may spend.
+  * **confirm_max_runs** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – With –tier: at most this many runs per deeper tier.
+  * **confirm_max_sets** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – With –tier: stop a deeper tier after this many sets.
+  * **must_include** ([`list`](https://docs.python.org/3/builtins/stdtypes.html#list)) – PR change id (`pr12`), repeatable, with –tier — also
+    report the best plan that keeps these PRs.
   * **log_path** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Evaluation log (JSONL). Default:
     `~/.local/share/mergeset/evaluations/<repo-slug>.jsonl` — outside
     the analysed repository, always.

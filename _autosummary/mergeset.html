@@ -209,6 +209,7 @@ data-aria-dark="Switch to auto color mode">
 </li>
 <li><a class="reference internal" href="#mergeset.TieredAnalysis"><code class="docutils literal notranslate"><span class="pre">TieredAnalysis</span></code></a><ul>
 <li><a class="reference internal" href="#mergeset.TieredAnalysis.best_including"><code class="docutils literal notranslate"><span class="pre">TieredAnalysis.best_including</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.TieredAnalysis.cost_lines"><code class="docutils literal notranslate"><span class="pre">TieredAnalysis.cost_lines()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.TieredAnalysis.depth_reached"><code class="docutils literal notranslate"><span class="pre">TieredAnalysis.depth_reached</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.TieredAnalysis.maximal_sets"><code class="docutils literal notranslate"><span class="pre">TieredAnalysis.maximal_sets</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.TieredAnalysis.must_include"><code class="docutils literal notranslate"><span class="pre">TieredAnalysis.must_include</span></code></a></li>
@@ -1638,6 +1639,22 @@ unchanged and says the right thing about tiers.</p>
 <dd><p>Heaviest validated set containing every change in <code class="docutils literal notranslate"><span class="pre">must_include</span></code>.
 <code class="docutils literal notranslate"><span class="pre">None</span></code> when they cannot all be kept together. A second, differently
 constrained answer – never a replacement for the first.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.TieredAnalysis.cost_lines">
+<span class="sig-name descname"><span class="pre">cost_lines</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/tiers.html#TieredAnalysis.cost_lines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.TieredAnalysis.cost_lines" title="Link to this definition">#</a></dt>
+<dd><p>One line per tier: what its log records, and how the tier is priced.</p>
+<p>Runs and seconds are read from the tier’s log, so they include earlier
+invocations against the same commits, and the line says so. The price
+says where it came from – <code class="docutils literal notranslate"><span class="pre">measured</span></code> from the log, <code class="docutils literal notranslate"><span class="pre">declared</span></code> by
+the caller, or neither, in which case the model’s default is shown –
+because an estimate with no provenance reads as a fact.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
@@ -3220,7 +3237,7 @@ exists to prevent — so both halves of the key are slugified.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=8bafd125"></script>
+      <script src="../_static/documentation_options.js?v=2fd7553c"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

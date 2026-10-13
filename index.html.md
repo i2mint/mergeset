@@ -142,6 +142,22 @@ analyze(repo, changes, validate=validate, reuse_worktree="/tmp/scratch-wt")
 
 The fingerprinted stage runs only when its inputs actually change, and `reuse_worktree` keeps one tree across the whole run — so an expensive install is paid once, not once per evaluation.
 
+## Tiered validation: screen cheaply, confirm expensively
+
+When the real check is too slow to run on every candidate set (a browser suite, a container build), give `mergeset` a ladder of validators, cheapest first. The first tier screens every set the search touches; each later tier only confirms the sets its predecessor left standing, so the expensive suite runs on a handful of sets instead of dozens. Each tier keeps its own evaluation log, because a cheap PASS is not evidence about an expensive tier.
+
+```bash
+python -m mergeset prs OWNER/REPO --repo . \
+    --validate-stage 'setup:pnpm install --frozen-lockfile' 'test:pnpm run test' \
+    --validate-fingerprint 'setup:pnpm-lock.yaml' \
+    --tier unit 'e2e:pnpm run e2e' \
+    --tier-cost 'e2e:300' \
+    --confirm-budget-seconds 1800 \
+    --must-include pr42
+```
+
+`--tier 'name:command'` is a tier that runs one command. A bare name (`unit` above) is the tier the `--validate-*` flags describe: stages compose *inside* a validator, tiers compose *across* validators. `--tier-cost` declares what an untimed tier costs per run, so it is not scheduled as if it were cheap; `--confirm-budget-seconds` and `--confirm-max-runs` bound what the deeper tiers may spend, admitting runs on the pessimistic estimate. `--must-include` also reports the best plan that keeps a given change, which is a different question from the maximal sets and is answered alongside them. The report says how deep validation got, what each tier spent, and whether each price was measured or declared. The library entry point is `analyze_tiered`.
+
 ## Output
 
 - **Markdown report** — the merge plans first, then what stops the rest, then the evidence.
