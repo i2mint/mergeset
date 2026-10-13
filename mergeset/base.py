@@ -17,6 +17,7 @@ from enum import Enum
 from typing import (
     Any,
     Callable,
+    Dict,
     Iterable,
     Mapping,
     Optional,
@@ -153,6 +154,44 @@ class MergeOutcome:
 
 
 @dataclass(frozen=True)
+class StageRun:
+    """What one stage of a staged validation did, and what it cost.
+
+    A stage skipped because its fingerprint matched (an install whose lockfile
+    did not change) is recorded too, with ``skipped=True`` and no time: that
+    skip is often the largest term in what an evaluation costs, and a log that
+    cannot show it cannot confirm it (i2mint/mergeset#17).
+
+    >>> StageRun.from_jdict(StageRun('setup', 33.0, 0).to_jdict())
+    StageRun(name='setup', duration=33.0, returncode=0, skipped=False)
+    """
+
+    name: str
+    duration: float = 0.0
+    returncode: Optional[int] = None  # None when skipped
+    skipped: bool = False
+
+    def to_jdict(self) -> dict:
+        """JSON-able view."""
+        return {
+            "name": self.name,
+            "duration": self.duration,
+            "returncode": self.returncode,
+            "skipped": self.skipped,
+        }
+
+    @classmethod
+    def from_jdict(cls, d: Mapping[str, Any]) -> "StageRun":
+        """Inverse of :meth:`to_jdict`."""
+        return cls(
+            name=d["name"],
+            duration=d.get("duration") or 0.0,
+            returncode=d.get("returncode"),
+            skipped=d.get("skipped", False),
+        )
+
+
+@dataclass(frozen=True)
 class ValidationOutcome:
     """Result of validating a merged tree."""
 
@@ -162,6 +201,30 @@ class ValidationOutcome:
     duration: float = 0.0
     stdout_tail: str = ""
     returncode: Optional[int] = None
+    #: Per-stage breakdown, in run order, for a staged validator; empty for a
+    #: single-command one and on rows written before stages were recorded.
+    stages: Sequence[StageRun] = ()
+
+    def __post_init__(self):
+        # A tuple whatever was passed, so a recorded outcome equals its re-read.
+        object.__setattr__(self, "stages", tuple(self.stages))
+
+    @property
+    def stage_seconds(self) -> Dict[str, float]:
+        """``{stage name: seconds}`` for the stages that ran (skips excluded).
+
+        The shape :data:`mergeset.cost.Seconds` accepts as a breakdown. Two
+        stages sharing a name are summed, never overwritten.
+
+        >>> ValidationOutcome(True, stages=[StageRun('setup', skipped=True),
+        ...                                 StageRun('test', 6.0, 0)]).stage_seconds
+        {'test': 6.0}
+        """
+        seconds: Dict[str, float] = {}
+        for s in self.stages:
+            if not s.skipped:
+                seconds[s.name] = seconds.get(s.name, 0.0) + (s.duration or 0.0)
+        return seconds
 
     def to_jdict(self) -> dict:
         """JSON-able view."""
@@ -172,7 +235,25 @@ class ValidationOutcome:
             "duration": self.duration,
             "stdout_tail": self.stdout_tail,
             "returncode": self.returncode,
+            "stages": [s.to_jdict() for s in self.stages],
         }
+
+    @classmethod
+    def from_jdict(cls, d: Mapping[str, Any]) -> "ValidationOutcome":
+        """Inverse of :meth:`to_jdict`; rows without ``stages`` read as none.
+
+        Keys it does not know are ignored, so a log written by a later version
+        still loads here instead of failing on its first new field.
+        """
+        return cls(
+            ok=d["ok"],
+            failing_tests=d.get("failing_tests", ()),
+            failing_files=d.get("failing_files", ()),
+            duration=d.get("duration", 0.0),
+            stdout_tail=d.get("stdout_tail", ""),
+            returncode=d.get("returncode"),
+            stages=tuple(StageRun.from_jdict(s) for s in d.get("stages") or ()),
+        )
 
 
 @dataclass(frozen=True)
@@ -218,7 +299,15 @@ class Evaluation:
             "verdict": self.verdict.value,
             "stage": self.stage.value if self.stage else None,
             "merge": self.merge.to_jdict() if self.merge else None,
-            "validation": self.validation.to_jdict() if self.validation else None,
+            "validation": self._validation_jdict(),
+            # Beside ``validation``, not inside it: releases before #17 build
+            # ``ValidationOutcome(**validation)`` and would refuse the whole log
+            # over one unknown key, while they ignore unknown top-level keys.
+            "validation_stages": (
+                [s.to_jdict() for s in self.validation.stages]
+                if self.validation
+                else []
+            ),
             "duration": self.duration,
             "at": self.at,
             "note": self.note,
@@ -226,17 +315,26 @@ class Evaluation:
             "heads": dict(sorted(self.heads.items())),
         }
 
+    def _validation_jdict(self) -> Optional[dict]:
+        if self.validation is None:
+            return None
+        jdict = self.validation.to_jdict()
+        del jdict["stages"]  # stored beside it; see ``to_jdict``
+        return jdict
+
     @classmethod
     def from_jdict(cls, d: Mapping[str, Any]) -> "Evaluation":
         """Inverse of :meth:`to_jdict`."""
         merge = d.get("merge")
         validation = d.get("validation")
+        if validation and d.get("validation_stages"):
+            validation = {**validation, "stages": d["validation_stages"]}
         return cls(
             subset=frozenset(d["subset"]),
             verdict=Verdict(d["verdict"]),
             stage=Stage(d["stage"]) if d.get("stage") else None,
             merge=MergeOutcome(**merge) if merge else None,
-            validation=ValidationOutcome(**validation) if validation else None,
+            validation=ValidationOutcome.from_jdict(validation) if validation else None,
             duration=d.get("duration", 0.0),
             at=d.get("at"),
             note=d.get("note", ""),

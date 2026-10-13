@@ -22,7 +22,7 @@ import time
 from dataclasses import dataclass
 from typing import Callable, Dict, Iterable, List, Optional, Sequence
 
-from mergeset.base import CapabilityError, ValidationOutcome
+from mergeset.base import CapabilityError, StageRun, ValidationOutcome
 
 #: Fail-fast by default: the answer we need is a bit, and the first failure has it.
 DEFAULT_PYTEST_ARGS = ("-x", "-q", "--tb=short", "-p", "no:cacheprovider")
@@ -343,13 +343,19 @@ def staged_validation(
         files: List[str] = []
         tail = ""
         ok = True
+        runs: List[StageRun] = []
         for stage in stages:
             if stage.fingerprint is not None:
                 value = stage.fingerprint(worktree)
                 if done.get(worktree, {}).get(stage.name) == value:
+                    runs.append(StageRun(stage.name, skipped=True))
                     continue
+            stage_started = time.time()
             outcome = _run(
                 [stage.command], worktree, timeout=stage.timeout, env=env, shell=True
+            )
+            runs.append(
+                StageRun(stage.name, time.time() - stage_started, outcome.returncode)
             )
             tail = f"[{stage.name}]\n{outcome.stdout_tail}"
             if outcome.ok:
@@ -375,6 +381,7 @@ def staged_validation(
             duration=time.time() - started,
             stdout_tail=tail,
             returncode=0 if ok else 1,
+            stages=runs,
         )
 
     return validate

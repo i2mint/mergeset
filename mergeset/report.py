@@ -15,7 +15,40 @@ from collections.abc import MutableMapping
 from typing import Iterable, Iterator, List, Optional
 
 from mergeset.analysis import Analysis
-from mergeset.base import CapabilityError, ChangeSet, set_key
+from mergeset.base import CapabilityError, ChangeSet, Evaluation, set_key
+
+
+def stage_breakdown(record: Evaluation) -> str:
+    """Where an evaluation's time went, stage by stage; ``''`` if not recorded.
+
+    The actionable version of a duration: "33 s of its 51 s installing
+    dependencies" says what to fix, "51 s" does not. The remainder of the
+    total -- merging, worktree setup -- is shown as ``other``.
+
+    >>> from mergeset.base import StageRun, ValidationOutcome, Verdict
+    >>> v = ValidationOutcome(True, duration=48.5, stages=[
+    ...     StageRun('setup', 33.0, 0), StageRun('build', 9.0, 0),
+    ...     StageRun('test', 6.5, 0)])
+    >>> stage_breakdown(Evaluation(frozenset('a'), Verdict.PASS,
+    ...                            validation=v, duration=49.0))
+    'setup 33.0 · build 9.0 · test 6.5 · other 0.5'
+    >>> v = ValidationOutcome(True, stages=[StageRun('setup', skipped=True),
+    ...                                     StageRun('test', 6.0, 0)])
+    >>> stage_breakdown(Evaluation(frozenset('a'), Verdict.PASS, validation=v,
+    ...                            duration=6.0))
+    'setup skipped · test 6.0'
+    """
+    validation = record.validation
+    if validation is None or not validation.stages:
+        return ""
+    parts = [
+        f"{s.name} skipped" if s.skipped else f"{s.name} {s.duration:.1f}"
+        for s in validation.stages
+    ]
+    other = (record.duration or 0) - sum(validation.stage_seconds.values())
+    if other >= 0.05:
+        parts.append(f"other {other:.1f}")
+    return " · ".join(parts)
 
 
 def _fmt_set(subset: Iterable[str]) -> str:
@@ -196,8 +229,12 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
         yield (
             f"| {_fmt_set(record.subset)} | {record.verdict.value} | "
             f"{record.stage.value if record.stage else ''} | "
-            f"{record.duration:.1f} | {detail} |"
+            f"{record.duration:.1f}{_in_parens(stage_breakdown(record))} | {detail} |"
         )
+
+
+def _in_parens(text: str) -> str:
+    return f" ({text})" if text else ""
 
 
 def _failure_evidence(analysis: Analysis, conflict: ChangeSet) -> str:
@@ -382,6 +419,17 @@ document.getElementById('notes').innerHTML = DATA.notes.length
   ? '<ul>' + DATA.notes.map(n => `<li>${esc(n)}</li>`).join('') + '</ul>'
   : '<i>none</i>';
 
+// Where the time went, stage by stage (#17); same text as the Markdown report.
+function stages(e) {
+  const st = e.validation_stages || [];
+  if (!st.length) return '';
+  const parts = st.map(s => s.skipped ? `${s.name} skipped` : `${s.name} ${(s.duration||0).toFixed(1)}`);
+  const ran = st.filter(s => !s.skipped).reduce((t, s) => t + (s.duration||0), 0);
+  const other = (e.duration||0) - ran;
+  if (other >= 0.05) parts.push(`other ${other.toFixed(1)}`);
+  return ` <small>(${esc(parts.join(' · '))})</small>`;
+}
+
 document.getElementById('log').innerHTML =
   '<tr><th>set</th><th>verdict</th><th>stage</th><th>s</th><th>detail</th></tr>' +
   DATA.log.map(e => {
@@ -392,7 +440,7 @@ document.getElementById('log').innerHTML =
     const cls = e.verdict === 'pass' ? 'good' : e.verdict === 'fail' ? 'bad' : 'warn';
     return `<tr><td><code>${esc(e.subset.join(', '))}</code></td>` +
       `<td class="${cls}">${esc(e.verdict)}</td><td>${esc(e.stage || '')}</td>` +
-      `<td>${(e.duration||0).toFixed(1)}</td><td>${detail}</td></tr>`;
+      `<td>${(e.duration||0).toFixed(1)}${stages(e)}</td><td>${detail}</td></tr>`;
   }).join('');
 </script>
 """
