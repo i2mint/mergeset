@@ -880,3 +880,52 @@ def test_a_cheaper_tiers_inference_is_not_a_run(repo, tmp_path):
     # base check, which runs before the search.)
     deep_search = result.analysis.searches[-1]
     assert deep_search.evaluations == len(result.logs["deep"]) - 1
+
+
+def test_reports_cover_every_tier_not_only_the_screen(repo, tmp_path):
+    """i2mint/mergeset#29: the header and the log table read the screen only."""
+    from mergeset.report import _analysis_jdict, html_report, markdown_report
+
+    deep = _stage_validator(
+        tmp_path,
+        "deep",
+        "import os, sys\nsys.exit(1 if os.path.exists('new-d.txt') else 0)\n",
+    )
+    result = analyze_tiered(
+        repo,
+        _changes(repo, ["feat-b", "feat-d"]),
+        base="main",
+        tiers=[Tier("screen", merge_only_validation()), Tier("deep", deep)],
+        pairwise_preoracle=False,
+        use_ci_status=False,
+    )
+    analysis = result.analysis
+    by_tier = analysis.evaluations_by_tier
+    assert list(by_tier) == ["screen", "deep"] and by_tier["deep"] > 0
+    md = markdown_report(analysis)
+    header = md.splitlines()[2]
+    assert f"{sum(by_tier.values())} expensive evaluations spent" in header
+    assert f"`deep` {by_tier['deep']}" in header
+    deep_table = md.split("### Tier `deep`")[1]
+    assert "| `feat-b`, `feat-d` | fail |" in deep_table, "the refutation is shown"
+    assert md.index("### Tier `screen`") < md.index("### Tier `deep`")
+    data = _analysis_jdict(analysis)
+    assert [t["name"] for t in data["tier_logs"]] == ["screen", "deep"]
+    assert data["evaluations_by_tier"] == by_tier
+    assert 'id="logs"' in html_report(analysis)
+
+
+def test_an_untiered_report_is_unchanged(repo, tmp_path):
+    from mergeset import analyze
+    from mergeset.report import markdown_report
+
+    analysis = analyze(
+        repo,
+        _changes(repo, ["feat-b", "feat-d"]),
+        base="main",
+        validate=merge_only_validation(),
+        use_ci_status=False,
+    )
+    md = markdown_report(analysis)
+    assert "### Tier" not in md
+    assert f"{analysis.evaluations} expensive evaluations spent ·" in md

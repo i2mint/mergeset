@@ -104,6 +104,11 @@ class Analysis:
     #: normal case. See :meth:`merge_plan`'s ``verified`` and ADR 0025.
     unverified_sets: List[ChangeSet] = field(default_factory=list)
     log: Optional[EvaluationLog] = None
+    #: Each tier's log, cheapest first, when validation was tiered
+    #: (:func:`mergeset.analyze_tiered`); ``log`` is then the first of them.
+    #: Empty otherwise. What reports read to show every tier's work, not only
+    #: the screen's (i2mint/mergeset#29).
+    tier_logs: Dict[str, EvaluationLog] = field(default_factory=dict)
     searches: List[SearchState] = field(default_factory=list)
     notes: List[str] = field(default_factory=list)
 
@@ -144,10 +149,18 @@ class Analysis:
         """
         if self.log is None:
             return self.evaluations_this_run
+        return self._decided(self.log)
+
+    @property
+    def evaluations_by_tier(self) -> Dict[str, int]:
+        """:attr:`evaluations`, per tier, cheapest first; empty when untiered."""
+        return {name: self._decided(log) for name, log in self.tier_logs.items()}
+
+    def _decided(self, log: EvaluationLog) -> int:
         ids = frozenset(c.id for c in self.changes)
         return sum(
             1
-            for e in self.log
+            for e in log
             if e.verdict in (Verdict.PASS, Verdict.FAIL) and e.subset <= ids
         )
 

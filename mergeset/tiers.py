@@ -934,6 +934,8 @@ def analyze_tiered(
             trust_unpinned=analyze_kwargs.get("trust_unpinned"),
         )
         analysis.notes.extend(unmatched_log_notes(logs[tier.name], label=tier.name))
+    # Every report reads these, so none of them covers only the screen (#29).
+    analysis.tier_logs = logs
     ingested: Dict[str, int] = {}
 
     # Every tier's log, not just the screen's. Budget admission for a deep tier
