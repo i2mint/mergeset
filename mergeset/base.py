@@ -181,6 +181,13 @@ class Evaluation:
 
     Everything else (conflict set, known-good/known-bad closure, merge plan,
     reports) is *derived* from a sequence of these and is re-derivable.
+
+    A row is about the commits that were actually merged, not about the ids:
+    ``base_sha`` and ``heads`` (change id -> head sha) pin it to them, so a row
+    written before a branch was rewritten is never mistaken for an answer about
+    the rewritten branch (i2mint/mergeset#23). Rows written before pinning
+    existed carry neither and read back as *unpinned*; see
+    :class:`mergeset.log.EvaluationLog`.
     """
 
     subset: ChangeSet
@@ -191,6 +198,10 @@ class Evaluation:
     duration: float = 0.0
     at: Optional[str] = None  # ISO timestamp, filled by the log
     note: str = ""
+    #: Full sha of the base the set was merged onto. ``None`` on unpinned rows.
+    base_sha: Optional[str] = None
+    #: Full head sha of each change in ``subset`` when it was evaluated.
+    heads: Mapping[ChangeId, str] = field(default_factory=dict)
     #: True when this came from the log rather than from a real run. Not
     #: serialized: it is a fact about *this* lookup, not about the evaluation.
     cached: bool = False
@@ -211,6 +222,8 @@ class Evaluation:
             "duration": self.duration,
             "at": self.at,
             "note": self.note,
+            "base_sha": self.base_sha,
+            "heads": dict(sorted(self.heads.items())),
         }
 
     @classmethod
@@ -227,7 +240,16 @@ class Evaluation:
             duration=d.get("duration", 0.0),
             at=d.get("at"),
             note=d.get("note", ""),
+            # Absent on rows written before pinning: they read back unpinned,
+            # never dropped (i2mint/mergeset#23).
+            base_sha=d.get("base_sha"),
+            heads=dict(d.get("heads") or {}),
         )
+
+    @property
+    def pinned(self) -> bool:
+        """True iff the row records which commits it was evaluated against."""
+        return self.base_sha is not None
 
 
 @runtime_checkable

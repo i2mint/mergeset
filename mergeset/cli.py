@@ -233,6 +233,7 @@ def branches(
     max_seconds: Optional[float] = None,
     max_sets: Optional[int] = None,
     log_path: Optional[str] = None,
+    trust_unpinned_log: bool = False,
     report_dir: Optional[str] = None,
     report_format: list = None,
     integration_branches: bool = False,
@@ -271,6 +272,8 @@ def branches(
         log_path: Evaluation log (JSONL). Default:
             ``~/.local/share/mergeset/evaluations/<repo-slug>.jsonl`` —
             outside the analysed repository, always.
+        trust_unpinned_log: Reuse rows of an old log that predate rows
+            recording their commits. Only when no head has moved since.
         report_dir: Write ``REPORT.md`` and ``report.html`` into this
             directory. By default they go to the artifact store
             (``<artifact root>/reports/<repo-slug>/``), never into the
@@ -304,6 +307,7 @@ def branches(
         max_seconds=max_seconds,
         max_sets=max_sets,
         log_path=log_path,
+        trust_unpinned_log=trust_unpinned_log,
         report_dir=report_dir,
         report_format=tuple(report_format) if report_format else None,
         integration_branches=integration_branches,
@@ -335,6 +339,7 @@ def prs(
     max_seconds: Optional[float] = None,
     max_sets: Optional[int] = None,
     log_path: Optional[str] = None,
+    trust_unpinned_log: bool = False,
     report_dir: Optional[str] = None,
     report_format: list = None,
     integration_branches: bool = False,
@@ -361,6 +366,8 @@ def prs(
         log_path: Evaluation log (JSONL). Default:
             ``~/.local/share/mergeset/evaluations/<repo-slug>.jsonl`` — outside
             the analysed repository, always.
+        trust_unpinned_log: Reuse rows of an old log that predate rows
+            recording their commits. Only when no head has moved since.
         report_dir: Write ``REPORT.md`` and ``report.html`` into this directory.
             By default they go to the artifact store, under
             ``reports/<repo-slug>/<timestamp>/``, so a re-run never overwrites
@@ -399,6 +406,7 @@ def prs(
         max_seconds=max_seconds,
         max_sets=max_sets,
         log_path=log_path,
+        trust_unpinned_log=trust_unpinned_log,
         report_dir=report_dir,
         report_format=tuple(report_format) if report_format else None,
         integration_branches=integration_branches,
@@ -427,6 +435,7 @@ def _run(
     max_seconds,
     max_sets,
     log_path,
+    trust_unpinned_log,
     report_dir,
     report_format,
     integration_branches,
@@ -455,6 +464,7 @@ def _run(
             ),
             resolver=claude_code_resolver() if resolver == "claude" else None,
             log_path=log_path,
+            trust_unpinned=trust_unpinned_log,
             reuse_worktree=(
                 _persistent_worktree(repo, base, reuse_worktree)
                 if reuse_worktree
@@ -498,7 +508,12 @@ def _integration_branches(analysis) -> list:
             analysis.repo,
             name,
             analysis.base_sha,
-            [(cid, by_id[cid].head) for cid in plan["changes"]],
+            # The shas that were validated, not the refs: a branch that moved
+            # since would put unvalidated commits on the integration branch.
+            [
+                (cid, analysis.head_shas.get(cid, by_id[cid].head))
+                for cid in plan["changes"]
+            ],
         )
         out.append(f"`{name}`: {'created ' + detail[:8] if created else detail}")
     return out
@@ -517,9 +532,21 @@ def show_log(*, log_path: Optional[str] = None, repo: str = ".") -> str:
     log = EvaluationLog(log_path)
     lines = [f"{len(log)} evaluations in {log_path}", ""]
     for e in log:
+        on = f"@{e.base_sha[:8]}" if e.base_sha else "@unpinned"
         lines.append(
-            f"{e.verdict.value:6} {e.duration:7.1f}s  {', '.join(sorted(e.subset))}"
+            f"{e.verdict.value:6} {e.duration:7.1f}s {on:9}  "
+            f"{', '.join(sorted(e.subset))}"
         )
+    moved = _moved_commits(log)
+    if moved:
+        lines += [
+            "",
+            "! The rows below are about different commits ("
+            + "; ".join(moved)
+            + "), so the sets mix answers to different questions. A run of "
+            "`branches`/`prs` pins the log to the current heads and uses only "
+            "the rows that match them.",
+        ]
     lines += ["", "Maximal passing sets:"]
     lines += [f"  {', '.join(sorted(s))}" for s in log.maximal_passing_sets()]
     lines += ["Minimal failing sets (conflicts):"]
@@ -529,6 +556,25 @@ def show_log(*, log_path: Optional[str] = None, repo: str = ".") -> str:
             f"  ! monotonicity violation: {sorted(bad)} bad but {sorted(good)} good"
         )
     return "\n".join(lines)
+
+
+def _moved_commits(log) -> list:
+    """What makes the log's rows disagree about commits, one phrase each."""
+    bases = {e.base_sha for e in log if e.base_sha}
+    heads: dict = {}
+    for e in log:
+        for cid, sha in e.heads.items():
+            heads.setdefault(cid, set()).add(sha)
+    out = [f"{len(bases)} bases"] if len(bases) > 1 else []
+    out += [
+        f"{cid} at {len(shas)} heads"
+        for cid, shas in sorted(heads.items())
+        if len(shas) > 1
+    ]
+    unpinned = sum(1 for e in log if not e.pinned)
+    if unpinned and (bases or heads):
+        out.append(f"{unpinned} rows record no commits")
+    return out
 
 
 def install_skills(

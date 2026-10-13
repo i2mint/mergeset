@@ -73,7 +73,7 @@ from typing import (
     Tuple,
 )
 
-from mergeset.analysis import Analysis, analyze
+from mergeset.analysis import Analysis, analyze, unmatched_log_notes
 from mergeset.base import (
     Change,
     ChangeId,
@@ -379,12 +379,16 @@ def _sync_costs(
     other :class:`~mergeset.cost.CostModel`: the seam publishes a protocol with
     no ``reset``, so the facade must not require one.
     """
-    durations = [(e.subset, e.duration) for e in log if (e.duration or 0) > 0]
+    # Every row, pinned to these commits or not: what an evaluation cost is a
+    # fact about the tier, and a rewritten branch does not make it untrue.
+    durations = [(e.subset, e.duration) for e in log.rows if (e.duration or 0) > 0]
     already = ingested.get(tier, 0)
     for subset, seconds in durations[already:]:
         cost_model.observe(tier, subset, seconds)
     ingested[tier] = len(durations)
-    return sum(seconds for _, seconds in durations)
+    # What this answer cost: the rows it rests on, the same population that
+    # `runs` counts -- not time spent on heads that have since moved.
+    return sum(e.duration or 0 for e in log)
 
 
 def _seed_conflicts(analysis: Analysis) -> List[ChangeSet]:
@@ -848,6 +852,16 @@ def analyze_tiered(
         cost_model=cost_model,
         depth_reached=screen.name,
     )
+    # The screen's log was pinned by `analyze`; every deeper tier's log answers
+    # questions about the same commits, so it is pinned to them too (#23).
+    logs[screen.name] = analysis.log  # the pinned view `analyze` made
+    for tier in tiers[1:]:
+        logs[tier.name] = logs[tier.name].pinned(
+            base=analysis.base_sha,
+            heads=analysis.head_shas,
+            trust_unpinned=analyze_kwargs.get("trust_unpinned"),
+        )
+        analysis.notes.extend(unmatched_log_notes(logs[tier.name], label=tier.name))
     ingested: Dict[str, int] = {}
     # Every tier's log, not just the screen's. Budget admission for a deep tier
     # happens before that tier has run anything in *this* process, so pricing it
@@ -892,9 +906,7 @@ def analyze_tiered(
     refresh_answer()
 
     # --- stages 2..n: confirm the frontier, one tier deeper each time -----
-    evaluators = [
-        _tier_evaluator(repo, analysis, changes, screen, logs[screen.name], emit)
-    ]
+    evaluators = [_tier_evaluator(repo, analysis, screen, logs[screen.name], emit)]
     for tier in tiers[1:]:
         if not tier.is_available():
             _skip(
@@ -926,9 +938,7 @@ def analyze_tiered(
                 emit,
             )
             break
-        evaluators.append(
-            _tier_evaluator(repo, analysis, changes, tier, logs[tier.name], emit)
-        )
+        evaluators.append(_tier_evaluator(repo, analysis, tier, logs[tier.name], emit))
         # ADR-0018 applies to every tier, not only the first. `analyze` checks
         # the base for the screen; without the same check here, a deep tier that
         # is red on the base alone makes every frontier set fail, and the run
@@ -1035,7 +1045,6 @@ def analyze_tiered(
 def _tier_evaluator(
     repo: str,
     analysis: Analysis,
-    changes: Sequence[Change],
     tier: Tier,
     log: EvaluationLog,
     emit: Callable[[str, dict], None],
@@ -1049,9 +1058,9 @@ def _tier_evaluator(
         git_oracle(
             repo,
             analysis.base_sha,
-            changes,
+            analysis.pinned_changes,
             validate=tier.validate,
-            depends_on=analysis.stacks,
+            depends_on=analysis.merged_through,
             on_event=lambda event, payload: emit(event, {**payload, "tier": tier.name}),
         )
     )
