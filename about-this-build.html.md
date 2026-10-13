@@ -2,7 +2,7 @@
 
 # About this build
 
-This documentation was built on **2026-10-13 12:56 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/faaf5792feacf8e4c66ef7ffd28ca5ffdc489984"><code>faaf579</code></a> on branch <code>main</code>, for **mergeset 0.0.30** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 13:10 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/b193dc7b1aaf1f068a8d91c739373720d2d6a684"><code>b193dc7</code></a> on branch <code>main</code>, for **mergeset 0.0.31** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -11,7 +11,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/mergeset/commit/faaf5792feacf8e4c66ef7ffd28ca5ffdc489984"><code>faaf5792feacf8e4c66ef7ffd28ca5ffdc489984</code></a> |
+| Commit              | <a href="https://github.com/i2mint/mergeset/commit/b193dc7b1aaf1f068a8d91c739373720d2d6a684"><code>b193dc7b1aaf1f068a8d91c739373720d2d6a684</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -22,9 +22,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/mergeset</code>                                                               |
-| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38400915747">38400915747</a>      |
+| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38402731065">38402731065</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>faaf5792feacf8e4c66ef7ffd28ca5ffdc489984</code> (in the history of the built commit) |
+| Event commit | <code>b193dc7b1aaf1f068a8d91c739373720d2d6a684</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -49,13 +49,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/mergeset/0.0.30/">0.0.30</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/mergeset/0.0.31/">0.0.31</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/mergeset && cd mergeset
-git checkout faaf5792feacf8e4c66ef7ffd28ca5ffdc489984
+git checkout b193dc7b1aaf1f068a8d91c739373720d2d6a684
 pip install "epythet==0.2.15"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

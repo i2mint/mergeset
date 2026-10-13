@@ -10,6 +10,11 @@ Note the deliberate absence of `from __future__ import annotations`: it turns
 every hint into a string, and the CLI adapter reads the real annotations to
 decide that `--max-seconds` is a float rather than the string `"600"`.
 
+### Module Attributes
+
+| [`EXIT_ABORTED`](#mergeset.cli.EXIT_ABORTED)   | the report is printed and is not an answer.   |
+|-----------------------------------------------------------------|-----------------------------------------------|
+
 ### Functions
 
 | [`branches`](#mergeset.cli.branches)(branch, \*[, repo, base, ...])   | Find maximal mergeable sets among the given branches.                     |
@@ -18,6 +23,27 @@ decide that `--max-seconds` is a float rather than the string `"600"`.
 | [`main`](#mergeset.cli.main)([argv])                              | Entry point: project `_dispatch_funcs` onto a command line parser.        |
 | [`prs`](#mergeset.cli.prs)(repo_spec, \*[, repo, author, ...])   | Find maximal mergeable sets among a repository's open pull requests.      |
 | [`show_log`](#mergeset.cli.show_log)(\*[, log_path, repo])            | Print what the evaluation log already knows, without evaluating anything. |
+
+### Classes
+
+| [`AbortedReport`](#mergeset.cli.AbortedReport)   | The report of a run that aborted.   |
+|------------------------------------------------------------------|-------------------------------------|
+
+### *class* mergeset.cli.AbortedReport
+
+Bases: [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+The report of a run that aborted. A `str` everywhere, but the CLI exits
+[`EXIT_ABORTED`](#mergeset.cli.EXIT_ABORTED) on it, so a script or CI step cannot read it as a
+finished run (#53).
+
+### mergeset.cli.EXIT_ABORTED *= 3*
+
+the
+report is printed and is not an answer. 1 and 2 stay with Python and argparse.
+
+* **Type:**
+  Exit status of a run that aborted (a search met an ERROR, ADR 0036)
 
 ### mergeset.cli.branches(branch, , repo='.', base='HEAD', validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, validate_input=None, merge_only=False, tier=None, tier_cost=None, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, confirm_budget_seconds=None, confirm_max_runs=None, confirm_max_sets=None, must_include=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
 

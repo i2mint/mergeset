@@ -1,4 +1,4 @@
-> built 2026-10-13 12:56 UTC from faaf579 (main) · mergeset 0.0.30. Details: build_info.json
+> built 2026-10-13 13:10 UTC from b193dc7 (main) · mergeset 0.0.31. Details: build_info.json
 
 # index.html.md
 
@@ -170,6 +170,7 @@ python -m mergeset prs OWNER/REPO --repo . \
 
 - **Markdown report** — the merge plans first, then what stops the rest, then the evidence.
 - **Self-contained HTML** — one file, no build step, no network: the conflict graph (textual vs validation conflicts distinguished), the plans, and the evaluation log.
+- **Exit status** — `0` when the run finished or stopped on its budget; `3` when a search aborted (the report says `ABORTED` and why, and is still printed in full: it is what was established, not an answer). Refusals before a run starts keep `0`.
 - **Integration branches** — `--integration-branches` creates a local `integration/<date>-<k>` per maximal set so you can test one by hand. It only ever creates *new local* branches; it never touches an existing branch and never pushes.
 
 ## Requirements
@@ -214,11 +215,23 @@ The order of operations is the whole point, because it is the order of *cost*:
 | [`Analysis`](_autosummary/mergeset.analysis.html.md#mergeset.analysis.Analysis)(repo, base, base_sha, changes[, ...])   | Everything a run learned.   |
 |---------------------------------------------------------------------------------------------------|-----------------------------|
 
-### *class* mergeset.analysis.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, unverified_sets=<factory>, log=None, tier_logs=<factory>, searches=<factory>, notes=<factory>)
+### *class* mergeset.analysis.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, aborted_tier=None, unverified_sets=<factory>, log=None, tier_logs=<factory>, searches=<factory>, notes=<factory>)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Everything a run learned. Every field is derivable from `log` + git.
+
+#### *property* aborted *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)*
+
+Why a search stopped on an `ERROR`, or `None`.
+
+An abort is not a budget stop (ADR 0017, 0036): the run could not do
+what it was asked, and what it reports is only what it had established.
+
+#### aborted_tier *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+The confirm tier whose search aborted, when one did after the screen
+finished (`None`: the screen itself aborted, or nothing did).
 
 #### *property* by_id *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [Change](_autosummary/mergeset.base.html.md#mergeset.base.Change)]*
 
@@ -886,6 +899,11 @@ Note the deliberate absence of `from __future__ import annotations`: it turns
 every hint into a string, and the CLI adapter reads the real annotations to
 decide that `--max-seconds` is a float rather than the string `"600"`.
 
+### Module Attributes
+
+| [`EXIT_ABORTED`](_autosummary/mergeset.cli.html.md#mergeset.cli.EXIT_ABORTED)   | the report is printed and is not an answer.   |
+|-----------------------------------------------------------------|-----------------------------------------------|
+
 ### Functions
 
 | [`branches`](_autosummary/mergeset.cli.html.md#mergeset.cli.branches)(branch, \*[, repo, base, ...])   | Find maximal mergeable sets among the given branches.                     |
@@ -894,6 +912,27 @@ decide that `--max-seconds` is a float rather than the string `"600"`.
 | [`main`](_autosummary/mergeset.cli.html.md#mergeset.cli.main)([argv])                              | Entry point: project `_dispatch_funcs` onto a command line parser.        |
 | [`prs`](_autosummary/mergeset.cli.html.md#mergeset.cli.prs)(repo_spec, \*[, repo, author, ...])   | Find maximal mergeable sets among a repository's open pull requests.      |
 | [`show_log`](_autosummary/mergeset.cli.html.md#mergeset.cli.show_log)(\*[, log_path, repo])            | Print what the evaluation log already knows, without evaluating anything. |
+
+### Classes
+
+| [`AbortedReport`](_autosummary/mergeset.cli.html.md#mergeset.cli.AbortedReport)   | The report of a run that aborted.   |
+|------------------------------------------------------------------|-------------------------------------|
+
+### *class* mergeset.cli.AbortedReport
+
+Bases: [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+The report of a run that aborted. A `str` everywhere, but the CLI exits
+[`EXIT_ABORTED`](_autosummary/mergeset.cli.html.md#mergeset.cli.EXIT_ABORTED) on it, so a script or CI step cannot read it as a
+finished run (#53).
+
+### mergeset.cli.EXIT_ABORTED *= 3*
+
+the
+report is printed and is not an answer. 1 and 2 stay with Python and argparse.
+
+* **Type:**
+  Exit status of a run that aborted (a search met an ERROR, ADR 0036)
 
 ### mergeset.cli.branches(branch, , repo='.', base='HEAD', validate_command=None, validate_stage=None, validate_fingerprint=None, validate_optional=None, validate_input=None, merge_only=False, tier=None, tier_cost=None, timeout=None, retries=0, max_evaluations=None, max_seconds=None, max_sets=None, confirm_budget_seconds=None, confirm_max_runs=None, confirm_max_sets=None, must_include=None, log_path=None, trust_unpinned_log=False, report_dir=None, report_format=None, integration_branches=False, reuse_worktree=None, resolver='none', no_pairwise=False, no_decompose=False, quiet=False)
 
@@ -1768,11 +1807,23 @@ changes.
 |------------------------------------------------------------------|----------------------------------------------------------------------------|
 | [`CapabilityError`](_autosummary/mergeset.html.md#mergeset.CapabilityError) | A required external capability is missing; the message says how to fix it. |
 
-### *class* mergeset.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, unverified_sets=<factory>, log=None, tier_logs=<factory>, searches=<factory>, notes=<factory>)
+### *class* mergeset.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, aborted_tier=None, unverified_sets=<factory>, log=None, tier_logs=<factory>, searches=<factory>, notes=<factory>)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Everything a run learned. Every field is derivable from `log` + git.
+
+#### *property* aborted *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)*
+
+Why a search stopped on an `ERROR`, or `None`.
+
+An abort is not a budget stop (ADR 0017, 0036): the run could not do
+what it was asked, and what it reports is only what it had established.
+
+#### aborted_tier *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+The confirm tier whose search aborted, when one did after the screen
+finished (`None`: the screen itself aborted, or nothing did).
 
 #### *property* by_id *: [Dict](https://docs.python.org/3/library/typing.html#typing.Dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [Change](_autosummary/mergeset.base.html.md#mergeset.base.Change)]*
 
@@ -6490,7 +6541,7 @@ contents join the fingerprint (see [`inputs_digest()`](_autosummary/mergeset.val
 
 # About this build
 
-This documentation was built on **2026-10-13 12:56 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/faaf5792feacf8e4c66ef7ffd28ca5ffdc489984"><code>faaf579</code></a> on branch <code>main</code>, for **mergeset 0.0.30** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 13:10 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/b193dc7b1aaf1f068a8d91c739373720d2d6a684"><code>b193dc7</code></a> on branch <code>main</code>, for **mergeset 0.0.31** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -6499,7 +6550,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/mergeset/commit/faaf5792feacf8e4c66ef7ffd28ca5ffdc489984"><code>faaf5792feacf8e4c66ef7ffd28ca5ffdc489984</code></a> |
+| Commit              | <a href="https://github.com/i2mint/mergeset/commit/b193dc7b1aaf1f068a8d91c739373720d2d6a684"><code>b193dc7b1aaf1f068a8d91c739373720d2d6a684</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -6510,9 +6561,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/mergeset</code>                                                               |
-| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38400915747">38400915747</a>      |
+| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38402731065">38402731065</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>faaf5792feacf8e4c66ef7ffd28ca5ffdc489984</code> (in the history of the built commit) |
+| Event commit | <code>b193dc7b1aaf1f068a8d91c739373720d2d6a684</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6537,13 +6588,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/mergeset/0.0.30/">0.0.30</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/mergeset/0.0.31/">0.0.31</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/mergeset && cd mergeset
-git checkout faaf5792feacf8e4c66ef7ffd28ca5ffdc489984
+git checkout b193dc7b1aaf1f068a8d91c739373720d2d6a684
 pip install "epythet==0.2.15"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

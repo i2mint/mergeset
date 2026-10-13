@@ -290,6 +290,7 @@ data-aria-dark="Switch to auto color mode">
 <ul class="simple">
 <li><p><strong>Markdown report</strong> — the merge plans first, then what stops the rest, then the evidence.</p></li>
 <li><p><strong>Self-contained HTML</strong> — one file, no build step, no network: the conflict graph (textual vs validation conflicts distinguished), the plans, and the evaluation log.</p></li>
+<li><p><strong>Exit status</strong> — <code class="docutils literal notranslate"><span class="pre">0</span></code> when the run finished or stopped on its budget; <code class="docutils literal notranslate"><span class="pre">3</span></code> when a search aborted (the report says <code class="docutils literal notranslate"><span class="pre">ABORTED</span></code> and why, and is still printed in full: it is what was established, not an answer). Refusals before a run starts keep <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
 <li><p><strong>Integration branches</strong> — <code class="docutils literal notranslate"><span class="pre">--integration-branches</span></code> creates a local <code class="docutils literal notranslate"><span class="pre">integration/&lt;date&gt;-&lt;k&gt;</span></code> per maximal set so you can test one by hand. It only ever creates <em>new local</em> branches; it never touches an existing branch and never pushes.</p></li>
 </ul>
 </section>
@@ -310,7 +311,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-13 12:56 UTC from <a href="https://github.com/i2mint/mergeset/commit/faaf5792feacf8e4c66ef7ffd28ca5ffdc489984">faaf579</a> (main) · mergeset 0.0.30 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-13 13:10 UTC from <a href="https://github.com/i2mint/mergeset/commit/b193dc7b1aaf1f068a8d91c739373720d2d6a684">b193dc7</a> (main) · mergeset 0.0.31 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -345,7 +346,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=61a342a2"></script>
+      <script src="_static/documentation_options.js?v=c5dbc6bb"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

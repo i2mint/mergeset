@@ -4,6 +4,12 @@ mergeset.cli
 .. automodule:: mergeset.cli
 
    
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      EXIT_ABORTED
+   
    .. rubric:: Functions
 
    .. autosummary::
@@ -13,4 +19,10 @@ mergeset.cli
       main
       prs
       show_log
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      AbortedReport
    

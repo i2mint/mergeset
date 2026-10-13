@@ -166,6 +166,7 @@ python -m mergeset prs OWNER/REPO --repo . \
 
 - **Markdown report** — the merge plans first, then what stops the rest, then the evidence.
 - **Self-contained HTML** — one file, no build step, no network: the conflict graph (textual vs validation conflicts distinguished), the plans, and the evaluation log.
+- **Exit status** — `0` when the run finished or stopped on its budget; `3` when a search aborted (the report says `ABORTED` and why, and is still printed in full: it is what was established, not an answer). Refusals before a run starts keep `0`.
 - **Integration branches** — `--integration-branches` creates a local `integration/<date>-<k>` per maximal set so you can test one by hand. It only ever creates *new local* branches; it never touches an existing branch and never pushes.
 
 ## Requirements

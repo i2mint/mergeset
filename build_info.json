@@ -1,32 +1,32 @@
 {
   "schema_version": 1,
-  "built_at": "2026-10-13T12:56:50Z",
+  "built_at": "2026-10-13T13:10:53Z",
   "package": {
     "name": "mergeset",
-    "version": "0.0.30",
+    "version": "0.0.31",
     "display_name": "mergeset",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "faaf5792feacf8e4c66ef7ffd28ca5ffdc489984",
-    "short_commit": "faaf579",
+    "commit": "b193dc7b1aaf1f068a8d91c739373720d2d6a684",
+    "short_commit": "b193dc7",
     "branch": "main",
     "tags": [],
     "dirty": false,
     "remote_url": "https://github.com/i2mint/mergeset",
-    "commit_url": "https://github.com/i2mint/mergeset/commit/faaf5792feacf8e4c66ef7ffd28ca5ffdc489984",
+    "commit_url": "https://github.com/i2mint/mergeset/commit/b193dc7b1aaf1f068a8d91c739373720d2d6a684",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "i2mint/mergeset",
-    "sha": "faaf5792feacf8e4c66ef7ffd28ca5ffdc489984",
+    "sha": "b193dc7b1aaf1f068a8d91c739373720d2d6a684",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "38400915747",
-    "run_url": "https://github.com/i2mint/mergeset/actions/runs/38400915747",
+    "run_id": "38402731065",
+    "run_url": "https://github.com/i2mint/mergeset/actions/runs/38402731065",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -56,15 +56,15 @@
   },
   "site": {
     "modules_documented": 17,
-    "objects_documented": 416
+    "objects_documented": 422
   },
   "pypi": {
     "checked": true,
-    "latest": "0.0.30",
+    "latest": "0.0.31",
     "relation": "same",
     "error": null
   },
-  "reproduce": "git clone https://github.com/i2mint/mergeset && cd mergeset\ngit checkout faaf5792feacf8e4c66ef7ffd28ca5ffdc489984\npip install \"epythet==0.2.15\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/i2mint/mergeset && cd mergeset\ngit checkout b193dc7b1aaf1f068a8d91c739373720d2d6a684\npip install \"epythet==0.2.15\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": true,
