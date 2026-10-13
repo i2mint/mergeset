@@ -18,7 +18,7 @@ from typing import Optional, Sequence
 
 from mergeset.analysis import analyze as _analyze
 from mergeset.base import CapabilityError, MergesetError
-from mergeset.gitops import create_integration_branch
+from mergeset.gitops import create_integration_branch, git
 from mergeset.oracle import claude_code_resolver
 from mergeset.log import EvaluationLog
 from mergeset.report import (
@@ -162,7 +162,7 @@ def _tiers(
     validator_flags: Sequence[str],
     timeout: Optional[float],
     retries: int,
-    branch_names=lambda: (),
+    is_commit=lambda name: False,
 ) -> list:
     """Build the ordered tiers from ``--tier`` and ``--tier-cost``.
 
@@ -171,12 +171,14 @@ def _tiers(
     friends, or the default pytest run), which is how a staged validator becomes
     one rung: the stages compose *inside* a tier, the tiers compose *across*
     validators, each with its own log. At most one tier can be bare, since there
-    is only one set of validation flags.
+    is only one set of validation flags. ``'name:'`` (empty command) is the same
+    bare tier, spelled so that it cannot be mistaken for anything else.
     """
     tiers, bare = [], []
     for spec in specs:
         name, sep, command = spec.partition(":")
-        if sep:
+        explicit_bare = bool(sep) and not command.strip()
+        if sep and not explicit_bare:
             name, command = _split_pair(spec, "--tier")
             validate = command_validation(command, timeout=timeout)
             if retries:
@@ -189,13 +191,15 @@ def _tiers(
                     f"the --validate-* flags describe; got {spec!r}. For example: "
                     "--tier 'unit:pytest -x' 'e2e:pnpm run e2e'"
                 )
-            if name in branch_names():
-                # `--tier` takes every value after it, so a branch name typed
-                # after the flag lands here instead of among the candidates.
+            if not explicit_bare and is_commit(name):
+                # `--tier` takes every value after it, so a branch, tag or sha
+                # typed after the flag lands here instead of among the
+                # candidates -- and would silently run as a tier.
                 raise ValueError(
-                    f"`{name}` is a branch, not a tier: it followed --tier, so "
-                    "it was read as one. Put branch names before --tier, or end "
-                    "the tier list with `--`."
+                    f"`{name}` names a commit in this repository, so it reads as "
+                    "a branch that followed --tier rather than a tier. Put the "
+                    f"branch names before --tier. If `{name}` really is the "
+                    f"tier's name, spell it --tier '{name}:'."
                 )
             bare.append(name)
             validate = validator
@@ -488,7 +492,7 @@ def branches(
         validate_optional=validate_optional or (),
         merge_only=merge_only,
         tier=tier,
-        tier_cost=tier_cost or (),
+        tier_cost=tier_cost,
         timeout=timeout,
         retries=retries,
         max_evaluations=max_evaluations,
@@ -497,7 +501,7 @@ def branches(
         confirm_budget_seconds=confirm_budget_seconds,
         confirm_max_runs=confirm_max_runs,
         confirm_max_sets=confirm_max_sets,
-        must_include=must_include or (),
+        must_include=must_include,
         log_path=log_path,
         trust_unpinned_log=trust_unpinned_log,
         report_dir=report_dir,
@@ -609,7 +613,7 @@ def prs(
         validate_optional=validate_optional or (),
         merge_only=merge_only,
         tier=tier,
-        tier_cost=tier_cost or (),
+        tier_cost=tier_cost,
         timeout=timeout,
         retries=retries,
         max_evaluations=max_evaluations,
@@ -618,7 +622,7 @@ def prs(
         confirm_budget_seconds=confirm_budget_seconds,
         confirm_max_runs=confirm_max_runs,
         confirm_max_sets=confirm_max_sets,
-        must_include=must_include or (),
+        must_include=must_include,
         log_path=log_path,
         trust_unpinned_log=trust_unpinned_log,
         report_dir=report_dir,
@@ -679,10 +683,25 @@ def _run(
             validate_fingerprint=validate_fingerprint,
             validate_optional=validate_optional,
         )
-        if tier is not None and not tier:
+        for kw, values in (
+            ("tier", tier),
+            ("tier_cost", tier_cost),
+            ("must_include", must_include),
+        ):
+            if values is not None and not values:
+                flag = "--" + kw.replace("_", "-")
+                raise ValueError(
+                    f"{flag} was given no values. Drop it, or pass at least one "
+                    f"(see --help)."
+                )
+        unknown_formats = set(report_format or ()) - set(REPORT_FORMATS)
+        if unknown_formats:
+            # Checked before the run, not when the reports are written after
+            # it: a branch name typed after --report-format lands here.
             raise ValueError(
-                "--tier was given no tiers. Pass at least one: --tier "
-                "'name:command', or a bare --tier NAME for the --validate-* flags."
+                f"--report-format names no format: "
+                f"{', '.join(sorted(unknown_formats))}. Formats are: "
+                f"{', '.join(REPORT_FORMATS)}. Put branch names before it."
             )
         if not tier:
             # `is not None`, not truthiness: `--confirm-max-runs 0` is an
@@ -690,7 +709,7 @@ def _run(
             stray = [
                 flag
                 for kw, flag in _TIER_ONLY_FLAGS.items()
-                if given[kw] is not None and given[kw] != ()
+                if given[kw] is not None
             ]
             if stray:
                 raise ValueError(
@@ -727,20 +746,20 @@ def _run(
                 changes,
                 tiers=_tiers(
                     tier,
-                    tier_cost,
+                    tier_cost or (),
                     validator=validate,
                     validator_flags=[
                         flag for kw, flag in _VALIDATOR_FLAGS.items() if given[kw]
                     ],
                     timeout=timeout,
                     retries=retries,
-                    branch_names=lambda: set(local_branch_names(repo))
-                    | {c.id for c in changes},
+                    is_commit=lambda name: name in {c.id for c in changes}
+                    or git(repo, "rev-parse", "--verify", "--quiet", f"{name}^{{commit}}").ok,
                 ),
                 confirm_budget_seconds=confirm_budget_seconds,
                 confirm_max_runs=confirm_max_runs,
                 confirm_max_sets=confirm_max_sets,
-                must_include=must_include,
+                must_include=must_include or (),
                 **common,
             )
             analysis = tiered.analysis
@@ -878,11 +897,20 @@ def install_skills(
 _dispatch_funcs = [branches, prs, show_log, install_skills]
 
 
-def main() -> int:
-    """Entry point: project ``_dispatch_funcs`` onto a command line parser."""
+def main(argv=None) -> int:
+    """Entry point: project ``_dispatch_funcs`` onto a command line parser.
+
+    cw's default convention stops reading a function's annotations as soon as
+    it declares any parameter (argh's rule), which would turn ``--max-seconds
+    60`` into the string ``"60"``. ``hints_when_declared`` keeps the hints and
+    merges the declarations on top.
+    """
+    import dataclasses
+
     import cw
 
-    return cw.dispatch(_dispatch_funcs)
+    convention = dataclasses.replace(cw.ARGH, hints_when_declared=True)
+    return cw.dispatch(_dispatch_funcs, argv=argv, convention=convention)
 
 
 if __name__ == "__main__":

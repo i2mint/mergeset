@@ -242,10 +242,11 @@ class TieredAnalysis:
         the caller, or neither, in which case the model's default is shown --
         because an estimate with no provenance reads as a fact.
         """
-        summary = getattr(self.cost_model, "summary", lambda: {})()
+        summarize = getattr(self.cost_model, "summary", None)
+        summary = summarize() if callable(summarize) else None
         lines = []
         for tier in self.tiers:
-            row = summary.get(tier.name, {})
+            row = (summary or {}).get(tier.name, {})
             spent = self.spent.get(tier.name, 0.0)
             runs = self.runs.get(tier.name, 0)
             line = (
@@ -256,6 +257,11 @@ class TieredAnalysis:
                 line += f"; priced from measurements, median {row['median_seconds']}s"
             elif row.get("source") == "declared":
                 line += f"; priced as declared, {row['declared_seconds']}s per run"
+            elif summary is None:
+                # A model that publishes no provenance: say what it charges,
+                # not where that came from.
+                price = self.cost_model.estimate(tier.name, frozenset())
+                line += f"; priced by the cost model at {round(price, 1)}s per run"
             else:
                 default = self.cost_model.estimate(tier.name, frozenset())
                 line += (

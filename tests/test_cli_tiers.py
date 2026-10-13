@@ -161,10 +161,8 @@ def test_prs_carries_the_whole_tier_surface(repo, monkeypatch):
 
 def _dispatch(monkeypatch, argv):
     """Run the real command line (cw + argparse), stopping at analyze_tiered."""
-    import cw
-
     seen = _captured(monkeypatch)
-    out = cw.dispatch(cli._dispatch_funcs, argv=argv)
+    out = cli.main(argv)
     return seen, out
 
 
@@ -191,8 +189,58 @@ def test_a_branch_swallowed_by_tier_is_refused(repo, monkeypatch, capsys):
          "--tier", "unit:true", "feat-b"],
     )  # fmt: skip
     text = (out or "") + capsys.readouterr().out
-    assert "`feat-b` is a branch, not a tier" in text
+    assert "`feat-b` names a commit in this repository" in text
     assert not seen  # nothing was analysed
+
+
+def test_a_swallowed_tag_is_refused_too(repo, monkeypatch, capsys):
+    from conftest import run
+
+    run(repo, "tag", "v1", "feat-b")
+    seen, out = _dispatch(
+        monkeypatch,
+        ["branches", "feat-a", "--repo", repo, "--base", "main",
+         "--tier", "unit:true", "v1"],
+    )  # fmt: skip
+    assert "`v1` names a commit" in (out or "") + capsys.readouterr().out
+    assert not seen
+
+
+def test_a_tier_named_like_a_branch_can_be_spelt_explicitly(repo, monkeypatch):
+    seen, _ = _dispatch(
+        monkeypatch,
+        ["branches", "feat-a", "--repo", repo, "--base", "main",
+         "--validate-command", "true", "--tier", "main:", "deep:true"],
+    )  # fmt: skip
+    assert [t.name for t in seen["tiers"]] == ["main", "deep"]
+
+
+def test_numeric_flags_arrive_as_numbers(repo, monkeypatch):
+    seen, _ = _dispatch(
+        monkeypatch,
+        ["branches", "feat-a", "feat-b", "--repo", repo, "--base", "main",
+         "--max-seconds", "60", "--max-evaluations", "5", "--timeout", "30",
+         "--tier", "unit:true", "deep:true",
+         "--confirm-max-runs", "2", "--confirm-budget-seconds", "90"],
+    )  # fmt: skip
+    assert seen["max_seconds"] == 60.0 and seen["max_evaluations"] == 5
+    assert seen["confirm_max_runs"] == 2 and seen["confirm_budget_seconds"] == 90.0
+    assert isinstance(seen["confirm_max_runs"], int)
+
+
+def test_numeric_flags_arrive_as_numbers_without_tiers(repo, monkeypatch):
+    got = {}
+
+    def fake_analyze(*args, **kwargs):
+        got.update(kwargs)
+        raise ValueError("stop here")
+
+    monkeypatch.setattr(cli, "_analyze", fake_analyze)
+    cli.main(
+        ["branches", "feat-a", "--repo", repo, "-b", "main", "--max-sets", "3",
+         "--max-seconds", "1.5"]
+    )  # fmt: skip
+    assert got["max_sets"] == 3 and got["max_seconds"] == 1.5
 
 
 def test_a_double_dash_ends_the_tier_list(repo, monkeypatch):
@@ -218,16 +266,19 @@ def test_a_double_dash_ends_the_tier_list(repo, monkeypatch):
         ({"tier": ["a:true"], "merge_only": True}, "--merge-only describe"),
         ({"tier": ["a", "b"]}, "Only one --tier can be a bare name"),
         ({"tier": ["pytest -x"]}, "--tier expects 'name:command'"),
-        ({"tier": ["a:"]}, "--tier expects 'name:value'"),
+        ({"tier": [":true"]}, "--tier expects 'name:value'"),
         ({"tier": ["a:true"], "tier_cost": ["b:3"]}, "--tier-cost names no tier"),
         ({"tier": ["a:true"], "tier_cost": ["a:0"]}, "seconds > 0"),
         ({"tier": ["a:true"], "tier_cost": ["a:soon"]}, "seconds > 0"),
         ({"tier": ["a:true"], "tier_cost": ["a:1", "a:2"]}, "names `a` twice"),
         ({"tier": ["a:true"], "tier_cost": ["a:inf"]}, "finite seconds > 0"),
-        ({"tier": []}, "--tier was given no tiers"),
+        ({"tier": []}, "--tier was given no values"),
         ({"confirm_max_runs": 0}, "--confirm-max-runs only mean"),
         ({"confirm_budget_seconds": 0.0}, "--confirm-budget-seconds only mean"),
-        ({"tier": ["feat-c"]}, "`feat-c` is a branch, not a tier"),
+        ({"tier": ["feat-c"]}, "`feat-c` names a commit"),
+        ({"tier": ["a:true"], "must_include": []}, "--must-include was given no"),
+        ({"tier": ["a:true"], "tier_cost": []}, "--tier-cost was given no"),
+        ({"report_format": ["markdown", "feat-b"]}, "--report-format names no"),
     ],
 )
 def test_options_that_cannot_mean_anything_are_refused(repo, monkeypatch, kwargs, says):
@@ -322,8 +373,6 @@ def test_every_tier_merges_the_way_the_screen_does(repo, tmp_path, monkeypatch):
 
 
 def test_branches_takes_several_positional_branches(repo, monkeypatch):
-    import cw
-
     seen = {}
 
     def fake_analyze(repo, changes, **kwargs):
@@ -331,8 +380,27 @@ def test_branches_takes_several_positional_branches(repo, monkeypatch):
         raise ValueError("stop here")
 
     monkeypatch.setattr(cli, "_analyze", fake_analyze)
-    cw.dispatch(
-        cli._dispatch_funcs,
-        argv=["branches", "feat-a", "feat-b", "--repo", repo, "-b", "main"],
-    )
+    cli.main(["branches", "feat-a", "feat-b", "--repo", repo, "-b", "main"])
     assert seen["ids"] == ["feat-a", "feat-b"]
+
+
+def test_a_cost_model_without_a_summary_is_not_called_a_default(repo, tmp_path):
+    from mergeset import Tier
+    from mergeset.validation import command_validation
+
+    class Flat:
+        def estimate(self, tier, subset):
+            return 3.0
+
+        pessimistic = estimate
+
+        def observe(self, tier, subset, seconds):
+            pass
+
+        def is_measured(self, tier):
+            return False
+
+    ok = command_validation(py_command(tmp_path, "pass", _PASS))
+    result = _tiered(repo, [Tier("screen", ok)], cost_model=Flat())
+    (line,) = result.cost_lines()
+    assert "priced by the cost model at 3.0s per run" in line
