@@ -288,6 +288,14 @@ def find_maximal_good_sets(
                 "cached": result.cached,
             },
         )
+        if result.verdict is Verdict.ERROR:
+            # ERROR carries no information about the changes at all, and a run
+            # that keeps going past one reports confident nonsense: every
+            # untestable set looks bad (or, inside a shrink, not bad, which
+            # records a wrong conflict), and "0 of 15 mergeable, complete" is
+            # the result. Stop, wherever in the search it happened.
+            why = result.note or "an evaluation could not be performed"
+            raise _Aborted(subset, why)
         return result
 
     # Complements of minimal hitting sets are the only candidates worth trying.
@@ -305,37 +313,51 @@ def find_maximal_good_sets(
             state.stopped_because = "search space exhausted"
             break
         tried.add(candidate)
-        result = counted_evaluate(candidate)
-        if result.verdict is Verdict.PASS:
-            grown = _grow_within_known(candidate, all_changes, state, parents)
-            if grown != candidate and counted_evaluate(grown).verdict is Verdict.PASS:
-                candidate = grown
-                tried.add(grown)
-            state.maximal_good_sets.append(candidate)
-            emit("maximal_good_set", {"subset": set_key(candidate)})
-        elif result.verdict is Verdict.FAIL:
-            hint = _suspects(result, candidate)
-            if not hint and suspects is not None:
-                hint = suspects(result, candidate) or frozenset()
-            conflict = shrink(counted_evaluate, sorted(hint or candidate))
-            if hint and conflict and not _is_bad(counted_evaluate, conflict):
-                # The hint was wrong; fall back to the whole candidate.
-                conflict = shrink(counted_evaluate, sorted(candidate))
-            state.add_conflict(conflict)
-            emit("conflict", {"subset": set_key(conflict)})
-        else:
-            # ERROR carries no information about the changes at all, and a run
-            # that keeps going past one reports confident nonsense: every
-            # untestable set looks bad, and "0 of 15 mergeable, complete" is the
-            # result. Stop, and say what went wrong.
-            state.error = result.note or "an evaluation could not be performed"
-            state.stopped_because = f"aborted: {state.error}"
-            emit("aborted", {"subset": set_key(candidate), "error": state.error})
+        try:
+            result = counted_evaluate(candidate)
+            if result.verdict is Verdict.PASS:
+                grown = _grow_within_known(candidate, all_changes, state, parents)
+                try:
+                    grown_passes = (
+                        grown != candidate
+                        and counted_evaluate(grown).verdict is Verdict.PASS
+                    )
+                except _Aborted:
+                    # `candidate` itself passed: keep it in the partial answer.
+                    state.maximal_good_sets.append(candidate)
+                    raise
+                if grown_passes:
+                    candidate = grown
+                    tried.add(grown)
+                state.maximal_good_sets.append(candidate)
+                emit("maximal_good_set", {"subset": set_key(candidate)})
+            elif result.verdict is Verdict.FAIL:
+                hint = _suspects(result, candidate)
+                if not hint and suspects is not None:
+                    hint = suspects(result, candidate) or frozenset()
+                conflict = shrink(counted_evaluate, sorted(hint or candidate))
+                if hint and conflict and not _is_bad(counted_evaluate, conflict):
+                    # The hint was wrong; fall back to the whole candidate.
+                    conflict = shrink(counted_evaluate, sorted(candidate))
+                state.add_conflict(conflict)
+                emit("conflict", {"subset": set_key(conflict)})
+        except _Aborted as stop:
+            state.error = stop.why
+            state.stopped_because = f"aborted: {stop.why}"
+            emit("aborted", {"subset": set_key(stop.subset), "error": stop.why})
             break
 
     state.elapsed = time.time() - started
     state.maximal_good_sets = _keep_maximal(state.maximal_good_sets)
     return state
+
+
+class _Aborted(Exception):
+    """An evaluation could not be performed (ADR 0017); ends the search."""
+
+    def __init__(self, subset: ChangeSet, why: str):
+        super().__init__(why)
+        self.subset, self.why = subset, why
 
 
 def _is_bad(evaluate: Evaluate, subset: ChangeSet) -> bool:

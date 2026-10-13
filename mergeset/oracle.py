@@ -226,9 +226,7 @@ def git_oracle(
             note=(
                 "assisted resolution"
                 if outcome.assisted
-                else "base alone"
-                if not subset
-                else ""
+                else "base alone" if not subset else ""
             ),
         )
 
@@ -453,7 +451,9 @@ def claude_code_resolver(
         return True, diff[:20000]
 
     # What decides which conflicts it resolves: the policy, the command that
-    # runs it, and how long it may take (a timeout is a decline).
+    # runs it, and how long it may take. A timeout is an ERROR now (ADR 0036) and
+    # never a recorded row, but the timeout stays in the spec: dropping it would
+    # change every existing fingerprint and orphan the logs pinned to it.
     spec = json.dumps([policy, command, float(timeout)])
     digest = hashlib.sha256(spec.encode()).hexdigest()[:16]
     setattr(resolve, RESOLVER_FINGERPRINT_ATTR, f"claude-code:{digest}")

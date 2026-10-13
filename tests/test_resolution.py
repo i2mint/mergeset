@@ -94,9 +94,10 @@ def test_the_resolution_survives_the_log(repo, tmp_path):
     from mergeset.log import EvaluationLog
 
     reread = EvaluationLog(path).exact(pair)
-    assert reread.merge.resolved_commit == result.logs["screen"].exact(
-        pair
-    ).merge.resolved_commit
+    assert (
+        reread.merge.resolved_commit
+        == result.logs["screen"].exact(pair).merge.resolved_commit
+    )
 
 
 def test_every_head_is_merged_on_the_resolver_path(repo, tmp_path):
@@ -129,16 +130,19 @@ def _deep_oracle(repo, tmp_path, recorded):
     return git_oracle(
         repo,
         resolve(repo, "main"),
-        [Change(id=n, head=resolve(repo, n), base="main") for n in ("feat-a", "feat-c")],
+        [
+            Change(id=n, head=resolve(repo, n), base="main")
+            for n in ("feat-a", "feat-c")
+        ],
         validate=command_validation(py_command(tmp_path, "pass", _PASS)),
         resolution=lambda subset: recorded,
     )
 
 
-def test_a_recorded_resolution_that_does_not_hold_every_head_is_refused(
-    repo, tmp_path
-):
-    stale = MergeOutcome(ok=True, assisted=True, resolved_commit=resolve(repo, "feat-a"))
+def test_a_recorded_resolution_that_does_not_hold_every_head_is_refused(repo, tmp_path):
+    stale = MergeOutcome(
+        ok=True, assisted=True, resolved_commit=resolve(repo, "feat-a")
+    )
     row = _deep_oracle(repo, tmp_path, stale)(frozenset({"feat-a", "feat-c"}))
     assert row.verdict is Verdict.ERROR
     assert "no longer applies" in row.note
@@ -237,9 +241,7 @@ def test_files_a_resolver_leaves_outside_its_commit_are_not_validated(repo, tmp_
     assert frozenset({"feat-a", "feat-c"}) in analysis.maximal_sets
 
 
-def test_a_resolver_that_leaves_tracked_edits_uncommitted_has_declined(
-    repo, tmp_path
-):
+def test_a_resolver_that_leaves_tracked_edits_uncommitted_has_declined(repo, tmp_path):
     def uncommitted(worktree, files):
         _scripted_resolver([])(worktree, files)
         with open(os.path.join(worktree, "other.txt"), "a") as f:
@@ -377,3 +379,64 @@ def test_a_resolution_survives_garbage_collection(repo, tmp_path):
     assert again.logs["deep"].exact(pair).verdict is Verdict.PASS
     assert again.verified_tier(pair) == "deep"
     assert len(calls) == 1
+
+
+def _raising(calls):
+    def broken(worktree, files):
+        calls.append(1)
+        raise TimeoutError("resolver timed out")
+
+    return broken
+
+
+def test_a_raising_resolver_is_asked_once_across_tiers_and_must_include(repo, tmp_path):
+    """Review of #52: the ERROR stopped one search, and the next asked again."""
+    calls = []
+    result = _tiered(
+        repo,
+        tmp_path,
+        ["feat-a", "feat-c"],
+        resolver=_raising(calls),
+        must_include=["feat-a", "feat-c"],
+    )
+    assert len(calls) == 1, calls
+    assert "deep" in result.skipped
+    assert any("aborted" in n for n in result.analysis.notes)
+    assert not any("No validated set keeps" in n for n in result.analysis.notes)
+
+
+def test_a_raising_resolver_is_asked_once_with_decompose(repo, tmp_path):
+    from mergeset.analysis import analyze
+
+    calls = []
+    analysis = analyze(
+        repo,
+        _changes(["feat-a", "feat-b", "feat-c"]),
+        base="main",
+        validate=command_validation(py_command(tmp_path, "pass", _PASS)),
+        resolver=_raising(calls),
+        pairwise_preoracle=False,
+        decompose=True,
+        use_ci_status=False,
+    )
+    assert len(calls) == 1, calls
+    assert sum(1 for s in analysis.searches if s.error) == 1
+
+
+def test_an_error_inside_conflict_shrinking_stops_the_search():
+    """It used to count as 'not bad' and record a wrong conflict."""
+    from mergeset.base import Evaluation
+    from mergeset.solve import find_maximal_good_sets
+
+    seen = []
+
+    def evaluate(subset):
+        seen.append(subset)
+        if subset == frozenset("abcd"):
+            return Evaluation(subset, Verdict.FAIL)
+        return Evaluation(subset, Verdict.ERROR, note="resolver timed out")
+
+    state = find_maximal_good_sets(list("abcd"), evaluate)
+    assert state.error == "resolver timed out"
+    assert state.conflicts == []
+    assert len(seen) == 2
