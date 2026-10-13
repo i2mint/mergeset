@@ -50,8 +50,9 @@ One decision per file. The `decision:` field in each file's front matter carries
 | [0031](0031-a-resolution-is-made-once-and-kept.md) | — | An assisted resolution is made once, vouched for, and kept |
 | [0032](0032-a-fingerprint-covers-the-inputs-it-is-told.md) | — | A validator's fingerprint covers the files outside the repository it is told it runs |
 | [0033](0033-a-row-is-about-how-the-set-was-merged.md) | — | A row is about how the set was merged, where that decided its outcome |
+| [0034](0034-a-resolver-is-offered-what-the-pre-oracle-would-exclude.md) | — | A resolver is offered the conflicts the pre-oracle would exclude |
 
-33 records. Append-only: when a decision is reversed, the old record stays
+34 records. Append-only: when a decision is reversed, the old record stays
 and the new one says what changed.
 
 Records from 0026 on have no `was` identifier: they were written after the split
