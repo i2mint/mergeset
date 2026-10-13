@@ -15,7 +15,9 @@ A row is an answer about *commits*, not about ids. Once the log is pinned
 (:meth:`EvaluationLog.pin`) to the base and the head of each change in play,
 only rows evaluated against those same commits count — rows about an older head
 of a rewritten branch are kept on disk and in :attr:`EvaluationLog.rows`, and
-simply not matched (i2mint/mergeset#23).
+simply not matched (i2mint/mergeset#23). The same holds for *what* was run:
+rows judged by another validator (another command, other stages) are kept and
+not matched (i2mint/mergeset#32).
 """
 
 from __future__ import annotations
@@ -37,7 +39,14 @@ from typing import (
     Tuple,
 )
 
-from mergeset.base import ChangeId, ChangeSet, Evaluation, Verdict, set_key
+from mergeset.base import (
+    UNKNOWN_FINGERPRINT,
+    ChangeId,
+    ChangeSet,
+    Evaluation,
+    Verdict,
+    set_key,
+)
 
 
 def _now() -> str:
@@ -148,7 +157,7 @@ class Known:
 
 @dataclass(frozen=True)
 class Pins:
-    """The commits a question is about: the base, and each change's head sha.
+    """What a question is about: the base, each change's head sha, the validator.
 
     A row *matches* when it was merged onto the same base and every change it
     holds is in play with the same head. A row holding a change that is not in
@@ -168,13 +177,27 @@ class Pins:
     False
     >>> Pins('B', {'a': 'A1'}).matches(row)          # b is not in play
     False
+
+    With a ``validator`` fingerprint, a row must also have been judged by that
+    validator. A row recording none (written before i2mint/mergeset#32) is not
+    refuted, only incomplete: see :attr:`EvaluationLog.unpinned`.
+
+    >>> pins = Pins('B', {'a': 'A1', 'b': 'B1'}, validator='command:1')
+    >>> pins.matches(replace(row, validator='command:1'))
+    True
+    >>> pins.refutes(replace(row, validator='command:2'))   # the command changed
+    True
+    >>> pins.matches(row), pins.refutes(row)                # recorded no validator
+    (False, False)
     """
 
     base: str
     heads: Mapping[ChangeId, str]
+    #: Fingerprint of the validator the question is asked of (``'unknown'``
+    #: when it cannot say what it runs). ``None`` compares no validator at all.
+    validator: Optional[str] = None
 
-    def matches(self, evaluation: Evaluation) -> bool:
-        """True iff ``evaluation`` was run against these commits."""
+    def _same_commits(self, evaluation: Evaluation) -> bool:
         if evaluation.base_sha != self.base:
             return False
         recorded = evaluation.heads
@@ -183,12 +206,45 @@ class Pins:
             for cid in evaluation.subset
         )
 
+    def refutes(self, evaluation: Evaluation) -> bool:
+        """True iff what ``evaluation`` records shows it answers another question.
+
+        Other commits, or another validator. A row that records too little to
+        tell is not refuted -- it is incomplete (see :meth:`complete`).
+        """
+        if evaluation.pinned and not self._same_commits(evaluation):
+            return True
+        return (
+            self.validator is not None
+            and evaluation.validator is not None
+            and evaluation.validator != self.validator
+        )
+
+    def complete(self, evaluation: Evaluation) -> bool:
+        """True iff ``evaluation`` records everything these pins compare."""
+        return evaluation.pinned and (
+            self.validator is None or evaluation.validator is not None
+        )
+
+    def matches(self, evaluation: Evaluation) -> bool:
+        """True iff ``evaluation`` was run against these commits, by this validator."""
+        return self.complete(evaluation) and not self.refutes(evaluation)
+
     def stamp(self, evaluation: Evaluation) -> Evaluation:
-        """``evaluation`` pinned to these commits (unless it already is)."""
-        if evaluation.pinned:
-            return evaluation
-        heads = {c: self.heads[c] for c in evaluation.subset if c in self.heads}
-        return replace(evaluation, base_sha=self.base, heads=heads)
+        """``evaluation`` pinned to these commits and validator, where it is not.
+
+        Pins naming no validator stamp :data:`~mergeset.base.UNKNOWN_FINGERPRINT`,
+        never nothing: a row recording no validator reads as written before
+        validators were recorded, and ``trust_unpinned`` would adopt it.
+        """
+        if not evaluation.pinned:
+            heads = {c: self.heads[c] for c in evaluation.subset if c in self.heads}
+            evaluation = replace(evaluation, base_sha=self.base, heads=heads)
+        if evaluation.validator is None:
+            evaluation = replace(
+                evaluation, validator=self.validator or UNKNOWN_FINGERPRINT
+            )
+        return evaluation
 
 
 class EvaluationLog:
@@ -204,11 +260,14 @@ class EvaluationLog:
             :meth:`pin`). Unpinned, every row counts, as before pinning existed;
             :func:`mergeset.analyze` always pins.
         trust_unpinned: Let rows that record no commits at all (written before
-            i2mint/mergeset#23, or by an unpinned log) count as matches once the
-            log is pinned. Off by default, because such a row may be about a head
-            that has since moved — which is the defect pinning exists to close.
-            Turn it on only when you know the heads have not moved since those
-            rows were written; it is the migration path for an old log.
+            i2mint/mergeset#23, or by an unpinned log), or no validator while
+            the pins name one (written before i2mint/mergeset#32), count as
+            matches once the log is pinned. Off by default, because such a row
+            may be about a head that has since moved, or judged by a command
+            that has since changed — which is the defect pinning exists to
+            close. Turn it on only when you know neither has changed since those
+            rows were written; it is the migration path for an old log. A row
+            whose recorded commits or validator differ never counts.
 
     >>> log = EvaluationLog(MemoryLines())
     >>> from mergeset.base import Evaluation, Verdict
@@ -257,9 +316,10 @@ class EvaluationLog:
         *,
         base: str,
         heads: Mapping[ChangeId, str],
+        validator: Optional[str] = None,
         trust_unpinned: Optional[bool] = None,
     ) -> "EvaluationLog":
-        """A view of this log scoped to ``base`` and these heads.
+        """A view of this log scoped to ``base``, these heads and ``validator``.
 
         Same store, same rows; this log itself is left as it was, so a caller
         that hands one log to two analyses keeps its own view of it.
@@ -277,10 +337,20 @@ class EvaluationLog:
         view._view_of = -1
         if trust_unpinned is not None:
             view.trust_unpinned = trust_unpinned
-        return view.pin(base=base, heads=heads)
+        return view.pin(base=base, heads=heads, validator=validator)
 
-    def pin(self, *, base: str, heads: Mapping[ChangeId, str]) -> "EvaluationLog":
-        """Scope *this* log to ``base`` and these heads; returns ``self``.
+    def pin(
+        self,
+        *,
+        base: str,
+        heads: Mapping[ChangeId, str],
+        validator: Optional[str] = None,
+    ) -> "EvaluationLog":
+        """Scope *this* log to ``base``, these heads and ``validator``; returns ``self``.
+
+        ``validator`` is the fingerprint of what the questions will be asked of
+        (:func:`mergeset.validation.fingerprint_of`); ``None`` matches rows on
+        commits alone.
 
         :meth:`pinned` is the same without changing this object.
 
@@ -299,7 +369,7 @@ class EvaluationLog:
         >>> log.known(frozenset('a')).verdict is None, len(log.rows), len(log.stale)
         (True, 1, 1)
         """
-        self.pins = Pins(base, dict(heads))
+        self.pins = Pins(base, dict(heads), validator)
         self._view_of = -1
         return self
 
@@ -314,11 +384,16 @@ class EvaluationLog:
     def _counts(self, evaluation: Evaluation) -> bool:
         if self.pins is None:
             return True
-        if not evaluation.pinned:
-            # Even trusted, an old row can only speak for changes in play:
-            # one holding another change would surface it in a fallback set.
-            return self.trust_unpinned and evaluation.subset <= self.pins.heads.keys()
-        return self.pins.matches(evaluation)
+        if self.pins.refutes(evaluation):
+            return False
+        if self.pins.complete(evaluation):
+            return True
+        # It records less than the pins compare (written before #23 or #32).
+        if not self.trust_unpinned:
+            return False
+        # Even trusted, an old row can only speak for changes in play: one
+        # holding another change would surface it in a fallback set.
+        return evaluation.pinned or evaluation.subset <= self.pins.heads.keys()
 
     @property
     def trust_unpinned(self) -> bool:
@@ -337,24 +412,43 @@ class EvaluationLog:
 
     @property
     def stale(self) -> List[Evaluation]:
-        """Rows evaluated against other commits than the pinned ones.
+        """Rows evaluated against other commits, or by another validator.
 
         Not wrong — about a different question — so kept, and not matched.
         """
         if self.pins is None:
             return []
-        return [e for e in self._rows if e.pinned and not self.pins.matches(e)]
+        return [e for e in self._rows if self.pins.refutes(e)]
+
+    @property
+    def other_validator(self) -> List[Evaluation]:
+        """The :attr:`stale` rows judged by a validator other than the pinned one.
+
+        Usually a tier or ``--validate-command`` whose command was edited.
+        """
+        pinned = self.pins.validator if self.pins is not None else None
+        if pinned is None:
+            return []
+        return [
+            e for e in self._rows if e.validator is not None and e.validator != pinned
+        ]
 
     @property
     def unpinned(self) -> List[Evaluation]:
-        """Rows recording no commits that a pinned log is not counting.
+        """Rows recording too little to match that a pinned log is not counting.
 
-        All of them by default; with ``trust_unpinned``, only those holding a
-        change that is not in play. Empty when the log is unpinned.
+        No commits (written before #23), or no validator while the pins name
+        one (written before #32). All of them by default; with
+        ``trust_unpinned``, only those holding a change that is not in play.
+        Empty when the log is unpinned.
         """
         if self.pins is None:
             return []
-        return [e for e in self._rows if not e.pinned and not self._counts(e)]
+        return [
+            e
+            for e in self._rows
+            if not self.pins.refutes(e) and not self._counts(e)
+        ]
 
     # -- reading -----------------------------------------------------------
 
