@@ -238,3 +238,85 @@ def test_a_set_the_aborted_tier_confirmed_is_not_flagged_unverified(
     for plan_set in analysis.maximal_sets:
         confirmed = result.verified_tier(plan_set) == "deep"
         assert (plan_set in unverified) != confirmed, plan_set
+
+
+def test_best_set_including_raises_on_an_error_instead_of_answering_none():
+    """Review of #52: an ERROR read as 'no set keeps these' (#54)."""
+    from mergeset.base import EvaluationAborted
+    from mergeset.tiers import best_set_including
+
+    def oracle(subset):
+        if {"h", "a"} <= subset:
+            return Evaluation(subset, Verdict.FAIL)
+        if subset == frozenset("bch"):
+            return Evaluation(subset, Verdict.ERROR, note="resolver timed out")
+        return Evaluation(subset, Verdict.PASS)
+
+    with pytest.raises(EvaluationAborted, match="resolver timed out") as stop:
+        best_set_including("abch", oracle, must_include=["h"])
+    # What was established before it is sound and travels with the exception.
+    assert frozenset({"a", "h"}) in stop.value.conflicts
+
+
+def test_an_error_inside_must_include_is_an_abort_not_a_finding(
+    repo, tmp_path, monkeypatch
+):
+    import mergeset.tiers as tiers_module
+    from mergeset.tiers import Tier, analyze_tiered
+    from mergeset.validation import merge_only_validation
+
+    real = tiers_module.best_set_including
+
+    def erroring(change_ids, evaluate, **kwargs):
+        def wrapped(subset):
+            return Evaluation(frozenset(subset), Verdict.ERROR, note="boom")
+
+        return real(change_ids, wrapped, **kwargs)
+
+    monkeypatch.setattr(tiers_module, "best_set_including", erroring)
+    result = analyze_tiered(
+        repo,
+        [Change(id=n, head=n, base="main") for n in ("feat-b", "feat-d")],
+        base="main",
+        tiers=[
+            Tier("screen", merge_only_validation()),
+            Tier("deep", command_validation(py_command(tmp_path, "deep", _PASS))),
+        ],
+        must_include=["feat-b"],
+        pairwise_preoracle=False,
+        use_ci_status=False,
+        decompose=False,
+    )
+    analysis = result.analysis
+    assert analysis.aborted == "boom"
+    assert analysis.aborted_phase == "--must-include" and analysis.aborted_tier is None
+    assert result.best_including is None
+    assert not any("No validated set keeps" in n for n in analysis.notes)
+    assert any("--must-include was not answered: boom" in n for n in analysis.notes)
+    text = markdown_report(analysis)
+    # A phase after the tiers: the plans were confirmed, and the report says so.
+    assert "ABORTED during --must-include" in text.splitlines()[2]
+    assert "the plans below stand" in text and "not** confirmed" not in text
+    assert "confirmed at the deepest tier" in "\n".join(analysis.notes)
+
+
+def test_a_set_validated_before_the_abort_is_not_lost(monkeypatch):
+    """Review of #59: the grow step's ERROR threw away the passing candidate."""
+    import mergeset.tiers as tiers_module
+    from mergeset.base import EvaluationAborted
+    from mergeset.tiers import best_set_including
+
+    def oracle(subset):
+        # 'c' is only ever added by the grow step, and it cannot be evaluated.
+        if "c" in subset:
+            return Evaluation(subset, Verdict.ERROR, note="resolver timed out")
+        return Evaluation(subset, Verdict.PASS)
+
+    monkeypatch.setattr(
+        tiers_module,
+        "_grow_within",
+        lambda candidate, universe, known, parents: candidate | {"c"},
+    )
+    with pytest.raises(EvaluationAborted) as stop:
+        best_set_including("abh", oracle, must_include=["h"], conflicts=[])
+    assert stop.value.best_so_far == frozenset("abh")

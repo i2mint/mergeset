@@ -83,7 +83,15 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
         f"{_state(analysis)}"
     )
     yield ""
-    if analysis.aborted_tier:
+    if analysis.aborted_phase:
+        yield (
+            f"> **Aborted during {analysis.aborted_phase}:** {analysis.aborted}. "
+            "The validation tiers finished, so the plans below stand; only the "
+            f"{analysis.aborted_phase} answer is missing. Fix the cause and "
+            "re-run: decided rows are kept, the failed one is asked again."
+        )
+        yield ""
+    elif analysis.aborted_tier:
         yield (
             f"> **Aborted at tier `{analysis.aborted_tier}`:** {analysis.aborted}. "
             "The tiers before it finished, so the plans below hold at the depth "
@@ -107,6 +115,7 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
     if (
         analysis.aborted
         and not analysis.aborted_tier
+        and not analysis.aborted_phase
         and not any(p["merge"] for p in plans)
     ):
         yield "_No plan: the run aborted before any set was established._"
@@ -236,7 +245,7 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
         and not unexplained
         and not analysis.singleton_conflicts
     ):
-        if analysis.aborted_tier:
+        if analysis.aborted_tier or analysis.aborted_phase:
             yield "_No conflicts found by the tiers that finished._"
         elif analysis.aborted:
             yield (
@@ -318,6 +327,8 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
 
 def _state(analysis: Analysis) -> str:
     """The header's verdict on the run: complete, aborted, or stopped on budget."""
+    if analysis.aborted_phase:
+        return f"ABORTED during {analysis.aborted_phase}"
     if analysis.aborted_tier:
         return f"ABORTED at tier `{analysis.aborted_tier}`"
     if analysis.aborted:
@@ -452,6 +463,7 @@ def _analysis_jdict(analysis: Analysis) -> dict:
         "exhausted": analysis.exhausted,
         "aborted": analysis.aborted,
         "aborted_tier": analysis.aborted_tier,
+        "aborted_phase": analysis.aborted_phase,
         "evaluations": analysis.evaluations,
         "changes": [
             {
@@ -561,7 +573,7 @@ const COLORS = ['#3b5b9e','#2f7d4f','#8a6a1f','#7a3f8f','#b3452e','#2f7d7d'];
 document.getElementById('summary').innerHTML =
   `base <code>${esc(DATA.base)}</code> (<code>${esc(DATA.base_sha.slice(0,8))}</code>) · ` +
   `${DATA.changes.length} changes · ${spend()} · ` +
-  (DATA.aborted ? `<span class="bad">ABORTED${DATA.aborted_tier ? ' at tier <code>' + esc(DATA.aborted_tier) + '</code>' : ''}</span> — ${esc(DATA.aborted)}`
+  (DATA.aborted ? `<span class="bad">ABORTED${DATA.aborted_phase ? ' during ' + esc(DATA.aborted_phase) : ''}${DATA.aborted_tier ? ' at tier <code>' + esc(DATA.aborted_tier) + '</code>' : ''}</span> — ${esc(DATA.aborted)}`
    : DATA.exhausted ? '<span class="good">complete</span>'
                   : '<span class="warn">partial (budget reached)</span>');
 
@@ -569,7 +581,9 @@ if (DATA.aborted) {
   const banner = document.getElementById('abort');
   banner.style.display = 'block';
   banner.innerHTML = '<b class="bad">Aborted.</b> ' + esc(DATA.aborted) +
-    (DATA.aborted_tier
+    (DATA.aborted_phase
+      ? ` The validation tiers finished; the plans stand, only the ${esc(DATA.aborted_phase)} answer is missing.`
+      : DATA.aborted_tier
       ? ` The tiers before <code>${esc(DATA.aborted_tier)}</code> finished; the plans were not confirmed there.`
       : ' The plans are only what had been established before the abort, not an answer.') +
     ' Fix the cause and re-run: decided rows are kept, the failed one is asked again.';

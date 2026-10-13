@@ -79,6 +79,7 @@ from mergeset.base import (
     ChangeId,
     ChangeSet,
     Evaluation,
+    EvaluationAborted,
     MergeOutcome,
     MergesetError,
     ValidationOutcome,
@@ -88,7 +89,12 @@ from mergeset.base import (
 from mergeset.cost import CostModel, MeasuredCost
 from mergeset.log import EvaluationLog, JsonlLines, StoreLines
 from mergeset.oracle import git_oracle, resolver_fingerprint_of
-from mergeset.solve import find_maximal_good_sets, minimal_hitting_sets, quickxplain
+from mergeset.solve import (
+    SearchState,
+    find_maximal_good_sets,
+    minimal_hitting_sets,
+    quickxplain,
+)
 from mergeset.stacks import close_down, largest_closed_subset
 from mergeset.storage import evaluation_log_path, slugify
 from mergeset.validation import recorded_fingerprint
@@ -685,6 +691,11 @@ def anytime_answer(
 # --------------------------------------------------------------------------
 
 
+#: The name an abort during ``--must-include`` is reported under
+#: (``Analysis.aborted_phase``): a phase after the tiers, not a tier.
+MUST_INCLUDE_PHASE = "--must-include"
+
+
 def best_set_including(
     change_ids: Sequence[ChangeId],
     evaluate: Callable[[ChangeSet], Evaluation],
@@ -725,6 +736,11 @@ def best_set_including(
         ``None`` means the required changes cannot all be kept: every way of
         resolving the known conflicts drops one of them.
 
+    Raises:
+        EvaluationAborted: an evaluation could not be performed (``ERROR``).
+            That is not an answer; the exception carries the conflicts known
+            so far.
+
     >>> from mergeset.base import Evaluation, Verdict
     >>> def oracle(subset):                      # 'h' conflicts with 'a' and 'b'
     ...     bad = {'h', 'a'} <= subset or {'h', 'b'} <= subset
@@ -756,6 +772,12 @@ def best_set_including(
         result = evaluate(frozenset(subset))
         if not result.cached:
             spent += 1
+        if result.verdict is Verdict.ERROR:
+            # Not "no set keeps these" and not "not bad" inside a shrink: the
+            # experiment could not be run (ADR 0017, 0036).
+            raise EvaluationAborted(
+                result.note or "an evaluation could not be performed", known
+            )
         return result
 
     while max_evaluations is None or spent < max_evaluations:
@@ -784,9 +806,15 @@ def best_set_including(
             # the bug it documents. Growing costs no evaluations of its own: it
             # only consults conflicts already known.
             grown = _grow_within(candidate, universe, known, parents)
-            if grown != candidate and counted(grown).verdict is Verdict.PASS:
-                return grown, known, spent
-            return candidate, known, spent
+            try:
+                grown_passes = (
+                    grown != candidate and counted(grown).verdict is Verdict.PASS
+                )
+            except EvaluationAborted as stop:
+                # `candidate` itself passed: do not lose it (as in solve.py).
+                stop.best_so_far = candidate
+                raise
+            return (grown if grown_passes else candidate), known, spent
         if result.verdict is not Verdict.FAIL:
             return None, known, spent
         conflict = shrink(counted, sorted(candidate))
@@ -1131,33 +1159,61 @@ def analyze_tiered(
             budget_seconds=confirm_budget_seconds,
             max_runs=confirm_max_runs,
         )
-        best, found, _ = best_set_including(
-            change_ids,
-            _confirming_chain(evaluators),
-            must_include=must_include,
-            conflicts=conflicts,
-            weight=weight_of_id,
-            depends_on=analysis.stacks,
-            max_evaluations=constrained_allowance,
-        )
-        result.best_including = best
-        conflicts = _minimal(list(conflicts) + list(found))
-        analysis.conflicts = _minimal(list(analysis.conflicts) + list(found))
-        sync_every_tier()
-        kept = ", ".join(sorted(result.must_include))
-        if best is None:
-            analysis.notes.append(
-                f"No validated set keeps {kept}: every way of resolving the known "
-                "conflicts drops at least one of them. Landing it means fixing a "
-                "conflict, not choosing a different subset."
+        try:
+            best, found, _ = best_set_including(
+                change_ids,
+                _confirming_chain(evaluators),
+                must_include=must_include,
+                conflicts=conflicts,
+                weight=weight_of_id,
+                depends_on=analysis.stacks,
+                max_evaluations=constrained_allowance,
             )
+        except EvaluationAborted as stop:
+            # Reported as the abort it is (exit status, banner), not as the
+            # finding "no validated set keeps ..." (#54).
+            failed = SearchState()
+            failed.error = stop.why
+            failed.stopped_because = f"aborted: {stop.why}"
+            analysis.searches.append(failed)
+            analysis.aborted_phase = MUST_INCLUDE_PHASE
+            emit("aborted", {"subset": [], "error": stop.why})
+            conflicts = _minimal(list(conflicts) + stop.conflicts)
+            analysis.conflicts = _minimal(list(analysis.conflicts) + stop.conflicts)
+            kept = ", ".join(sorted(result.must_include))
+            if stop.best_so_far is not None:
+                result.best_including = stop.best_so_far
+                analysis.notes.append(
+                    f"--must-include was not fully answered: {stop.why}. A "
+                    f"validated set that keeps {kept} is "
+                    f"{', '.join(set_key(stop.best_so_far))}, but a heavier one "
+                    "may exist: the search aborted before it could look."
+                )
+            else:
+                result.best_including = None
+                analysis.notes.append(
+                    f"--must-include was not answered: {stop.why}. The maximal "
+                    "sets above stand; the constrained question has no answer yet."
+                )
         else:
-            analysis.notes.append(
-                f"Best validated set that keeps {kept}: {len(best)} of "
-                f"{len(change_ids)} changes ({', '.join(set_key(best))}). This is a "
-                "different question from the maximal set above, and a smaller "
-                "answer to it is not a worse answer."
-            )
+            result.best_including = best
+            conflicts = _minimal(list(conflicts) + list(found))
+            analysis.conflicts = _minimal(list(analysis.conflicts) + list(found))
+            kept = ", ".join(sorted(result.must_include))
+            if best is None:
+                analysis.notes.append(
+                    f"No validated set keeps {kept}: every way of resolving the "
+                    "known conflicts drops at least one of them. Landing it means "
+                    "fixing a conflict, not choosing a different subset."
+                )
+            else:
+                analysis.notes.append(
+                    f"Best validated set that keeps {kept}: {len(best)} of "
+                    f"{len(change_ids)} changes ({', '.join(set_key(best))}). This "
+                    "is a different question from the maximal set above, and a "
+                    "smaller answer to it is not a worse answer."
+                )
+        sync_every_tier()
 
     sync_every_tier()  # a skipped tier's base check ran too
     # A cheaper tier runs, on the way to a deeper one, sets it had only

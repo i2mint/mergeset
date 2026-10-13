@@ -37,6 +37,7 @@ from mergeset.base import (
     Evaluation,
     MergeOutcome,
     MergesetError,
+    EvaluationAborted,
     StageRun,
     ValidationOutcome,
     Verdict,
@@ -203,6 +204,7 @@ __all__ = [
     "StoreLines",
     "ARTIFACT_KINDS",
     "MergesetError",
+    "EvaluationAborted",
     "CapabilityError",
 ]
 
