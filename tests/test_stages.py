@@ -77,7 +77,7 @@ def test_stages_survive_the_log_and_old_rows_read_without_them(tmp_path):
     old = Evaluation(
         frozenset("b"), Verdict.PASS, validation=ValidationOutcome(True)
     ).to_jdict()
-    del old["validation"]["stages"]  # a row written before #17
+    del old["validation_stages"]  # a row written before #17
     with open(path, "a") as f:
         f.write(json.dumps(old) + "\n")
 
@@ -105,3 +105,68 @@ def test_an_analysis_logs_and_reports_where_the_time_went(repo, tmp_path):
     )
     report = markdown_report(analysis)
     assert "setup 0." in report and " · test " in report
+
+
+#: The validation keys a release before #17 accepts: it builds
+#: ``ValidationOutcome(**row["validation"])`` and fails on anything else.
+_PRE_17_VALIDATION_KEYS = {
+    "ok",
+    "failing_tests",
+    "failing_files",
+    "duration",
+    "stdout_tail",
+    "returncode",
+}
+
+
+def test_a_new_row_stays_readable_by_a_release_before_stages(tmp_path):
+    validate = staged_validation([ValidationStage("test", "exit 0")])
+    row = Evaluation(frozenset("a"), Verdict.PASS, validation=validate(str(tmp_path)))
+    jdict = json.loads(json.dumps(row.to_jdict()))
+    assert set(jdict["validation"]) <= _PRE_17_VALIDATION_KEYS
+    assert jdict["validation_stages"][0]["name"] == "test"
+
+
+def test_a_recorded_outcome_equals_its_reread(tmp_path):
+    validate = staged_validation([ValidationStage("test", "exit 0")])
+    row = Evaluation(frozenset("a"), Verdict.PASS, validation=validate(str(tmp_path)))
+    assert Evaluation.from_jdict(json.loads(json.dumps(row.to_jdict()))) == row
+
+
+def test_stages_sharing_a_name_are_summed_not_overwritten():
+    outcome = ValidationOutcome(
+        True, stages=[StageRun("test", 0.3, 0), StageRun("test", 0.4, 0)]
+    )
+    assert outcome.stage_seconds == {"test": 0.7}
+
+
+def test_a_stage_with_no_duration_does_not_break_the_report():
+    from mergeset.report import stage_breakdown
+
+    row = Evaluation.from_jdict(
+        {
+            "subset": ["a"],
+            "verdict": "pass",
+            "validation": {"ok": True},
+            "validation_stages": [{"name": "test", "duration": None}],
+        }
+    )
+    assert stage_breakdown(row) == "test 0.0"
+
+
+def test_show_log_and_the_html_report_carry_the_breakdown(repo, tmp_path):
+    from mergeset.cli import show_log
+    from mergeset.report import html_report
+
+    log_path = str(tmp_path / "eval.jsonl")
+    analysis = analyze(
+        repo,
+        list(branch_changes(repo, ["feat-b"], base="main")),
+        base="main",
+        validate=staged_validation([ValidationStage("test", "exit 0")]),
+        log_path=log_path,
+    )
+    assert "test 0." in show_log(log_path=log_path)
+    html = html_report(analysis)
+    assert '"validation_stages": [{"name": "test"' in html
+    assert "${stages(e)}" in html

@@ -101,9 +101,9 @@ def test_search_never_proposes_a_set_missing_an_ancestor():
     find_maximal_good_sets("abcdef", evaluate, depends_on=FOREST)
     for subset in seen:
         for member in subset:
-            assert ancestors(member, FOREST) <= subset, (
-                f"{set_key(subset)} contains {member} without its ancestors"
-            )
+            assert (
+                ancestors(member, FOREST) <= subset
+            ), f"{set_key(subset)} contains {member} without its ancestors"
 
 
 def test_dropping_a_stack_root_drops_its_whole_cone():

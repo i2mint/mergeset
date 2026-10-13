@@ -421,7 +421,7 @@ document.getElementById('notes').innerHTML = DATA.notes.length
 
 // Where the time went, stage by stage (#17); same text as the Markdown report.
 function stages(e) {
-  const st = (e.validation && e.validation.stages) || [];
+  const st = e.validation_stages || [];
   if (!st.length) return '';
   const parts = st.map(s => s.skipped ? `${s.name} skipped` : `${s.name} ${(s.duration||0).toFixed(1)}`);
   const ran = st.filter(s => !s.skipped).reduce((t, s) => t + (s.duration||0), 0);
