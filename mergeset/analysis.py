@@ -48,7 +48,7 @@ from mergeset.gitops import (
 )
 from mergeset.attribution import git_diff_reader, suspects as attribute_suspects
 from mergeset.log import EvaluationLog
-from mergeset.oracle import Resolver, git_oracle, merge_order
+from mergeset.oracle import Resolver, git_oracle, merge_order, resolver_fingerprint_of
 from mergeset.solve import (
     SearchState,
     combine_components,
@@ -334,10 +334,14 @@ def analyze(
     # ... and only if it was judged by this very validator: the same commits
     # under an edited test command are a different question too (#32).
     validate = validate or pytest_validation()
+    # ... and only if its outcome was not decided by another resolver: an
+    # assisted PASS is no answer to a run that cannot resolve, nor a conflict
+    # recorded without a resolver to a run that has one (#34).
     log = log.pinned(
         base=base_sha,
         heads=head_shas,
         validator=recorded_fingerprint(validate),
+        resolver=resolver_fingerprint_of(resolver),
         trust_unpinned=trust_unpinned,
     )
 
@@ -595,6 +599,13 @@ def unmatched_log_notes(log: EvaluationLog, *, label: str = "") -> List[str]:
             if by_validator
             else ""
         )
+        by_resolver = len(log.other_resolver)
+        if by_resolver:
+            why += (
+                f" {by_resolver} of them {'was' if by_resolver == 1 else 'were'} "
+                "decided by how conflicts were resolved, and this run resolves "
+                "them differently (another resolver, or none)."
+            )
         notes.append(
             f"{where} holds {len(log.stale)} row(s) evaluated against other "
             "commits, other changes or by another validator (a base or a head "
@@ -605,9 +616,10 @@ def unmatched_log_notes(log: EvaluationLog, *, label: str = "") -> List[str]:
     if log.unpinned:
         notes.append(
             f"{where} holds {len(log.unpinned)} row(s) written before evaluations "
-            "recorded their commits or their validator, so what they are about "
-            "is unknown. They are kept, and not used. If neither the heads nor "
-            "the validation have changed since, pass `trust_unpinned=True` "
+            "recorded their commits, their validator or their conflict "
+            "resolver, so what they are about is unknown. They are kept, and "
+            "not used. If neither the heads, the validation nor the resolver "
+            "have changed since, pass `trust_unpinned=True` "
             "(`--trust-unpinned-log` on the command line) to use them."
         )
     return notes

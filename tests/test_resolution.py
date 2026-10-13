@@ -319,8 +319,15 @@ def test_a_resolution_survives_garbage_collection(repo, tmp_path):
     git(repo, "gc", "--prune=now", "--quiet")
     # The screen answers from its log; the deep tier, edited (another command,
     # so another fingerprint), must re-run and find the screen's resolution
-    # still there. No resolver this time.
-    again = _tiered(repo, tmp_path, ["feat-a", "feat-c"], deep_name="deep-v2")
+    # still there. The same resolver, since an assisted PASS answers only runs
+    # that resolve the same way (#34) -- but it is not asked again.
+    again = _tiered(
+        repo,
+        tmp_path,
+        ["feat-a", "feat-c"],
+        deep_name="deep-v2",
+        resolver=_scripted_resolver(calls),
+    )
     assert again.logs["deep"].other_validator, "the deep tier really re-ran"
     pair = frozenset({"feat-a", "feat-c"})
     assert again.logs["deep"].exact(pair).verdict is Verdict.PASS

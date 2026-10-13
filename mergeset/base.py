@@ -268,6 +268,10 @@ class ValidationOutcome:
 #: unknown validator as if they were old rows from a known one (#32).
 UNKNOWN_FINGERPRINT = "unknown"
 
+#: What a row records as its resolver when conflicts were left unresolved
+#: (i2mint/mergeset#34).
+NO_RESOLVER = "none"
+
 
 @dataclass(frozen=True)
 class Evaluation:
@@ -302,6 +306,11 @@ class Evaluation:
     #: :func:`mergeset.validation.fingerprint_of`). ``None`` on rows written
     #: before fingerprints, and on rows judged by a validator that has none.
     validator: Optional[str] = None
+    #: Fingerprint of how conflicts were resolved when the set was merged
+    #: (:data:`NO_RESOLVER`, or :func:`mergeset.oracle.resolver_fingerprint_of`).
+    #: ``None`` on rows written before i2mint/mergeset#34. It matters only on a
+    #: row whose outcome the resolver decided: see :attr:`merge_dependent`.
+    resolver: Optional[str] = None
     #: True when this came from the log rather than from a real run. Not
     #: serialized: it is a fact about *this* lookup, not about the evaluation.
     cached: bool = False
@@ -337,6 +346,7 @@ class Evaluation:
             "base_sha": self.base_sha,
             "heads": dict(sorted(self.heads.items())),
             "validator": self.validator,
+            "resolver": self.resolver,
         }
 
     def _validation_jdict(self) -> Optional[dict]:
@@ -373,7 +383,35 @@ class Evaluation:
             # Absent on rows written before i2mint/mergeset#32: read back as
             # judged by an unknown validator, never dropped.
             validator=d.get("validator"),
+            # Absent on rows written before i2mint/mergeset#34.
+            resolver=d.get("resolver"),
         )
+
+    @property
+    def merge_dependent(self) -> bool:
+        """True iff how conflicts were resolved decided this row's outcome.
+
+        An assisted merge exists only because a resolver resolved it; a
+        textual conflict stands only because none did. A clean merge is the
+        same tree whatever the resolver, so its verdict answers any of them.
+
+        >>> Evaluation(frozenset('a'), Verdict.PASS).merge_dependent
+        False
+        >>> Evaluation(frozenset('a'), Verdict.PASS,
+        ...            merge=MergeOutcome(True, assisted=True)).merge_dependent
+        True
+        >>> Evaluation(frozenset('ab'), Verdict.FAIL,
+        ...            merge=MergeOutcome(False, 'conflict')).merge_dependent
+        True
+        """
+        assisted = self.merge is not None and self.merge.assisted
+        return assisted or self.unresolved_conflict
+
+    @property
+    def unresolved_conflict(self) -> bool:
+        """True iff the row is a textual conflict that no resolver resolved."""
+        merge = self.merge
+        return merge is not None and not merge.ok and merge.reason == "conflict"
 
     @property
     def pinned(self) -> bool:
