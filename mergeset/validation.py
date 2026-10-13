@@ -106,7 +106,25 @@ def recorded_fingerprint(validate: Optional[Callable]) -> str:
     return fingerprint_of(validate) or UNKNOWN_FINGERPRINT
 
 
-def inputs_digest(paths: Iterable[str]) -> Dict[str, str]:
+#: How old a file's last change must be before its stat may vouch for its
+#: contents. An edit within one timestamp tick of a read leaves size and mtime
+#: as they were (git's "racy clean" problem); 2 s covers the coarsest common
+#: filesystem timestamps (FAT). Younger files are always read.
+RACY_SECONDS = 2.0
+
+#: How many file digests :data:`FILE_DIGESTS` holds before it starts over.
+MAX_CACHED_DIGESTS = 1_000_000
+
+#: Content digests of input files, keyed by the file's path and stat (#42).
+#: Reading an 8.5 GB tree takes about a minute; stat-ing it, seconds. A run
+#: digests its inputs once per validator built and twice around every
+#: evaluation, so all but the first read come from here.
+FILE_DIGESTS: Dict[tuple, str] = {}
+
+
+def inputs_digest(
+    paths: Iterable[str], *, cache: Optional[Dict[tuple, str]] = FILE_DIGESTS
+) -> Dict[str, str]:
     """A digest of each path's current contents, keyed by its real path.
 
     These are the files a validator runs that its command text does not
@@ -120,6 +138,12 @@ def inputs_digest(paths: Iterable[str]) -> Dict[str, str]:
     directory, *not* the worktree: files inside the repository are already
     pinned by the commits. ``paths`` is a collection of paths: a lone string is
     refused, since it would be read one character at a time.
+
+    A file whose path, inode, size, mtime and ctime match an earlier read is
+    not read again: its digest comes from ``cache`` (default
+    :data:`FILE_DIGESTS`), but only once its last change (mtime or ctime,
+    which no tool can set back) is :data:`RACY_SECONDS` older than that read.
+    ``cache=None`` reads every file.
 
     >>> import tempfile
     >>> with tempfile.NamedTemporaryFile('w', suffix='.py', delete=False) as f:
@@ -141,11 +165,31 @@ def inputs_digest(paths: Iterable[str]) -> Dict[str, str]:
         )
 
     def file_digest(path: str) -> str:
+        stat = os.stat(path)
+        key = (
+            path,
+            stat.st_dev,
+            stat.st_ino,
+            stat.st_size,
+            stat.st_mtime_ns,
+            stat.st_ctime_ns,
+        )
+        if cache is not None and key in cache:
+            return cache[key]
+        reading_from = time.time_ns()
         digest = hashlib.sha256()
         with open(path, "rb") as f:
             for chunk in iter(lambda: f.read(1 << 20), b""):
                 digest.update(chunk)
-        return digest.hexdigest()[:16]
+        value = digest.hexdigest()[:16]
+        changed = max(stat.st_mtime_ns, stat.st_ctime_ns)
+        if cache is not None and changed < reading_from - RACY_SECONDS * 1e9:
+            # Any later edit stamps a time after `reading_from`, so the key it
+            # leaves behind cannot be this one.
+            if len(cache) >= MAX_CACHED_DIGESTS:
+                cache.clear()
+            cache[key] = value
+        return value
 
     def tree_digest(path: str) -> str:
         digest = hashlib.sha256()
