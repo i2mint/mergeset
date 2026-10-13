@@ -57,8 +57,9 @@ One decision per file. The `decision:` field in each file's front matter carries
 | [0038](0038-an-aborted-run-says-so-and-exits-3.md) | — | An aborted run says so, and exits 3 |
 | [0039](0039-a-tier-that-aborts-has-not-been-reached.md) | — | A tier that aborts has not been reached |
 | [0040](0040-a-question-that-cannot-be-answered-raises-it-does-not-answer-none.md) | — | A constrained search that cannot run raises; it does not answer None |
+| [0041](0041-the-deepest-tier-runs-the-plan-it-vouches-for.md) | — | The deepest tier runs the plan it vouches for, and a cheaper tier does not re-run what a deeper log refuted |
 
-40 records. Append-only: when a decision is reversed, the old record stays
+41 records. Append-only: when a decision is reversed, the old record stays
 and the new one says what changed.
 
 Records from 0026 on have no `was` identifier: they were written after the split

@@ -62,6 +62,7 @@ from __future__ import annotations
 import hashlib
 import os
 import re
+import time
 from dataclasses import dataclass, field, replace
 from typing import (
     Callable,
@@ -70,6 +71,7 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
+    Set,
     Tuple,
 )
 
@@ -1113,21 +1115,76 @@ def analyze_tiered(
                 )
                 break
         emit("tier", {"name": tier.name, "role": "confirm", "max_runs": allowance})
-        state = find_maximal_good_sets(
-            change_ids,
-            _confirming_chain(evaluators),
-            known_conflicts=conflicts,
-            depends_on=analysis.stacks,
-            weight=weight_of_id,
-            max_evaluations=allowance,
-            max_seconds=confirm_budget_seconds,
-            max_sets=confirm_max_sets,
-            on_event=on_event,
-        )
-        analysis.searches.append(state)
-        conflicts = conflicts + list(state.conflicts)
-        analysis.conflicts = _minimal(analysis.conflicts + state.conflicts)
-        sync_every_tier()
+        chain = _confirming_chain(evaluators)
+        exact_chain = _confirming_chain(evaluators, exact_deepest=True)
+        # Sets this tier must run for real: maximal sets it had only inferred.
+        run_exactly: Set[ChangeSet] = set()
+
+        def evaluate(subset: ChangeSet) -> Evaluation:
+            return (exact_chain if subset in run_exactly else chain)(subset)
+
+        tier_started = time.monotonic()
+        spent_here = 0
+        maximal_so_far: List[ChangeSet] = []
+        while True:
+            state = find_maximal_good_sets(
+                change_ids,
+                evaluate,
+                known_conflicts=conflicts,
+                depends_on=analysis.stacks,
+                weight=weight_of_id,
+                max_evaluations=(
+                    None if allowance is None else max(allowance - spent_here, 0)
+                ),
+                max_seconds=(
+                    None
+                    if confirm_budget_seconds is None
+                    else max(
+                        confirm_budget_seconds - (time.monotonic() - tier_started), 0
+                    )
+                ),
+                max_sets=confirm_max_sets,
+                on_event=on_event,
+            )
+            analysis.searches.append(state)
+            conflicts = conflicts + list(state.conflicts)
+            analysis.conflicts = _minimal(analysis.conflicts + state.conflicts)
+            sync_every_tier()
+            spent_here += state.evaluations
+            if run_exactly and not state.exhausted and not state.error:
+                # A repeat that the budget cut short knows only the sets it got
+                # to. The sets of the search before it that this one has not
+                # refuted still stand, as unrun inferences; dropping them would
+                # replace a complete answer with a partial one.
+                standing = [
+                    s
+                    for s in maximal_so_far
+                    if not any(known <= s for known in conflicts)
+                ]
+                state.maximal_good_sets = _maximal_among(
+                    list(state.maximal_good_sets) + standing
+                )
+            maximal_so_far = list(state.maximal_good_sets)
+            if state.error:
+                break
+            # The tier vouches for the plan it is handed (#37): a maximal set
+            # this tier only inferred from a bigger one it had run is run now,
+            # and if it fails, the search refines around the failure.
+            pending = {
+                s
+                for s in state.maximal_good_sets
+                if logs[tier.name].exact(s) is None
+            }
+            if not pending or pending <= run_exactly:
+                break  # nothing to run, or running it again would change nothing
+            if allowance is not None and spent_here >= allowance:
+                break
+            if (
+                confirm_budget_seconds is not None
+                and time.monotonic() - tier_started >= confirm_budget_seconds
+            ):
+                break
+            run_exactly |= pending
         if state.error:
             # An aborted tier confirmed nothing: its partial sets do not replace
             # the previous depth's answer, and the depth is not reached (#55).
@@ -1235,24 +1292,53 @@ def analyze_tiered(
 
 def _confirming_chain(
     stages: Sequence[Tuple[EvaluationLog, Callable[[ChangeSet], Evaluation]]],
+    *,
+    exact_deepest: bool = False,
 ) -> Callable[[ChangeSet], Evaluation]:
     """Chain the tiers' oracles, each cached by its own log, cheapest first.
 
     Each log answers for its own tier, so a set the screen already decided is a
     cache hit at the screen and a real run only at the tier that has not seen
-    it. One exception: a cheaper tier never passes a set *by inference* on the
-    way to a deeper one; it runs the set (i2mint/mergeset#31). The deep tier
-    is about to spend real money on the set, and the claim that comes out of
-    it -- "passed every tier up to this one" (``TieredAnalysis.verified_tier``,
-    D25) -- needs an exact PASS at each. Inference from a passing superset is a
-    prior, not a run: a change that fixes another makes ``{a, b, d}`` pass while
-    ``{a, b}`` fails. The cheap run costs little by the tiers' own ordering,
-    and a cheap FAIL saves the deep run outright. The deepest tier in the chain
-    still infers, as any search does from its own tier's results.
+    it. Two exceptions, both about not letting inference stand in for a run
+    (i2mint/mergeset#31, #37):
+
+    - A cheaper tier never passes a set *by inference* on the way to a deeper
+      one; it runs the set. The deep tier is about to spend real money on the
+      set, and the claim that comes out of it -- "passed every tier up to this
+      one" (``TieredAnalysis.verified_tier``, D25) -- needs an exact PASS at
+      each. Inference from a passing superset is a prior, not a run: a change
+      that fixes another makes ``{a, b, d}`` pass while ``{a, b}`` fails. The
+      cheap run costs little by the tiers' own ordering, and a cheap FAIL saves
+      the deep run outright. But not when a deeper log already refutes the set:
+      then the cheap run would only re-learn what the chain knows.
+    - The deepest tier infers during a search, as any search does from its own
+      tier's results; ``exact_deepest=True`` makes it run a set whose PASS it
+      would only infer, which is how a plan is given the exact row it needs.
     """
     *cheaper, (log, oracle) = stages
+
+    def cheaper_stage(position: int):
+        own_log, own_oracle = cheaper[position]
+        deeper = [lg for lg, _ in stages[position + 1 :]]
+        run = own_log.caching(own_oracle, infer_pass=False)
+
+        def stage(subset: ChangeSet) -> Evaluation:
+            known = own_log.known(subset)
+            would_run = not known or (
+                known.exact is None and known.verdict is Verdict.PASS
+            )
+            if would_run:
+                for deeper_log in deeper:
+                    refuted = deeper_log.known(subset)
+                    if refuted and refuted.verdict is Verdict.FAIL:
+                        return refuted.answer(subset)
+            return run(subset)
+
+        return stage
+
     chain = chained_evaluate(
-        [lg.caching(o, infer_pass=False) for lg, o in cheaper] + [log.caching(oracle)]
+        [cheaper_stage(i) for i in range(len(cheaper))]
+        + [log.caching(oracle, infer_pass=not exact_deepest)]
     )
 
     def evaluate(subset: ChangeSet) -> Evaluation:
@@ -1267,6 +1353,15 @@ def _confirming_chain(
         return result
 
     return evaluate
+
+
+def _maximal_among(sets: Sequence[ChangeSet]) -> List[ChangeSet]:
+    """The members of ``sets`` that no other member strictly contains."""
+    out: List[ChangeSet] = []
+    for s in sets:
+        if s not in out and not any(s < other for other in sets):
+            out.append(s)
+    return out
 
 
 def _tier_oracle(
