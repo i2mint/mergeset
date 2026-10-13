@@ -10,6 +10,7 @@ every hint into a string, and the CLI adapter reads the real annotations to
 decide that ``--max-seconds`` is a float rather than the string ``"600"``.
 """
 
+import math
 import os
 import re
 import sys
@@ -161,6 +162,7 @@ def _tiers(
     validator_flags: Sequence[str],
     timeout: Optional[float],
     retries: int,
+    branch_names=lambda: (),
 ) -> list:
     """Build the ordered tiers from ``--tier`` and ``--tier-cost``.
 
@@ -187,6 +189,14 @@ def _tiers(
                     f"the --validate-* flags describe; got {spec!r}. For example: "
                     "--tier 'unit:pytest -x' 'e2e:pnpm run e2e'"
                 )
+            if name in branch_names():
+                # `--tier` takes every value after it, so a branch name typed
+                # after the flag lands here instead of among the candidates.
+                raise ValueError(
+                    f"`{name}` is a branch, not a tier: it followed --tier, so "
+                    "it was read as one. Put branch names before --tier, or end "
+                    "the tier list with `--`."
+                )
             bare.append(name)
             validate = validator
         tiers.append(Tier(name, validate))
@@ -212,9 +222,10 @@ def _tiers(
             seconds = float(value)
         except ValueError:
             seconds = -1.0
-        if not seconds > 0:
+        if not (seconds > 0 and math.isfinite(seconds)):
             raise ValueError(
-                f"--tier-cost expects 'name:seconds' with seconds > 0, got {spec!r}."
+                f"--tier-cost expects 'name:seconds' with finite seconds > 0, "
+                f"got {spec!r}."
             )
         if name in declared:
             raise ValueError(f"--tier-cost names `{name}` twice.")
@@ -325,6 +336,39 @@ def _where(store, key: str) -> str:
     return os.path.join(rootdir, *key.split("/"))
 
 
+def _cli_params(*repeatable: str, **positional_nargs: str):
+    """Declare argparse particulars the annotations cannot carry.
+
+    ``repeatable`` list flags accumulate across repeats: argparse's default for
+    a ``nargs='*'`` option keeps only the *last* use, so ``--tier a:x --tier
+    b:y`` would silently be one tier. ``extend`` makes it two, and ``--tier a:x
+    b:y`` still works. ``positional_nargs`` is for a list positional, which the
+    adapter would otherwise read as exactly one value (so ``branches a b`` was
+    refused). Declared through cw's plain ``_cw`` attribute, so this module
+    still imports no CLI library.
+    """
+    params = {p: {"action": "extend", "nargs": "*"} for p in repeatable}
+    params.update({p: {"nargs": n} for p, n in positional_nargs.items()})
+
+    def mark(func):
+        func._cw = {"params": params}
+        return func
+
+    return mark
+
+
+_LIST_FLAGS = (
+    "validate_stage",
+    "validate_fingerprint",
+    "validate_optional",
+    "tier",
+    "tier_cost",
+    "must_include",
+    "report_format",
+)
+
+
+@_cli_params(*_LIST_FLAGS, branch="+")
 def branches(
     branch: list[str],
     *,
@@ -389,6 +433,7 @@ def branches(
             bare: ``--validate-stage 'build:make' 'test:make test' --tier
             unit 'e2e:make e2e'``. Tier logs live in the artifact store next
             to the default log, one per tier, so --log-path is refused here.
+            --tier takes every value after it: put branch names first.
         tier_cost: ``'tier:seconds'``, repeatable — the declared cost of one
             run, used until the tier has been timed. Set it for a tier that has
             never run, or it is scheduled as if it were cheap.
@@ -442,7 +487,7 @@ def branches(
         validate_fingerprint=validate_fingerprint or (),
         validate_optional=validate_optional or (),
         merge_only=merge_only,
-        tier=tier or (),
+        tier=tier,
         tier_cost=tier_cost or (),
         timeout=timeout,
         retries=retries,
@@ -467,6 +512,7 @@ def branches(
     )
 
 
+@_cli_params(*_LIST_FLAGS)
 def prs(
     repo_spec: str,
     *,
@@ -562,7 +608,7 @@ def prs(
         validate_fingerprint=validate_fingerprint or (),
         validate_optional=validate_optional or (),
         merge_only=merge_only,
-        tier=tier or (),
+        tier=tier,
         tier_cost=tier_cost or (),
         timeout=timeout,
         retries=retries,
@@ -633,8 +679,19 @@ def _run(
             validate_fingerprint=validate_fingerprint,
             validate_optional=validate_optional,
         )
+        if tier is not None and not tier:
+            raise ValueError(
+                "--tier was given no tiers. Pass at least one: --tier "
+                "'name:command', or a bare --tier NAME for the --validate-* flags."
+            )
         if not tier:
-            stray = [flag for kw, flag in _TIER_ONLY_FLAGS.items() if given[kw]]
+            # `is not None`, not truthiness: `--confirm-max-runs 0` is an
+            # instruction, and ignoring it would be the silent drop.
+            stray = [
+                flag
+                for kw, flag in _TIER_ONLY_FLAGS.items()
+                if given[kw] is not None and given[kw] != ()
+            ]
             if stray:
                 raise ValueError(
                     f"{', '.join(stray)} only mean something with --tier. To ask "
@@ -677,6 +734,8 @@ def _run(
                     ],
                     timeout=timeout,
                     retries=retries,
+                    branch_names=lambda: set(local_branch_names(repo))
+                    | {c.id for c in changes},
                 ),
                 confirm_budget_seconds=confirm_budget_seconds,
                 confirm_max_runs=confirm_max_runs,

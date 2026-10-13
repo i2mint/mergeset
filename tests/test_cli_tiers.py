@@ -111,12 +111,97 @@ def test_a_tier_command_may_contain_colons(repo, monkeypatch):
 
 def test_retries_and_timeout_reach_every_command_tier(repo, monkeypatch):
     seen = _captured(monkeypatch)
+    timeouts = []
+    real = cli.command_validation
+
+    def recording(command, *, timeout=None):
+        timeouts.append((command, timeout))
+        return real(command, timeout=timeout)
+
+    monkeypatch.setattr(cli, "command_validation", recording)
     cli.branches(
-        ["feat-a"], repo=repo, base="main", tier=["a:true", "b:true"], retries=2
+        ["feat-a"],
+        repo=repo,
+        base="main",
+        tier=["a:true", "b:false"],
+        retries=2,
+        timeout=7.0,
     )
     assert all(
         "flake_tolerant" in t.validate.__qualname__ for t in seen["tiers"]
     ), [t.validate.__qualname__ for t in seen["tiers"]]
+    assert timeouts == [("true", 7.0), ("false", 7.0)]
+
+
+def test_prs_carries_the_whole_tier_surface(repo, monkeypatch):
+    from mergeset.base import Change
+
+    seen = _captured(monkeypatch)
+    monkeypatch.setattr(cli, "fetch_pull_requests", lambda spec, author=None: [{}])
+    monkeypatch.setattr(
+        cli,
+        "pr_changes",
+        lambda repo, prs, base=None: [Change(id="pr7", head="feat-a", base="main")],
+    )
+    cli.prs(
+        "o/r",
+        repo=repo,
+        tier=["unit:true", "e2e:true"],
+        tier_cost=["e2e:9"],
+        confirm_budget_seconds=60.0,
+        confirm_max_runs=3,
+        confirm_max_sets=1,
+        must_include=["pr7"],
+    )
+    assert [(t.name, t.cost) for t in seen["tiers"]] == [("unit", None), ("e2e", 9.0)]
+    assert seen["confirm_budget_seconds"] == 60.0
+    assert (seen["confirm_max_runs"], seen["confirm_max_sets"]) == (3, 1)
+    assert list(seen["must_include"]) == ["pr7"]
+
+
+def _dispatch(monkeypatch, argv):
+    """Run the real command line (cw + argparse), stopping at analyze_tiered."""
+    import cw
+
+    seen = _captured(monkeypatch)
+    out = cw.dispatch(cli._dispatch_funcs, argv=argv)
+    return seen, out
+
+
+def test_repeating_a_list_flag_accumulates(repo, monkeypatch):
+    seen, _ = _dispatch(
+        monkeypatch,
+        ["branches", "feat-a", "feat-b", "--repo", repo, "--base", "main",
+         "--tier", "unit:true", "--tier", "e2e:true", "deep:true",
+         "--tier-cost", "unit:1", "--tier-cost", "e2e:2",
+         "--must-include", "feat-a", "--must-include", "feat-b"],
+    )  # fmt: skip
+    assert [(t.name, t.cost) for t in seen["tiers"]] == [
+        ("unit", 1.0),
+        ("e2e", 2.0),
+        ("deep", None),
+    ]
+    assert sorted(seen["must_include"]) == ["feat-a", "feat-b"]
+
+
+def test_a_branch_swallowed_by_tier_is_refused(repo, monkeypatch, capsys):
+    seen, out = _dispatch(
+        monkeypatch,
+        ["branches", "feat-a", "--repo", repo, "--base", "main",
+         "--tier", "unit:true", "feat-b"],
+    )  # fmt: skip
+    text = (out or "") + capsys.readouterr().out
+    assert "`feat-b` is a branch, not a tier" in text
+    assert not seen  # nothing was analysed
+
+
+def test_a_double_dash_ends_the_tier_list(repo, monkeypatch):
+    seen, _ = _dispatch(
+        monkeypatch,
+        ["branches", "--repo", repo, "--base", "main",
+         "--tier", "unit:true", "--", "feat-a", "feat-b"],
+    )  # fmt: skip
+    assert [t.name for t in seen["tiers"]] == ["unit"]
 
 
 @pytest.mark.parametrize(
@@ -138,6 +223,11 @@ def test_retries_and_timeout_reach_every_command_tier(repo, monkeypatch):
         ({"tier": ["a:true"], "tier_cost": ["a:0"]}, "seconds > 0"),
         ({"tier": ["a:true"], "tier_cost": ["a:soon"]}, "seconds > 0"),
         ({"tier": ["a:true"], "tier_cost": ["a:1", "a:2"]}, "names `a` twice"),
+        ({"tier": ["a:true"], "tier_cost": ["a:inf"]}, "finite seconds > 0"),
+        ({"tier": []}, "--tier was given no tiers"),
+        ({"confirm_max_runs": 0}, "--confirm-max-runs only mean"),
+        ({"confirm_budget_seconds": 0.0}, "--confirm-budget-seconds only mean"),
+        ({"tier": ["feat-c"]}, "`feat-c` is a branch, not a tier"),
     ],
 )
 def test_options_that_cannot_mean_anything_are_refused(repo, monkeypatch, kwargs, says):
@@ -180,3 +270,69 @@ def test_without_tier_the_untiered_path_is_unchanged(repo, monkeypatch):
     monkeypatch.setattr(cli, "_analyze_tiered", must_not_run)
     cli.branches(["feat-a"], repo=repo, base="main", log_path="/x.jsonl")
     assert seen["log_path"] == "/x.jsonl" and callable(seen["validate"])
+
+
+def _tiered(repo, tiers, **kwargs):
+    from mergeset import analyze_tiered, branch_changes
+
+    changes = list(branch_changes(repo, ["feat-b", "feat-d"], base="main"))
+    return analyze_tiered(repo, changes, tiers=tiers, base="main", **kwargs)
+
+
+def test_cost_lines_say_where_each_price_came_from(repo, tmp_path):
+    from mergeset import Tier
+    from mergeset.validation import command_validation
+
+    ok = command_validation(py_command(tmp_path, "pass", _PASS))
+    result = _tiered(
+        repo,
+        [Tier("screen", ok), Tier("deep", ok, cost=40.0), Tier("deeper", ok)],
+        confirm_max_runs=0,
+    )
+    screen, deep, deeper = result.cost_lines()
+    assert screen.startswith("Tier `screen`: ") and " runs on record, " in screen
+    assert "priced from measurements, median" in screen
+    assert "priced as declared, 40.0s per run" in deep
+    assert deep.endswith("; skipped (the reason is in the notes).")
+    assert "0 runs on record, 0.0s in total" in deep
+    # The run stopped at `deep`, so `deeper` was never priced by anyone.
+    assert "no measured or declared price, so a default of" in deeper
+
+
+def test_every_tier_merges_the_way_the_screen_does(repo, tmp_path, monkeypatch):
+    import mergeset.tiers as tiers
+    from mergeset import Tier
+    from mergeset.validation import command_validation
+
+    calls = []
+    real = tiers.git_oracle
+
+    def recording(*args, **kwargs):
+        calls.append(kwargs.get("reuse_worktree"))
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(tiers, "git_oracle", recording)
+    ok = command_validation(py_command(tmp_path, "pass", _PASS))
+    wt = str(tmp_path / "wt")
+    from mergeset.gitops import persistent_worktree
+
+    persistent_worktree(repo, "main", wt)
+    _tiered(repo, [Tier("screen", ok), Tier("deep", ok)], reuse_worktree=wt)
+    assert calls and all(c == wt for c in calls), calls
+
+
+def test_branches_takes_several_positional_branches(repo, monkeypatch):
+    import cw
+
+    seen = {}
+
+    def fake_analyze(repo, changes, **kwargs):
+        seen["ids"] = [c.id for c in changes]
+        raise ValueError("stop here")
+
+    monkeypatch.setattr(cli, "_analyze", fake_analyze)
+    cw.dispatch(
+        cli._dispatch_funcs,
+        argv=["branches", "feat-a", "feat-b", "--repo", repo, "-b", "main"],
+    )
+    assert seen["ids"] == ["feat-a", "feat-b"]

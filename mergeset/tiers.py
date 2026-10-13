@@ -234,26 +234,34 @@ class TieredAnalysis:
         return list(self.analysis.maximal_sets)
 
     def cost_lines(self) -> List[str]:
-        """One line per tier: what it ran, what it spent, and how it is priced.
+        """One line per tier: what its log records, and how the tier is priced.
 
-        The price says where it came from -- ``measured`` from the tier's own
-        log, ``declared`` by the caller, or ``unknown`` -- because an estimate
-        with no provenance reads as a fact. A cost model that publishes no
-        ``summary()`` still gets the runs and the spend.
+        Runs and seconds are read from the tier's log, so they include earlier
+        invocations against the same commits, and the line says so. The price
+        says where it came from -- ``measured`` from the log, ``declared`` by
+        the caller, or neither, in which case the model's default is shown --
+        because an estimate with no provenance reads as a fact.
         """
         summary = getattr(self.cost_model, "summary", lambda: {})()
         lines = []
         for tier in self.tiers:
             row = summary.get(tier.name, {})
-            spent = round(self.spent.get(tier.name, 0.0), 1)
+            spent = self.spent.get(tier.name, 0.0)
             runs = self.runs.get(tier.name, 0)
-            line = f"Tier `{tier.name}`: {runs} run{'s' if runs != 1 else ''}, {spent}s"
+            line = (
+                f"Tier `{tier.name}`: {runs} run{'s' if runs != 1 else ''} on "
+                f"record, {spent:.1f}s in total"
+            )
             if row.get("source") == "measured":
                 line += f"; priced from measurements, median {row['median_seconds']}s"
             elif row.get("source") == "declared":
                 line += f"; priced as declared, {row['declared_seconds']}s per run"
-            elif row:
-                line += "; no price known"
+            else:
+                default = self.cost_model.estimate(tier.name, frozenset())
+                line += (
+                    f"; no measured or declared price, so a default of "
+                    f"{round(default, 1)}s per run is assumed"
+                )
             if tier.name in self.skipped:
                 line += "; skipped (the reason is in the notes)"
             lines.append(line + ".")
@@ -943,7 +951,17 @@ def analyze_tiered(
     refresh_answer()
 
     # --- stages 2..n: confirm the frontier, one tier deeper each time -----
-    evaluators = [_tier_evaluator(repo, analysis, screen, logs[screen.name], emit)]
+    # How a set is merged is not a tier's business: every tier merges the same
+    # way the screen did, or a deep tier re-installs in a fresh worktree each
+    # run and cannot merge what the resolver merged for the screen.
+    merging = {
+        k: analyze_kwargs[k]
+        for k in ("resolver", "reuse_worktree", "worktree_root")
+        if analyze_kwargs.get(k) is not None
+    }
+    evaluators = [
+        _tier_evaluator(repo, analysis, screen, logs[screen.name], emit, **merging)
+    ]
     for tier in tiers[1:]:
         if not tier.is_available():
             _skip(
@@ -975,7 +993,9 @@ def analyze_tiered(
                 emit,
             )
             break
-        evaluators.append(_tier_evaluator(repo, analysis, tier, logs[tier.name], emit))
+        evaluators.append(
+            _tier_evaluator(repo, analysis, tier, logs[tier.name], emit, **merging)
+        )
         # ADR-0018 applies to every tier, not only the first. `analyze` checks
         # the base for the screen; without the same check here, a deep tier that
         # is red on the base alone makes every frontier set fail, and the run
@@ -1085,11 +1105,14 @@ def _tier_evaluator(
     tier: Tier,
     log: EvaluationLog,
     emit: Callable[[str, dict], None],
+    **merging,
 ):
     """A log-cached evaluator for one tier: merge onto the base, then run the tier.
 
     Backed by the tier's *own* log, so a set the screen already decided is a
     cache hit at the screen and a real run only at the tier that has not seen it.
+    ``merging`` is how sets are merged (``resolver``, ``reuse_worktree``,
+    ``worktree_root``), the same for every tier.
     """
     return log.caching(
         git_oracle(
@@ -1099,6 +1122,7 @@ def _tier_evaluator(
             validate=tier.validate,
             depends_on=analysis.merged_through,
             on_event=lambda event, payload: emit(event, {**payload, "tier": tier.name}),
+            **merging,
         )
     )
 
