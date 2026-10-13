@@ -186,8 +186,8 @@ class Pins:
 
     base: str
     heads: Mapping[ChangeId, str]
-    #: Fingerprint of the validator the question is asked of; ``None`` when the
-    #: validator cannot say what it runs, and then rows match on commits alone.
+    #: Fingerprint of the validator the question is asked of (``'unknown'``
+    #: when it cannot say what it runs). ``None`` compares no validator at all.
     validator: Optional[str] = None
 
     def _same_commits(self, evaluation: Evaluation) -> bool:

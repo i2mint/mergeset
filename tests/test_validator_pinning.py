@@ -219,3 +219,85 @@ def test_show_log_says_the_rows_mix_validators(repo, tmp_path):
     _analyze(repo, EvaluationLog(path), command_validation(py_command(tmp_path, "p", _PASS)))
     _analyze(repo, EvaluationLog(path), merge_only_validation())
     assert "2 validators" in cli.show_log(log_path=path)
+
+
+def _strict(tmp_path):
+    return command_validation(py_command(tmp_path, "nod", _NO_D))
+
+
+def test_an_unknown_validator_is_not_answered_by_a_fingerprinted_one(repo, tmp_path):
+    """Review of #33: a lambda must not inherit a command's verdicts."""
+    path = str(tmp_path / "eval.jsonl")
+    assert _sets(_analyze(repo, EvaluationLog(path), _strict(tmp_path))) == {
+        ("feat-b",)
+    }
+    lenient = _analyze(
+        repo, EvaluationLog(path), callable_validation(lambda worktree: True)
+    )
+    assert _sets(lenient) == {("feat-b", "feat-d")}
+    assert lenient.evaluations_this_run > 0
+
+
+def test_a_fingerprinted_validator_is_not_answered_by_an_unknown_one(repo, tmp_path):
+    for trust in (False, True):
+        # One log per case: the first case's rows would answer the second.
+        path = str(tmp_path / f"eval-{trust}.jsonl")
+        _analyze(repo, EvaluationLog(path), callable_validation(lambda wt: True))
+        log = EvaluationLog(path, trust_unpinned=trust)
+        strict = _analyze(repo, log, _strict(tmp_path))
+        assert _sets(strict) == {("feat-b",)}, f"trust_unpinned={trust}"
+
+
+def test_callable_validation_keeps_the_users_fingerprint():
+    def check(worktree):
+        return True
+
+    check.validator_fingerprint = "smoke-v2"
+    assert fingerprint_of(callable_validation(check)) == "smoke-v2"
+
+
+def test_spellings_that_run_the_same_share_a_fingerprint():
+    f = fingerprint_of
+    assert f(command_validation("x", env=None)) == f(command_validation("x", env={}))
+    assert f(command_validation("x", timeout=60)) == f(
+        command_validation("x", timeout=60.0)
+    )
+    assert f(staged_validation([ValidationStage("t", "x", timeout=60)])) == f(
+        staged_validation([ValidationStage("t", "x", timeout=60.0)])
+    )
+
+
+def test_another_validators_timings_do_not_price_the_tier():
+    from mergeset.tiers import _sync_costs
+
+    class Recorder:
+        def __init__(self):
+            self.seen = []
+
+        def observe(self, tier, subset, seconds):
+            self.seen.append(seconds)
+
+    log = EvaluationLog(MemoryLines())
+    for validator, seconds in (("cmd:old", 2.0), ("cmd:new", 600.0), (None, 7.0)):
+        log.record(
+            Evaluation(
+                frozenset("a"),
+                Verdict.PASS,
+                duration=seconds,
+                base_sha="B",
+                heads={"a": "A"},
+                validator=validator,
+            )
+        )
+    view = log.pinned(base="B", heads={"a": "A"}, validator="cmd:new")
+    model = Recorder()
+    _sync_costs(model, view, "deep", {})
+    assert sorted(model.seen) == [7.0, 600.0]
+
+
+def test_show_log_counts_rows_recording_no_validator_as_a_mix(repo, tmp_path):
+    path = str(tmp_path / "eval.jsonl")
+    _analyze(repo, EvaluationLog(path), merge_only_validation())
+    _without_validator(path)
+    _analyze(repo, EvaluationLog(path), merge_only_validation())
+    assert "2 validators" in cli.show_log(log_path=path)

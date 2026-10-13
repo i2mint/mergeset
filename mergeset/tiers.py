@@ -90,7 +90,7 @@ from mergeset.oracle import git_oracle
 from mergeset.solve import find_maximal_good_sets, minimal_hitting_sets, quickxplain
 from mergeset.stacks import close_down, largest_closed_subset
 from mergeset.storage import evaluation_log_path, slugify
-from mergeset.validation import fingerprint_of
+from mergeset.validation import recorded_fingerprint
 
 
 @dataclass(frozen=True)
@@ -421,8 +421,15 @@ def _sync_costs(
     no ``reset``, so the facade must not require one.
     """
     # Every row, pinned to these commits or not: what an evaluation cost is a
-    # fact about the tier, and a rewritten branch does not make it untrue.
-    durations = [(e.subset, e.duration) for e in log.rows if (e.duration or 0) > 0]
+    # fact about the tier, and a rewritten branch does not make it untrue. Not
+    # rows judged by another validator, though: an edited command is a new
+    # price, and a 2 s check's timings must not admit a 600 s one (#32).
+    other = {id(e) for e in log.other_validator}
+    durations = [
+        (e.subset, e.duration)
+        for e in log.rows
+        if (e.duration or 0) > 0 and id(e) not in other
+    ]
     already = ingested.get(tier, 0)
     for subset, seconds in durations[already:]:
         cost_model.observe(tier, subset, seconds)
@@ -913,7 +920,7 @@ def analyze_tiered(
             heads=analysis.head_shas,
             # A tier whose command was edited asks a new question (#32): its
             # log keeps the old rows, and stops answering with them.
-            validator=fingerprint_of(tier.validate),
+            validator=recorded_fingerprint(tier.validate),
             trust_unpinned=analyze_kwargs.get("trust_unpinned"),
         )
         analysis.notes.extend(unmatched_log_notes(logs[tier.name], label=tier.name))

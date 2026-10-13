@@ -17,7 +17,10 @@ validator carries one, and the evaluation log stamps it on each row, so a row
 recorded by ``pytest -x`` never answers a question asked of ``pytest -m e2e``
 (i2mint/mergeset#32). A user callable has none unless it sets one, since only its
 author knows what changes its verdicts:
-``my_validator.validator_fingerprint = 'smoke-v2'``.
+``my_validator.validator_fingerprint = 'smoke-v2'``. Its rows are stamped
+:data:`UNKNOWN_FINGERPRINT`, which matches only other such rows. A wrapper made
+with ``functools.wraps`` copies the wrapped validator's fingerprint along with
+its ``__dict__``; a wrapper that changes what is checked must set its own.
 """
 
 from __future__ import annotations
@@ -54,14 +57,21 @@ _RUNNER_EVIDENCE = (
 #: The attribute a validator carries to say what it runs (i2mint/mergeset#32).
 FINGERPRINT_ATTR = "validator_fingerprint"
 
+#: What a row records when its validator had no fingerprint. Not ``None``: that
+#: is what rows written before fingerprints existed read back as, and the
+#: migration switch (``trust_unpinned``) must not adopt today's rows from an
+#: unknown validator as if they were old rows from this one.
+UNKNOWN_FINGERPRINT = "unknown"
+
 
 def fingerprint_of(validate: Optional[Callable]) -> Optional[str]:
     """What ``validate`` runs, as a short string -- or ``None`` when it cannot say.
 
     Two validators with the same fingerprint give the same verdict on the same
     tree, so an evaluation log may answer one with the other's rows. ``None``
-    means unknown: the log then matches rows on commits alone, as it did
-    before fingerprints existed.
+    means unknown: such a validator's rows are recorded as
+    :data:`UNKNOWN_FINGERPRINT` (see :func:`recorded_fingerprint`), and answer
+    only other validators that cannot say what they run either.
 
     >>> fingerprint_of(command_validation('make test')) == fingerprint_of(
     ...     command_validation('make test'))
@@ -78,6 +88,29 @@ def fingerprint_of(validate: Optional[Callable]) -> Optional[str]:
     return None if value is None else str(value)
 
 
+def recorded_fingerprint(validate: Optional[Callable]) -> str:
+    """The fingerprint a log row records for ``validate``: never ``None``.
+
+    >>> recorded_fingerprint(lambda worktree: True)
+    'unknown'
+    """
+    return fingerprint_of(validate) or UNKNOWN_FINGERPRINT
+
+
+def _same_verdicts(**spec: Any) -> Dict[str, Any]:
+    """``spec`` with the spellings that run identically made identical.
+
+    ``env=None`` and ``env={}`` run the same command, and so do ``timeout=60``
+    and ``timeout=60.0``; a fingerprint that told them apart would only cost a
+    re-run.
+    """
+    if "env" in spec:
+        spec["env"] = spec["env"] or None
+    if spec.get("timeout") is not None:
+        spec["timeout"] = float(spec["timeout"])
+    return spec
+
+
 def _fingerprinted(validate: Callable, kind: str, **spec: Any) -> Callable:
     """Attach the fingerprint of ``kind`` and ``spec`` to ``validate``; return it.
 
@@ -85,7 +118,9 @@ def _fingerprinted(validate: Callable, kind: str, **spec: Any) -> Callable:
     timeout (a timeout is a FAIL), the environment, the retries. ``kind`` stays
     readable in front of it, for a person looking at a log row.
     """
-    payload = json.dumps({"kind": kind, **spec}, sort_keys=True, default=str)
+    payload = json.dumps(
+        {"kind": kind, **_same_verdicts(**spec)}, sort_keys=True, default=str
+    )
     digest = hashlib.sha256(payload.encode()).hexdigest()[:16]
     setattr(validate, FINGERPRINT_ATTR, f"{kind}:{digest}")
     return validate
@@ -227,9 +262,7 @@ def pytest_validation(
         # Which tests run is now decided by a callable, and a callable's name
         # says nothing about what it selects: leave the fingerprint unknown.
         return validate
-    return _fingerprinted(
-        validate, "pytest", args=list(args), timeout=timeout, env=env
-    )
+    return _fingerprinted(validate, "pytest", args=list(args), timeout=timeout, env=env)
 
 
 def command_validation(
@@ -280,6 +313,11 @@ def callable_validation(
             return result
         return ValidationOutcome(ok=bool(result), duration=time.time() - started)
 
+    # The adapter changes how the verdict is read, not what is checked, so a
+    # fingerprint the user put on ``func`` is the adapter's too.
+    fingerprint = fingerprint_of(func)
+    if fingerprint is not None:
+        setattr(validate, FINGERPRINT_ATTR, fingerprint)
     return validate
 
 
@@ -453,7 +491,13 @@ def staged_validation(
         validate,
         "staged",
         stages=[
-            [s.name, s.command, s.timeout, s.required] for s in stages
+            [
+                s.name,
+                s.command,
+                _same_verdicts(timeout=s.timeout)["timeout"],
+                s.required,
+            ]
+            for s in stages
         ],
         env=env,
     )

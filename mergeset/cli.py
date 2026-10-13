@@ -878,7 +878,9 @@ def _moved_commits(log) -> list:
         for cid, shas in sorted(heads.items())
         if len(shas) > 1
     ]
-    validators = {e.validator for e in log if e.validator}
+    # Rows recording no validator count as one more: a mix of old rows and
+    # fingerprinted ones is a mix too.
+    validators = {e.validator for e in log}
     if len(validators) > 1:
         out.append(f"{len(validators)} validators")
     unpinned = sum(1 for e in log if not e.pinned)

@@ -57,7 +57,7 @@ from mergeset.solve import (
 )
 from mergeset.sources import detect_stacks, size_weight
 from mergeset.storage import evaluation_lines
-from mergeset.validation import fingerprint_of, pytest_validation
+from mergeset.validation import pytest_validation, recorded_fingerprint
 from mergeset.stacks import (
     close_up,
     cone_weights,
@@ -321,7 +321,7 @@ def analyze(
     log = log.pinned(
         base=base_sha,
         heads=head_shas,
-        validator=fingerprint_of(validate),
+        validator=recorded_fingerprint(validate),
         trust_unpinned=trust_unpinned,
     )
 
