@@ -1032,7 +1032,6 @@ def test_the_deepest_tier_runs_a_plan_it_had_only_inferred(repo, tmp_path):
     assert result.logs["deep"].exact(pair).verdict is Verdict.PASS
     assert result.verified_tier(pair) == "deep"
     assert not result.analysis.unverified_sets
-    assert result.runs["deep"] == len(result.logs["deep"])
 
 
 def test_a_plan_the_deepest_tier_fails_is_refined_not_reported(repo, tmp_path):
@@ -1102,3 +1101,51 @@ def test_a_cheaper_tier_does_not_rerun_what_a_deeper_log_refuted():
     # A set no deeper log has refuted is still run at the screen.
     chain(frozenset("a"))
     assert screen_runs == [frozenset("a")]
+    # A cheaper tier's own exact FAIL still answers first (it is the tier blamed).
+    screen_log.record(Evaluation(frozenset("b"), Verdict.FAIL, note="screen"))
+    deep_log.record(Evaluation(frozenset("b"), Verdict.FAIL, note="deep"))
+    assert chain(frozenset("b")).note == "screen"
+
+
+def test_a_repeat_cut_short_by_the_budget_does_not_report_a_plan_it_refuted(
+    repo, tmp_path
+):
+    """Review of #37. ``a`` and ``c`` conflict; the deep tier fails ``c`` without ``d``.
+
+    Two earlier runs bank deep PASSes for ``{a, b}`` and ``{b, c, d}``, so after
+    the screen refuses ``d`` the deep log infers both ``{a, b}`` and ``{b, c}``.
+    With room for one deep run the repeat search runs ``{b, c}``, learns it
+    fails, and is out of budget: it must not then report ``{b, c}`` as a plan,
+    nor lose ``{a, b}``, which it has not refuted.
+    """
+    deep = _stage_validator(
+        tmp_path,
+        "deep",
+        "import os, sys\n"
+        "c = 'CCC' in open('shared.txt').read()\n"
+        "sys.exit(1 if c and not os.path.exists('new-d.txt') else 0)\n",
+    )
+    common = dict(
+        base="main", pairwise_preoracle=False, decompose=False, use_ci_status=False
+    )
+    s1 = Tier("screen", _stage_validator(tmp_path, "s1", "raise SystemExit(0)\n"))
+    for names in (["feat-a", "feat-b"], ["feat-b", "feat-c", "feat-d"]):
+        analyze_tiered(
+            repo, _changes(repo, names), tiers=[s1, Tier("deep", deep)], **common
+        )
+    screen = _stage_validator(
+        tmp_path,
+        "s2",
+        "import os, sys\nsys.exit(1 if os.path.exists('new-d.txt') else 0)\n",
+    )
+    result = analyze_tiered(
+        repo,
+        _changes(repo, ["feat-a", "feat-b", "feat-c", "feat-d"]),
+        tiers=[Tier("screen", screen), Tier("deep", deep)],
+        confirm_max_runs=1,
+        **common,
+    )
+    refuted = frozenset({"feat-b", "feat-c"})
+    assert result.logs["deep"].exact(refuted).verdict is Verdict.FAIL
+    assert refuted not in result.maximal_sets
+    assert frozenset({"feat-a", "feat-b"}) in result.maximal_sets

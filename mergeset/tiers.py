@@ -1125,6 +1125,7 @@ def analyze_tiered(
 
         tier_started = time.monotonic()
         spent_here = 0
+        maximal_so_far: List[ChangeSet] = []
         while True:
             state = find_maximal_good_sets(
                 change_ids,
@@ -1150,6 +1151,20 @@ def analyze_tiered(
             analysis.conflicts = _minimal(analysis.conflicts + state.conflicts)
             sync_every_tier()
             spent_here += state.evaluations
+            if run_exactly and not state.exhausted and not state.error:
+                # A repeat that the budget cut short knows only the sets it got
+                # to. The sets of the search before it that this one has not
+                # refuted still stand, as unrun inferences; dropping them would
+                # replace a complete answer with a partial one.
+                standing = [
+                    s
+                    for s in maximal_so_far
+                    if not any(known <= s for known in conflicts)
+                ]
+                state.maximal_good_sets = _maximal_among(
+                    list(state.maximal_good_sets) + standing
+                )
+            maximal_so_far = list(state.maximal_good_sets)
             if state.error:
                 break
             # The tier vouches for the plan it is handed (#37): a maximal set
@@ -1338,6 +1353,15 @@ def _confirming_chain(
         return result
 
     return evaluate
+
+
+def _maximal_among(sets: Sequence[ChangeSet]) -> List[ChangeSet]:
+    """The members of ``sets`` that no other member strictly contains."""
+    out: List[ChangeSet] = []
+    for s in sets:
+        if s not in out and not any(s < other for other in sets):
+            out.append(s)
+    return out
 
 
 def _tier_oracle(
