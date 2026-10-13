@@ -41,6 +41,7 @@ import shutil
 import subprocess
 import time
 from dataclasses import dataclass
+from stat import S_ISDIR, S_ISREG
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
 from mergeset.base import (
@@ -106,7 +107,28 @@ def recorded_fingerprint(validate: Optional[Callable]) -> str:
     return fingerprint_of(validate) or UNKNOWN_FINGERPRINT
 
 
-def inputs_digest(paths: Iterable[str]) -> Dict[str, str]:
+#: How old a file's last change must be before its stat may vouch for its
+#: contents. An edit within one timestamp tick of a read leaves size and mtime
+#: as they were (git's "racy clean" problem); 2 s covers the coarsest common
+#: filesystem timestamps (FAT). Younger files are always read.
+RACY_SECONDS = 2.0
+
+#: How many file digests :data:`FILE_DIGESTS` holds before it starts over:
+#: about 110 MiB, room for a large virtual environment.
+MAX_CACHED_DIGESTS = 250_000
+
+#: Content digests of input files, keyed by the file's path and stat (#42).
+#: Reading an 8.5 GB tree takes about a minute; stat-ing it, seconds. A run
+#: digests its inputs once per validator built and twice around every
+#: evaluation, so all but the first read come from here.
+FILE_DIGESTS: Dict[tuple, str] = {}
+
+_SHARED = object()  # `cache=` default: FILE_DIGESTS, read when called
+
+
+def inputs_digest(
+    paths: Iterable[str], *, cache: Optional[Dict[tuple, str]] = _SHARED
+) -> Dict[str, str]:
     """A digest of each path's current contents, keyed by its real path.
 
     These are the files a validator runs that its command text does not
@@ -121,6 +143,20 @@ def inputs_digest(paths: Iterable[str]) -> Dict[str, str]:
     pinned by the commits. ``paths`` is a collection of paths: a lone string is
     refused, since it would be read one character at a time.
 
+    A file whose path, inode, size, mtime and ctime match an earlier read is
+    not read again: its digest comes from ``cache`` (default
+    :data:`FILE_DIGESTS`), but only once its last change (mtime or ctime,
+    which no tool can set back) is :data:`RACY_SECONDS` older than that read.
+    ``cache=None`` reads every file.
+
+    Trusting a stat is what ``make`` and ``git`` do, with their blind spots: a
+    second write through a shared ``mmap`` to an already-dirty page changes
+    no timestamp, and a network filesystem may serve cached attributes (NFS,
+    for up to a minute) or stamp times from a clock behind this one. For inputs
+    edited that way, pass ``cache=None``, or set
+    ``mergeset.validation.FILE_DIGESTS = None`` to turn the cache off for every
+    validator (ADR 0035).
+
     >>> import tempfile
     >>> with tempfile.NamedTemporaryFile('w', suffix='.py', delete=False) as f:
     ...     _ = f.write('print(1)')
@@ -134,18 +170,39 @@ def inputs_digest(paths: Iterable[str]) -> Dict[str, str]:
     ['missing']
     """
 
+    if cache is _SHARED:
+        cache = FILE_DIGESTS
     if isinstance(paths, (str, bytes, os.PathLike)):
         raise TypeError(
             f"inputs is a collection of paths, got the single path {paths!r}: "
             f"wrap it in a list, inputs=[{paths!r}]."
         )
 
-    def file_digest(path: str) -> str:
+    def file_digest(path: str, stat: os.stat_result) -> str:
+        key = (
+            path,
+            stat.st_dev,
+            stat.st_ino,
+            stat.st_size,
+            stat.st_mtime_ns,
+            stat.st_ctime_ns,
+        )
+        if cache is not None and key in cache:
+            return cache[key]
+        reading_from = time.time_ns()
         digest = hashlib.sha256()
         with open(path, "rb") as f:
             for chunk in iter(lambda: f.read(1 << 20), b""):
                 digest.update(chunk)
-        return digest.hexdigest()[:16]
+        value = digest.hexdigest()[:16]
+        changed = max(stat.st_mtime_ns, stat.st_ctime_ns)
+        if cache is not None and changed < reading_from - RACY_SECONDS * 1e9:
+            # Any later edit stamps a time after `reading_from`, so the key it
+            # leaves behind cannot be this one.
+            if len(cache) >= MAX_CACHED_DIGESTS:
+                cache.clear()
+            cache[key] = value
+        return value
 
     def tree_digest(path: str) -> str:
         digest = hashlib.sha256()
@@ -175,9 +232,15 @@ def inputs_digest(paths: Iterable[str]) -> Dict[str, str]:
 
     def digest_of(path: str) -> str:
         try:
-            if os.path.isfile(path):
-                return file_digest(path)
-            if os.path.isdir(path):
+            stat = os.stat(path)
+        except FileNotFoundError:
+            return "missing"
+        except OSError:
+            return "unreadable"
+        try:
+            if S_ISREG(stat.st_mode):
+                return file_digest(path, stat)
+            if S_ISDIR(stat.st_mode):
                 return tree_digest(path)
         except OSError:
             return "unreadable"
@@ -241,8 +304,8 @@ def _inputs_held(
     reverting the edit later would let those rows answer the old script. A
     verdict reached either side of the edit is refused instead, and the run
     stops with the reason: the next run digests the new contents. The inputs
-    are digested twice per run, before and after; keep them to the files the
-    command reads, not a whole environment.
+    are digested twice per evaluation, before and after, re-reading only files
+    whose stat changed (ADR 0035).
     """
 
     def check(when: str) -> None:

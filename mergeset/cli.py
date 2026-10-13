@@ -10,11 +10,12 @@ every hint into a string, and the CLI adapter reads the real annotations to
 decide that ``--max-seconds`` is a float rather than the string ``"600"``.
 """
 
+import functools
 import math
 import os
 import re
 import sys
-from typing import Optional, Sequence
+from typing import Callable, Optional, Sequence
 
 from mergeset.analysis import analyze as _analyze
 from mergeset.base import NO_RESOLVER, CapabilityError, MergesetError, Verdict
@@ -166,7 +167,7 @@ def _tiers(
     specs: Sequence[str],
     costs: Sequence[str],
     *,
-    validator,
+    make_validator: Callable[[], Callable],
     validator_flags: Sequence[str],
     timeout: Optional[float],
     retries: int,
@@ -184,6 +185,8 @@ def _tiers(
     bare tier, spelled so that it cannot be mistaken for anything else.
     ``inputs`` (``--validate-input``) joins every tier's fingerprint: a file a
     tier does not run only costs that tier a re-run when it changes.
+    ``make_validator`` builds the bare tier's validator, and is only called
+    when there is one: building it digests the inputs (#42).
     """
     tiers, bare = [], []
     for spec in specs:
@@ -213,7 +216,7 @@ def _tiers(
                     f"tier's name, spell it --tier '{name}:'."
                 )
             bare.append(name)
-            validate = validator
+            validate = make_validator()
         tiers.append(Tier(name, validate))
     if len(bare) > 1:
         raise ValueError(
@@ -701,7 +704,10 @@ def _run(
         return f"Unknown resolver {resolver!r}; expected 'none' or 'claude'."
     given = locals()
     try:
-        validate = _validator(
+        # Built only when something runs it: a tiered run whose tiers all have
+        # a command never does, and building it digests every input (#42).
+        make_validator = functools.partial(
+            _validator,
             merge_only=merge_only,
             validate_command=validate_command,
             timeout=timeout,
@@ -738,6 +744,33 @@ def _run(
                 "--validate-input names files a validation runs, but --merge-only "
                 "runs none. Drop one of them."
             )
+        # Built before anything is created (a reused worktree, a resolver), so
+        # a bad validation flag is refused first -- and the bare validator only
+        # when a tier runs it (#42).
+        tiers = None
+        if tier:
+            tiers = _tiers(
+                tier,
+                tier_cost or (),
+                make_validator=make_validator,
+                validator_flags=[
+                    flag for kw, flag in _VALIDATOR_FLAGS.items() if given[kw]
+                ],
+                timeout=timeout,
+                retries=retries,
+                inputs=validate_input,
+                is_commit=lambda name: (
+                    name in {c.id for c in changes}
+                    or git(
+                        repo,
+                        "rev-parse",
+                        "--verify",
+                        "--quiet",
+                        f"{name}^{{commit}}",
+                    ).ok
+                ),
+            )
+        validate = None if tier else make_validator()
         for kw, values in (
             ("tier", tier),
             ("tier_cost", tier_cost),
@@ -810,27 +843,7 @@ def _run(
             tiered = _analyze_tiered(
                 repo,
                 changes,
-                tiers=_tiers(
-                    tier,
-                    tier_cost or (),
-                    validator=validate,
-                    validator_flags=[
-                        flag for kw, flag in _VALIDATOR_FLAGS.items() if given[kw]
-                    ],
-                    timeout=timeout,
-                    retries=retries,
-                    inputs=validate_input,
-                    is_commit=lambda name: (
-                        name in {c.id for c in changes}
-                        or git(
-                            repo,
-                            "rev-parse",
-                            "--verify",
-                            "--quiet",
-                            f"{name}^{{commit}}",
-                        ).ok
-                    ),
-                ),
+                tiers=tiers,
                 confirm_budget_seconds=confirm_budget_seconds,
                 confirm_max_runs=confirm_max_runs,
                 confirm_max_sets=confirm_max_sets,
@@ -996,9 +1009,11 @@ def _moved_commits(log) -> list:
         for e in log
     )
     resolvers = {
-        NO_RESOLVER
-        if e.resolver is None and e.unresolved_conflict and not old_assisted
-        else e.resolver
+        (
+            NO_RESOLVER
+            if e.resolver is None and e.unresolved_conflict and not old_assisted
+            else e.resolver
+        )
         for e in log
         if e.merge_dependent
     }
