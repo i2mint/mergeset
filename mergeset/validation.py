@@ -153,7 +153,9 @@ def inputs_digest(
     second write through a shared ``mmap`` to an already-dirty page changes
     no timestamp, and a network filesystem may serve cached attributes (NFS,
     for up to a minute) or stamp times from a clock behind this one. For inputs
-    edited that way, pass ``cache=None`` (ADR 0035).
+    edited that way, pass ``cache=None``, or set
+    ``mergeset.validation.FILE_DIGESTS = None`` to turn the cache off for every
+    validator (ADR 0035).
 
     >>> import tempfile
     >>> with tempfile.NamedTemporaryFile('w', suffix='.py', delete=False) as f:
@@ -302,8 +304,8 @@ def _inputs_held(
     reverting the edit later would let those rows answer the old script. A
     verdict reached either side of the edit is refused instead, and the run
     stops with the reason: the next run digests the new contents. The inputs
-    are digested twice per run, before and after; keep them to the files the
-    command reads, not a whole environment.
+    are digested twice per evaluation, before and after, re-reading only files
+    whose stat changed (ADR 0035).
     """
 
     def check(when: str) -> None:
