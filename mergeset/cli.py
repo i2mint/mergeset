@@ -283,6 +283,7 @@ def _progress(event: str, payload: dict) -> None:
         "component": lambda p: f"component: {', '.join(p['changes'])}",
         "assisted_merge": lambda p: f"  attempting assisted resolution of {p['files']}",
         "tier": lambda p: f"tier {p['name']} ({p['role']})",
+        "aborted": lambda p: f"  ABORTED: {p['error']}",
         "tier_skipped": lambda p: f"  tier {p['name']} skipped: {p['why']}",
         "anytime": lambda p: f"  anytime: {p['summary']}",
     }
@@ -878,11 +879,14 @@ def _run(
         analysis, report_dir, title, formats=report_format or ("markdown", "html")
     ):
         lines.append(f"\nWrote {path}")
-    if integration_branches:
+    if integration_branches and analysis.aborted:
+        lines.append("\n## Integration branches\n\nNot created: the run aborted.")
+    elif integration_branches:
         lines.append("\n## Integration branches\n")
         for path in _integration_branches(analysis):
             lines.append(f"- {path}")
-    return "\n".join(lines)
+    report = "\n".join(lines)
+    return AbortedReport(report) if analysis.aborted else report
 
 
 def _integration_branches(analysis) -> list:
@@ -1053,6 +1057,25 @@ def install_skills(
     return "Installed:\n" + "\n".join(f"  {p}" for p in installed)
 
 
+#: Exit status of a run that aborted (a search met an ERROR, ADR 0036): the
+#: report is printed and is not an answer. 1 and 2 stay with Python and argparse.
+EXIT_ABORTED = 3
+
+
+class AbortedReport(str):
+    """The report of a run that aborted. A ``str`` everywhere, but the CLI exits
+    :data:`EXIT_ABORTED` on it, so a script or CI step cannot read it as a
+    finished run (#53)."""
+
+
+def _egress(result, *, out=None, err=None) -> int:
+    """cw's default egress, with the exit status an aborted report carries."""
+    import cw
+
+    status = cw.ARGH.egress(result, out=out, err=err)
+    return EXIT_ABORTED if isinstance(result, AbortedReport) else status
+
+
 #: SSOT of the CLI surface. Any adapter (cw, HTTP, MCP) consumes this list.
 _dispatch_funcs = [branches, prs, show_log, install_skills]
 
@@ -1069,7 +1092,7 @@ def main(argv=None) -> int:
 
     import cw
 
-    convention = dataclasses.replace(cw.ARGH, hints_when_declared=True)
+    convention = dataclasses.replace(cw.ARGH, hints_when_declared=True, egress=_egress)
     return cw.dispatch(_dispatch_funcs, argv=argv, convention=convention)
 
 

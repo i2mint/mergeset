@@ -107,7 +107,7 @@ Public destination + private source → it does not go in the repo. Cite it by s
 
 ## Stop and say so when
 
-- The report says **ABORTED**, or a note says an evaluation could not be performed — the run did not fail, it did not happen. Usually a bad `reuse_worktree` path or a wrong validation command.
+- The report says **ABORTED** (the CLI exits **3**; read the report, do not treat it as a crash), or a note says an evaluation could not be performed — the run did not fail, it did not happen. Usually a bad `reuse_worktree` path or a wrong validation command.
 - The **base does not validate on its own** — `analyze` refuses to start. Fix the base or the command; do not pass `check_base=False` to get past it.
 - A **monotonicity violation** is reported — a flaky test, or a change that fixes another. The conclusions are not trustworthy until it is understood.
 

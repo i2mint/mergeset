@@ -1105,6 +1105,7 @@ def analyze_tiered(
         result.depth_reached = tier.name
         refresh_answer()
         if state.error:
+            analysis.aborted_tier = tier.name
             _skip(result, analysis, tier, f"it aborted: {state.error}", emit)
             break
 
@@ -1290,7 +1291,7 @@ def _minimal(conflicts: Sequence[ChangeSet]) -> List[ChangeSet]:
 
 def _aborted(analysis: Analysis) -> Optional[str]:
     """Why a search stopped on an ERROR, or ``None`` if none did."""
-    return next((s.error for s in analysis.searches if s.error), None)
+    return analysis.aborted
 
 
 def _skip(
@@ -1359,7 +1360,8 @@ def _record_what_may_be_claimed(
             f"not run is not a tier that passed."
         )
     for tier_name, why in result.skipped.items():
-        analysis.notes.append(f"Tier `{tier_name}` did not run because {why}.")
+        ran = "ran but" if why.startswith("it aborted") else "did not run because"
+        analysis.notes.append(f"Tier `{tier_name}` {ran} {why}.")
     analysis.notes.append("Anytime status: " + answer.summary())
     if not answer.optimal and answer.pending:
         cheapest = min(price for _, price in answer.pending)

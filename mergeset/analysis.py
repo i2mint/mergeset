@@ -100,6 +100,9 @@ class Analysis:
     #: Whether the per-component answers were trusted to combine, or whether a
     #: global search had to verify them. See ``analyze(component_local=...)``.
     components_combined: bool = False
+    #: The confirm tier whose search aborted, when one did after the screen
+    #: finished (``None``: the screen itself aborted, or nothing did).
+    aborted_tier: Optional[str] = None
     #: Sets reported without ever having been evaluated as a whole. Empty is the
     #: normal case. See :meth:`merge_plan`'s ``verified`` and ADR 0025.
     unverified_sets: List[ChangeSet] = field(default_factory=list)
@@ -180,6 +183,15 @@ class Analysis:
     def exhausted(self) -> bool:
         """True iff every component's search finished rather than hit a budget."""
         return all(s.exhausted for s in self.searches) if self.searches else False
+
+    @property
+    def aborted(self) -> Optional[str]:
+        """Why a search stopped on an ``ERROR``, or ``None``.
+
+        An abort is not a budget stop (ADR 0017, 0036): the run could not do
+        what it was asked, and what it reports is only what it had established.
+        """
+        return next((s.error for s in self.searches if s.error), None)
 
     def merge_plan(self) -> List[dict]:
         """One entry per maximal set: what to merge, in what order, what it drops.
