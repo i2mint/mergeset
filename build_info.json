@@ -1,32 +1,32 @@
 {
   "schema_version": 1,
-  "built_at": "2026-10-13T11:39:15Z",
+  "built_at": "2026-10-13T11:51:02Z",
   "package": {
     "name": "mergeset",
-    "version": "0.0.26",
+    "version": "0.0.27",
     "display_name": "mergeset",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "3d593646c43cf826bb11a06ddf3c95a1a5f2d00e",
-    "short_commit": "3d59364",
+    "commit": "51f56cbca2f43292bc2f48335b90314de459c7a2",
+    "short_commit": "51f56cb",
     "branch": "main",
     "tags": [],
     "dirty": false,
     "remote_url": "https://github.com/i2mint/mergeset",
-    "commit_url": "https://github.com/i2mint/mergeset/commit/3d593646c43cf826bb11a06ddf3c95a1a5f2d00e",
+    "commit_url": "https://github.com/i2mint/mergeset/commit/51f56cbca2f43292bc2f48335b90314de459c7a2",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "i2mint/mergeset",
-    "sha": "3d593646c43cf826bb11a06ddf3c95a1a5f2d00e",
+    "sha": "51f56cbca2f43292bc2f48335b90314de459c7a2",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "38391532752",
-    "run_url": "https://github.com/i2mint/mergeset/actions/runs/38391532752",
+    "run_id": "38392889182",
+    "run_url": "https://github.com/i2mint/mergeset/actions/runs/38392889182",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -60,16 +60,16 @@
   },
   "pypi": {
     "checked": true,
-    "latest": "0.0.27",
+    "latest": "0.0.28",
     "relation": "behind",
     "error": null
   },
-  "reproduce": "git clone https://github.com/i2mint/mergeset && cd mergeset\ngit checkout 3d593646c43cf826bb11a06ddf3c95a1a5f2d00e\npip install \"epythet==0.2.15\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/i2mint/mergeset && cd mergeset\ngit checkout 51f56cbca2f43292bc2f48335b90314de459c7a2\npip install \"epythet==0.2.15\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": false,
     "notes": [
-      "The documented version (0.0.26) is behind the latest release on PyPI (0.0.27): `pip install mergeset` gives newer code than these docs describe."
+      "The documented version (0.0.27) is behind the latest release on PyPI (0.0.28): `pip install mergeset` gives newer code than these docs describe."
     ]
   }
 }

@@ -581,324 +581,326 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="443">            <span class="s2">"resolver, a textual conflict is offered to it rather than excluded "</span>
 </span><span data-line="444">            <span class="s2">"up front."</span>
 </span><span data-line="445">        <span class="p">)</span>
-</span><span data-line="446">    <span class="n">pairwise_preoracle</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">pairwise_preoracle</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">bool</span><span class="p">(</span><span class="n">pairwise_preoracle</span><span class="p">)</span>
-</span><span data-line="447">    <span class="k">if</span> <span class="n">pairwise_preoracle</span><span class="p">:</span>
-</span><span data-line="448">        <span class="k">for</span> <span class="n">change_id</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">singleton_textual_conflicts</span><span class="p">(</span>
-</span><span data-line="449">            <span class="n">repo</span><span class="p">,</span> <span class="n">base_sha</span><span class="p">,</span> <span class="n">heads_by_id</span>
-</span><span data-line="450">        <span class="p">):</span>
-</span><span data-line="451">            <span class="n">known_conflicts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="n">change_id</span><span class="p">}))</span>
-</span><span data-line="452">            <span class="n">analysis</span><span class="o">.</span><span class="n">singleton_conflicts</span><span class="p">[</span><span class="n">change_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">files</span>
-</span><span data-line="453">            <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="454">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">change_id</span><span class="si">}</span><span class="s2"> does not merge onto the base at all "</span>
-</span><span data-line="455">                <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span><span class="si">}</span><span class="s2"> conflicting files). Excluded before any test ran."</span>
-</span><span data-line="456">            <span class="p">)</span>
-</span><span data-line="457">
-</span><span data-line="458">    <span class="k">if</span> <span class="n">pairwise_preoracle</span><span class="p">:</span>
-</span><span data-line="459">        <span class="n">viable</span> <span class="o">=</span> <span class="p">{</span>
-</span><span data-line="460">            <span class="n">cid</span><span class="p">:</span> <span class="n">head</span>
-</span><span data-line="461">            <span class="k">for</span> <span class="n">cid</span><span class="p">,</span> <span class="n">head</span> <span class="ow">in</span> <span class="n">heads_by_id</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-</span><span data-line="462">            <span class="k">if</span> <span class="n">cid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">singleton_conflicts</span>
-</span><span data-line="463">        <span class="p">}</span>
-</span><span data-line="464">        <span class="n">analysis</span><span class="o">.</span><span class="n">textual_conflicts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
-</span><span data-line="465">            <span class="n">pairwise_textual_conflicts</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base_sha</span><span class="p">,</span> <span class="n">viable</span><span class="p">)</span>
-</span><span data-line="466">        <span class="p">)</span>
-</span><span data-line="467">        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">textual_conflicts</span><span class="p">:</span>
-</span><span data-line="468">            <span class="n">known_conflicts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">}))</span>
-</span><span data-line="469">            <span class="n">emit</span><span class="p">(</span><span class="s2">"textual_conflict"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"pair"</span><span class="p">:</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="s2">"files"</span><span class="p">:</span> <span class="n">files</span><span class="p">})</span>
-</span><span data-line="470">
-</span><span data-line="471">    <span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">]</span>
-</span><span data-line="472">    <span class="k">if</span> <span class="n">decompose</span><span class="p">:</span>
-</span><span data-line="473">        <span class="n">analysis</span><span class="o">.</span><span class="n">components</span> <span class="o">=</span> <span class="n">independent_components</span><span class="p">(</span>
-</span><span data-line="474">            <span class="n">ids</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">cid</span><span class="p">:</span> <span class="n">analysis</span><span class="o">.</span><span class="n">files_by_change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cid</span><span class="p">,</span> <span class="p">())</span>
-</span><span data-line="475">        <span class="p">)</span>
-</span><span data-line="476">    <span class="k">else</span><span class="p">:</span>
-</span><span data-line="477">        <span class="n">analysis</span><span class="o">.</span><span class="n">components</span> <span class="o">=</span> <span class="p">[</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">ids</span><span class="p">)]</span>
-</span><span data-line="478">
-</span><span data-line="479">    <span class="n">evaluate</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">caching</span><span class="p">(</span>
-</span><span data-line="480">        <span class="n">git_oracle</span><span class="p">(</span>
-</span><span data-line="481">            <span class="n">repo</span><span class="p">,</span>
-</span><span data-line="482">            <span class="n">base_sha</span><span class="p">,</span>
-</span><span data-line="483">            <span class="n">analysis</span><span class="o">.</span><span class="n">pinned_changes</span><span class="p">,</span>
-</span><span data-line="484">            <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">,</span>
-</span><span data-line="485">            <span class="n">resolver</span><span class="o">=</span><span class="n">resolver</span><span class="p">,</span>
-</span><span data-line="486">            <span class="n">depends_on</span><span class="o">=</span><span class="n">analysis</span><span class="o">.</span><span class="n">merged_through</span><span class="p">,</span>
-</span><span data-line="487">            <span class="n">reuse_worktree</span><span class="o">=</span><span class="n">reuse_worktree</span><span class="p">,</span>
-</span><span data-line="488">            <span class="n">worktree_root</span><span class="o">=</span><span class="n">worktree_root</span><span class="p">,</span>
-</span><span data-line="489">            <span class="n">on_event</span><span class="o">=</span><span class="n">on_event</span><span class="p">,</span>
-</span><span data-line="490">        <span class="p">)</span>
-</span><span data-line="491">    <span class="p">)</span>
-</span><span data-line="492">
-</span><span data-line="493">    <span class="k">if</span> <span class="n">check_base</span><span class="p">:</span>
-</span><span data-line="494">        <span class="c1"># One evaluation of the empty set. If the base does not validate, every</span>
-</span><span data-line="495">        <span class="c1"># subsequent failure is meaningless and "nothing can be merged" would be</span>
-</span><span data-line="496">        <span class="c1"># reported as a finding rather than as the misconfiguration it is.</span>
-</span><span data-line="497">        <span class="n">baseline</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">())</span>
-</span><span data-line="498">        <span class="k">if</span> <span class="n">baseline</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">:</span>
-</span><span data-line="499">            <span class="n">detail</span> <span class="o">=</span> <span class="n">_failure_detail</span><span class="p">(</span><span class="n">baseline</span><span class="p">)</span>
-</span><span data-line="500">            <span class="k">raise</span> <span class="n">MergesetError</span><span class="p">(</span>
-</span><span data-line="501">                <span class="sa">f</span><span class="s2">"The base (</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2"> @ </span><span class="si">{</span><span class="n">base_sha</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2">) does not pass validation on "</span>
-</span><span data-line="502">                <span class="sa">f</span><span class="s2">"its own: </span><span class="si">{</span><span class="n">detail</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">"</span>
-</span><span data-line="503">                <span class="s2">"Every result would be meaningless, so nothing was evaluated. "</span>
-</span><span data-line="504">                <span class="s2">"Either the base is genuinely broken, or the validation command "</span>
-</span><span data-line="505">                <span class="s2">"is wrong for this repository. Check it by hand, then re-run "</span>
-</span><span data-line="506">                <span class="s2">"(pass check_base=False to proceed anyway)."</span>
-</span><span data-line="507">            <span class="p">)</span>
-</span><span data-line="508">
-</span><span data-line="509">    <span class="n">diff_of</span> <span class="o">=</span> <span class="n">git_diff_reader</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base_sha</span><span class="p">,</span> <span class="n">heads_by_id</span><span class="p">)</span>
+</span><span data-line="446">    <span class="n">pairwise_preoracle</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="447">        <span class="kc">True</span> <span class="k">if</span> <span class="n">pairwise_preoracle</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">bool</span><span class="p">(</span><span class="n">pairwise_preoracle</span><span class="p">)</span>
+</span><span data-line="448">    <span class="p">)</span>
+</span><span data-line="449">    <span class="k">if</span> <span class="n">pairwise_preoracle</span><span class="p">:</span>
+</span><span data-line="450">        <span class="k">for</span> <span class="n">change_id</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">singleton_textual_conflicts</span><span class="p">(</span>
+</span><span data-line="451">            <span class="n">repo</span><span class="p">,</span> <span class="n">base_sha</span><span class="p">,</span> <span class="n">heads_by_id</span>
+</span><span data-line="452">        <span class="p">):</span>
+</span><span data-line="453">            <span class="n">known_conflicts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="n">change_id</span><span class="p">}))</span>
+</span><span data-line="454">            <span class="n">analysis</span><span class="o">.</span><span class="n">singleton_conflicts</span><span class="p">[</span><span class="n">change_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">files</span>
+</span><span data-line="455">            <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="456">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">change_id</span><span class="si">}</span><span class="s2"> does not merge onto the base at all "</span>
+</span><span data-line="457">                <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span><span class="si">}</span><span class="s2"> conflicting files). Excluded before any test ran."</span>
+</span><span data-line="458">            <span class="p">)</span>
+</span><span data-line="459">
+</span><span data-line="460">    <span class="k">if</span> <span class="n">pairwise_preoracle</span><span class="p">:</span>
+</span><span data-line="461">        <span class="n">viable</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="462">            <span class="n">cid</span><span class="p">:</span> <span class="n">head</span>
+</span><span data-line="463">            <span class="k">for</span> <span class="n">cid</span><span class="p">,</span> <span class="n">head</span> <span class="ow">in</span> <span class="n">heads_by_id</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+</span><span data-line="464">            <span class="k">if</span> <span class="n">cid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">singleton_conflicts</span>
+</span><span data-line="465">        <span class="p">}</span>
+</span><span data-line="466">        <span class="n">analysis</span><span class="o">.</span><span class="n">textual_conflicts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+</span><span data-line="467">            <span class="n">pairwise_textual_conflicts</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base_sha</span><span class="p">,</span> <span class="n">viable</span><span class="p">)</span>
+</span><span data-line="468">        <span class="p">)</span>
+</span><span data-line="469">        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">textual_conflicts</span><span class="p">:</span>
+</span><span data-line="470">            <span class="n">known_conflicts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">}))</span>
+</span><span data-line="471">            <span class="n">emit</span><span class="p">(</span><span class="s2">"textual_conflict"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"pair"</span><span class="p">:</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="s2">"files"</span><span class="p">:</span> <span class="n">files</span><span class="p">})</span>
+</span><span data-line="472">
+</span><span data-line="473">    <span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">]</span>
+</span><span data-line="474">    <span class="k">if</span> <span class="n">decompose</span><span class="p">:</span>
+</span><span data-line="475">        <span class="n">analysis</span><span class="o">.</span><span class="n">components</span> <span class="o">=</span> <span class="n">independent_components</span><span class="p">(</span>
+</span><span data-line="476">            <span class="n">ids</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">cid</span><span class="p">:</span> <span class="n">analysis</span><span class="o">.</span><span class="n">files_by_change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cid</span><span class="p">,</span> <span class="p">())</span>
+</span><span data-line="477">        <span class="p">)</span>
+</span><span data-line="478">    <span class="k">else</span><span class="p">:</span>
+</span><span data-line="479">        <span class="n">analysis</span><span class="o">.</span><span class="n">components</span> <span class="o">=</span> <span class="p">[</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">ids</span><span class="p">)]</span>
+</span><span data-line="480">
+</span><span data-line="481">    <span class="n">evaluate</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">caching</span><span class="p">(</span>
+</span><span data-line="482">        <span class="n">git_oracle</span><span class="p">(</span>
+</span><span data-line="483">            <span class="n">repo</span><span class="p">,</span>
+</span><span data-line="484">            <span class="n">base_sha</span><span class="p">,</span>
+</span><span data-line="485">            <span class="n">analysis</span><span class="o">.</span><span class="n">pinned_changes</span><span class="p">,</span>
+</span><span data-line="486">            <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">,</span>
+</span><span data-line="487">            <span class="n">resolver</span><span class="o">=</span><span class="n">resolver</span><span class="p">,</span>
+</span><span data-line="488">            <span class="n">depends_on</span><span class="o">=</span><span class="n">analysis</span><span class="o">.</span><span class="n">merged_through</span><span class="p">,</span>
+</span><span data-line="489">            <span class="n">reuse_worktree</span><span class="o">=</span><span class="n">reuse_worktree</span><span class="p">,</span>
+</span><span data-line="490">            <span class="n">worktree_root</span><span class="o">=</span><span class="n">worktree_root</span><span class="p">,</span>
+</span><span data-line="491">            <span class="n">on_event</span><span class="o">=</span><span class="n">on_event</span><span class="p">,</span>
+</span><span data-line="492">        <span class="p">)</span>
+</span><span data-line="493">    <span class="p">)</span>
+</span><span data-line="494">
+</span><span data-line="495">    <span class="k">if</span> <span class="n">check_base</span><span class="p">:</span>
+</span><span data-line="496">        <span class="c1"># One evaluation of the empty set. If the base does not validate, every</span>
+</span><span data-line="497">        <span class="c1"># subsequent failure is meaningless and "nothing can be merged" would be</span>
+</span><span data-line="498">        <span class="c1"># reported as a finding rather than as the misconfiguration it is.</span>
+</span><span data-line="499">        <span class="n">baseline</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">())</span>
+</span><span data-line="500">        <span class="k">if</span> <span class="n">baseline</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">:</span>
+</span><span data-line="501">            <span class="n">detail</span> <span class="o">=</span> <span class="n">_failure_detail</span><span class="p">(</span><span class="n">baseline</span><span class="p">)</span>
+</span><span data-line="502">            <span class="k">raise</span> <span class="n">MergesetError</span><span class="p">(</span>
+</span><span data-line="503">                <span class="sa">f</span><span class="s2">"The base (</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2"> @ </span><span class="si">{</span><span class="n">base_sha</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2">) does not pass validation on "</span>
+</span><span data-line="504">                <span class="sa">f</span><span class="s2">"its own: </span><span class="si">{</span><span class="n">detail</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">"</span>
+</span><span data-line="505">                <span class="s2">"Every result would be meaningless, so nothing was evaluated. "</span>
+</span><span data-line="506">                <span class="s2">"Either the base is genuinely broken, or the validation command "</span>
+</span><span data-line="507">                <span class="s2">"is wrong for this repository. Check it by hand, then re-run "</span>
+</span><span data-line="508">                <span class="s2">"(pass check_base=False to proceed anyway)."</span>
+</span><span data-line="509">            <span class="p">)</span>
 </span><span data-line="510">
-</span><span data-line="511">    <span class="k">def</span><span class="w"> </span><span class="nf">suspects_from_failure</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
-</span><span data-line="512"><span class="w">        </span><span class="sd">"""Which changes in ``subset`` the failure output points at."""</span>
-</span><span data-line="513">        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">validation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="514">            <span class="k">return</span> <span class="nb">frozenset</span><span class="p">()</span>
-</span><span data-line="515">        <span class="k">return</span> <span class="n">attribute_suspects</span><span class="p">(</span>
-</span><span data-line="516">            <span class="n">result</span><span class="o">.</span><span class="n">validation</span><span class="p">,</span>
-</span><span data-line="517">            <span class="n">files_by_change</span><span class="o">=</span><span class="n">analysis</span><span class="o">.</span><span class="n">files_by_change</span><span class="p">,</span>
-</span><span data-line="518">            <span class="n">within</span><span class="o">=</span><span class="n">subset</span><span class="p">,</span>
-</span><span data-line="519">            <span class="n">diff_of</span><span class="o">=</span><span class="n">diff_of</span><span class="p">,</span>
-</span><span data-line="520">        <span class="p">)</span>
-</span><span data-line="521">
-</span><span data-line="522">    <span class="n">per_component</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="523">    <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
-</span><span data-line="524">        <span class="n">component_conflicts</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">known_conflicts</span> <span class="k">if</span> <span class="n">c</span> <span class="o">&lt;=</span> <span class="n">component</span><span class="p">]</span>
-</span><span data-line="525">        <span class="n">emit</span><span class="p">(</span><span class="s2">"component"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"changes"</span><span class="p">:</span> <span class="n">set_key</span><span class="p">(</span><span class="n">component</span><span class="p">)})</span>
-</span><span data-line="526">        <span class="n">state</span> <span class="o">=</span> <span class="n">find_maximal_good_sets</span><span class="p">(</span>
-</span><span data-line="527">            <span class="n">component</span><span class="p">,</span>
-</span><span data-line="528">            <span class="n">evaluate</span><span class="p">,</span>
-</span><span data-line="529">            <span class="n">known_conflicts</span><span class="o">=</span><span class="n">component_conflicts</span><span class="p">,</span>
-</span><span data-line="530">            <span class="n">depends_on</span><span class="o">=</span><span class="n">analysis</span><span class="o">.</span><span class="n">stacks</span><span class="p">,</span>
-</span><span data-line="531">            <span class="n">weight</span><span class="o">=</span><span class="k">lambda</span> <span class="n">cid</span><span class="p">:</span> <span class="n">weights</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cid</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
-</span><span data-line="532">            <span class="n">max_evaluations</span><span class="o">=</span><span class="n">max_evaluations</span><span class="p">,</span>
-</span><span data-line="533">            <span class="n">max_seconds</span><span class="o">=</span><span class="n">max_seconds</span><span class="p">,</span>
-</span><span data-line="534">            <span class="n">max_sets</span><span class="o">=</span><span class="n">max_sets</span><span class="p">,</span>
-</span><span data-line="535">            <span class="n">suspects</span><span class="o">=</span><span class="n">suspects_from_failure</span><span class="p">,</span>
-</span><span data-line="536">            <span class="n">on_event</span><span class="o">=</span><span class="n">on_event</span><span class="p">,</span>
-</span><span data-line="537">        <span class="p">)</span>
-</span><span data-line="538">        <span class="n">analysis</span><span class="o">.</span><span class="n">searches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
-</span><span data-line="539">        <span class="n">analysis</span><span class="o">.</span><span class="n">conflicts</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">conflicts</span><span class="p">)</span>
-</span><span data-line="540">        <span class="n">per_component</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">maximal_good_sets</span> <span class="ow">or</span> <span class="p">[</span><span class="nb">frozenset</span><span class="p">()])</span>
-</span><span data-line="541">
-</span><span data-line="542">    <span class="n">combined</span> <span class="o">=</span> <span class="n">combine_components</span><span class="p">(</span><span class="n">per_component</span><span class="p">)</span>
-</span><span data-line="543">    <span class="k">if</span> <span class="n">component_local</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
-</span><span data-line="544">        <span class="n">analysis</span><span class="o">.</span><span class="n">components_combined</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span data-line="545">        <span class="n">analysis</span><span class="o">.</span><span class="n">maximal_sets</span> <span class="o">=</span> <span class="n">combined</span>
-</span><span data-line="546">    <span class="k">else</span><span class="p">:</span>
-</span><span data-line="547">        <span class="c1"># Decomposition is sound for *textual* conflicts and unsound for</span>
-</span><span data-line="548">        <span class="c1"># anything a whole-repo run can see: a drift test in one component can</span>
-</span><span data-line="549">        <span class="c1"># read generated artifacts derived from sources another component edits,</span>
-</span><span data-line="550">        <span class="c1"># with no changed file in common. So the components buy cheap conflicts,</span>
-</span><span data-line="551">        <span class="c1"># and then one global search -- seeded with every one of them, so it</span>
-</span><span data-line="552">        <span class="c1"># starts almost finished -- decides the answer.</span>
-</span><span data-line="553">        <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="554">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">components</span><span class="p">)</span><span class="si">}</span><span class="s2"> file-overlap components were searched "</span>
-</span><span data-line="555">            <span class="s2">"first to find conflicts cheaply, then verified globally: a whole-repo "</span>
-</span><span data-line="556">            <span class="s2">"validator can fail on changes that share no file, so component "</span>
-</span><span data-line="557">            <span class="s2">"results are not assumed to combine freely "</span>
-</span><span data-line="558">            <span class="s2">"(pass component_local=True if your validator cannot see across them)."</span>
-</span><span data-line="559">        <span class="p">)</span>
-</span><span data-line="560">        <span class="n">global_state</span> <span class="o">=</span> <span class="n">find_maximal_good_sets</span><span class="p">(</span>
-</span><span data-line="561">            <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">],</span>
-</span><span data-line="562">            <span class="n">evaluate</span><span class="p">,</span>
-</span><span data-line="563">            <span class="n">known_conflicts</span><span class="o">=</span><span class="n">analysis</span><span class="o">.</span><span class="n">conflicts</span><span class="p">,</span>
-</span><span data-line="564">            <span class="n">depends_on</span><span class="o">=</span><span class="n">analysis</span><span class="o">.</span><span class="n">stacks</span><span class="p">,</span>
-</span><span data-line="565">            <span class="n">weight</span><span class="o">=</span><span class="k">lambda</span> <span class="n">cid</span><span class="p">:</span> <span class="n">weights</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cid</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
-</span><span data-line="566">            <span class="n">max_evaluations</span><span class="o">=</span><span class="n">max_evaluations</span><span class="p">,</span>
-</span><span data-line="567">            <span class="n">max_seconds</span><span class="o">=</span><span class="n">max_seconds</span><span class="p">,</span>
-</span><span data-line="568">            <span class="n">max_sets</span><span class="o">=</span><span class="n">max_sets</span><span class="p">,</span>
-</span><span data-line="569">            <span class="n">suspects</span><span class="o">=</span><span class="n">suspects_from_failure</span><span class="p">,</span>
-</span><span data-line="570">            <span class="n">on_event</span><span class="o">=</span><span class="n">on_event</span><span class="p">,</span>
-</span><span data-line="571">        <span class="p">)</span>
-</span><span data-line="572">        <span class="n">analysis</span><span class="o">.</span><span class="n">searches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">global_state</span><span class="p">)</span>
-</span><span data-line="573">        <span class="n">analysis</span><span class="o">.</span><span class="n">conflicts</span> <span class="o">=</span> <span class="n">_dedupe_conflicts</span><span class="p">(</span>
-</span><span data-line="574">            <span class="n">analysis</span><span class="o">.</span><span class="n">conflicts</span> <span class="o">+</span> <span class="n">global_state</span><span class="o">.</span><span class="n">conflicts</span>
-</span><span data-line="575">        <span class="p">)</span>
-</span><span data-line="576">        <span class="n">analysis</span><span class="o">.</span><span class="n">maximal_sets</span> <span class="o">=</span> <span class="n">global_state</span><span class="o">.</span><span class="n">maximal_good_sets</span> <span class="ow">or</span> <span class="n">_fallback_sets</span><span class="p">(</span>
-</span><span data-line="577">            <span class="n">combined</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">analysis</span>
-</span><span data-line="578">        <span class="p">)</span>
-</span><span data-line="579">
-</span><span data-line="580">    <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">searches</span><span class="p">:</span>
-</span><span data-line="581">        <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
-</span><span data-line="582">            <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="583">                <span class="sa">f</span><span class="s2">"ABORTED: </span><span class="si">{</span><span class="n">state</span><span class="o">.</span><span class="n">error</span><span class="si">}</span><span class="s2">. The sets below are whatever had been "</span>
-</span><span data-line="584">                <span class="s2">"established before that point; they are not an answer."</span>
-</span><span data-line="585">            <span class="p">)</span>
-</span><span data-line="586">    <span class="n">_mark_unverified</span><span class="p">(</span><span class="n">analysis</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">trusted</span><span class="o">=</span><span class="n">component_local</span><span class="p">)</span>
-</span><span data-line="587">
-</span><span data-line="588">    <span class="n">violations</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">monotonicity_violations</span><span class="p">()</span>
-</span><span data-line="589">    <span class="k">for</span> <span class="n">good</span><span class="p">,</span> <span class="n">bad</span> <span class="ow">in</span> <span class="n">violations</span><span class="p">:</span>
-</span><span data-line="590">        <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="591">            <span class="sa">f</span><span class="s2">"MONOTONICITY VIOLATION: </span><span class="si">{</span><span class="n">set_key</span><span class="p">(</span><span class="n">bad</span><span class="p">)</span><span class="si">}</span><span class="s2"> failed but </span><span class="si">{</span><span class="n">set_key</span><span class="p">(</span><span class="n">good</span><span class="p">)</span><span class="si">}</span><span class="s2"> "</span>
-</span><span data-line="592">            <span class="s2">"passed, though it contains it. Suspect a flaky test, or a change "</span>
-</span><span data-line="593">            <span class="s2">"that fixes another. Results below are not fully trustworthy."</span>
-</span><span data-line="594">        <span class="p">)</span>
-</span><span data-line="595">    <span class="k">return</span> <span class="n">analysis</span></div>
+</span><span data-line="511">    <span class="n">diff_of</span> <span class="o">=</span> <span class="n">git_diff_reader</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">base_sha</span><span class="p">,</span> <span class="n">heads_by_id</span><span class="p">)</span>
+</span><span data-line="512">
+</span><span data-line="513">    <span class="k">def</span><span class="w"> </span><span class="nf">suspects_from_failure</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="n">ChangeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChangeSet</span><span class="p">:</span>
+</span><span data-line="514"><span class="w">        </span><span class="sd">"""Which changes in ``subset`` the failure output points at."""</span>
+</span><span data-line="515">        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">validation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="516">            <span class="k">return</span> <span class="nb">frozenset</span><span class="p">()</span>
+</span><span data-line="517">        <span class="k">return</span> <span class="n">attribute_suspects</span><span class="p">(</span>
+</span><span data-line="518">            <span class="n">result</span><span class="o">.</span><span class="n">validation</span><span class="p">,</span>
+</span><span data-line="519">            <span class="n">files_by_change</span><span class="o">=</span><span class="n">analysis</span><span class="o">.</span><span class="n">files_by_change</span><span class="p">,</span>
+</span><span data-line="520">            <span class="n">within</span><span class="o">=</span><span class="n">subset</span><span class="p">,</span>
+</span><span data-line="521">            <span class="n">diff_of</span><span class="o">=</span><span class="n">diff_of</span><span class="p">,</span>
+</span><span data-line="522">        <span class="p">)</span>
+</span><span data-line="523">
+</span><span data-line="524">    <span class="n">per_component</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="525">    <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
+</span><span data-line="526">        <span class="n">component_conflicts</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">known_conflicts</span> <span class="k">if</span> <span class="n">c</span> <span class="o">&lt;=</span> <span class="n">component</span><span class="p">]</span>
+</span><span data-line="527">        <span class="n">emit</span><span class="p">(</span><span class="s2">"component"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"changes"</span><span class="p">:</span> <span class="n">set_key</span><span class="p">(</span><span class="n">component</span><span class="p">)})</span>
+</span><span data-line="528">        <span class="n">state</span> <span class="o">=</span> <span class="n">find_maximal_good_sets</span><span class="p">(</span>
+</span><span data-line="529">            <span class="n">component</span><span class="p">,</span>
+</span><span data-line="530">            <span class="n">evaluate</span><span class="p">,</span>
+</span><span data-line="531">            <span class="n">known_conflicts</span><span class="o">=</span><span class="n">component_conflicts</span><span class="p">,</span>
+</span><span data-line="532">            <span class="n">depends_on</span><span class="o">=</span><span class="n">analysis</span><span class="o">.</span><span class="n">stacks</span><span class="p">,</span>
+</span><span data-line="533">            <span class="n">weight</span><span class="o">=</span><span class="k">lambda</span> <span class="n">cid</span><span class="p">:</span> <span class="n">weights</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cid</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+</span><span data-line="534">            <span class="n">max_evaluations</span><span class="o">=</span><span class="n">max_evaluations</span><span class="p">,</span>
+</span><span data-line="535">            <span class="n">max_seconds</span><span class="o">=</span><span class="n">max_seconds</span><span class="p">,</span>
+</span><span data-line="536">            <span class="n">max_sets</span><span class="o">=</span><span class="n">max_sets</span><span class="p">,</span>
+</span><span data-line="537">            <span class="n">suspects</span><span class="o">=</span><span class="n">suspects_from_failure</span><span class="p">,</span>
+</span><span data-line="538">            <span class="n">on_event</span><span class="o">=</span><span class="n">on_event</span><span class="p">,</span>
+</span><span data-line="539">        <span class="p">)</span>
+</span><span data-line="540">        <span class="n">analysis</span><span class="o">.</span><span class="n">searches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+</span><span data-line="541">        <span class="n">analysis</span><span class="o">.</span><span class="n">conflicts</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">conflicts</span><span class="p">)</span>
+</span><span data-line="542">        <span class="n">per_component</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">maximal_good_sets</span> <span class="ow">or</span> <span class="p">[</span><span class="nb">frozenset</span><span class="p">()])</span>
+</span><span data-line="543">
+</span><span data-line="544">    <span class="n">combined</span> <span class="o">=</span> <span class="n">combine_components</span><span class="p">(</span><span class="n">per_component</span><span class="p">)</span>
+</span><span data-line="545">    <span class="k">if</span> <span class="n">component_local</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+</span><span data-line="546">        <span class="n">analysis</span><span class="o">.</span><span class="n">components_combined</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span data-line="547">        <span class="n">analysis</span><span class="o">.</span><span class="n">maximal_sets</span> <span class="o">=</span> <span class="n">combined</span>
+</span><span data-line="548">    <span class="k">else</span><span class="p">:</span>
+</span><span data-line="549">        <span class="c1"># Decomposition is sound for *textual* conflicts and unsound for</span>
+</span><span data-line="550">        <span class="c1"># anything a whole-repo run can see: a drift test in one component can</span>
+</span><span data-line="551">        <span class="c1"># read generated artifacts derived from sources another component edits,</span>
+</span><span data-line="552">        <span class="c1"># with no changed file in common. So the components buy cheap conflicts,</span>
+</span><span data-line="553">        <span class="c1"># and then one global search -- seeded with every one of them, so it</span>
+</span><span data-line="554">        <span class="c1"># starts almost finished -- decides the answer.</span>
+</span><span data-line="555">        <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="556">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">components</span><span class="p">)</span><span class="si">}</span><span class="s2"> file-overlap components were searched "</span>
+</span><span data-line="557">            <span class="s2">"first to find conflicts cheaply, then verified globally: a whole-repo "</span>
+</span><span data-line="558">            <span class="s2">"validator can fail on changes that share no file, so component "</span>
+</span><span data-line="559">            <span class="s2">"results are not assumed to combine freely "</span>
+</span><span data-line="560">            <span class="s2">"(pass component_local=True if your validator cannot see across them)."</span>
+</span><span data-line="561">        <span class="p">)</span>
+</span><span data-line="562">        <span class="n">global_state</span> <span class="o">=</span> <span class="n">find_maximal_good_sets</span><span class="p">(</span>
+</span><span data-line="563">            <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">],</span>
+</span><span data-line="564">            <span class="n">evaluate</span><span class="p">,</span>
+</span><span data-line="565">            <span class="n">known_conflicts</span><span class="o">=</span><span class="n">analysis</span><span class="o">.</span><span class="n">conflicts</span><span class="p">,</span>
+</span><span data-line="566">            <span class="n">depends_on</span><span class="o">=</span><span class="n">analysis</span><span class="o">.</span><span class="n">stacks</span><span class="p">,</span>
+</span><span data-line="567">            <span class="n">weight</span><span class="o">=</span><span class="k">lambda</span> <span class="n">cid</span><span class="p">:</span> <span class="n">weights</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cid</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+</span><span data-line="568">            <span class="n">max_evaluations</span><span class="o">=</span><span class="n">max_evaluations</span><span class="p">,</span>
+</span><span data-line="569">            <span class="n">max_seconds</span><span class="o">=</span><span class="n">max_seconds</span><span class="p">,</span>
+</span><span data-line="570">            <span class="n">max_sets</span><span class="o">=</span><span class="n">max_sets</span><span class="p">,</span>
+</span><span data-line="571">            <span class="n">suspects</span><span class="o">=</span><span class="n">suspects_from_failure</span><span class="p">,</span>
+</span><span data-line="572">            <span class="n">on_event</span><span class="o">=</span><span class="n">on_event</span><span class="p">,</span>
+</span><span data-line="573">        <span class="p">)</span>
+</span><span data-line="574">        <span class="n">analysis</span><span class="o">.</span><span class="n">searches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">global_state</span><span class="p">)</span>
+</span><span data-line="575">        <span class="n">analysis</span><span class="o">.</span><span class="n">conflicts</span> <span class="o">=</span> <span class="n">_dedupe_conflicts</span><span class="p">(</span>
+</span><span data-line="576">            <span class="n">analysis</span><span class="o">.</span><span class="n">conflicts</span> <span class="o">+</span> <span class="n">global_state</span><span class="o">.</span><span class="n">conflicts</span>
+</span><span data-line="577">        <span class="p">)</span>
+</span><span data-line="578">        <span class="n">analysis</span><span class="o">.</span><span class="n">maximal_sets</span> <span class="o">=</span> <span class="n">global_state</span><span class="o">.</span><span class="n">maximal_good_sets</span> <span class="ow">or</span> <span class="n">_fallback_sets</span><span class="p">(</span>
+</span><span data-line="579">            <span class="n">combined</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">analysis</span>
+</span><span data-line="580">        <span class="p">)</span>
+</span><span data-line="581">
+</span><span data-line="582">    <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">searches</span><span class="p">:</span>
+</span><span data-line="583">        <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
+</span><span data-line="584">            <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="585">                <span class="sa">f</span><span class="s2">"ABORTED: </span><span class="si">{</span><span class="n">state</span><span class="o">.</span><span class="n">error</span><span class="si">}</span><span class="s2">. The sets below are whatever had been "</span>
+</span><span data-line="586">                <span class="s2">"established before that point; they are not an answer."</span>
+</span><span data-line="587">            <span class="p">)</span>
+</span><span data-line="588">    <span class="n">_mark_unverified</span><span class="p">(</span><span class="n">analysis</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">trusted</span><span class="o">=</span><span class="n">component_local</span><span class="p">)</span>
+</span><span data-line="589">
+</span><span data-line="590">    <span class="n">violations</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">monotonicity_violations</span><span class="p">()</span>
+</span><span data-line="591">    <span class="k">for</span> <span class="n">good</span><span class="p">,</span> <span class="n">bad</span> <span class="ow">in</span> <span class="n">violations</span><span class="p">:</span>
+</span><span data-line="592">        <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="593">            <span class="sa">f</span><span class="s2">"MONOTONICITY VIOLATION: </span><span class="si">{</span><span class="n">set_key</span><span class="p">(</span><span class="n">bad</span><span class="p">)</span><span class="si">}</span><span class="s2"> failed but </span><span class="si">{</span><span class="n">set_key</span><span class="p">(</span><span class="n">good</span><span class="p">)</span><span class="si">}</span><span class="s2"> "</span>
+</span><span data-line="594">            <span class="s2">"passed, though it contains it. Suspect a flaky test, or a change "</span>
+</span><span data-line="595">            <span class="s2">"that fixes another. Results below are not fully trustworthy."</span>
+</span><span data-line="596">        <span class="p">)</span>
+</span><span data-line="597">    <span class="k">return</span> <span class="n">analysis</span></div>
 
-</span><span data-line="596">
-</span><span data-line="597">
+</span><span data-line="598">
+</span><span data-line="599">
 <div class="viewcode-block" id="unmatched_log_notes">
 <a class="viewcode-back" href="../../_autosummary/mergeset.analysis.html#mergeset.unmatched_log_notes">[docs]</a>
-</span><span data-line="598"><span class="k">def</span><span class="w"> </span><span class="nf">unmatched_log_notes</span><span class="p">(</span><span class="n">log</span><span class="p">:</span> <span class="n">EvaluationLog</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-</span><span data-line="599"><span class="w">    </span><span class="sd">"""Say how many rows a pinned log is keeping but not using, and why.</span>
-</span><span data-line="600">
-</span><span data-line="601"><span class="sd">    Rows about other commits are never dropped, and never silently ignored</span>
-</span><span data-line="602"><span class="sd">    either: a re-run that is suddenly slow should say it is because heads moved.</span>
-</span><span data-line="603"><span class="sd">    """</span>
-</span><span data-line="604">    <span class="n">where</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"The </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> evaluation log"</span> <span class="k">if</span> <span class="n">label</span> <span class="k">else</span> <span class="s2">"The evaluation log"</span>
-</span><span data-line="605">    <span class="n">notes</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="606">    <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">stale</span><span class="p">:</span>
-</span><span data-line="607">        <span class="n">by_validator</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">other_validator</span><span class="p">)</span>
-</span><span data-line="608">        <span class="n">why</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="609">            <span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="n">by_validator</span><span class="si">}</span><span class="s2"> of them </span><span class="si">{</span><span class="s1">'was'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">by_validator</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'were'</span><span class="si">}</span><span class="s2"> "</span>
-</span><span data-line="610">            <span class="s2">"judged by a different validator (its command, stages, timeout or "</span>
-</span><span data-line="611">            <span class="s2">"environment changed, or a validator that cannot say what it runs "</span>
-</span><span data-line="612">            <span class="s2">"took the place of one that can, or the reverse)."</span>
-</span><span data-line="613">            <span class="k">if</span> <span class="n">by_validator</span>
-</span><span data-line="614">            <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="615">        <span class="p">)</span>
-</span><span data-line="616">        <span class="n">by_resolver</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">other_resolver</span><span class="p">)</span>
-</span><span data-line="617">        <span class="k">if</span> <span class="n">by_resolver</span><span class="p">:</span>
-</span><span data-line="618">            <span class="n">why</span> <span class="o">+=</span> <span class="p">(</span>
-</span><span data-line="619">                <span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="n">by_resolver</span><span class="si">}</span><span class="s2"> of them </span><span class="si">{</span><span class="s1">'was'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">by_resolver</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'were'</span><span class="si">}</span><span class="s2"> "</span>
-</span><span data-line="620">                <span class="s2">"decided by how conflicts were resolved, and this run resolves "</span>
-</span><span data-line="621">                <span class="s2">"them differently (another resolver, or none)."</span>
-</span><span data-line="622">            <span class="p">)</span>
-</span><span data-line="623">        <span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="624">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2"> holds </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">stale</span><span class="p">)</span><span class="si">}</span><span class="s2"> row(s) evaluated against other "</span>
-</span><span data-line="625">            <span class="s2">"commits, other changes or by another validator (a base or a head "</span>
-</span><span data-line="626">            <span class="s2">"has moved, the row holds a change not in play, or the validation "</span>
-</span><span data-line="627">            <span class="sa">f</span><span class="s2">"was edited).</span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2"> They are kept, and not used: they answer a "</span>
-</span><span data-line="628">            <span class="s2">"different question."</span>
-</span><span data-line="629">        <span class="p">)</span>
-</span><span data-line="630">    <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">unpinned</span><span class="p">:</span>
-</span><span data-line="631">        <span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="632">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2"> holds </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">unpinned</span><span class="p">)</span><span class="si">}</span><span class="s2"> row(s) written before evaluations "</span>
-</span><span data-line="633">            <span class="s2">"recorded their commits, their validator or their conflict "</span>
-</span><span data-line="634">            <span class="s2">"resolver, so what they are about is unknown. They are kept, and "</span>
-</span><span data-line="635">            <span class="s2">"not used. If neither the heads, the validation nor the resolver "</span>
-</span><span data-line="636">            <span class="s2">"have changed since, pass `trust_unpinned=True` "</span>
-</span><span data-line="637">            <span class="s2">"(`--trust-unpinned-log` on the command line) to use them."</span>
-</span><span data-line="638">        <span class="p">)</span>
-</span><span data-line="639">    <span class="k">return</span> <span class="n">notes</span></div>
+</span><span data-line="600"><span class="k">def</span><span class="w"> </span><span class="nf">unmatched_log_notes</span><span class="p">(</span><span class="n">log</span><span class="p">:</span> <span class="n">EvaluationLog</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span><span data-line="601"><span class="w">    </span><span class="sd">"""Say how many rows a pinned log is keeping but not using, and why.</span>
+</span><span data-line="602">
+</span><span data-line="603"><span class="sd">    Rows about other commits are never dropped, and never silently ignored</span>
+</span><span data-line="604"><span class="sd">    either: a re-run that is suddenly slow should say it is because heads moved.</span>
+</span><span data-line="605"><span class="sd">    """</span>
+</span><span data-line="606">    <span class="n">where</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"The </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> evaluation log"</span> <span class="k">if</span> <span class="n">label</span> <span class="k">else</span> <span class="s2">"The evaluation log"</span>
+</span><span data-line="607">    <span class="n">notes</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="608">    <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">stale</span><span class="p">:</span>
+</span><span data-line="609">        <span class="n">by_validator</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">other_validator</span><span class="p">)</span>
+</span><span data-line="610">        <span class="n">why</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="611">            <span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="n">by_validator</span><span class="si">}</span><span class="s2"> of them </span><span class="si">{</span><span class="s1">'was'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">by_validator</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'were'</span><span class="si">}</span><span class="s2"> "</span>
+</span><span data-line="612">            <span class="s2">"judged by a different validator (its command, stages, timeout or "</span>
+</span><span data-line="613">            <span class="s2">"environment changed, or a validator that cannot say what it runs "</span>
+</span><span data-line="614">            <span class="s2">"took the place of one that can, or the reverse)."</span>
+</span><span data-line="615">            <span class="k">if</span> <span class="n">by_validator</span>
+</span><span data-line="616">            <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="617">        <span class="p">)</span>
+</span><span data-line="618">        <span class="n">by_resolver</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">other_resolver</span><span class="p">)</span>
+</span><span data-line="619">        <span class="k">if</span> <span class="n">by_resolver</span><span class="p">:</span>
+</span><span data-line="620">            <span class="n">why</span> <span class="o">+=</span> <span class="p">(</span>
+</span><span data-line="621">                <span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="n">by_resolver</span><span class="si">}</span><span class="s2"> of them </span><span class="si">{</span><span class="s1">'was'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">by_resolver</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'were'</span><span class="si">}</span><span class="s2"> "</span>
+</span><span data-line="622">                <span class="s2">"decided by how conflicts were resolved, and this run resolves "</span>
+</span><span data-line="623">                <span class="s2">"them differently (another resolver, or none)."</span>
+</span><span data-line="624">            <span class="p">)</span>
+</span><span data-line="625">        <span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="626">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2"> holds </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">stale</span><span class="p">)</span><span class="si">}</span><span class="s2"> row(s) evaluated against other "</span>
+</span><span data-line="627">            <span class="s2">"commits, other changes or by another validator (a base or a head "</span>
+</span><span data-line="628">            <span class="s2">"has moved, the row holds a change not in play, or the validation "</span>
+</span><span data-line="629">            <span class="sa">f</span><span class="s2">"was edited).</span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2"> They are kept, and not used: they answer a "</span>
+</span><span data-line="630">            <span class="s2">"different question."</span>
+</span><span data-line="631">        <span class="p">)</span>
+</span><span data-line="632">    <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">unpinned</span><span class="p">:</span>
+</span><span data-line="633">        <span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="634">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2"> holds </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">unpinned</span><span class="p">)</span><span class="si">}</span><span class="s2"> row(s) written before evaluations "</span>
+</span><span data-line="635">            <span class="s2">"recorded their commits, their validator or their conflict "</span>
+</span><span data-line="636">            <span class="s2">"resolver, so what they are about is unknown. They are kept, and "</span>
+</span><span data-line="637">            <span class="s2">"not used. If neither the heads, the validation nor the resolver "</span>
+</span><span data-line="638">            <span class="s2">"have changed since, pass `trust_unpinned=True` "</span>
+</span><span data-line="639">            <span class="s2">"(`--trust-unpinned-log` on the command line) to use them."</span>
+</span><span data-line="640">        <span class="p">)</span>
+</span><span data-line="641">    <span class="k">return</span> <span class="n">notes</span></div>
 
-</span><span data-line="640">
-</span><span data-line="641">
-</span><span data-line="642"><span class="k">def</span><span class="w"> </span><span class="nf">_fallback_sets</span><span class="p">(</span>
-</span><span data-line="643">    <span class="n">combined</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">],</span> <span class="n">log</span><span class="p">:</span> <span class="n">EvaluationLog</span><span class="p">,</span> <span class="n">analysis</span><span class="p">:</span> <span class="s2">"Analysis"</span>
-</span><span data-line="644"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
-</span><span data-line="645"><span class="w">    </span><span class="sd">"""Combined sets to fall back on when the global search produced nothing.</span>
-</span><span data-line="646">
-</span><span data-line="647"><span class="sd">    The global search runs out of budget (or aborts) before finding a single</span>
-</span><span data-line="648"><span class="sd">    passing set, and the only other answer in hand is the cartesian combination</span>
-</span><span data-line="649"><span class="sd">    of the per-component answers. That combination has never been evaluated as a</span>
-</span><span data-line="650"><span class="sd">    whole — and a whole-repo validator can fail on changes that share no file,</span>
-</span><span data-line="651"><span class="sd">    which is the entire reason the global search exists.</span>
-</span><span data-line="652">
-</span><span data-line="653"><span class="sd">    So: never hand back a set the log already refutes, and let whatever is left</span>
-</span><span data-line="654"><span class="sd">    through only as *unverified*. Recommending a set recorded as failing is the</span>
-</span><span data-line="655"><span class="sd">    original defect this whole path was written to prevent.</span>
-</span><span data-line="656"><span class="sd">    """</span>
-</span><span data-line="657">    <span class="n">refuted</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">combined</span> <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">known</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">]</span>
-</span><span data-line="658">    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">refuted</span><span class="p">:</span>
-</span><span data-line="659">        <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="660">            <span class="sa">f</span><span class="s2">"Dropped the combined set </span><span class="si">{</span><span class="n">set_key</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="si">}</span><span class="s2">: the log records it as "</span>
-</span><span data-line="661">            <span class="s2">"failing. Component answers do not combine freely for a validator "</span>
-</span><span data-line="662">            <span class="s2">"that sees the whole repository."</span>
-</span><span data-line="663">        <span class="p">)</span>
-</span><span data-line="664">    <span class="n">surviving</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">combined</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">refuted</span><span class="p">]</span>
-</span><span data-line="665">    <span class="k">if</span> <span class="n">surviving</span><span class="p">:</span>
-</span><span data-line="666">        <span class="k">return</span> <span class="n">surviving</span>
-</span><span data-line="667">    <span class="c1"># Nothing combinable survives. Rather than report nothing, report what was</span>
-</span><span data-line="668">    <span class="c1"># actually established: the largest sets the log records as passing. They</span>
-</span><span data-line="669">    <span class="c1"># are smaller than the answer, and they are true, which is the right trade.</span>
-</span><span data-line="670">    <span class="n">established</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">maximal_passing_sets</span><span class="p">()</span>
-</span><span data-line="671">    <span class="k">if</span> <span class="n">established</span><span class="p">:</span>
-</span><span data-line="672">        <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="673">            <span class="s2">"Every combined set was refuted, so the sets below are the largest "</span>
-</span><span data-line="674">            <span class="s2">"the log records as *passing*. They are what was established within "</span>
-</span><span data-line="675">            <span class="s2">"the budget, not the maximal answer — re-run with a larger budget."</span>
-</span><span data-line="676">        <span class="p">)</span>
-</span><span data-line="677">    <span class="k">return</span> <span class="n">established</span>
-</span><span data-line="678">
-</span><span data-line="679">
-</span><span data-line="680"><span class="k">def</span><span class="w"> </span><span class="nf">_mark_unverified</span><span class="p">(</span>
-</span><span data-line="681">    <span class="n">analysis</span><span class="p">:</span> <span class="s2">"Analysis"</span><span class="p">,</span> <span class="n">log</span><span class="p">:</span> <span class="n">EvaluationLog</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">trusted</span><span class="p">:</span> <span class="nb">bool</span>
-</span><span data-line="682"><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="683"><span class="w">    </span><span class="sd">"""Flag every reported set that was never evaluated as a whole.</span>
-</span><span data-line="684">
-</span><span data-line="685"><span class="sd">    The log is the source of truth: a set is verified iff it has an exact</span>
-</span><span data-line="686"><span class="sd">    recorded PASS. Inference across the monotone closure does not count here —</span>
-</span><span data-line="687"><span class="sd">    a passing *superset* is what makes a set good by inference, and if such a</span>
-</span><span data-line="688"><span class="sd">    superset existed it would be the answer instead.</span>
-</span><span data-line="689">
-</span><span data-line="690"><span class="sd">    ``trusted`` (the validator declared itself component-local) means combining</span>
-</span><span data-line="691"><span class="sd">    is sound by contract, so nothing is flagged.</span>
-</span><span data-line="692"><span class="sd">    """</span>
-</span><span data-line="693">    <span class="k">if</span> <span class="n">trusted</span><span class="p">:</span>
-</span><span data-line="694">        <span class="k">return</span>
-</span><span data-line="695">    <span class="n">analysis</span><span class="o">.</span><span class="n">unverified_sets</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="696">        <span class="n">s</span>
-</span><span data-line="697">        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">maximal_sets</span>
-</span><span data-line="698">        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">exact</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="ow">and</span> <span class="n">log</span><span class="o">.</span><span class="n">exact</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">)</span>
-</span><span data-line="699">    <span class="p">]</span>
-</span><span data-line="700">    <span class="k">if</span> <span class="n">analysis</span><span class="o">.</span><span class="n">unverified_sets</span><span class="p">:</span>
-</span><span data-line="701">        <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="702">            <span class="s2">"NOT VERIFIED: "</span>
-</span><span data-line="703">            <span class="o">+</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-</span><span data-line="704">                <span class="n">set_key</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">set_key</span><span class="p">(</span><span class="n">s</span><span class="p">))</span> <span class="ow">or</span> <span class="s2">"(base alone)"</span>
-</span><span data-line="705">                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">unverified_sets</span>
-</span><span data-line="706">            <span class="p">)</span>
-</span><span data-line="707">            <span class="o">+</span> <span class="s2">" — reported without ever being merged and validated as a whole. "</span>
-</span><span data-line="708">            <span class="s2">"These are combinations of per-component answers, and a whole-repo "</span>
-</span><span data-line="709">            <span class="s2">"validator can object to a combination it has never seen. Re-run "</span>
-</span><span data-line="710">            <span class="s2">"with a larger budget before acting on them."</span>
-</span><span data-line="711">        <span class="p">)</span>
-</span><span data-line="712">
-</span><span data-line="713">
-</span><span data-line="714"><span class="k">def</span><span class="w"> </span><span class="nf">_common_base</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">changes</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Change</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="715"><span class="w">    </span><span class="sd">"""The commit every change can fairly be measured against.</span>
-</span><span data-line="716">
-</span><span data-line="717"><span class="sd">    When all candidates already share a base, that is it. When they do not</span>
-</span><span data-line="718"><span class="sd">    (stacked PRs, PRs opened against a non-default branch), fall back to the</span>
-</span><span data-line="719"><span class="sd">    merge base of all of them — and the caller is told, because "which base"</span>
-</span><span data-line="720"><span class="sd">    silently differing is the classic way this analysis becomes meaningless.</span>
-</span><span data-line="721"><span class="sd">    """</span>
-</span><span data-line="722">    <span class="n">bases</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">base</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">}</span>
-</span><span data-line="723">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bases</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-</span><span data-line="724">        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">bases</span><span class="p">))</span>
-</span><span data-line="725">    <span class="n">current</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">bases</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
-</span><span data-line="726">    <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">bases</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]:</span>
-</span><span data-line="727">        <span class="n">current</span> <span class="o">=</span> <span class="n">merge_base</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="n">resolve</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
-</span><span data-line="728">    <span class="k">return</span> <span class="n">current</span>
-</span><span data-line="729">
-</span><span data-line="730">
-</span><span data-line="731"><span class="k">def</span><span class="w"> </span><span class="nf">_dedupe_conflicts</span><span class="p">(</span><span class="n">conflicts</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
-</span><span data-line="732"><span class="w">    </span><span class="sd">"""Keep only the minimal conflicts; a superset of a conflict says nothing new."""</span>
-</span><span data-line="733">    <span class="n">unique</span> <span class="o">=</span> <span class="p">{</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">conflicts</span> <span class="k">if</span> <span class="n">c</span><span class="p">}</span>
-</span><span data-line="734">    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
-</span><span data-line="735">        <span class="p">(</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">unique</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">other</span> <span class="o">&lt;</span> <span class="n">c</span> <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">unique</span><span class="p">)),</span>
-</span><span data-line="736">        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">set_key</span><span class="p">(</span><span class="n">c</span><span class="p">)),</span>
-</span><span data-line="737">    <span class="p">)</span>
-</span><span data-line="738">
-</span><span data-line="739">
-</span><span data-line="740"><span class="k">def</span><span class="w"> </span><span class="nf">_failure_detail</span><span class="p">(</span><span class="n">evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="741"><span class="w">    </span><span class="sd">"""The most specific thing we can say about why an evaluation failed.</span>
-</span><span data-line="742">
-</span><span data-line="743"><span class="sd">    Failing test ids when the runner named some; otherwise the tail of what it</span>
-</span><span data-line="744"><span class="sd">    printed, because "exit code 1 and nothing else" is exactly the case where a</span>
-</span><span data-line="745"><span class="sd">    bare verdict leaves the user with nowhere to look.</span>
-</span><span data-line="746"><span class="sd">    """</span>
-</span><span data-line="747">    <span class="n">validation</span> <span class="o">=</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">validation</span>
-</span><span data-line="748">    <span class="k">if</span> <span class="n">validation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="749">        <span class="k">if</span> <span class="n">validation</span><span class="o">.</span><span class="n">failing_tests</span><span class="p">:</span>
-</span><span data-line="750">            <span class="k">return</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">validation</span><span class="o">.</span><span class="n">failing_tests</span><span class="p">[:</span><span class="mi">5</span><span class="p">])</span>
-</span><span data-line="751">        <span class="n">tail</span> <span class="o">=</span> <span class="p">(</span><span class="n">validation</span><span class="o">.</span><span class="n">stdout_tail</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-</span><span data-line="752">        <span class="k">if</span> <span class="n">tail</span><span class="p">:</span>
-</span><span data-line="753">            <span class="k">return</span> <span class="sa">f</span><span class="s2">"exit </span><span class="si">{</span><span class="n">validation</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">: "</span> <span class="o">+</span> <span class="s2">" / "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tail</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span>
-</span><span data-line="754">        <span class="k">return</span> <span class="p">(</span>
-</span><span data-line="755">            <span class="sa">f</span><span class="s2">"the validation command exited </span><span class="si">{</span><span class="n">validation</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2"> and printed nothing"</span>
-</span><span data-line="756">        <span class="p">)</span>
-</span><span data-line="757">    <span class="k">if</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">merge</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">merge</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
-</span><span data-line="758">        <span class="k">return</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">merge</span><span class="o">.</span><span class="n">detail</span> <span class="ow">or</span> <span class="s2">"the merge failed"</span>
-</span><span data-line="759">    <span class="k">return</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">note</span> <span class="ow">or</span> <span class="s2">"no detail was reported"</span>
+</span><span data-line="642">
+</span><span data-line="643">
+</span><span data-line="644"><span class="k">def</span><span class="w"> </span><span class="nf">_fallback_sets</span><span class="p">(</span>
+</span><span data-line="645">    <span class="n">combined</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">],</span> <span class="n">log</span><span class="p">:</span> <span class="n">EvaluationLog</span><span class="p">,</span> <span class="n">analysis</span><span class="p">:</span> <span class="s2">"Analysis"</span>
+</span><span data-line="646"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+</span><span data-line="647"><span class="w">    </span><span class="sd">"""Combined sets to fall back on when the global search produced nothing.</span>
+</span><span data-line="648">
+</span><span data-line="649"><span class="sd">    The global search runs out of budget (or aborts) before finding a single</span>
+</span><span data-line="650"><span class="sd">    passing set, and the only other answer in hand is the cartesian combination</span>
+</span><span data-line="651"><span class="sd">    of the per-component answers. That combination has never been evaluated as a</span>
+</span><span data-line="652"><span class="sd">    whole — and a whole-repo validator can fail on changes that share no file,</span>
+</span><span data-line="653"><span class="sd">    which is the entire reason the global search exists.</span>
+</span><span data-line="654">
+</span><span data-line="655"><span class="sd">    So: never hand back a set the log already refutes, and let whatever is left</span>
+</span><span data-line="656"><span class="sd">    through only as *unverified*. Recommending a set recorded as failing is the</span>
+</span><span data-line="657"><span class="sd">    original defect this whole path was written to prevent.</span>
+</span><span data-line="658"><span class="sd">    """</span>
+</span><span data-line="659">    <span class="n">refuted</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">combined</span> <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">known</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">FAIL</span><span class="p">]</span>
+</span><span data-line="660">    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">refuted</span><span class="p">:</span>
+</span><span data-line="661">        <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="662">            <span class="sa">f</span><span class="s2">"Dropped the combined set </span><span class="si">{</span><span class="n">set_key</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="si">}</span><span class="s2">: the log records it as "</span>
+</span><span data-line="663">            <span class="s2">"failing. Component answers do not combine freely for a validator "</span>
+</span><span data-line="664">            <span class="s2">"that sees the whole repository."</span>
+</span><span data-line="665">        <span class="p">)</span>
+</span><span data-line="666">    <span class="n">surviving</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">combined</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">refuted</span><span class="p">]</span>
+</span><span data-line="667">    <span class="k">if</span> <span class="n">surviving</span><span class="p">:</span>
+</span><span data-line="668">        <span class="k">return</span> <span class="n">surviving</span>
+</span><span data-line="669">    <span class="c1"># Nothing combinable survives. Rather than report nothing, report what was</span>
+</span><span data-line="670">    <span class="c1"># actually established: the largest sets the log records as passing. They</span>
+</span><span data-line="671">    <span class="c1"># are smaller than the answer, and they are true, which is the right trade.</span>
+</span><span data-line="672">    <span class="n">established</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">maximal_passing_sets</span><span class="p">()</span>
+</span><span data-line="673">    <span class="k">if</span> <span class="n">established</span><span class="p">:</span>
+</span><span data-line="674">        <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="675">            <span class="s2">"Every combined set was refuted, so the sets below are the largest "</span>
+</span><span data-line="676">            <span class="s2">"the log records as *passing*. They are what was established within "</span>
+</span><span data-line="677">            <span class="s2">"the budget, not the maximal answer — re-run with a larger budget."</span>
+</span><span data-line="678">        <span class="p">)</span>
+</span><span data-line="679">    <span class="k">return</span> <span class="n">established</span>
+</span><span data-line="680">
+</span><span data-line="681">
+</span><span data-line="682"><span class="k">def</span><span class="w"> </span><span class="nf">_mark_unverified</span><span class="p">(</span>
+</span><span data-line="683">    <span class="n">analysis</span><span class="p">:</span> <span class="s2">"Analysis"</span><span class="p">,</span> <span class="n">log</span><span class="p">:</span> <span class="n">EvaluationLog</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">trusted</span><span class="p">:</span> <span class="nb">bool</span>
+</span><span data-line="684"><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="685"><span class="w">    </span><span class="sd">"""Flag every reported set that was never evaluated as a whole.</span>
+</span><span data-line="686">
+</span><span data-line="687"><span class="sd">    The log is the source of truth: a set is verified iff it has an exact</span>
+</span><span data-line="688"><span class="sd">    recorded PASS. Inference across the monotone closure does not count here —</span>
+</span><span data-line="689"><span class="sd">    a passing *superset* is what makes a set good by inference, and if such a</span>
+</span><span data-line="690"><span class="sd">    superset existed it would be the answer instead.</span>
+</span><span data-line="691">
+</span><span data-line="692"><span class="sd">    ``trusted`` (the validator declared itself component-local) means combining</span>
+</span><span data-line="693"><span class="sd">    is sound by contract, so nothing is flagged.</span>
+</span><span data-line="694"><span class="sd">    """</span>
+</span><span data-line="695">    <span class="k">if</span> <span class="n">trusted</span><span class="p">:</span>
+</span><span data-line="696">        <span class="k">return</span>
+</span><span data-line="697">    <span class="n">analysis</span><span class="o">.</span><span class="n">unverified_sets</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="698">        <span class="n">s</span>
+</span><span data-line="699">        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">maximal_sets</span>
+</span><span data-line="700">        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">exact</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="ow">and</span> <span class="n">log</span><span class="o">.</span><span class="n">exact</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">verdict</span> <span class="ow">is</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">)</span>
+</span><span data-line="701">    <span class="p">]</span>
+</span><span data-line="702">    <span class="k">if</span> <span class="n">analysis</span><span class="o">.</span><span class="n">unverified_sets</span><span class="p">:</span>
+</span><span data-line="703">        <span class="n">analysis</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="704">            <span class="s2">"NOT VERIFIED: "</span>
+</span><span data-line="705">            <span class="o">+</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+</span><span data-line="706">                <span class="n">set_key</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">set_key</span><span class="p">(</span><span class="n">s</span><span class="p">))</span> <span class="ow">or</span> <span class="s2">"(base alone)"</span>
+</span><span data-line="707">                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">analysis</span><span class="o">.</span><span class="n">unverified_sets</span>
+</span><span data-line="708">            <span class="p">)</span>
+</span><span data-line="709">            <span class="o">+</span> <span class="s2">" — reported without ever being merged and validated as a whole. "</span>
+</span><span data-line="710">            <span class="s2">"These are combinations of per-component answers, and a whole-repo "</span>
+</span><span data-line="711">            <span class="s2">"validator can object to a combination it has never seen. Re-run "</span>
+</span><span data-line="712">            <span class="s2">"with a larger budget before acting on them."</span>
+</span><span data-line="713">        <span class="p">)</span>
+</span><span data-line="714">
+</span><span data-line="715">
+</span><span data-line="716"><span class="k">def</span><span class="w"> </span><span class="nf">_common_base</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">changes</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Change</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="717"><span class="w">    </span><span class="sd">"""The commit every change can fairly be measured against.</span>
+</span><span data-line="718">
+</span><span data-line="719"><span class="sd">    When all candidates already share a base, that is it. When they do not</span>
+</span><span data-line="720"><span class="sd">    (stacked PRs, PRs opened against a non-default branch), fall back to the</span>
+</span><span data-line="721"><span class="sd">    merge base of all of them — and the caller is told, because "which base"</span>
+</span><span data-line="722"><span class="sd">    silently differing is the classic way this analysis becomes meaningless.</span>
+</span><span data-line="723"><span class="sd">    """</span>
+</span><span data-line="724">    <span class="n">bases</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">base</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">}</span>
+</span><span data-line="725">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bases</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+</span><span data-line="726">        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">bases</span><span class="p">))</span>
+</span><span data-line="727">    <span class="n">current</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">bases</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+</span><span data-line="728">    <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">bases</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]:</span>
+</span><span data-line="729">        <span class="n">current</span> <span class="o">=</span> <span class="n">merge_base</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="n">resolve</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+</span><span data-line="730">    <span class="k">return</span> <span class="n">current</span>
+</span><span data-line="731">
+</span><span data-line="732">
+</span><span data-line="733"><span class="k">def</span><span class="w"> </span><span class="nf">_dedupe_conflicts</span><span class="p">(</span><span class="n">conflicts</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ChangeSet</span><span class="p">]:</span>
+</span><span data-line="734"><span class="w">    </span><span class="sd">"""Keep only the minimal conflicts; a superset of a conflict says nothing new."""</span>
+</span><span data-line="735">    <span class="n">unique</span> <span class="o">=</span> <span class="p">{</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">conflicts</span> <span class="k">if</span> <span class="n">c</span><span class="p">}</span>
+</span><span data-line="736">    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+</span><span data-line="737">        <span class="p">(</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">unique</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">other</span> <span class="o">&lt;</span> <span class="n">c</span> <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">unique</span><span class="p">)),</span>
+</span><span data-line="738">        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">set_key</span><span class="p">(</span><span class="n">c</span><span class="p">)),</span>
+</span><span data-line="739">    <span class="p">)</span>
+</span><span data-line="740">
+</span><span data-line="741">
+</span><span data-line="742"><span class="k">def</span><span class="w"> </span><span class="nf">_failure_detail</span><span class="p">(</span><span class="n">evaluation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="743"><span class="w">    </span><span class="sd">"""The most specific thing we can say about why an evaluation failed.</span>
+</span><span data-line="744">
+</span><span data-line="745"><span class="sd">    Failing test ids when the runner named some; otherwise the tail of what it</span>
+</span><span data-line="746"><span class="sd">    printed, because "exit code 1 and nothing else" is exactly the case where a</span>
+</span><span data-line="747"><span class="sd">    bare verdict leaves the user with nowhere to look.</span>
+</span><span data-line="748"><span class="sd">    """</span>
+</span><span data-line="749">    <span class="n">validation</span> <span class="o">=</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">validation</span>
+</span><span data-line="750">    <span class="k">if</span> <span class="n">validation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="751">        <span class="k">if</span> <span class="n">validation</span><span class="o">.</span><span class="n">failing_tests</span><span class="p">:</span>
+</span><span data-line="752">            <span class="k">return</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">validation</span><span class="o">.</span><span class="n">failing_tests</span><span class="p">[:</span><span class="mi">5</span><span class="p">])</span>
+</span><span data-line="753">        <span class="n">tail</span> <span class="o">=</span> <span class="p">(</span><span class="n">validation</span><span class="o">.</span><span class="n">stdout_tail</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+</span><span data-line="754">        <span class="k">if</span> <span class="n">tail</span><span class="p">:</span>
+</span><span data-line="755">            <span class="k">return</span> <span class="sa">f</span><span class="s2">"exit </span><span class="si">{</span><span class="n">validation</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">: "</span> <span class="o">+</span> <span class="s2">" / "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tail</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span>
+</span><span data-line="756">        <span class="k">return</span> <span class="p">(</span>
+</span><span data-line="757">            <span class="sa">f</span><span class="s2">"the validation command exited </span><span class="si">{</span><span class="n">validation</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2"> and printed nothing"</span>
+</span><span data-line="758">        <span class="p">)</span>
+</span><span data-line="759">    <span class="k">if</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">merge</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">merge</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+</span><span data-line="760">        <span class="k">return</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">merge</span><span class="o">.</span><span class="n">detail</span> <span class="ow">or</span> <span class="s2">"the merge failed"</span>
+</span><span data-line="761">    <span class="k">return</span> <span class="n">evaluation</span><span class="o">.</span><span class="n">note</span> <span class="ow">or</span> <span class="s2">"no detail was reported"</span>
 </span></pre></div>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -926,7 +928,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=6a9d8632"></script>
+      <script src="../../_static/documentation_options.js?v=cee5022b"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
