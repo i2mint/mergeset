@@ -79,6 +79,7 @@ from mergeset.base import (
     ChangeId,
     ChangeSet,
     Evaluation,
+    MergeOutcome,
     MergesetError,
     ValidationOutcome,
     Verdict,
@@ -990,6 +991,20 @@ def analyze_tiered(
         for k in ("resolver", "reuse_worktree", "worktree_root")
         if analyze_kwargs.get(k) is not None
     }
+    # ... but only the screen *resolves*. A deeper tier reuses the resolution
+    # the screen recorded for the set (#30): asking the resolver again would
+    # multiply its paid calls by the number of tiers, and could hand the deep
+    # tier a different resolved tree than the one the screen passed. The chain
+    # reaches a deep tier only after the screen recorded an exact PASS (#31),
+    # so that row is there to read.
+    deep_merging = dict(merging)
+    if deep_merging.pop("resolver", None) is not None:
+
+        def screen_resolution(subset: ChangeSet) -> Optional[MergeOutcome]:
+            row = logs[screen.name].exact(frozenset(subset))
+            return row.merge if row is not None else None
+
+        deep_merging["resolution"] = screen_resolution
     # (log, oracle) per tier entered so far; `_confirming_chain` caches each
     # oracle by its own log and chains them.
     evaluators = [
@@ -1027,7 +1042,7 @@ def analyze_tiered(
             )
             break
         evaluators.append(
-            (logs[tier.name], _tier_oracle(repo, analysis, tier, emit, **merging))
+            (logs[tier.name], _tier_oracle(repo, analysis, tier, emit, **deep_merging))
         )
         # ADR-0018 applies to every tier, not only the first. `analyze` checks
         # the base for the screen; without the same check here, a deep tier that
@@ -1184,9 +1199,9 @@ def _tier_oracle(
 ):
     """The uncached evaluator for one tier: merge onto the base, then run the tier.
 
-    ``merging`` is how sets are merged (``resolver``, ``reuse_worktree``,
-    ``worktree_root``), the same for every tier. Cached by
-    :func:`_confirming_chain`.
+    ``merging`` is how sets are merged (``resolver`` for the screen,
+    ``resolution`` for the tiers after it, ``reuse_worktree``,
+    ``worktree_root``). Cached by :func:`_confirming_chain`.
     """
     return git_oracle(
         repo,
