@@ -32,6 +32,7 @@ gave (i2mint/mergeset#39).
 
 from __future__ import annotations
 
+import functools
 import hashlib
 import json
 import os
@@ -106,14 +107,17 @@ def recorded_fingerprint(validate: Optional[Callable]) -> str:
 
 
 def inputs_digest(paths: Iterable[str]) -> Dict[str, str]:
-    """A digest of each path's current contents, keyed by its absolute path.
+    """A digest of each path's current contents, keyed by its real path.
 
     These are the files a validator runs that its command text does not
     capture: a script outside the analysed repository, a config it reads. A
-    directory is digested over every file under it (names and contents), a
-    missing path as ``'missing'`` -- so creating it later changes the digest
-    too. Relative paths are resolved against the current directory, *not* the
-    worktree: files inside the repository are already pinned by the commits.
+    directory is digested over every file under it (names and contents,
+    following symlinks, each directory once), a missing path as ``'missing'``
+    -- so creating it later changes the digest too -- and one that cannot be
+    read as ``'unreadable'``. Relative paths are resolved against the current
+    directory, *not* the worktree: files inside the repository are already
+    pinned by the commits. ``paths`` is a collection of paths: a lone string is
+    refused, since it would be read one character at a time.
 
     >>> import tempfile
     >>> with tempfile.NamedTemporaryFile('w', suffix='.py', delete=False) as f:
@@ -128,23 +132,47 @@ def inputs_digest(paths: Iterable[str]) -> Dict[str, str]:
     'missing'
     """
 
+    if isinstance(paths, (str, bytes, os.PathLike)):
+        raise TypeError(
+            f"inputs is a collection of paths, got the single path {paths!r}: "
+            f"wrap it in a list, inputs=[{paths!r}]."
+        )
+
+    def file_digest(path: str) -> str:
+        digest = hashlib.sha256()
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(1 << 20), b""):
+                digest.update(chunk)
+        return digest.hexdigest()[:16]
+
+    def tree_digest(path: str) -> str:
+        digest = hashlib.sha256()
+        seen = set()
+        for root, dirs, files in os.walk(path, followlinks=True):
+            real = os.path.realpath(root)
+            if real in seen:  # a symlink loop, or the same directory twice
+                dirs[:] = []
+                continue
+            seen.add(real)
+            dirs.sort()
+            for name in sorted(files):
+                full = os.path.join(root, name)
+                digest.update(os.path.relpath(full, path).encode() + b"\0")
+                digest.update(digest_of(full).encode())
+        return digest.hexdigest()[:16]
+
     def digest_of(path: str) -> str:
-        if os.path.isfile(path):
-            with open(path, "rb") as f:
-                return hashlib.sha256(f.read()).hexdigest()[:16]
-        if os.path.isdir(path):
-            digest = hashlib.sha256()
-            for root, dirs, files in os.walk(path):
-                dirs.sort()
-                for name in sorted(files):
-                    full = os.path.join(root, name)
-                    digest.update(os.path.relpath(full, path).encode() + b"\0")
-                    digest.update(digest_of(full).encode())
-            return digest.hexdigest()[:16]
+        try:
+            if os.path.isfile(path):
+                return file_digest(path)
+            if os.path.isdir(path):
+                return tree_digest(path)
+        except OSError:
+            return "unreadable"
         return "missing"
 
-    absolute = (os.path.abspath(os.path.expanduser(p)) for p in paths)
-    return {path: digest_of(path) for path in sorted(set(absolute))}
+    real = (os.path.realpath(os.path.expanduser(os.fspath(p))) for p in paths)
+    return {path: digest_of(path) for path in sorted(set(real))}
 
 
 def _same_verdicts(**spec: Any) -> Dict[str, Any]:
@@ -162,7 +190,7 @@ def _same_verdicts(**spec: Any) -> Dict[str, Any]:
         # No inputs digests like before they existed, so naming none never
         # retires a log's rows.
         inputs = spec.pop("inputs")
-        if inputs:
+        if isinstance(inputs, (str, bytes, os.PathLike)) or inputs:
             spec["inputs"] = inputs_digest(inputs)
     return spec
 
@@ -176,12 +204,49 @@ def _fingerprinted(validate: Callable, kind: str, **spec: Any) -> Callable:
     read now, when the validator is made. ``kind`` stays
     readable in front of it, for a person looking at a log row.
     """
-    payload = json.dumps(
-        {"kind": kind, **_same_verdicts(**spec)}, sort_keys=True, default=str
-    )
+    inputs = spec.get("inputs") or ()
+    spec = _same_verdicts(**spec)
+    payload = json.dumps({"kind": kind, **spec}, sort_keys=True, default=str)
     digest = hashlib.sha256(payload.encode()).hexdigest()[:16]
+    if "inputs" in spec:
+        validate = _inputs_held(validate, inputs, spec["inputs"])
     setattr(validate, FINGERPRINT_ATTR, f"{kind}:{digest}")
     return validate
+
+
+def _inputs_held(
+    validate: Callable, inputs: Sequence[str], digested: Dict[str, str]
+) -> Callable:
+    """``validate``, refusing to run once ``inputs`` differ from ``digested``.
+
+    The fingerprint is made once, from the inputs as they were; the command
+    reads them afresh on every run. An input edited mid-run would be judged
+    by the new script and recorded under the old one's fingerprint, so that
+    reverting the edit later would let those rows answer the old script. A
+    verdict reached either side of the edit is refused instead, and the run
+    stops with the reason: the next run digests the new contents.
+    """
+
+    def check(when: str) -> None:
+        if inputs_digest(inputs) != digested:
+            changed = sorted(
+                p for p, d in inputs_digest(inputs).items() if digested.get(p) != d
+            )
+            raise CapabilityError(
+                f"A validation input changed {when} ({', '.join(changed)}). "
+                "Verdicts are recorded under the inputs as they were when the "
+                "validator was made, so this run cannot record any more of them. "
+                "Run again: the new contents get their own fingerprint."
+            )
+
+    @functools.wraps(validate)
+    def validate_with_inputs(worktree: str) -> ValidationOutcome:
+        check("since the validator was made")
+        outcome = validate(worktree)
+        check("while it ran")
+        return outcome
+
+    return validate_with_inputs
 
 
 def detect_runner(path: str) -> Optional[str]:
@@ -322,6 +387,13 @@ def pytest_validation(
     if select_paths is not None:
         # Which tests run is now decided by a callable, and a callable's name
         # says nothing about what it selects: leave the fingerprint unknown.
+        if inputs:
+            raise ValueError(
+                "pytest_validation(select_paths=...) has no fingerprint (only "
+                "its author knows what the callable selects), so inputs= would "
+                "be ignored. Drop inputs, or set validator_fingerprint on the "
+                "returned validator yourself."
+            )
         return validate
     return _fingerprinted(
         validate, "pytest", args=list(args), timeout=timeout, env=env, inputs=inputs
@@ -595,12 +667,14 @@ def js_validation(
     lint: Optional[str] = None,
     lockfile: str = "pnpm-lock.yaml",
     timeout: Optional[float] = None,
+    inputs: Sequence[str] = (),
 ) -> Callable[[str], ValidationOutcome]:
     """A staged validator shaped like a JavaScript project.
 
     Install is fingerprinted on the lockfile so it runs only when dependencies
     actually changed; the build, when given, is a required prerequisite of the
-    tests rather than part of them.
+    tests rather than part of them. ``inputs``: files outside the repository
+    that any step runs (see :func:`inputs_digest`).
     """
     stages = [
         ValidationStage(
@@ -612,4 +686,4 @@ def js_validation(
     stages.append(ValidationStage("test", test, timeout=timeout))
     if lint:
         stages.append(ValidationStage("lint", lint, timeout=timeout, required=False))
-    return staged_validation(stages)
+    return staged_validation(stages, inputs=inputs)

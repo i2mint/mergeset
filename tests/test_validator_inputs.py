@@ -8,7 +8,10 @@ script outside it is pinned only when named with ``inputs=`` (library) or
 ``--validate-input`` (CLI). These tests edit the script, not the command.
 """
 
+import pytest
+
 from mergeset.analysis import analyze
+from mergeset.base import CapabilityError
 from mergeset.log import EvaluationLog
 from mergeset.sources import branch_changes
 from mergeset.validation import (
@@ -18,6 +21,7 @@ from mergeset.validation import (
     fingerprint_of,
     flake_tolerant,
     inputs_digest,
+    js_validation,
     pytest_validation,
     staged_validation,
 )
@@ -168,7 +172,7 @@ def test_validate_input_with_merge_only_is_refused(repo, tmp_path):
         repo=repo,
         base="main",
         merge_only=True,
-        validate_input=[str(tmp_path / "x.py")],
+        validate_input=[str(_touch(tmp_path / "x.py"))],
         report_dir=str(tmp_path / "reports"),
         quiet=True,
     )
@@ -181,3 +185,84 @@ def py_command_existing(tmp_path):
 
     return f'"{sys.executable}" "{tmp_path / "check.py"}"'
 
+
+
+def _touch(path):
+    path.write_text("")
+    return path
+
+
+def test_a_branch_typed_after_validate_input_is_refused(repo, tmp_path):
+    out = cli.branches(
+        ["feat-b"],
+        repo=repo,
+        base="main",
+        validate_command="true",
+        validate_input=[str(_touch(tmp_path / "chk.sh")), "feat-d"],
+        report_dir=str(tmp_path / "reports"),
+        quiet=True,
+    )
+    assert "--validate-input names no file: feat-d" in out
+
+
+def test_an_input_edited_mid_run_stops_the_run(tmp_path):
+    script = tmp_path / "check.py"
+    script.write_text(_PASS)
+    validate = command_validation(py_command_existing(tmp_path), inputs=[str(script)])
+    assert validate(str(tmp_path)).ok
+    script.write_text(_NO_D)
+    with pytest.raises(CapabilityError, match="changed since the validator was made"):
+        validate(str(tmp_path))
+
+
+def test_an_input_edited_while_it_runs_is_not_recorded(tmp_path):
+    script = tmp_path / "check.py"
+    # The script rewrites itself, as an edit landing mid-evaluation would.
+    script.write_text(
+        "import sys\nopen(sys.argv[0], 'a').write('# edited')\n"
+    )
+    validate = command_validation(py_command_existing(tmp_path), inputs=[str(script)])
+    with pytest.raises(CapabilityError, match="while it ran"):
+        validate(str(tmp_path))
+
+
+def test_a_lone_string_is_not_read_as_characters(tmp_path):
+    with pytest.raises(TypeError, match="wrap it in a list"):
+        command_validation("true", inputs=str(tmp_path / "check.py"))
+    with pytest.raises(TypeError):
+        inputs_digest(str(tmp_path))
+
+
+def test_a_symlinked_subdirectory_is_followed(tmp_path):
+    lib = tmp_path / "lib"
+    lib.mkdir()
+    (lib / "h.py").write_text("1")
+    checks = tmp_path / "checks"
+    checks.mkdir()
+    (checks / "lib").symlink_to(lib)
+    (checks / "loop").symlink_to(checks)  # a cycle must terminate
+    before = inputs_digest([str(checks)])
+    (lib / "h.py").write_text("2")
+    assert inputs_digest([str(checks)]) != before
+
+
+def test_a_symlink_and_its_target_are_one_input(tmp_path):
+    (tmp_path / "check.py").write_text("x")
+    (tmp_path / "alias.py").symlink_to(tmp_path / "check.py")
+    assert fingerprint_of(
+        command_validation("c", inputs=[str(tmp_path / "alias.py")])
+    ) == fingerprint_of(command_validation("c", inputs=[str(tmp_path / "check.py")]))
+
+
+def test_js_validation_takes_inputs(tmp_path):
+    script = tmp_path / "x.js"
+    script.write_text("1")
+    before = fingerprint_of(js_validation(inputs=[str(script)]))
+    script.write_text("2")
+    assert fingerprint_of(js_validation(inputs=[str(script)])) != before
+    assert fingerprint_of(js_validation()) == fingerprint_of(js_validation(inputs=[]))
+
+
+def test_inputs_with_an_unfingerprinted_pytest_selection_are_refused(tmp_path):
+    with pytest.raises(ValueError, match="select_paths"):
+        pytest_validation(select_paths=lambda wt: [], inputs=[str(tmp_path)])
