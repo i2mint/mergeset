@@ -41,6 +41,7 @@ from mergeset.gitops import (
     changed_files,
     singleton_textual_conflicts,
     check_git_capability,
+    is_ancestor,
     merge_base,
     pairwise_textual_conflicts,
     resolve,
@@ -84,6 +85,11 @@ class Analysis:
     components: List[ChangeSet] = field(default_factory=list)
     files_by_change: Dict[ChangeId, List[str]] = field(default_factory=dict)
     stacks: Dict[ChangeId, ChangeId] = field(default_factory=dict)
+    #: The ``stacks`` edges whose child head really contains the parent's head,
+    #: so merging the child brings the parent along. Only these let the oracle
+    #: merge a tip alone; any other parent is merged explicitly, or the row
+    #: would name a parent head that was never in the tree (#23).
+    merged_through: Dict[ChangeId, ChangeId] = field(default_factory=dict)
     #: Cost of dropping each change *including its descendant cone*.
     weights: Dict[ChangeId, float] = field(default_factory=dict)
     #: Cost of the change on its own, before the cone is accounted for.
@@ -210,6 +216,7 @@ def analyze(
     resolver: Optional[Resolver] = None,
     log: Optional[EvaluationLog] = None,
     log_path: Optional[str] = None,
+    trust_unpinned: Optional[bool] = None,
     artifacts: Optional[Mapping[str, MutableMapping]] = None,
     weight: Optional[Callable[[Change], float]] = None,
     pairwise_preoracle: bool = True,
@@ -241,7 +248,11 @@ def analyze(
         log / log_path: The evaluation log — the single source of truth. Defaults
             to ``<artifact root>/evaluations/<repo-slug>.jsonl`` (see
             :mod:`mergeset.storage`), *outside* the analysed repository. Reusing
-            an existing one makes a re-run nearly free.
+            an existing one makes a re-run nearly free. Only rows evaluated
+            against the same base and heads are reused (see ADR 0028).
+        trust_unpinned: Reuse log rows written before rows recorded their
+            commits (an old log). Default: the log's own setting, which is off.
+            Only when the heads have not moved since those rows were written.
         weight: ``Change -> cost of dropping it``; default is size-based.
         pairwise_preoracle: Use ``git merge-tree`` to find textual conflicts for
             free before spending any evaluation.
@@ -296,8 +307,9 @@ def analyze(
             )
         )
     # A row counts only if it was evaluated against these very commits: the
-    # same ids over rewritten branches are a different question (#23).
-    log.pin(base=base_sha, heads=head_shas)
+    # same ids over rewritten branches are a different question (#23). A view,
+    # so a log the caller hands to several analyses is not re-scoped under it.
+    log = log.pinned(base=base_sha, heads=head_shas, trust_unpinned=trust_unpinned)
 
     # A validator may declare that it cannot see across components (the
     # merge-only one does); otherwise assume it can, which is the safe default.
@@ -325,7 +337,19 @@ def analyze(
         own_weights=own_weights,
         log=log,
         stacks=stacks,
+        merged_through={
+            child: parent
+            for child, parent in stacks.items()
+            if is_ancestor(repo, head_shas[parent], head_shas[child])
+        },
     )
+    for child, parent in stacks.items():
+        if child not in analysis.merged_through:
+            analysis.notes.append(
+                f"{child} is stacked on {parent} but does not contain "
+                f"{parent}'s current head (one of them moved without the other "
+                f"being rebased), so {parent} is merged explicitly alongside it."
+            )
     analysis.notes.extend(unmatched_log_notes(log))
     if stacks:
         ids = [c.id for c in changes]
@@ -411,7 +435,7 @@ def analyze(
             analysis.pinned_changes,
             validate=validate,
             resolver=resolver,
-            depends_on=analysis.stacks,
+            depends_on=analysis.merged_through,
             reuse_worktree=reuse_worktree,
             worktree_root=worktree_root,
             on_event=on_event,
@@ -534,15 +558,17 @@ def unmatched_log_notes(log: EvaluationLog, *, label: str = "") -> List[str]:
     if log.stale:
         notes.append(
             f"{where} holds {len(log.stale)} row(s) evaluated against other "
-            "commits (a base or a branch head has moved since). They are kept, "
-            "and not used: they answer a different question."
+            "commits or other changes (a base or a head has moved, or the row "
+            "holds a change not in play). They are kept, and not used: they "
+            "answer a different question."
         )
     if log.unpinned:
         notes.append(
             f"{where} holds {len(log.unpinned)} row(s) written before evaluations "
             "recorded their commits, so which heads they are about is unknown. "
             "They are kept, and not used. If the heads have not moved since, "
-            "pass `EvaluationLog(..., trust_unpinned=True)` to use them."
+            "pass `trust_unpinned=True` (`--trust-unpinned-log` on the command "
+            "line) to use them."
         )
     return notes
 

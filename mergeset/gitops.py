@@ -106,6 +106,11 @@ def resolve(repo: str, rev: str) -> str:
     ).stdout.strip()
 
 
+def is_ancestor(repo: str, ancestor: str, descendant: str) -> bool:
+    """True iff ``ancestor`` is reachable from ``descendant`` (or equal to it)."""
+    return git(repo, "merge-base", "--is-ancestor", ancestor, descendant).ok
+
+
 def merge_base(repo: str, a: str, b: str) -> str:
     """Best common ancestor of ``a`` and ``b``."""
     return git(repo, "merge-base", a, b, check=True).stdout.strip()

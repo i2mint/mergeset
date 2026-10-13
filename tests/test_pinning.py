@@ -154,21 +154,30 @@ def test_rows_record_the_shas_they_were_merged_at(repo, tmp_path):
     assert all(e.base_sha == analysis.base_sha for e in analysis.log.rows)
 
 
-def test_a_row_about_a_change_not_in_play_still_informs_the_closure():
-    """A passing {a, b, x} says {a, b} is good, whatever x was at."""
+def test_a_row_holding_a_change_not_in_play_does_not_count():
+    """Its head for that change is unchecked, so it answers nothing here.
+
+    Counting it once let an "established" fallback set recommend ``x`` -- not
+    a candidate -- and reported two heads of ``x`` as a monotonicity violation.
+    """
     log = EvaluationLog(MemoryLines())
+    log.record(
+        Evaluation(
+            frozenset("ax"), Verdict.FAIL, base_sha="B", heads={"a": "A1", "x": "X0"}
+        )
+    )
     log.record(
         Evaluation(
             frozenset("abx"),
             Verdict.PASS,
             base_sha="B",
-            heads={"a": "A1", "b": "B1", "x": "X0"},
+            heads={"a": "A1", "b": "B1", "x": "X1"},
         )
     )
-    log.pin(base="B", heads={"a": "A1", "b": "B1"})
-    assert log.known(frozenset("ab")).verdict is Verdict.PASS
-    log.pin(base="B", heads={"a": "A1", "b": "B2"})
-    assert log.known(frozenset("ab")).verdict is None
+    view = log.pinned(base="B", heads={"a": "A1", "b": "B1"})
+    assert not view.monotonicity_violations()
+    assert not view.maximal_passing_sets()
+    assert len(view.stale) == 2
 
 
 def test_pins_given_at_construction_scope_the_log():
@@ -207,3 +216,190 @@ def test_every_tier_log_is_pinned_not_only_the_screens(repo, tmp_path):
     assert again.maximal_sets == [frozenset({"feat-b", "feat-d"})]
     assert again.verified_tier(frozenset({"feat-b", "feat-d"})) == "deep"
     assert again.logs["deep"].stale
+
+
+def _move_during_the_run(repo, branch, filename, content):
+    """A ``weight`` callback that rewrites ``branch`` once heads are resolved.
+
+    ``analyze`` resolves heads, then weighs the changes, then does everything
+    else. Moving a branch from inside ``weight`` is a branch moving mid-run:
+    every later step must still see the commit that was resolved.
+    """
+    moved = []
+
+    def weight(change):
+        if not moved:
+            moved.append(True)
+            _rewrite(repo, branch, filename, content)
+        return 1.0
+
+    return weight
+
+
+def test_a_branch_moving_mid_run_does_not_reach_the_pre_oracles(repo):
+    changes = list(branch_changes(repo, ["feat-a", "feat-c"], base="main"))
+    analysis = analyze(
+        repo,
+        changes,
+        base="main",
+        validate=merge_only_validation(),
+        log=EvaluationLog(MemoryLines()),
+        weight=_move_during_the_run(repo, "feat-c", "c.txt", "elsewhere\n"),
+    )
+    # feat-c as resolved edits shared.txt, and conflicts with feat-a there.
+    assert analysis.files_by_change["feat-c"] == ["shared.txt"]
+    assert [(a, b) for a, b, _ in analysis.textual_conflicts] == [("feat-a", "feat-c")]
+
+
+def test_a_branch_moving_mid_run_does_not_reach_the_oracle(repo):
+    changes = list(branch_changes(repo, ["feat-a", "feat-c"], base="main"))
+    analysis = analyze(
+        repo,
+        changes,
+        base="main",
+        validate=merge_only_validation(),
+        log=EvaluationLog(MemoryLines()),
+        pairwise_preoracle=False,
+        decompose=False,
+        weight=_move_during_the_run(repo, "feat-c", "c.txt", "elsewhere\n"),
+    )
+    assert ("feat-a", "feat-c") not in _sets(analysis)
+
+
+def test_a_branch_moving_mid_run_does_not_reach_a_deep_tier(repo, tmp_path):
+    from mergeset.tiers import Tier, analyze_tiered
+    from test_tiers import _changes, _stage_validator
+
+    deep = _stage_validator(
+        tmp_path,
+        "deep",
+        "import os, sys\n" "sys.exit(1 if os.path.exists('new-d.txt') else 0)\n",
+    )
+    result = analyze_tiered(
+        repo,
+        _changes(repo, ["feat-b", "feat-d"]),
+        base="main",
+        tiers=[Tier("screen", merge_only_validation()), Tier("deep", deep)],
+        pairwise_preoracle=False,
+        use_ci_status=False,
+        weight=_move_during_the_run(repo, "feat-d", "d-renamed.txt", "d\n"),
+    )
+    assert result.maximal_sets == [frozenset({"feat-b"})]
+
+
+def test_an_integration_branch_holds_the_validated_commits(repo):
+    from mergeset.cli import _integration_branches
+
+    changes = list(branch_changes(repo, ["feat-b", "feat-c"], base="main"))
+    analysis = analyze(
+        repo,
+        changes,
+        base="main",
+        validate=merge_only_validation(),
+        log=EvaluationLog(MemoryLines()),
+        weight=_move_during_the_run(repo, "feat-c", "c.txt", "elsewhere\n"),
+    )
+    assert _sets(analysis) == {("feat-b", "feat-c")}
+    (line,) = _integration_branches(analysis)
+    name = line.split("`")[1]
+    files = run(repo, "ls-tree", "--name-only", name).split()
+    assert "c.txt" not in files
+    assert "CCC" in run(repo, "show", f"{name}:shared.txt")
+
+
+def test_a_stacked_child_that_lags_its_parent_is_not_pinned_to_the_parent(
+    repo, tmp_path
+):
+    """The child's tree does not contain the parent's new head, so merge both."""
+    from mergeset.base import Change
+    from mergeset.validation import callable_validation
+
+    run(repo, "checkout", "-q", "-b", "stack-a", "main")
+    open(os.path.join(repo, "a1.txt"), "w").write("a1\n")
+    run(repo, "add", "-A")
+    run(repo, "commit", "-qm", "a1")
+    run(repo, "checkout", "-q", "-b", "stack-b")
+    open(os.path.join(repo, "b1.txt"), "w").write("b1\n")
+    run(repo, "add", "-A")
+    run(repo, "commit", "-qm", "b1")
+    # The parent moves on; the child is not rebased.
+    run(repo, "checkout", "-q", "stack-a")
+    open(os.path.join(repo, "broken.txt"), "w").write("a2\n")
+    run(repo, "add", "-A")
+    run(repo, "commit", "-qm", "a2 breaks things")
+    run(repo, "checkout", "-q", "main")
+
+    changes = [
+        Change(
+            "pr1",
+            "stack-a",
+            "main",
+            "pr",
+            meta={"head_ref": "stack-a", "base_ref": "main"},
+        ),
+        Change(
+            "pr2",
+            "stack-b",
+            "stack-a",
+            "pr",
+            meta={"head_ref": "stack-b", "base_ref": "stack-a"},
+        ),
+    ]
+    analysis = analyze(
+        repo,
+        changes,
+        base="main",
+        validate=callable_validation(
+            lambda wt: not os.path.exists(os.path.join(wt, "broken.txt"))
+        ),
+        log=EvaluationLog(MemoryLines()),
+        use_ci_status=False,
+    )
+    assert analysis.stacks == {"pr2": "pr1"} and not analysis.merged_through
+    # pr1 as it is now is broken, and pr2 cannot go without it.
+    assert _sets(analysis) == {()}
+    assert any("does not contain" in n for n in analysis.notes)
+
+
+def test_a_log_handed_to_two_analyses_is_not_rescoped_under_the_first(repo, tmp_path):
+    log = EvaluationLog(str(tmp_path / "eval.jsonl"))
+    first = _analyze(repo, None, log=log)
+    _rewrite(repo, "feat-c", "c.txt", "elsewhere\n")
+    _analyze(repo, None, log=log)
+    assert log.pins is None, "the caller's log is not pinned under it"
+    assert ("feat-a", "feat-c") not in _sets(first)
+    assert first.log.exact(frozenset({"feat-a", "feat-c"})).verdict is Verdict.FAIL
+
+
+def test_trust_unpinned_reaches_analyze(repo, tmp_path):
+    log_path = str(tmp_path / "old.jsonl")
+    _legacy_rows(log_path, [((), "pass")])
+    analysis = _analyze(repo, log_path, trust_unpinned=True)
+    assert not analysis.log.unpinned
+    assert analysis.log.exact(frozenset()) is not None
+
+
+def test_trust_unpinned_reaches_every_tier(repo):
+    from mergeset.tiers import Tier, analyze_tiered, tier_lines
+
+    for tier in ("screen", "deep"):
+        EvaluationLog(tier_lines(repo, tier)).record(
+            Evaluation(frozenset(), Verdict.PASS)  # unpinned, as an old log
+        )
+
+    def tiered(**kwargs):
+        return analyze_tiered(
+            repo,
+            list(branch_changes(repo, ["feat-b"], base="main")),
+            base="main",
+            tiers=[
+                Tier("screen", merge_only_validation()),
+                Tier("deep", merge_only_validation()),
+            ],
+            **kwargs,
+        )
+
+    assert tiered().logs["deep"].unpinned
+    trusted = tiered(trust_unpinned=True)
+    assert not trusted.logs["deep"].unpinned
+    assert not trusted.logs["screen"].unpinned

@@ -386,7 +386,9 @@ def _sync_costs(
     for subset, seconds in durations[already:]:
         cost_model.observe(tier, subset, seconds)
     ingested[tier] = len(durations)
-    return sum(seconds for _, seconds in durations)
+    # What this answer cost: the rows it rests on, the same population that
+    # `runs` counts -- not time spent on heads that have since moved.
+    return sum(e.duration or 0 for e in log)
 
 
 def _seed_conflicts(analysis: Analysis) -> List[ChangeSet]:
@@ -852,8 +854,13 @@ def analyze_tiered(
     )
     # The screen's log was pinned by `analyze`; every deeper tier's log answers
     # questions about the same commits, so it is pinned to them too (#23).
+    logs[screen.name] = analysis.log  # the pinned view `analyze` made
     for tier in tiers[1:]:
-        logs[tier.name].pin(base=analysis.base_sha, heads=analysis.head_shas)
+        logs[tier.name] = logs[tier.name].pinned(
+            base=analysis.base_sha,
+            heads=analysis.head_shas,
+            trust_unpinned=analyze_kwargs.get("trust_unpinned"),
+        )
         analysis.notes.extend(unmatched_log_notes(logs[tier.name], label=tier.name))
     ingested: Dict[str, int] = {}
     # Every tier's log, not just the screen's. Budget admission for a deep tier
@@ -1053,7 +1060,7 @@ def _tier_evaluator(
             analysis.base_sha,
             analysis.pinned_changes,
             validate=tier.validate,
-            depends_on=analysis.stacks,
+            depends_on=analysis.merged_through,
             on_event=lambda event, payload: emit(event, {**payload, "tier": tier.name}),
         )
     )

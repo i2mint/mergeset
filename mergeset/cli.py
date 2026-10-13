@@ -233,6 +233,7 @@ def branches(
     max_seconds: Optional[float] = None,
     max_sets: Optional[int] = None,
     log_path: Optional[str] = None,
+    trust_unpinned_log: bool = False,
     report_dir: Optional[str] = None,
     report_format: list = None,
     integration_branches: bool = False,
@@ -271,6 +272,8 @@ def branches(
         log_path: Evaluation log (JSONL). Default:
             ``~/.local/share/mergeset/evaluations/<repo-slug>.jsonl`` —
             outside the analysed repository, always.
+        trust_unpinned_log: Reuse rows of an old log that predate rows
+            recording their commits. Only when no head has moved since.
         report_dir: Write ``REPORT.md`` and ``report.html`` into this
             directory. By default they go to the artifact store
             (``<artifact root>/reports/<repo-slug>/``), never into the
@@ -304,6 +307,7 @@ def branches(
         max_seconds=max_seconds,
         max_sets=max_sets,
         log_path=log_path,
+        trust_unpinned_log=trust_unpinned_log,
         report_dir=report_dir,
         report_format=tuple(report_format) if report_format else None,
         integration_branches=integration_branches,
@@ -335,6 +339,7 @@ def prs(
     max_seconds: Optional[float] = None,
     max_sets: Optional[int] = None,
     log_path: Optional[str] = None,
+    trust_unpinned_log: bool = False,
     report_dir: Optional[str] = None,
     report_format: list = None,
     integration_branches: bool = False,
@@ -361,6 +366,8 @@ def prs(
         log_path: Evaluation log (JSONL). Default:
             ``~/.local/share/mergeset/evaluations/<repo-slug>.jsonl`` — outside
             the analysed repository, always.
+        trust_unpinned_log: Reuse rows of an old log that predate rows
+            recording their commits. Only when no head has moved since.
         report_dir: Write ``REPORT.md`` and ``report.html`` into this directory.
             By default they go to the artifact store, under
             ``reports/<repo-slug>/<timestamp>/``, so a re-run never overwrites
@@ -399,6 +406,7 @@ def prs(
         max_seconds=max_seconds,
         max_sets=max_sets,
         log_path=log_path,
+        trust_unpinned_log=trust_unpinned_log,
         report_dir=report_dir,
         report_format=tuple(report_format) if report_format else None,
         integration_branches=integration_branches,
@@ -427,6 +435,7 @@ def _run(
     max_seconds,
     max_sets,
     log_path,
+    trust_unpinned_log,
     report_dir,
     report_format,
     integration_branches,
@@ -455,6 +464,7 @@ def _run(
             ),
             resolver=claude_code_resolver() if resolver == "claude" else None,
             log_path=log_path,
+            trust_unpinned=trust_unpinned_log,
             reuse_worktree=(
                 _persistent_worktree(repo, base, reuse_worktree)
                 if reuse_worktree

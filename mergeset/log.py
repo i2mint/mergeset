@@ -20,6 +20,7 @@ simply not matched (i2mint/mergeset#23).
 
 from __future__ import annotations
 
+import copy
 import json
 import os
 from dataclasses import dataclass, replace
@@ -150,9 +151,10 @@ class Pins:
     """The commits a question is about: the base, and each change's head sha.
 
     A row *matches* when it was merged onto the same base and every change it
-    holds that is in play had the same head. Changes in the row that are not in
-    play do not matter: a passing ``{a, b, x}`` still says ``{a, b}`` is good,
-    and a failing set holding ``x`` is never a subset of a set without it.
+    holds is in play with the same head. A row holding a change that is not in
+    play does not match: its head for that change is unchecked, and such a row
+    would otherwise surface as an "established" set recommending a change
+    nobody asked about, or as a monotonicity violation between two heads of it.
 
     >>> from mergeset.base import Evaluation, Verdict
     >>> pins = Pins('B', {'a': 'A1', 'b': 'B1'})
@@ -163,6 +165,8 @@ class Pins:
     >>> pins.matches(replace(row, heads={'a': 'A0', 'b': 'B1'}))  # a rewritten
     False
     >>> pins.matches(replace(row, base_sha='B0'))                 # base moved
+    False
+    >>> Pins('B', {'a': 'A1'}).matches(row)          # b is not in play
     False
     """
 
@@ -175,9 +179,8 @@ class Pins:
             return False
         recorded = evaluation.heads
         return all(
-            recorded.get(cid) == self.heads[cid]
+            cid in self.heads and recorded.get(cid) == self.heads[cid]
             for cid in evaluation.subset
-            if cid in self.heads
         )
 
     def stamp(self, evaluation: Evaluation) -> Evaluation:
@@ -239,17 +242,47 @@ class EvaluationLog:
             store = JsonlLines(str(store))
         self.store = store
         self.trust_unpinned = trust_unpinned
-        #: Every row, in log order, whatever commits it is about.
+        #: Every row, in log order, whatever commits it is about. Shared with
+        #: every view made by :meth:`pinned`, so a row recorded through one
+        #: is in all of them, and each decides for itself whether it counts.
         self._rows: List[Evaluation] = [Evaluation.from_jdict(d) for d in self.store]
-        self.pins: Optional[Pins] = None
-        self._evaluations: List[Evaluation] = list(self._rows)
-        if pins is not None:
-            self.pin(base=pins.base, heads=pins.heads)
+        self.pins: Optional[Pins] = pins
+        self._view: List[Evaluation] = []
+        self._view_of = -1  # len(self._rows) when _view was computed
 
     # -- pinning -----------------------------------------------------------
 
+    def pinned(
+        self,
+        *,
+        base: str,
+        heads: Mapping[ChangeId, str],
+        trust_unpinned: Optional[bool] = None,
+    ) -> "EvaluationLog":
+        """A view of this log scoped to ``base`` and these heads.
+
+        Same store, same rows; this log itself is left as it was, so a caller
+        that hands one log to two analyses keeps its own view of it.
+
+        >>> from mergeset.base import Evaluation, Verdict
+        >>> log = EvaluationLog(MemoryLines())
+        >>> view = log.pinned(base='B', heads={'a': 'A1'})
+        >>> _ = view.record(Evaluation(frozenset('a'), Verdict.PASS))
+        >>> log.pins is None, len(log), len(view)
+        (True, 1, 1)
+        >>> len(log.pinned(base='B', heads={'a': 'A2'}))
+        0
+        """
+        view = copy.copy(self)
+        view._view_of = -1
+        if trust_unpinned is not None:
+            view.trust_unpinned = trust_unpinned
+        return view.pin(base=base, heads=heads)
+
     def pin(self, *, base: str, heads: Mapping[ChangeId, str]) -> "EvaluationLog":
-        """Scope the log to ``base`` and these heads; returns ``self``.
+        """Scope *this* log to ``base`` and these heads; returns ``self``.
+
+        :meth:`pinned` is the same without changing this object.
 
         From here on, reading (:meth:`known`, :meth:`exact`, the closure,
         iteration, ``len``) sees only rows evaluated against these commits, and
@@ -267,8 +300,16 @@ class EvaluationLog:
         (True, 1, 1)
         """
         self.pins = Pins(base, dict(heads))
-        self._evaluations = [e for e in self._rows if self._counts(e)]
+        self._view_of = -1
         return self
+
+    @property
+    def _evaluations(self) -> List[Evaluation]:
+        """The rows that count, recomputed when rows were added (by any view)."""
+        if self._view_of != len(self._rows):
+            self._view = [e for e in self._rows if self._counts(e)]
+            self._view_of = len(self._rows)
+        return self._view
 
     def _counts(self, evaluation: Evaluation) -> bool:
         if self.pins is None:
@@ -406,8 +447,6 @@ class EvaluationLog:
             evaluation = self.pins.stamp(evaluation)
         self.store.append(evaluation.to_jdict())
         self._rows.append(evaluation)
-        if self._counts(evaluation):
-            self._evaluations.append(evaluation)
         return evaluation
 
     def caching(self, evaluate: Callable[[ChangeSet], Evaluation]):
