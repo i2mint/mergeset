@@ -556,16 +556,35 @@ class EvaluationLog:
         self._rows.append(evaluation)
         return evaluation
 
-    def caching(self, evaluate: Callable[[ChangeSet], Evaluation]):
+    def caching(
+        self, evaluate: Callable[[ChangeSet], Evaluation], *, infer_pass: bool = True
+    ):
         """Wrap ``evaluate`` so known sets are answered from the log.
 
         The returned callable is what the solver should be handed: it never
         spends a real evaluation on a set the log can already decide.
+
+        ``infer_pass=False`` runs a set whose PASS would only be *inferred*
+        from a passing superset, and records it: for a caller that needs an
+        exact PASS behind every claim (a cheaper tier on the way to a deeper
+        one). Exact rows and inferred FAILs are still answered from the log.
+
+        >>> log = EvaluationLog(MemoryLines())
+        >>> _ = log.record(Evaluation(frozenset('ab'), Verdict.PASS))
+        >>> runs = []
+        >>> def run(s):
+        ...     runs.append(set_key(s))
+        ...     return Evaluation(s, Verdict.PASS)
+        >>> log.caching(run)(frozenset('a')).cached, runs
+        (True, [])
+        >>> log.caching(run, infer_pass=False)(frozenset('a')).cached, runs
+        (False, [('a',)])
         """
 
         def cached(subset: ChangeSet) -> Evaluation:
             known = self.known(subset)
-            if known:
+            inferred_pass = known.exact is None and known.verdict is Verdict.PASS
+            if known and (infer_pass or not inferred_pass):
                 if known.exact is not None:
                     return replace(known.exact, cached=True)
                 return Evaluation(

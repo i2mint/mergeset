@@ -803,9 +803,10 @@ def test_a_deep_exact_pass_verifies_a_set_the_screen_only_inferred(repo, tmp_pat
     """i2mint/mergeset#31: three branches, one of which fails only the deep tier.
 
     The screen passes ``{a, b, d}`` as a whole, so ``{a, b}`` is good at the
-    screen only by inference. The deep tier refutes the triple and passes
-    ``{a, b}`` exactly -- reached through the chain, so the screen did pass it.
-    That plan was run at every tier and must not be reported NOT VERIFIED.
+    screen only by inference. The deep tier refutes the triple; on the way to
+    the deep tier, the screen now runs ``{a, b}`` for real instead of passing it
+    on inference, so the plan holds an exact PASS at every tier and is not
+    reported NOT VERIFIED.
     """
     screen = _stage_validator(tmp_path, "screen", "raise SystemExit(0)\n")
     deep = _stage_validator(
@@ -824,9 +825,50 @@ def test_a_deep_exact_pass_verifies_a_set_the_screen_only_inferred(repo, tmp_pat
     )
     pair = frozenset({"feat-a", "feat-b"})
     assert result.maximal_sets == [pair]
-    assert result.logs["screen"].exact(pair) is None, "the shape the issue needs"
+    assert result.logs["screen"].exact(pair).verdict is Verdict.PASS
     assert result.logs["deep"].exact(pair).verdict is Verdict.PASS
     assert result.verified_tier(pair) == "deep"
     assert not result.analysis.unverified_sets
     assert "nothing validated yet" not in result.answer.summary()
     assert any("confirmed at the deepest tier" in n for n in result.analysis.notes)
+
+
+def test_a_cheaper_tiers_inference_is_not_a_run(repo, tmp_path):
+    """Review of the first fix for #31: a change that fixes another.
+
+    ``feat-d`` repairs what ``feat-a`` and ``feat-b`` break together, so the
+    screen passes ``{a, b, d}`` and fails ``{a, b}``; the deep tier fails
+    whatever holds ``feat-d``. Passing ``{a, b}`` at the screen on inference
+    from the triple certified a set the screen fails. The screen must run it.
+    """
+    screen = _stage_validator(
+        tmp_path,
+        "screen",
+        "import os, sys\n"
+        "a = open('shared.txt').read().splitlines()[1] == 'AAA'\n"
+        "b = open('other.txt').read() == 'changed by b\\n'\n"
+        "sys.exit(1 if a and b and not os.path.exists('new-d.txt') else 0)\n",
+    )
+    deep = _stage_validator(
+        tmp_path,
+        "deep",
+        "import os, sys\nsys.exit(1 if os.path.exists('new-d.txt') else 0)\n",
+    )
+    result = analyze_tiered(
+        repo,
+        _changes(repo, ["feat-a", "feat-b", "feat-d"]),
+        base="main",
+        tiers=[Tier("screen", screen), Tier("deep", deep)],
+        pairwise_preoracle=False,
+        decompose=False,
+        use_ci_status=False,
+    )
+    pair = frozenset({"feat-a", "feat-b"})
+    assert result.logs["screen"].exact(pair).verdict is Verdict.FAIL
+    assert result.logs["deep"].exact(pair) is None, "deep was not paid for it"
+    assert pair not in result.maximal_sets
+    for s in result.maximal_sets:
+        assert result.verified_tier(s) == "deep"
+    assert any(
+        "MONOTONICITY VIOLATION at tier `screen`" in n for n in result.analysis.notes
+    )

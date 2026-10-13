@@ -275,55 +275,22 @@ class TieredAnalysis:
         return lines
 
     def verified_tier(self, subset: ChangeSet) -> Optional[str]:
-        """The deepest tier that ran ``subset`` and passed it, every cheaper one agreeing.
+        """The deepest tier that recorded an exact PASS for ``subset``.
 
-        At the claimed tier, inference across the monotone closure deliberately
-        does not count. A passing *superset* is what makes a subset good by
-        inference, and if such a superset existed it would be the answer
-        instead — so for the purpose of "was this claim actually run", only an
-        exact recorded PASS counts. D25's rule, applied per tier.
-
-        The cheaper tiers need only *know* the set passes, exactly or by
-        inference (i2mint/mergeset#31). A deep tier is reached only through the
-        chain, which asks every cheaper tier first and stops at the first that
-        does not pass; so a deep exact PASS was preceded by a PASS at each
-        cheaper tier, and the screen often gave it by inference from a passing
-        superset the deep tier went on to refute. Requiring an exact screen PASS
-        there reported a plan run at every tier as NOT VERIFIED. A cheaper tier
-        that does not know the set passes (refuted it since, or never saw it)
-        still blocks the claim: then the deep row cannot have come through it.
-
-        >>> from mergeset.log import MemoryLines
-        >>> from mergeset.validation import merge_only_validation
-        >>> tiers = [Tier(n, merge_only_validation()) for n in ('screen', 'deep')]
-        >>> logs = {t.name: EvaluationLog(MemoryLines()) for t in tiers}
-        >>> ab, abd = frozenset('ab'), frozenset('abd')
-        >>> _ = logs['screen'].record(Evaluation(abd, Verdict.PASS))
-        >>> _ = logs['deep'].record(Evaluation(abd, Verdict.FAIL))
-        >>> _ = logs['deep'].record(Evaluation(ab, Verdict.PASS))
-        >>> result = TieredAnalysis(tiers, analysis=None, logs=logs, cost_model=None)
-        >>> result.verified_tier(ab), result.verified_tier(abd)
-        ('deep', 'screen')
-        >>> result.verified_tier(frozenset('a')) is None   # only ever inferred
-        True
+        Inference across the monotone closure deliberately does not count. A
+        passing *superset* is what makes a subset good by inference, and if such
+        a superset existed it would be the answer instead — so for the purpose
+        of "was this claim actually run", only an exact recorded PASS counts.
+        D25's rule, applied per tier.
         """
-        subset = frozenset(subset)
-
-        def passes(tier: Tier, *, exactly: bool) -> bool:
+        deepest = None
+        for tier in self.tiers:
             log = self.logs.get(tier.name)
-            if log is None:
-                return False
-            if exactly:
-                exact = log.exact(subset)
-                return exact is not None and exact.verdict is Verdict.PASS
-            return log.known(subset).verdict is Verdict.PASS
-
-        for depth in range(len(self.tiers) - 1, -1, -1):
-            if passes(self.tiers[depth], exactly=True) and all(
-                passes(cheaper, exactly=False) for cheaper in self.tiers[:depth]
-            ):
-                return self.tiers[depth].name
-        return None
+            exact = log.exact(frozenset(subset)) if log else None
+            if exact is None or exact.verdict is not Verdict.PASS:
+                return deepest
+            deepest = tier.name
+        return deepest
 
 
 # --------------------------------------------------------------------------
@@ -954,6 +921,8 @@ def analyze_tiered(
     # The screen's log was pinned by `analyze`; every deeper tier's log answers
     # questions about the same commits, so it is pinned to them too (#23).
     logs[screen.name] = analysis.log  # the pinned view `analyze` made
+    # `analyze` has reported these; the confirm stages can find more (#31).
+    noted_violations = set(analysis.log.monotonicity_violations())
     for tier in tiers[1:]:
         logs[tier.name] = logs[tier.name].pinned(
             base=analysis.base_sha,
@@ -1016,8 +985,10 @@ def analyze_tiered(
         for k in ("resolver", "reuse_worktree", "worktree_root")
         if analyze_kwargs.get(k) is not None
     }
+    # (log, oracle) per tier entered so far; `_confirming_chain` caches each
+    # oracle by its own log and chains them.
     evaluators = [
-        _tier_evaluator(repo, analysis, screen, logs[screen.name], emit, **merging)
+        (logs[screen.name], _tier_oracle(repo, analysis, screen, emit, **merging))
     ]
     for tier in tiers[1:]:
         if not tier.is_available():
@@ -1051,7 +1022,7 @@ def analyze_tiered(
             )
             break
         evaluators.append(
-            _tier_evaluator(repo, analysis, tier, logs[tier.name], emit, **merging)
+            (logs[tier.name], _tier_oracle(repo, analysis, tier, emit, **merging))
         )
         # ADR-0018 applies to every tier, not only the first. `analyze` checks
         # the base for the screen; without the same check here, a deep tier that
@@ -1061,7 +1032,7 @@ def analyze_tiered(
         # notice: a tier expensive enough to need this design is a tier nobody
         # can cheaply re-run by hand to cross-check.
         if check_base:
-            baseline = chained_evaluate(evaluators)(frozenset())
+            baseline = _confirming_chain(evaluators)(frozenset())
             if baseline.verdict is not Verdict.PASS:
                 # Skipped, not raised -- the one place this departs from
                 # ADR-0018. By now the screen search is banked, often many
@@ -1082,7 +1053,7 @@ def analyze_tiered(
         emit("tier", {"name": tier.name, "role": "confirm", "max_runs": allowance})
         state = find_maximal_good_sets(
             change_ids,
-            chained_evaluate(evaluators),
+            _confirming_chain(evaluators),
             known_conflicts=conflicts,
             depends_on=analysis.stacks,
             weight=weight_of_id,
@@ -1122,7 +1093,7 @@ def analyze_tiered(
         )
         best, found, _ = best_set_including(
             change_ids,
-            chained_evaluate(evaluators),
+            _confirming_chain(evaluators),
             must_include=must_include,
             conflicts=conflicts,
             weight=weight_of_id,
@@ -1152,35 +1123,67 @@ def analyze_tiered(
                 "answer to it is not a worse answer."
             )
 
+    # A cheaper tier runs, on the way to a deeper one, sets it had only
+    # inferred from a passing superset (`_confirming_chain`); when one fails,
+    # the monotone prior broke at that tier, and the reader must hear it.
+    for tier_name in names:
+        for good, bad in logs[tier_name].monotonicity_violations():
+            if (good, bad) in noted_violations and tier_name == screen.name:
+                continue
+            analysis.notes.append(
+                f"MONOTONICITY VIOLATION at tier `{tier_name}`: {set_key(bad)} "
+                f"failed but {set_key(good)} passed, though it contains it. "
+                "Suspect a flaky test, or a change that fixes another. Results "
+                "below are not fully trustworthy."
+            )
     _record_what_may_be_claimed(result, analysis, names, refresh_answer())
     return result
 
 
-def _tier_evaluator(
+def _confirming_chain(
+    stages: Sequence[Tuple[EvaluationLog, Callable[[ChangeSet], Evaluation]]],
+) -> Callable[[ChangeSet], Evaluation]:
+    """Chain the tiers' oracles, each cached by its own log, cheapest first.
+
+    Each log answers for its own tier, so a set the screen already decided is a
+    cache hit at the screen and a real run only at the tier that has not seen
+    it. One exception: a cheaper tier never passes a set *by inference* on the
+    way to a deeper one; it runs the set (i2mint/mergeset#31). The deep tier
+    is about to spend real money on the set, and the claim that comes out of
+    it -- "passed every tier up to this one" (``TieredAnalysis.verified_tier``,
+    D25) -- needs an exact PASS at each. Inference from a passing superset is a
+    prior, not a run: a change that fixes another makes ``{a, b, d}`` pass while
+    ``{a, b}`` fails. The cheap run costs little by the tiers' own ordering,
+    and a cheap FAIL saves the deep run outright. The deepest tier in the chain
+    still infers, as any search does from its own tier's results.
+    """
+    *cheaper, (log, oracle) = stages
+    return chained_evaluate(
+        [lg.caching(o, infer_pass=False) for lg, o in cheaper] + [log.caching(oracle)]
+    )
+
+
+def _tier_oracle(
     repo: str,
     analysis: Analysis,
     tier: Tier,
-    log: EvaluationLog,
     emit: Callable[[str, dict], None],
     **merging,
 ):
-    """A log-cached evaluator for one tier: merge onto the base, then run the tier.
+    """The uncached evaluator for one tier: merge onto the base, then run the tier.
 
-    Backed by the tier's *own* log, so a set the screen already decided is a
-    cache hit at the screen and a real run only at the tier that has not seen it.
     ``merging`` is how sets are merged (``resolver``, ``reuse_worktree``,
-    ``worktree_root``), the same for every tier.
+    ``worktree_root``), the same for every tier. Cached by
+    :func:`_confirming_chain`.
     """
-    return log.caching(
-        git_oracle(
-            repo,
-            analysis.base_sha,
-            analysis.pinned_changes,
-            validate=tier.validate,
-            depends_on=analysis.merged_through,
-            on_event=lambda event, payload: emit(event, {**payload, "tier": tier.name}),
-            **merging,
-        )
+    return git_oracle(
+        repo,
+        analysis.base_sha,
+        analysis.pinned_changes,
+        validate=tier.validate,
+        depends_on=analysis.merged_through,
+        on_event=lambda event, payload: emit(event, {**payload, "tier": tier.name}),
+        **merging,
     )
 
 
