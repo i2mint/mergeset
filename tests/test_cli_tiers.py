@@ -114,9 +114,9 @@ def test_retries_and_timeout_reach_every_command_tier(repo, monkeypatch):
     timeouts = []
     real = cli.command_validation
 
-    def recording(command, *, timeout=None):
+    def recording(command, *, timeout=None, inputs=()):
         timeouts.append((command, timeout))
-        return real(command, timeout=timeout)
+        return real(command, timeout=timeout, inputs=inputs)
 
     monkeypatch.setattr(cli, "command_validation", recording)
     cli.branches(

@@ -21,6 +21,13 @@ author knows what changes its verdicts:
 :data:`UNKNOWN_FINGERPRINT`, which matches only other such rows. A wrapper made
 with ``functools.wraps`` copies the wrapped validator's fingerprint along with
 its ``__dict__``; a wrapper that changes what is checked must set its own.
+
+A fingerprint covers the command's *text*. When the command runs a script that
+lives outside the analysed repository (``python ~/checks/smoke.py``), the
+script's contents are not in it: files inside the repository are pinned by the
+commits, files outside it are not. Name such files with ``inputs=`` and their
+contents join the fingerprint, so editing the script retires the verdicts it
+gave (i2mint/mergeset#39).
 """
 
 from __future__ import annotations
@@ -98,6 +105,48 @@ def recorded_fingerprint(validate: Optional[Callable]) -> str:
     return fingerprint_of(validate) or UNKNOWN_FINGERPRINT
 
 
+def inputs_digest(paths: Iterable[str]) -> Dict[str, str]:
+    """A digest of each path's current contents, keyed by its absolute path.
+
+    These are the files a validator runs that its command text does not
+    capture: a script outside the analysed repository, a config it reads. A
+    directory is digested over every file under it (names and contents), a
+    missing path as ``'missing'`` -- so creating it later changes the digest
+    too. Relative paths are resolved against the current directory, *not* the
+    worktree: files inside the repository are already pinned by the commits.
+
+    >>> import tempfile
+    >>> with tempfile.NamedTemporaryFile('w', suffix='.py', delete=False) as f:
+    ...     _ = f.write('print(1)')
+    >>> before = inputs_digest([f.name])
+    >>> with open(f.name, 'w') as g:
+    ...     _ = g.write('print(2)')
+    >>> inputs_digest([f.name]) == before
+    False
+    >>> os.remove(f.name)
+    >>> inputs_digest([f.name])[f.name]
+    'missing'
+    """
+
+    def digest_of(path: str) -> str:
+        if os.path.isfile(path):
+            with open(path, "rb") as f:
+                return hashlib.sha256(f.read()).hexdigest()[:16]
+        if os.path.isdir(path):
+            digest = hashlib.sha256()
+            for root, dirs, files in os.walk(path):
+                dirs.sort()
+                for name in sorted(files):
+                    full = os.path.join(root, name)
+                    digest.update(os.path.relpath(full, path).encode() + b"\0")
+                    digest.update(digest_of(full).encode())
+            return digest.hexdigest()[:16]
+        return "missing"
+
+    absolute = (os.path.abspath(os.path.expanduser(p)) for p in paths)
+    return {path: digest_of(path) for path in sorted(set(absolute))}
+
+
 def _same_verdicts(**spec: Any) -> Dict[str, Any]:
     """``spec`` with the spellings that run identically made identical.
 
@@ -109,6 +158,12 @@ def _same_verdicts(**spec: Any) -> Dict[str, Any]:
         spec["env"] = spec["env"] or None
     if spec.get("timeout") is not None:
         spec["timeout"] = float(spec["timeout"])
+    if "inputs" in spec:
+        # No inputs digests like before they existed, so naming none never
+        # retires a log's rows.
+        inputs = spec.pop("inputs")
+        if inputs:
+            spec["inputs"] = inputs_digest(inputs)
     return spec
 
 
@@ -116,7 +171,9 @@ def _fingerprinted(validate: Callable, kind: str, **spec: Any) -> Callable:
     """Attach the fingerprint of ``kind`` and ``spec`` to ``validate``; return it.
 
     The digest is over everything that can change a verdict: the command, the
-    timeout (a timeout is a FAIL), the environment, the retries. ``kind`` stays
+    timeout (a timeout is a FAIL), the environment, the retries, and the
+    contents of the ``inputs`` the command runs (see :func:`inputs_digest`),
+    read now, when the validator is made. ``kind`` stays
     readable in front of it, for a person looking at a log row.
     """
     payload = json.dumps(
@@ -242,6 +299,7 @@ def pytest_validation(
     timeout: Optional[float] = None,
     env: Optional[dict] = None,
     select_paths: Optional[Callable[[str], Sequence[str]]] = None,
+    inputs: Sequence[str] = (),
 ) -> Callable[[str], ValidationOutcome]:
     """A validator that runs the project's pytest suite, fail-fast by default.
 
@@ -253,6 +311,8 @@ def pytest_validation(
         select_paths: ``worktree -> test paths`` — the seam for test-impact
             selection. Return only the tests the merged changes can affect and
             each evaluation gets dramatically cheaper. Default: run everything.
+        inputs: Files outside the repository whose contents change verdicts
+            (a shared ``conftest.py``, a plugin); see :func:`inputs_digest`.
     """
 
     def validate(worktree: str) -> ValidationOutcome:
@@ -263,7 +323,9 @@ def pytest_validation(
         # Which tests run is now decided by a callable, and a callable's name
         # says nothing about what it selects: leave the fingerprint unknown.
         return validate
-    return _fingerprinted(validate, "pytest", args=list(args), timeout=timeout, env=env)
+    return _fingerprinted(
+        validate, "pytest", args=list(args), timeout=timeout, env=env, inputs=inputs
+    )
 
 
 def command_validation(
@@ -271,14 +333,21 @@ def command_validation(
     *,
     timeout: Optional[float] = None,
     env: Optional[dict] = None,
+    inputs: Sequence[str] = (),
 ) -> Callable[[str], ValidationOutcome]:
-    """A validator that runs an arbitrary shell command in the merged worktree."""
+    """A validator that runs an arbitrary shell command in the merged worktree.
+
+    ``inputs`` names the files outside the repository the command runs, such as
+    the script in ``python ~/checks/smoke.py``: their contents join the
+    validator's fingerprint, so an edited script is not answered by the old
+    script's verdicts (see :func:`inputs_digest`).
+    """
 
     def validate(worktree: str) -> ValidationOutcome:
         return _run([command], worktree, timeout=timeout, env=env, shell=True)
 
     return _fingerprinted(
-        validate, "command", command=command, timeout=timeout, env=env
+        validate, "command", command=command, timeout=timeout, env=env, inputs=inputs
     )
 
 
@@ -287,15 +356,22 @@ def act_validation(
     job: Optional[str] = None,
     timeout: Optional[float] = None,
     env: Optional[dict] = None,
+    inputs: Sequence[str] = (),
 ) -> Callable[[str], ValidationOutcome]:
-    """A validator that runs the repository's GitHub Actions locally with ``act``."""
+    """A validator that runs the repository's GitHub Actions locally with ``act``.
+
+    ``inputs``: files outside the repository that change verdicts (an
+    ``.actrc``, a secrets file); see :func:`inputs_digest`.
+    """
 
     def validate(worktree: str) -> ValidationOutcome:
         check_validation_capability(worktree, "act")
         cmd = ["act", "-q"] + (["-j", job] if job else [])
         return _run(cmd, worktree, timeout=timeout, env=env)
 
-    return _fingerprinted(validate, "act", job=job, timeout=timeout, env=env)
+    return _fingerprinted(
+        validate, "act", job=job, timeout=timeout, env=env, inputs=inputs
+    )
 
 
 def callable_validation(
@@ -423,7 +499,10 @@ def file_fingerprint(*paths: str) -> Callable[[str], str]:
 
 
 def staged_validation(
-    stages: Sequence[ValidationStage], *, env: Optional[dict] = None
+    stages: Sequence[ValidationStage],
+    *,
+    env: Optional[dict] = None,
+    inputs: Sequence[str] = (),
 ) -> Callable[[str], ValidationOutcome]:
     """Run an ordered list of :class:`ValidationStage` steps, reporting which one failed.
 
@@ -436,6 +515,9 @@ def staged_validation(
 
     The failing stage's name is prefixed onto every reported failure id, so the
     log distinguishes ``build: ...`` from ``test: tests/x.ts::y``.
+
+    ``inputs`` names files outside the repository that any stage runs; their
+    contents join the fingerprint (see :func:`inputs_digest`).
     """
     done: Dict[str, Dict[str, str]] = {}
 
@@ -501,6 +583,7 @@ def staged_validation(
             for s in stages
         ],
         env=env,
+        inputs=inputs,
     )
 
 
