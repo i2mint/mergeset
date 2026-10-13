@@ -216,7 +216,7 @@ def _tiers(
                     f"tier's name, spell it --tier '{name}:'."
                 )
             bare.append(name)
-            validate = make_validator()
+            validate = None  # built below, once the flags are known to be usable
         tiers.append(Tier(name, validate))
     if len(bare) > 1:
         raise ValueError(
@@ -233,6 +233,13 @@ def _tiers(
             "--validate-stage 'build:make' 'test:make test' --tier unit "
             "'e2e:make e2e'."
         )
+    if bare:
+        # Only now: building the validator digests the inputs (#42), which a
+        # run about to be refused should not pay for (#51).
+        built = make_validator()
+        tiers = [
+            Tier(t.name, built if t.validate is None else t.validate) for t in tiers
+        ]
     declared = {}
     for spec in costs:
         name, value = _split_pair(spec, "--tier-cost")

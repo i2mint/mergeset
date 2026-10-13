@@ -123,7 +123,27 @@ MAX_CACHED_DIGESTS = 250_000
 #: evaluation, so all but the first read come from here.
 FILE_DIGESTS: Dict[tuple, str] = {}
 
-_SHARED = object()  # `cache=` default: FILE_DIGESTS, read when called
+
+class _Shared:
+    """The `cache=` default: :data:`FILE_DIGESTS`, read when called."""
+
+    def __repr__(self) -> str:
+        return "FILE_DIGESTS"
+
+
+_SHARED = _Shared()
+
+
+def _stat_key(path: str, stat: os.stat_result) -> tuple:
+    """What a cached file digest is keyed on: the path and the file's stat."""
+    return (
+        path,
+        stat.st_dev,
+        stat.st_ino,
+        stat.st_size,
+        stat.st_mtime_ns,
+        stat.st_ctime_ns,
+    )
 
 
 def inputs_digest(
@@ -179,23 +199,31 @@ def inputs_digest(
         )
 
     def file_digest(path: str, stat: os.stat_result) -> str:
-        key = (
-            path,
-            stat.st_dev,
-            stat.st_ino,
-            stat.st_size,
-            stat.st_mtime_ns,
-            stat.st_ctime_ns,
-        )
+        key = _stat_key(path, stat)
         if cache is not None and key in cache:
             return cache[key]
         reading_from = time.time_ns()
-        digest = hashlib.sha256()
-        with open(path, "rb") as f:
-            for chunk in iter(lambda: f.read(1 << 20), b""):
-                digest.update(chunk)
+        # Open without blocking, then look at what was opened: between the
+        # `stat` and here the path may have become a FIFO, and a plain `open`
+        # of one waits for a writer that never comes (#51). The key is the
+        # opened file's own stat, so it names what was read.
+        fd = os.open(
+            path,
+            os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_BINARY", 0),
+        )
+        try:
+            opened = os.fstat(fd)
+            if not S_ISREG(opened.st_mode):
+                return "missing"
+            key = _stat_key(path, opened)
+            digest = hashlib.sha256()
+            with os.fdopen(fd, "rb", closefd=False) as f:
+                for chunk in iter(lambda: f.read(1 << 20), b""):
+                    digest.update(chunk)
+        finally:
+            os.close(fd)
         value = digest.hexdigest()[:16]
-        changed = max(stat.st_mtime_ns, stat.st_ctime_ns)
+        changed = max(opened.st_mtime_ns, opened.st_ctime_ns)
         if cache is not None and changed < reading_from - RACY_SECONDS * 1e9:
             # Any later edit stamps a time after `reading_from`, so the key it
             # leaves behind cannot be this one.
@@ -428,6 +456,18 @@ def _run(
         output = (e.stdout or "") if isinstance(e.stdout, str) else ""
         returncode = -1
         output += f"\n[mergeset] timed out after {timeout}s"
+    except FileNotFoundError as e:
+        # A program that is not installed is a refusal with a fix, not a
+        # traceback (ADR 0023) -- and not a FAIL: it says nothing about the
+        # changes (ADR 0017). A vanished worktree is a different error.
+        if not shell and shutil.which(cmd[0], path=full_env.get("PATH")) is None:
+            raise CapabilityError(
+                f"`{cmd[0]}` is not on PATH, so the validator cannot run. "
+                f"Install it in the environment mergeset runs in (for the default "
+                f"validator: `pip install {cmd[0]}`), or pass a different "
+                "validator (e.g. `--validate-command 'make test'`)."
+            ) from e
+        raise
     failing = _failing_test_ids(output)
     return ValidationOutcome(
         ok=returncode == 0,
