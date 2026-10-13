@@ -80,9 +80,17 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
         f"Base `{analysis.base}` (`{analysis.base_sha[:8]}`) · "
         f"{len(analysis.changes)} candidate changes · "
         f"{_spend(analysis)} · "
-        f"{'complete' if analysis.exhausted else 'partial (budget reached)'}"
+        f"{_state(analysis)}"
     )
     yield ""
+    if analysis.aborted:
+        yield (
+            f"> **Aborted:** {analysis.aborted}. The run could not do what it was "
+            "asked; what follows is only what had been established before that "
+            "point, not an answer. Fix the cause and re-run: decided rows are "
+            "kept, the failed one is asked again."
+        )
+        yield ""
 
     yield "## Recommended merge plans"
     yield ""
@@ -208,7 +216,12 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
         and not unexplained
         and not analysis.singleton_conflicts
     ):
-        if analysis.exhausted or not analysis.searches:
+        if analysis.aborted:
+            yield (
+                "_Nothing found yet: the run aborted before any conflict was "
+                "found, so this is not a finding._"
+            )
+        elif analysis.exhausted or not analysis.searches:
             yield "_Nothing. Every candidate merges and validates together._"
         else:
             yield (
@@ -281,6 +294,13 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
         yield ""
 
 
+def _state(analysis: Analysis) -> str:
+    """The header's verdict on the run: complete, aborted, or stopped on budget."""
+    if analysis.aborted:
+        return "ABORTED"
+    return "complete" if analysis.exhausted else "partial (budget reached)"
+
+
 def _spend(analysis: Analysis) -> str:
     """The header's account of what the analysis cost, per tier when tiered."""
     by_tier = analysis.evaluations_by_tier
@@ -292,13 +312,24 @@ def _spend(analysis: Analysis) -> str:
 
 def _log_table(log: Iterable[Evaluation]) -> Iterator[str]:
     rows = list(log)
-    yield f"{len(rows)} rows. Every row is re-usable: a re-run costs nothing for sets already decided."
+    undecided = sum(1 for r in rows if r.verdict is Verdict.ERROR)
+    yield (
+        f"{len(rows)} rows. Every decided row (pass, fail) is re-usable: a re-run "
+        "costs nothing for sets already decided."
+        + (
+            f" {undecided} `error` row(s) decided nothing and are asked again."
+            if undecided
+            else ""
+        )
+    )
     yield ""
     yield "| set | verdict | stage | seconds | detail |"
     yield "| --- | --- | --- | --- | --- |"
     for record in rows:
         detail = ""
-        if record.merge and not record.merge.ok:
+        if record.verdict is Verdict.ERROR:
+            detail = record.note or (record.merge.detail if record.merge else "")
+        elif record.merge and not record.merge.ok:
             detail = "conflict: " + ", ".join(
                 f"`{f}`" for f in record.merge.conflicting_files[:3]
             )
@@ -395,6 +426,7 @@ def _analysis_jdict(analysis: Analysis) -> dict:
         "base": analysis.base,
         "base_sha": analysis.base_sha,
         "exhausted": analysis.exhausted,
+        "aborted": analysis.aborted,
         "evaluations": analysis.evaluations,
         "changes": [
             {
@@ -503,7 +535,8 @@ const COLORS = ['#3b5b9e','#2f7d4f','#8a6a1f','#7a3f8f','#b3452e','#2f7d7d'];
 document.getElementById('summary').innerHTML =
   `base <code>${esc(DATA.base)}</code> (<code>${esc(DATA.base_sha.slice(0,8))}</code>) · ` +
   `${DATA.changes.length} changes · ${spend()} · ` +
-  (DATA.exhausted ? '<span class="good">complete</span>'
+  (DATA.aborted ? `<span class="bad">ABORTED</span> — ${esc(DATA.aborted)}`
+   : DATA.exhausted ? '<span class="good">complete</span>'
                   : '<span class="warn">partial (budget reached)</span>');
 
 // --- conflict graph: changes on a circle, conflicts as chords -------------
@@ -580,7 +613,8 @@ const logTable = rows =>
   '<tr><th>set</th><th>verdict</th><th>stage</th><th>s</th><th>detail</th></tr>' +
   rows.map(e => {
     let detail = '';
-    if (e.merge && !e.merge.ok) detail = 'conflict: ' + esc(e.merge.conflicting_files.slice(0,3).join(', '));
+    if (e.verdict === 'error') detail = esc(e.note || (e.merge && e.merge.detail) || '');
+    else if (e.merge && !e.merge.ok) detail = 'conflict: ' + esc(e.merge.conflicting_files.slice(0,3).join(', '));
     else if (e.validation && !e.validation.ok) detail = esc(e.validation.failing_tests.slice(0,3).join(', '));
     if (e.merge && e.merge.assisted) detail += ' <b class="warn">(assisted)</b>';
     const cls = e.verdict === 'pass' ? 'good' : e.verdict === 'fail' ? 'bad' : 'warn';

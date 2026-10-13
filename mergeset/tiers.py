@@ -1290,7 +1290,7 @@ def _minimal(conflicts: Sequence[ChangeSet]) -> List[ChangeSet]:
 
 def _aborted(analysis: Analysis) -> Optional[str]:
     """Why a search stopped on an ERROR, or ``None`` if none did."""
-    return next((s.error for s in analysis.searches if s.error), None)
+    return analysis.aborted
 
 
 def _skip(

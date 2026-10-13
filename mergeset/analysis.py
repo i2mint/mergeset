@@ -181,6 +181,15 @@ class Analysis:
         """True iff every component's search finished rather than hit a budget."""
         return all(s.exhausted for s in self.searches) if self.searches else False
 
+    @property
+    def aborted(self) -> Optional[str]:
+        """Why a search stopped on an ``ERROR``, or ``None``.
+
+        An abort is not a budget stop (ADR 0017, 0036): the run could not do
+        what it was asked, and what it reports is only what it had established.
+        """
+        return next((s.error for s in self.searches if s.error), None)
+
     def merge_plan(self) -> List[dict]:
         """One entry per maximal set: what to merge, in what order, what it drops.
 
