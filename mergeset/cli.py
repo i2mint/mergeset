@@ -275,6 +275,11 @@ def _progress(event: str, payload: dict) -> None:
             if p.get("cached")
             else f"  -> {p['verdict']}: {', '.join(p['subset']) or '(base alone)'}"
         ),
+        "offered": lambda p: (
+            None
+            if p.get("cached")
+            else f"  offered to the resolver -> {p['verdict']}: {', '.join(p['subset'])}"
+        ),
         "conflict": lambda p: f"  conflict: {', '.join(p['subset'])}",
         "maximal_good_set": lambda p: f"  MAXIMAL GOOD SET: {', '.join(p['subset'])}",
         "textual_conflict": lambda p: (
@@ -506,8 +511,9 @@ def branches(
             subagent attempt *mechanical* conflict resolutions. Anything it
             resolves is flagged as assisted and its diff kept — never
             reported as a clean merge.
-        no_pairwise: Skip the `git merge-tree` pre-oracle (skipped anyway with a
-            resolver, which is offered those conflicts instead).
+        no_pairwise: Skip the `git merge-tree` pre-oracle. With a resolver (and
+            without this flag) it is used only to offer each textual conflict to
+            the resolver once, up front, instead of excluding it.
         no_decompose: Do not split into independent file-overlap components.
         quiet: Suppress progress output.
     """
