@@ -1,4 +1,4 @@
-> built 2026-10-13 22:23 UTC from 488ffb2 (main) · mergeset 0.0.34. Details: build_info.json
+> built 2026-10-14 00:36 UTC from f8c2851 (main) · mergeset 0.0.35. Details: build_info.json
 
 # index.html.md
 
@@ -368,8 +368,10 @@ Find the maximal sets of `changes` that merge and validate on `base`.
   * **pairwise_preoracle** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool)]) – Use `git merge-tree` to find textual conflicts for
     free before spending any evaluation, and exclude them. `None` (the
     default) means on, unless a `resolver` is given: those conflicts
-    are what it is for, so it is offered them instead (ADR 0034). Pass
-    `True` to exclude them even then.
+    are what it is for, so each is offered to it once, up front, and
+    only the ones it declines are excluded (ADRs 0034, 0042). Pass
+    `True` to exclude them all even then, `False` to skip the
+    pre-oracle.
   * **decompose** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Use file-overlap components to find conflicts cheaply. The
     components are always searched first, because a conflict found
     inside a small component is a conflict found for a fraction of the
@@ -1042,8 +1044,9 @@ Find maximal mergeable sets among the given branches.
     subagent attempt *mechanical* conflict resolutions. Anything it
     resolves is flagged as assisted and its diff kept — never
     reported as a clean merge.
-  * **no_pairwise** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Skip the `git merge-tree` pre-oracle (skipped anyway with a
-    resolver, which is offered those conflicts instead).
+  * **no_pairwise** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Skip the `git merge-tree` pre-oracle. With a resolver (and
+    without this flag) it is used only to offer each textual conflict to
+    the resolver once, up front, instead of excluding it.
   * **no_decompose** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Do not split into independent file-overlap components.
   * **quiet** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Suppress progress output.
 * **Return type:**
@@ -2962,8 +2965,10 @@ Find the maximal sets of `changes` that merge and validate on `base`.
   * **pairwise_preoracle** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool)]) – Use `git merge-tree` to find textual conflicts for
     free before spending any evaluation, and exclude them. `None` (the
     default) means on, unless a `resolver` is given: those conflicts
-    are what it is for, so it is offered them instead (ADR 0034). Pass
-    `True` to exclude them even then.
+    are what it is for, so each is offered to it once, up front, and
+    only the ones it declines are excluded (ADRs 0034, 0042). Pass
+    `True` to exclude them all even then, `False` to skip the
+    pre-oracle.
   * **decompose** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Use file-overlap components to find conflicts cheaply. The
     components are always searched first, because a conflict found
     inside a small component is a conflict found for a fraction of the
@@ -6618,18 +6623,18 @@ contents join the fingerprint (see [`inputs_digest()`](_autosummary/mergeset.val
 
 # About this build
 
-This documentation was built on **2026-10-13 22:23 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/488ffb2f04cb57c48d9cb7a9744406c22765f10c"><code>488ffb2</code></a> on branch <code>main</code>, for **mergeset 0.0.34** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-14 00:36 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/f8c28518c669b6e532099a055453aeead8d9d029"><code>f8c2851</code></a> on branch <code>main</code>, for **mergeset 0.0.35** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.34) is behind the latest release on PyPI (0.0.35): `pip install mergeset` gives newer code than these docs describe.
+- The documented version (0.0.35) is behind the latest release on PyPI (0.0.36): `pip install mergeset` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/mergeset/commit/488ffb2f04cb57c48d9cb7a9744406c22765f10c"><code>488ffb2f04cb57c48d9cb7a9744406c22765f10c</code></a> |
+| Commit              | <a href="https://github.com/i2mint/mergeset/commit/f8c28518c669b6e532099a055453aeead8d9d029"><code>f8c28518c669b6e532099a055453aeead8d9d029</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -6640,9 +6645,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/mergeset</code>                                                               |
-| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38477258351">38477258351</a>      |
+| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38491018578">38491018578</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>488ffb2f04cb57c48d9cb7a9744406c22765f10c</code> (in the history of the built commit) |
+| Event commit | <code>f8c28518c669b6e532099a055453aeead8d9d029</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6667,13 +6672,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/mergeset/0.0.35/">0.0.35</a>, newer than the documented version (0.0.34).
+Latest release: <a href="https://pypi.org/project/mergeset/0.0.36/">0.0.36</a>, newer than the documented version (0.0.35).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/mergeset && cd mergeset
-git checkout 488ffb2f04cb57c48d9cb7a9744406c22765f10c
+git checkout f8c28518c669b6e532099a055453aeead8d9d029
 pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

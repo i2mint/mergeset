@@ -127,8 +127,9 @@ Find maximal mergeable sets among the given branches.
     subagent attempt *mechanical* conflict resolutions. Anything it
     resolves is flagged as assisted and its diff kept — never
     reported as a clean merge.
-  * **no_pairwise** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Skip the `git merge-tree` pre-oracle (skipped anyway with a
-    resolver, which is offered those conflicts instead).
+  * **no_pairwise** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Skip the `git merge-tree` pre-oracle. With a resolver (and
+    without this flag) it is used only to offer each textual conflict to
+    the resolver once, up front, instead of excluding it.
   * **no_decompose** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Do not split into independent file-overlap components.
   * **quiet** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Suppress progress output.
 * **Return type:**

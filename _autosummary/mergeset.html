@@ -2038,8 +2038,10 @@ validator have changed since those rows were written.</p></li>
 <li><p><strong>pairwise_preoracle</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]</span>) – Use <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge-tree</span></code> to find textual conflicts for
 free before spending any evaluation, and exclude them. <code class="docutils literal notranslate"><span class="pre">None</span></code> (the
 default) means on, unless a <code class="docutils literal notranslate"><span class="pre">resolver</span></code> is given: those conflicts
-are what it is for, so it is offered them instead (ADR 0034). Pass
-<code class="docutils literal notranslate"><span class="pre">True</span></code> to exclude them even then.</p></li>
+are what it is for, so each is offered to it once, up front, and
+only the ones it declines are excluded (ADRs 0034, 0042). Pass
+<code class="docutils literal notranslate"><span class="pre">True</span></code> to exclude them all even then, <code class="docutils literal notranslate"><span class="pre">False</span></code> to skip the
+pre-oracle.</p></li>
 <li><p><strong>decompose</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Use file-overlap components to find conflicts cheaply. The
 components are always searched first, because a conflict found
 inside a small component is a conflict found for a fraction of the
@@ -3502,7 +3504,7 @@ exists to prevent — so both halves of the key are slugified.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=9dd25805"></script>
+      <script src="../_static/documentation_options.js?v=39aadc1c"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

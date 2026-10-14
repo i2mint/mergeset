@@ -299,8 +299,9 @@ install survives between evaluations. It is created if missing.</p></li>
 subagent attempt <em>mechanical</em> conflict resolutions. Anything it
 resolves is flagged as assisted and its diff kept — never
 reported as a clean merge.</p></li>
-<li><p><strong>no_pairwise</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Skip the <code class="code docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge-tree</span></code> pre-oracle (skipped anyway with a
-resolver, which is offered those conflicts instead).</p></li>
+<li><p><strong>no_pairwise</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Skip the <code class="code docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge-tree</span></code> pre-oracle. With a resolver (and
+without this flag) it is used only to offer each textual conflict to
+the resolver once, up front, instead of excluding it.</p></li>
 <li><p><strong>no_decompose</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Do not split into independent file-overlap components.</p></li>
 <li><p><strong>quiet</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Suppress progress output.</p></li>
 </ul>
@@ -450,7 +451,7 @@ not a command that could pretend the log alone is enough.)</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=9dd25805"></script>
+      <script src="../_static/documentation_options.js?v=39aadc1c"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

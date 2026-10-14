@@ -2,18 +2,18 @@
 
 # About this build
 
-This documentation was built on **2026-10-13 22:23 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/488ffb2f04cb57c48d9cb7a9744406c22765f10c"><code>488ffb2</code></a> on branch <code>main</code>, for **mergeset 0.0.34** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-14 00:36 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/f8c28518c669b6e532099a055453aeead8d9d029"><code>f8c2851</code></a> on branch <code>main</code>, for **mergeset 0.0.35** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.34) is behind the latest release on PyPI (0.0.35): `pip install mergeset` gives newer code than these docs describe.
+- The documented version (0.0.35) is behind the latest release on PyPI (0.0.36): `pip install mergeset` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/mergeset/commit/488ffb2f04cb57c48d9cb7a9744406c22765f10c"><code>488ffb2f04cb57c48d9cb7a9744406c22765f10c</code></a> |
+| Commit              | <a href="https://github.com/i2mint/mergeset/commit/f8c28518c669b6e532099a055453aeead8d9d029"><code>f8c28518c669b6e532099a055453aeead8d9d029</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -24,9 +24,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/mergeset</code>                                                               |
-| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38477258351">38477258351</a>      |
+| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/38491018578">38491018578</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>488ffb2f04cb57c48d9cb7a9744406c22765f10c</code> (in the history of the built commit) |
+| Event commit | <code>f8c28518c669b6e532099a055453aeead8d9d029</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -51,13 +51,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/mergeset/0.0.35/">0.0.35</a>, newer than the documented version (0.0.34).
+Latest release: <a href="https://pypi.org/project/mergeset/0.0.36/">0.0.36</a>, newer than the documented version (0.0.35).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/mergeset && cd mergeset
-git checkout 488ffb2f04cb57c48d9cb7a9744406c22765f10c
+git checkout f8c28518c669b6e532099a055453aeead8d9d029
 pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

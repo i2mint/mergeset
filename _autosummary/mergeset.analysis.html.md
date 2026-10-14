@@ -178,8 +178,10 @@ Find the maximal sets of `changes` that merge and validate on `base`.
   * **pairwise_preoracle** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool)]) – Use `git merge-tree` to find textual conflicts for
     free before spending any evaluation, and exclude them. `None` (the
     default) means on, unless a `resolver` is given: those conflicts
-    are what it is for, so it is offered them instead (ADR 0034). Pass
-    `True` to exclude them even then.
+    are what it is for, so each is offered to it once, up front, and
+    only the ones it declines are excluded (ADRs 0034, 0042). Pass
+    `True` to exclude them all even then, `False` to skip the
+    pre-oracle.
   * **decompose** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Use file-overlap components to find conflicts cheaply. The
     components are always searched first, because a conflict found
     inside a small component is a conflict found for a fraction of the
