@@ -469,9 +469,7 @@ def analyze(
     if pairwise_preoracle:
         singles = list(singleton_textual_conflicts(repo, base_sha, heads_by_id))
         viable = {
-            cid: head
-            for cid, head in heads_by_id.items()
-            if cid not in dict(singles)
+            cid: head for cid, head in heads_by_id.items() if cid not in dict(singles)
         }
         pairs = list(pairwise_textual_conflicts(repo, base_sha, viable))
         if offer_once:
@@ -639,7 +637,6 @@ def analyze(
             "that fixes another. Results below are not fully trustworthy."
         )
     return analysis
-
 
 
 @dataclass
