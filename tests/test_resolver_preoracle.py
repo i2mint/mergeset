@@ -260,3 +260,24 @@ def test_the_note_does_not_claim_the_rest_merged_after_an_error():
     )
     assert "stopped on an evaluation that could not be performed (boom)" in offered.note
     assert "the rest merged" not in offered.note
+
+
+def test_a_set_whose_stack_closure_holds_a_known_conflict_is_not_offered():
+    from mergeset.analysis import _offer_once
+    from mergeset.base import Evaluation, Verdict
+
+    seen = []
+
+    def evaluate(subset):
+        seen.append(subset)
+        return Evaluation(subset, Verdict.PASS)
+
+    # C is stacked on P, and P is already excluded (e.g. its CI is red).
+    offered = _offer_once(
+        evaluate,
+        [],
+        [("c", "x")],
+        parents={"c": "p"},
+        known=[frozenset({"p"})],
+    )
+    assert not seen and not offered.declined

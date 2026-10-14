@@ -700,18 +700,22 @@ def _offer_once(
     def offer(subset: ChangeSet) -> bool:
         """Evaluate ``subset``; True when the offering may continue."""
         nonlocal asked, errored
-        if any(k <= subset for k in known + out.declined):
+        closed = close_down(subset, parents) if parents else subset
+        if any(k <= closed for k in known + out.declined):
             return True  # already known to fail; the search will not ask
         if not budget_left():
             return False
-        closed = close_down(subset, parents) if parents else subset
         result = evaluate(closed)
         asked += 1
         if not result.cached:
             out.spent += 1
         emit(
             "offered",
-            {"subset": set_key(closed), "verdict": result.verdict.value},
+            {
+                "subset": set_key(closed),
+                "verdict": result.verdict.value,
+                "cached": result.cached,
+            },
         )
         if result.verdict is Verdict.ERROR:
             errored = result.note or "an evaluation could not be performed"
@@ -727,15 +731,15 @@ def _offer_once(
                 break
     out.seconds = time.time() - started
     out.note = (
-        f"The {len(singletons)} changes and {len(pairs)} pairs that conflict "
-        f"textually were offered to the resolver once, before the search "
+        f"The textual conflicts ({len(singletons)} change(s), {len(pairs)} "
+        f"pair(s)) were offered to the resolver once, before the search "
         f"({asked} evaluated, {out.spent} not cached): {len(out.declined)} "
         "failed and are known conflicts."
     )
     if errored:
         out.note += (
             f" The offering stopped on an evaluation that could not be "
-            f"performed ({errored}); the search will abort on it."
+            f"performed ({errored}); the search will meet it again."
         )
     elif stopped:
         out.note += (

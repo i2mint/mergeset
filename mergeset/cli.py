@@ -275,6 +275,11 @@ def _progress(event: str, payload: dict) -> None:
             if p.get("cached")
             else f"  -> {p['verdict']}: {', '.join(p['subset']) or '(base alone)'}"
         ),
+        "offered": lambda p: (
+            None
+            if p.get("cached")
+            else f"  offered to the resolver -> {p['verdict']}: {', '.join(p['subset'])}"
+        ),
         "conflict": lambda p: f"  conflict: {', '.join(p['subset'])}",
         "maximal_good_set": lambda p: f"  MAXIMAL GOOD SET: {', '.join(p['subset'])}",
         "textual_conflict": lambda p: (
