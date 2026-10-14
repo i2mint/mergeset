@@ -41,7 +41,7 @@ def test_without_a_resolver_the_preoracle_still_excludes(repo, tmp_path):
     assert [(a, b) for a, b, _ in analysis.textual_conflicts] == [
         ("feat-a", "feat-c")
     ]
-    assert not any("pre-oracle was skipped" in n for n in analysis.notes)
+    assert not any("offered to the resolver once" in n for n in analysis.notes)
 
 
 def test_a_declined_conflict_is_reported_as_unmerged_not_as_validation(repo, tmp_path):
@@ -210,3 +210,53 @@ def test_offer_once_skips_pairs_holding_a_declined_singleton_and_stops_on_error(
         frozenset({"a", "b"}),
         frozenset({"c", "d"}),
     ]
+
+
+def test_a_pair_holding_an_excluded_change_is_not_offered(repo, tmp_path):
+    calls = []
+
+    def declines(worktree, files):
+        calls.append(sorted(files))
+        return False, "no"
+
+    analysis = analyze(
+        repo,
+        [
+            Change(id="feat-a", head="feat-a", base="main", meta={"ci": "failure"}),
+            Change(id="feat-c", head="feat-c", base="main"),
+        ],
+        base="main",
+        log=EvaluationLog(str(tmp_path / "eval.jsonl")),
+        validate=merge_only_validation(),
+        resolver=declines,
+    )
+    assert not calls
+    assert analysis.maximal_sets == [frozenset({"feat-c"})]
+
+
+def test_offer_once_records_the_change_set_not_its_stack_closure():
+    from mergeset.analysis import _offer_once
+    from mergeset.base import Evaluation, Verdict
+
+    seen = []
+
+    def evaluate(subset):
+        seen.append(subset)
+        return Evaluation(subset, Verdict.FAIL if "c" in subset else Verdict.PASS)
+
+    offered = _offer_once(
+        evaluate, ["c"], [("p", "y")], parents={"c": "p"}
+    )
+    assert seen == [frozenset({"c", "p"}), frozenset({"p", "y"})]
+    assert offered.declined == [frozenset({"c"})]
+
+
+def test_the_note_does_not_claim_the_rest_merged_after_an_error():
+    from mergeset.analysis import _offer_once
+    from mergeset.base import Evaluation, Verdict
+
+    offered = _offer_once(
+        lambda s: Evaluation(s, Verdict.ERROR, note="boom"), [], [("a", "b")], parents={}
+    )
+    assert "stopped on an evaluation that could not be performed (boom)" in offered.note
+    assert "the rest merged" not in offered.note

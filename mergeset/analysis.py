@@ -533,6 +533,7 @@ def analyze(
             evaluate,
             textual_singletons,
             textual_pairs,
+            known=known_conflicts,
             parents=analysis.stacks,
             max_evaluations=max_evaluations,
             max_seconds=max_seconds,
@@ -657,6 +658,7 @@ def _offer_once(
     pairs: Sequence[Tuple[ChangeId, ChangeId]],
     *,
     parents: Mapping[ChangeId, ChangeId],
+    known: Iterable[ChangeSet] = (),
     max_evaluations: Optional[int] = None,
     max_seconds: Optional[float] = None,
     on_event: Optional[Callable[[str, dict], None]] = None,
@@ -664,11 +666,16 @@ def _offer_once(
     """Evaluate each textual conflict once, so a resolver is asked at most once.
 
     Without this, a resolver that declines a pair is asked again for every
-    superset the search evaluates before it narrows to the pair (#47). The
+    superset the search evaluates before it narrows to the pair (#47). A set
+    that holds a ``known`` conflict (e.g. a change whose own CI is red) is not
+    offered: the search would never evaluate it. The
     evaluations go through the caching oracle, so the search re-uses them. Only
     the sets that FAIL are returned, to be seeded as known conflicts; one that
     PASSes was resolved and stays in play. Singletons go first, because a
-    declined singleton makes every pair holding it redundant.
+    declined singleton makes every pair holding it redundant. What is
+    recorded is the change set offered, not its closure over the stack it sits
+    on: the search closes sets itself, and blaming a parent for its child's
+    conflict would hide the parent's own pairs.
 
     An ERROR stops the offering and seeds nothing for that set: the search
     meets it again and aborts there (ADR 0036). The offering spends from the
@@ -677,8 +684,10 @@ def _offer_once(
     emit = on_event or (lambda name, payload: None)
     started = time.time()
     out = _Offered()
+    known = [frozenset(k) for k in known]
     asked = 0
     stopped = ""
+    errored = ""
 
     def budget_left() -> bool:
         nonlocal stopped
@@ -690,19 +699,22 @@ def _offer_once(
 
     def offer(subset: ChangeSet) -> bool:
         """Evaluate ``subset``; True when the offering may continue."""
-        nonlocal asked
+        nonlocal asked, errored
+        if any(k <= subset for k in known + out.declined):
+            return True  # already known to fail; the search will not ask
         if not budget_left():
             return False
-        subset = close_down(subset, parents) if parents else subset
-        result = evaluate(subset)
+        closed = close_down(subset, parents) if parents else subset
+        result = evaluate(closed)
         asked += 1
         if not result.cached:
             out.spent += 1
         emit(
             "offered",
-            {"subset": set_key(subset), "verdict": result.verdict.value},
+            {"subset": set_key(closed), "verdict": result.verdict.value},
         )
         if result.verdict is Verdict.ERROR:
+            errored = result.note or "an evaluation could not be performed"
             return False
         if result.verdict is Verdict.FAIL:
             out.declined.append(subset)
@@ -710,21 +722,26 @@ def _offer_once(
 
     ok = all(offer(frozenset({cid})) for cid in singletons)
     if ok:
-        failed = {cid for d in out.declined for cid in d}
         for a, b in pairs:
-            if a in failed or b in failed:
-                continue
             if not offer(frozenset({a, b})):
                 break
     out.seconds = time.time() - started
     out.note = (
-        f"Each of the {len(singletons)} changes and {len(pairs)} pairs that "
-        f"conflict textually was offered to the resolver once, before the search "
+        f"The {len(singletons)} changes and {len(pairs)} pairs that conflict "
+        f"textually were offered to the resolver once, before the search "
         f"({asked} evaluated, {out.spent} not cached): {len(out.declined)} "
-        "failed and are known conflicts, the rest merged."
+        "failed and are known conflicts."
     )
-    if stopped:
-        out.note += f" The offering stopped early: {stopped}."
+    if errored:
+        out.note += (
+            f" The offering stopped on an evaluation that could not be "
+            f"performed ({errored}); the search will abort on it."
+        )
+    elif stopped:
+        out.note += (
+            f" The offering stopped early ({stopped}); the sets not yet offered "
+            "are found by the search instead."
+        )
     return out
 
 

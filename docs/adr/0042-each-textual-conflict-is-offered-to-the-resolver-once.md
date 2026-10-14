@@ -13,6 +13,7 @@ ADR 0034 skipped the `git merge-tree` pre-oracle when a resolver is given, so th
 - `Analysis.textual_conflicts` stays empty in this mode: it means "excluded before any test ran", and readers (the report, tiered seeds) rely on it. A declined pair is reported as *Did not merge* from the log, as in ADR 0034.
 - The offering spends from `max_evaluations` / `max_seconds`; the search gets the remainder. An exhausted budget stops the offering and says so in a note.
 - An ERROR stops the offering and seeds nothing for that set; the search meets it and aborts (ADR 0036).
+- A set that holds an already-known conflict (a change whose own CI is red, a declined singleton) is not offered. What is recorded for a declined offer is the change set offered, not its closure over a stack: blaming a parent for its child's conflict would hide the parent's own pairs.
 - Explicit `pairwise_preoracle=True` still excludes every textual conflict without asking; `False` still skips the pre-oracle.
 
-**Cost.** Pairs the resolver does resolve are validated once up front, in addition to the supersets the search validates later.
+**Cost.** At most one resolver call per pair holds only for a resolver that declines. One that *accepts* is called once for the pair here and again inside every superset the search evaluates, because a resolution is not reused across sets: with decompose off, 3 resolvable pairs cost 6 resolver calls instead of 3 (found by the adversarial review). The resolved pairs are also validated up front. This trades paid calls on resolving resolvers for the saving on declining ones; reusing a resolution across sets removes the cost and is tracked as a follow-up.
