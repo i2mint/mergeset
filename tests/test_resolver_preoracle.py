@@ -33,7 +33,7 @@ def test_the_preoracle_does_not_exclude_what_the_resolver_is_for(repo, tmp_path)
     assert analysis.maximal_sets == [frozenset({"feat-a", "feat-c"})]
     assert calls, "the resolver was never offered the conflict"
     assert not analysis.textual_conflicts
-    assert any("pre-oracle was skipped" in n for n in analysis.notes)
+    assert any("offered to the resolver once" in n for n in analysis.notes)
 
 
 def test_without_a_resolver_the_preoracle_still_excludes(repo, tmp_path):
@@ -129,3 +129,84 @@ def test_a_budget_stop_is_not_reported_as_nothing_conflicting(repo, tmp_path):
     assert not analysis.exhausted
     report = markdown_report(analysis)
     assert "Every candidate merges and validates together" not in report
+
+
+def test_a_declining_resolver_is_asked_once_per_textual_pair(repo, tmp_path):
+    """#47: not again for every superset holding the conflict."""
+    calls = []
+
+    def declines(worktree, files):
+        calls.append(sorted(files))
+        return False, "no"
+
+    analysis = _analyze(
+        repo,
+        tmp_path,
+        ["feat-a", "feat-b", "feat-c", "feat-d"],
+        resolver=declines,
+        decompose=False,
+    )
+    assert len(calls) == 1, calls
+    assert frozenset({"feat-a", "feat-c"}) in analysis.conflicts
+    assert sorted(map(sorted, analysis.maximal_sets)) == [
+        ["feat-a", "feat-b", "feat-d"],
+        ["feat-b", "feat-c", "feat-d"],
+    ]
+    assert not analysis.textual_conflicts
+    [note] = [n for n in analysis.notes if "offered to the resolver once" in n]
+    assert "1 failed" in note
+
+
+def test_a_resolved_pair_stays_in_play(repo, tmp_path):
+    calls = []
+    analysis = _analyze(
+        repo,
+        tmp_path,
+        ["feat-a", "feat-b", "feat-c"],
+        resolver=_scripted_resolver(calls),
+    )
+    assert analysis.maximal_sets == [frozenset({"feat-a", "feat-b", "feat-c"})]
+    assert not analysis.conflicts
+
+
+def test_the_offering_spends_from_the_evaluation_budget(repo, tmp_path):
+    calls = []
+
+    def declines(worktree, files):
+        calls.append(1)
+        return False, "no"
+
+    analysis = _analyze(
+        repo,
+        tmp_path,
+        ["feat-a", "feat-b", "feat-c"],
+        resolver=declines,
+        max_evaluations=1,
+    )
+    assert len(calls) == 1
+    [note] = [n for n in analysis.notes if "offered to the resolver once" in n]
+    assert "stopped early" in note or analysis.searches[0].stopped_because
+
+
+def test_offer_once_skips_pairs_holding_a_declined_singleton_and_stops_on_error():
+    from mergeset.analysis import _offer_once
+    from mergeset.base import Evaluation, Verdict
+
+    seen = []
+
+    def evaluate(subset):
+        seen.append(subset)
+        verdict = Verdict.FAIL if "x" in subset else Verdict.PASS
+        if subset == frozenset({"c", "d"}):
+            verdict = Verdict.ERROR
+        return Evaluation(subset, verdict)
+
+    offered = _offer_once(
+        evaluate, ["x"], [("x", "a"), ("a", "b"), ("c", "d"), ("e", "f")], parents={}
+    )
+    assert offered.declined == [frozenset({"x"})]
+    assert seen == [
+        frozenset({"x"}),
+        frozenset({"a", "b"}),
+        frozenset({"c", "d"}),
+    ]

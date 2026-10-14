@@ -14,4 +14,4 @@ The `git merge-tree` pre-oracle (ADR 0006: cost ordering) finds every change tha
 
 **Reports follow.** A conflict a resolver declined is a FAIL at the merge stage. It is now listed as *Did not merge*, with its conflicting files, and drawn as a textual edge, never under "merged cleanly, still failed". The same holds for any merge-stage FAIL the pre-oracle did not foresee (three changes that conflict only together, or a run with `--no-pairwise`). A set that merged only with an assisted resolution and then failed validation has its own heading and edge kind: the resolution may be the cause, and it did not merge cleanly either.
 
-**Cost.** Without the pre-oracle, a declining resolver is asked again for every evaluated superset holding the conflict, before the pair itself is known to fail (i2mint/mergeset#47 tracks offering each textual pair once, up front).
+**Cost.** Without the pre-oracle, a declining resolver is asked again for every evaluated superset holding the conflict, before the pair itself is known to fail (fixed by ADR 0042, i2mint/mergeset#47).

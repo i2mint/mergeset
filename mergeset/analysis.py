@@ -16,9 +16,11 @@ The order of operations is the whole point, because it is the order of *cost*:
 from __future__ import annotations
 
 import os
+import time
 from dataclasses import dataclass, field, replace
 from collections.abc import Mapping, MutableMapping
 from typing import (
+    Any,
     Callable,
     Dict,
     Iterable,
@@ -55,6 +57,7 @@ from mergeset.solve import (
     find_maximal_good_sets,
     independent_components,
 )
+from mergeset.stacks import close_down
 from mergeset.sources import detect_stacks, size_weight
 from mergeset.storage import evaluation_lines
 from mergeset.validation import pytest_validation, recorded_fingerprint
@@ -294,8 +297,10 @@ def analyze(
         pairwise_preoracle: Use ``git merge-tree`` to find textual conflicts for
             free before spending any evaluation, and exclude them. ``None`` (the
             default) means on, unless a ``resolver`` is given: those conflicts
-            are what it is for, so it is offered them instead (ADR 0034). Pass
-            ``True`` to exclude them even then.
+            are what it is for, so each is offered to it once, up front, and
+            only the ones it declines are excluded (ADRs 0034, 0042). Pass
+            ``True`` to exclude them all even then, ``False`` to skip the
+            pre-oracle.
         decompose: Use file-overlap components to find conflicts cheaply. The
             components are always searched first, because a conflict found
             inside a small component is a conflict found for a fraction of the
@@ -448,42 +453,42 @@ def analyze(
 
     # The cheapest oracle of all: does each change even merge onto base alone?
     heads_by_id = dict(head_shas)
-    if pairwise_preoracle is None and resolver is not None:
+    offer_once = pairwise_preoracle is None and resolver is not None
+    if offer_once:
         # A textual conflict is what a resolver exists for. Seeded as a known
         # failure it would be excluded before the resolver was ever offered it,
-        # and `resolver=` would do nothing (#44). So the merge itself decides.
-        pairwise_preoracle = False
-        analysis.notes.append(
-            "The `git merge-tree` pre-oracle was skipped: with a conflict "
-            "resolver, a textual conflict is offered to it rather than excluded "
-            "up front."
-        )
+        # and `resolver=` would do nothing (#44). The pre-oracle still finds
+        # them for free, but only to offer each one to the resolver once, after
+        # the base check and before the search (#47); see `_offer_once`.
+        pairwise_preoracle = True
     pairwise_preoracle = (
         True if pairwise_preoracle is None else bool(pairwise_preoracle)
     )
+    textual_singletons: List[ChangeId] = []
+    textual_pairs: List[Tuple[ChangeId, ChangeId]] = []
     if pairwise_preoracle:
-        for change_id, files in singleton_textual_conflicts(
-            repo, base_sha, heads_by_id
-        ):
-            known_conflicts.append(frozenset({change_id}))
-            analysis.singleton_conflicts[change_id] = files
-            analysis.notes.append(
-                f"{change_id} does not merge onto the base at all "
-                f"({len(files)} conflicting files). Excluded before any test ran."
-            )
-
-    if pairwise_preoracle:
+        singles = list(singleton_textual_conflicts(repo, base_sha, heads_by_id))
         viable = {
             cid: head
             for cid, head in heads_by_id.items()
-            if cid not in analysis.singleton_conflicts
+            if cid not in dict(singles)
         }
-        analysis.textual_conflicts = list(
-            pairwise_textual_conflicts(repo, base_sha, viable)
-        )
-        for a, b, files in analysis.textual_conflicts:
-            known_conflicts.append(frozenset({a, b}))
-            emit("textual_conflict", {"pair": (a, b), "files": files})
+        pairs = list(pairwise_textual_conflicts(repo, base_sha, viable))
+        if offer_once:
+            textual_singletons = [cid for cid, _ in singles]
+            textual_pairs = [(a, b) for a, b, _ in pairs]
+        else:
+            for change_id, files in singles:
+                known_conflicts.append(frozenset({change_id}))
+                analysis.singleton_conflicts[change_id] = files
+                analysis.notes.append(
+                    f"{change_id} does not merge onto the base at all "
+                    f"({len(files)} conflicting files). Excluded before any test ran."
+                )
+            analysis.textual_conflicts = pairs
+            for a, b, files in pairs:
+                known_conflicts.append(frozenset({a, b}))
+                emit("textual_conflict", {"pair": (a, b), "files": files})
 
     ids = [c.id for c in changes]
     if decompose:
@@ -522,6 +527,23 @@ def analyze(
                 "is wrong for this repository. Check it by hand, then re-run "
                 "(pass check_base=False to proceed anyway)."
             )
+
+    if textual_singletons or textual_pairs:
+        offered = _offer_once(
+            evaluate,
+            textual_singletons,
+            textual_pairs,
+            parents=analysis.stacks,
+            max_evaluations=max_evaluations,
+            max_seconds=max_seconds,
+            on_event=on_event,
+        )
+        known_conflicts.extend(offered.declined)
+        analysis.notes.append(offered.note)
+        if max_evaluations is not None:
+            max_evaluations = max(0, max_evaluations - offered.spent)
+        if max_seconds is not None:
+            max_seconds = max(0.0, max_seconds - offered.seconds)
 
     diff_of = git_diff_reader(repo, base_sha, heads_by_id)
 
@@ -616,6 +638,94 @@ def analyze(
             "that fixes another. Results below are not fully trustworthy."
         )
     return analysis
+
+
+
+@dataclass
+class _Offered:
+    """What offering the textual conflicts to the resolver once came to."""
+
+    declined: List[ChangeSet] = field(default_factory=list)
+    spent: int = 0
+    seconds: float = 0.0
+    note: str = ""
+
+
+def _offer_once(
+    evaluate: Callable[[ChangeSet], Any],
+    singletons: Sequence[ChangeId],
+    pairs: Sequence[Tuple[ChangeId, ChangeId]],
+    *,
+    parents: Mapping[ChangeId, ChangeId],
+    max_evaluations: Optional[int] = None,
+    max_seconds: Optional[float] = None,
+    on_event: Optional[Callable[[str, dict], None]] = None,
+) -> _Offered:
+    """Evaluate each textual conflict once, so a resolver is asked at most once.
+
+    Without this, a resolver that declines a pair is asked again for every
+    superset the search evaluates before it narrows to the pair (#47). The
+    evaluations go through the caching oracle, so the search re-uses them. Only
+    the sets that FAIL are returned, to be seeded as known conflicts; one that
+    PASSes was resolved and stays in play. Singletons go first, because a
+    declined singleton makes every pair holding it redundant.
+
+    An ERROR stops the offering and seeds nothing for that set: the search
+    meets it again and aborts there (ADR 0036). The offering spends from the
+    budgets the caller gave, and the caller deducts :attr:`_Offered.spent`.
+    """
+    emit = on_event or (lambda name, payload: None)
+    started = time.time()
+    out = _Offered()
+    asked = 0
+    stopped = ""
+
+    def budget_left() -> bool:
+        nonlocal stopped
+        if max_evaluations is not None and out.spent >= max_evaluations:
+            stopped = f"max_evaluations ({max_evaluations}) reached"
+        elif max_seconds is not None and time.time() - started >= max_seconds:
+            stopped = f"max_seconds ({max_seconds}) reached"
+        return not stopped
+
+    def offer(subset: ChangeSet) -> bool:
+        """Evaluate ``subset``; True when the offering may continue."""
+        nonlocal asked
+        if not budget_left():
+            return False
+        subset = close_down(subset, parents) if parents else subset
+        result = evaluate(subset)
+        asked += 1
+        if not result.cached:
+            out.spent += 1
+        emit(
+            "offered",
+            {"subset": set_key(subset), "verdict": result.verdict.value},
+        )
+        if result.verdict is Verdict.ERROR:
+            return False
+        if result.verdict is Verdict.FAIL:
+            out.declined.append(subset)
+        return True
+
+    ok = all(offer(frozenset({cid})) for cid in singletons)
+    if ok:
+        failed = {cid for d in out.declined for cid in d}
+        for a, b in pairs:
+            if a in failed or b in failed:
+                continue
+            if not offer(frozenset({a, b})):
+                break
+    out.seconds = time.time() - started
+    out.note = (
+        f"Each of the {len(singletons)} changes and {len(pairs)} pairs that "
+        f"conflict textually was offered to the resolver once, before the search "
+        f"({asked} evaluated, {out.spent} not cached): {len(out.declined)} "
+        "failed and are known conflicts, the rest merged."
+    )
+    if stopped:
+        out.note += f" The offering stopped early: {stopped}."
+    return out
 
 
 def unmatched_log_notes(log: EvaluationLog, *, label: str = "") -> List[str]:
