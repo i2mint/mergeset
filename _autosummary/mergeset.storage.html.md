@@ -98,9 +98,6 @@ The artifact root for `app_name`, honouring `$MERGESET_DATA_DIR`.
 It is a *root*, not a leaf: artifacts always go in a per-kind subfolder of
 it (see [`artifact_store()`](#mergeset.storage.artifact_store)), so a new kind never needs a migration.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> import os, tempfile
 >>> d = tempfile.mkdtemp()
@@ -112,15 +109,15 @@ True
 True
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### mergeset.storage.artifact_mall(, rootdir=None, store_factory=None, kinds=('reports', 'evaluations', 'logs', 'fixtures'), app_name='mergeset', binary=False)
 
 All the artifact stores, keyed by kind — a *mall*, in `dol` terms.
 
 Stores are built lazily, so asking for the mall never creates a directory
 for a kind you do not use.
-
-* **Return type:**
-  [`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`MutableMapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping)]
 
 ```pycon
 >>> import tempfile
@@ -129,6 +126,9 @@ for a kind you do not use.
 >>> list(mall['evaluations'])
 ['a.jsonl']
 ```
+
+* **Return type:**
+  [`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`MutableMapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping)]
 
 ### mergeset.storage.artifact_path(kind, key='', , rootdir=None, app_name='mergeset')
 
@@ -139,9 +139,6 @@ store — the append-only evaluation log, and a subprocess told where to write
 its own output. Everything else should go through [`artifact_store()`](#mergeset.storage.artifact_store),
 because a path is exactly the coupling the store exists to remove.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> import tempfile
 >>> root = tempfile.mkdtemp()
@@ -149,6 +146,9 @@ because a path is exactly the coupling the store exists to remove.
 ...     __import__('os').path.join(root, 'evaluations', 'x.jsonl')
 True
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### mergeset.storage.artifact_store(kind, , rootdir=None, store_factory=None, app_name='mergeset', binary=False)
 
@@ -210,9 +210,6 @@ is how derived data ends up committed.
 `repo` is resolved to an absolute path first, so `'.'` names the current
 directory rather than collapsing every project into one `repo.jsonl`.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> import tempfile, os
 >>> p = evaluation_log_path('/x/proj/widget', rootdir=tempfile.mkdtemp())
@@ -221,6 +218,9 @@ True
 >>> os.path.basename(p).endswith('.jsonl')
 True
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### mergeset.storage.run_key(repo, , at=None)
 
@@ -232,9 +232,6 @@ analysis is exactly the case that made this necessary: the interesting thing
 about it is the *diff* against the previous run, and there is no diff if the
 previous run was clobbered.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> key = run_key('/x/proj/widget', at='2026-09-09T14-00-00Z')
 >>> key.endswith('/2026-09-09T14-00-00Z')
@@ -242,6 +239,9 @@ True
 >>> key.startswith('proj-widget-')
 True
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### mergeset.storage.slash_separated_keys(store, , sep='/')
 
@@ -254,9 +254,6 @@ Without this the same key is two different keys on two machines — the
 filesystem leaking through the abstraction the store exists to provide.
 
 A no-op where the separator is already `/`.
-
-* **Return type:**
-  [`MutableMapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping)
 
 ```pycon
 >>> store = slash_separated_keys({}, sep='/')
@@ -277,6 +274,9 @@ callers keep using `/`:
 (['a/b'], 1)
 ```
 
+* **Return type:**
+  [`MutableMapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping)
+
 ### mergeset.storage.slugify(text, , maxlen=48)
 
 A filesystem-safe key naming a run after its repository.
@@ -290,9 +290,6 @@ appended whenever the readable part is not the whole story.
 
 The digest also survives truncation: a long parent directory used to eat the
 only component that distinguished anything.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> slugify('/Users/me/proj/i/mergeset')
@@ -318,3 +315,6 @@ True
 >>> 'repo' in slugify('/x/' + 'a' * 80 + '/repo')
 True
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)

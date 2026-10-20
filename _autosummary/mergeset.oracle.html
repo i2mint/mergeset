@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -265,7 +266,7 @@ expensive per-tree setup (dependency install, build cache)
 amortizable across the whole run.</p></li>
 <li><p><strong>worktree_root</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – Where throwaway worktrees go. Default: a temp dir.</p></li>
 <li><p><strong>keep_worktrees</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Keep them for inspection (they add up fast).</p></li>
-<li><p><strong>on_event</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]]</span>) – <code class="docutils literal notranslate"><span class="pre">(event,</span> <span class="pre">payload)</span></code> progress callback.</p></li>
+<li><p><strong>on_event</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>], <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span>]]</span>) – <code class="docutils literal notranslate"><span class="pre">(event,</span> <span class="pre">payload)</span></code> progress callback.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -286,15 +287,15 @@ amortizable across the whole run.</p></li>
 recorded with the order that was used so the result stays reproducible.
 Stacked changes are merged parent-first; otherwise smallest-first, which
 surfaces the cheap conflicts early.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">merge_order</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="s1">'b'</span><span class="p">,</span> <span class="s1">'a'</span><span class="p">}),</span> <span class="p">{})</span>
+</span><span data-line="2"><span class="go">['a', 'b']</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">merge_order</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="s1">'b'</span><span class="p">,</span> <span class="s1">'a'</span><span class="p">}),</span> <span class="p">{})</span>
-</span><span data-line="2"><span class="go">['a', 'b']</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -308,11 +309,6 @@ nothing (<a class="reference internal" href="mergeset.base.html#mergeset.base.NO
 how it resolves records <a class="reference internal" href="mergeset.base.html#mergeset.base.UNKNOWN_FINGERPRINT" title="mergeset.base.UNKNOWN_FINGERPRINT"><code class="xref py py-data docutils literal notranslate"><span class="pre">UNKNOWN_FINGERPRINT</span></code></a>, which
 matches only other such rows. A user resolver may set
 <code class="docutils literal notranslate"><span class="pre">resolver.resolver_fingerprint</span> <span class="pre">=</span> <span class="pre">'my-resolver-v2'</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">resolver_fingerprint_of</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
 </span><span data-line="2"><span class="go">'none'</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">resolver_fingerprint_of</span><span class="p">(</span><span class="k">lambda</span> <span class="n">worktree</span><span class="p">,</span> <span class="n">files</span><span class="p">:</span> <span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="s1">''</span><span class="p">))</span>
@@ -321,6 +317,11 @@ matches only other such rows. A user resolver may set
 </span><span data-line="6"><span class="go">True</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -365,7 +366,7 @@ matches only other such rows. A user resolver may set
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=39aadc1c"></script>
+      <script src="../_static/documentation_options.js?v=0e525676"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

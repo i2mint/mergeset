@@ -129,20 +129,20 @@ changes.
 | [`EvaluationAborted`](#mergeset.EvaluationAborted)(why[, conflicts, best_so_far]) | An evaluation could not be performed (`Verdict.ERROR`, ADR 0017).          |
 | [`CapabilityError`](#mergeset.CapabilityError)                                  | A required external capability is missing; the message says how to fix it. |
 
-### *class* mergeset.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, aborted_tier=None, aborted_phase=None, unverified_sets=<factory>, log=None, tier_logs=<factory>, searches=<factory>, notes=<factory>)
+### *class* mergeset.Analysis(repo, base, base_sha, changes, head_shas=dict(), maximal_sets=list(), conflicts=list(), textual_conflicts=list(), components=list(), files_by_change=dict(), stacks=dict(), merged_through=dict(), weights=dict(), own_weights=dict(), singleton_conflicts=dict(), components_combined=False, aborted_tier=None, aborted_phase=None, unverified_sets=list(), log=None, tier_logs=dict(), searches=list(), notes=list())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Everything a run learned. Every field is derivable from `log` + git.
 
-#### *property* aborted *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)*
+#### *property* aborted *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
 
 Why a search stopped on an `ERROR`, or `None`.
 
 An abort is not a budget stop (ADR 0017, 0036): the run could not do
 what it was asked, and what it reports is only what it had established.
 
-#### aborted_phase *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### aborted_phase *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 the tiers’
 results are complete, only that phase’s answer is missing.
@@ -150,7 +150,7 @@ results are complete, only that phase’s answer is missing.
 * **Type:**
   A phase after the tiers that aborted (`"--must-include"`)
 
-#### aborted_tier *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### aborted_tier *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 The confirm tier whose search aborted, when one did after the screen
 finished (`None`: the screen itself aborted, or nothing did).
@@ -252,7 +252,7 @@ normal case. See [`merge_plan()`](#mergeset.Analysis.merge_plan)’s `verified` 
 
 Cost of dropping each change *including its descendant cone*.
 
-### *class* mergeset.AnytimeAnswer(best, best_weight, best_tier, full_depth, bound, bound_set, gap, optimal, pending=(), spent=<factory>)
+### *class* mergeset.AnytimeAnswer(best, best_weight, best_tier, full_depth, bound, bound_set, gap, optimal, pending=(), spent=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -272,19 +272,31 @@ exists. That is a stopping rule rather than a budget running out.
 
 Heaviest set validated so far, at `best_tier`.
 
+* **Type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]
+
 #### best_weight
 
 Its weight (the sum of its changes’ weights).
+
+* **Type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 #### best_tier
 
 Deepest tier that actually ran on `best`; `None` when
 nothing has been validated yet.
 
+* **Type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 #### full_depth
 
 True iff every tier ran on `best`. When False, `best` is
 a partial claim however good `gap` looks.
+
+* **Type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### bound, bound_set
 
@@ -294,9 +306,15 @@ The upper bound and the set that realizes it.
 
 `bound - best_weight` — what might still be being missed.
 
+* **Type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
+
 #### optimal
 
 `gap <= 0 and full_depth`; nothing better exists.
+
+* **Type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 #### pending
 
@@ -304,16 +322,19 @@ The upper bound and the set that realizes it.
 taken to full depth. The answer to “what would closing the gap
 cost”.
 
+* **Type:**
+  [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset), [`float`](https://docs.python.org/3/builtins/functions.html#float)]]
+
 #### spent
 
 Seconds spent, per tier.
 
+* **Type:**
+  [`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`float`](https://docs.python.org/3/builtins/functions.html#float)]
+
 #### summary()
 
 One line a progress display or a report can print.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> AnytimeAnswer(frozenset({'a'}), 1.0, 'unit', False, 2.0,
@@ -324,13 +345,16 @@ One line a progress display or a report can print.
 'best 2 changes (weight 2.0, all tiers); provably maximal'
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### *exception* mergeset.CapabilityError
 
 Bases: [`MergesetError`](mergeset.base.html.md#mergeset.base.MergesetError)
 
 A required external capability is missing; the message says how to fix it.
 
-### *class* mergeset.Change(id, head, base, source='branch', weight=None, meta=<factory>)
+### *class* mergeset.Change(id, head, base, source='branch', weight=None, meta=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -417,7 +441,7 @@ Upper estimate, in seconds. Used to *admit* work against a budget.
 * **Return type:**
   [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
-### *class* mergeset.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, validator=None, resolver=None, cached=False)
+### *class* mergeset.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=dict(), validator=None, resolver=None, cached=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -435,7 +459,7 @@ existed carry neither and read back as *unpinned*; see
 on that tree, the same way (i2mint/mergeset#32): the same commits under a
 different test command are a different question.
 
-#### base_sha *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### base_sha *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 Full sha of the base the set was merged onto. `None` on unpinned rows.
 
@@ -482,7 +506,7 @@ True iff the set evaluated as good.
 
 True iff the row records which commits it was evaluated against.
 
-#### resolver *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### resolver *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 Fingerprint of how conflicts were resolved when the set was merged
 (`NO_RESOLVER`, or [`mergeset.oracle.resolver_fingerprint_of()`](mergeset.oracle.html.md#mergeset.oracle.resolver_fingerprint_of)).
@@ -500,7 +524,7 @@ JSON-able view; `subset` becomes a sorted list.
 
 True iff the row is a textual conflict that no resolver resolved.
 
-#### validator *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### validator *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 Fingerprint of the validator that judged the tree (see
 [`mergeset.validation.fingerprint_of()`](mergeset.validation.html.md#mergeset.validation.fingerprint_of)). `None` on rows written
@@ -674,9 +698,6 @@ iteration, `len`) sees only rows evaluated against these commits, and
 rows stay in the store and in [`rows`](#mergeset.EvaluationLog.rows), and are reported by
 [`stale`](#mergeset.EvaluationLog.stale) and [`unpinned`](#mergeset.EvaluationLog.unpinned).
 
-* **Return type:**
-  [`EvaluationLog`](mergeset.log.html.md#mergeset.log.EvaluationLog)
-
 ```pycon
 >>> from mergeset.base import Evaluation, Verdict
 >>> log = EvaluationLog(MemoryLines()).pin(base='B', heads={'a': 'A1'})
@@ -688,15 +709,15 @@ rows stay in the store and in [`rows`](#mergeset.EvaluationLog.rows), and are re
 (True, 1, 1)
 ```
 
+* **Return type:**
+  [`EvaluationLog`](mergeset.log.html.md#mergeset.log.EvaluationLog)
+
 #### pinned(, base, heads, validator=None, resolver=None, trust_unpinned=None)
 
 A view of this log scoped to `base`, these heads and `validator`.
 
 Same store, same rows; this log itself is left as it was, so a caller
 that hands one log to two analyses keeps its own view of it.
-
-* **Return type:**
-  [`EvaluationLog`](mergeset.log.html.md#mergeset.log.EvaluationLog)
 
 ```pycon
 >>> from mergeset.base import Evaluation, Verdict
@@ -708,6 +729,9 @@ that hands one log to two analyses keeps its own view of it.
 >>> len(log.pinned(base='B', heads={'a': 'A2'}))
 0
 ```
+
+* **Return type:**
+  [`EvaluationLog`](mergeset.log.html.md#mergeset.log.EvaluationLog)
 
 #### record(evaluation)
 
@@ -769,7 +793,7 @@ Append one record, flushing immediately (crash-safe enough).
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-### *class* mergeset.MeasuredCost(declared=<factory>, per_change=<factory>, unmeasured_seconds=60.0)
+### *class* mergeset.MeasuredCost(declared=dict(), per_change=dict(), unmeasured_seconds=60.0)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -842,14 +866,14 @@ and conclude the tier is unlimited.
 
 Central estimate of what evaluating `subset` at `tier` will cost.
 
-* **Return type:**
-  [`float`](https://docs.python.org/3/builtins/functions.html#float)
-
 ```pycon
 >>> cost = MeasuredCost(declared={'unit': 10.0}, per_change={'x': -50.0})
 >>> cost.estimate('unit', frozenset({'x'}))
 0.0
 ```
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 #### forget(tier)
 
@@ -886,9 +910,6 @@ this carries is the spread *within* a regime, which is the variance no
 candidate set predicts. The expensive regime is reserved explicitly by
 the scheduler instead of being smuggled in as a hedge.
 
-* **Return type:**
-  [`float`](https://docs.python.org/3/builtins/functions.html#float)
-
 ```pycon
 >>> cost = MeasuredCost()
 >>> cost.observe('unit', frozenset({'a'}), 45.0)
@@ -898,6 +919,9 @@ the scheduler instead of being smuggled in as a hedge.
 >>> round(cost.pessimistic('unit', frozenset({'a'})), 1)
 80.0
 ```
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 #### runs(tier)
 
@@ -949,7 +973,7 @@ aborts, because a set that was never tested has told us nothing.
 `'conflict'` (a real textual conflict) or `'error'` (the merge could
 not be attempted: bad path, missing ref, unusable worktree).
 
-#### resolved_commit *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### resolved_commit *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 base plus every head,
 conflicts resolved. A deeper tier checks this commit out instead of
@@ -1076,7 +1100,7 @@ Whether this tier can run right now.
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
-### *class* mergeset.TieredAnalysis(tiers, analysis, logs, cost_model, depth_reached=None, skipped=<factory>, spent=<factory>, runs=<factory>, answer=None, must_include=frozenset({}), best_including=None)
+### *class* mergeset.TieredAnalysis(tiers, analysis, logs, cost_model, depth_reached=None, skipped=dict(), spent=dict(), runs=dict(), answer=None, must_include=frozenset({}), best_including=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -1087,7 +1111,7 @@ Result of a tiered run.
 depth validation actually reached — so every existing report renders it
 unchanged and says the right thing about tiers.
 
-#### best_including *: [frozenset](https://docs.python.org/3/builtins/stdtypes.html#frozenset) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### best_including *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[frozenset](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]* *= None*
 
 Heaviest validated set containing every change in `must_include`.
 `None` when they cannot all be kept together. A second, differently
@@ -1106,7 +1130,7 @@ because an estimate with no provenance reads as a fact.
 * **Return type:**
   [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
-#### depth_reached *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### depth_reached *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 How deep validation actually got, as a tier name.
 
@@ -1339,13 +1363,13 @@ Screen with the cheap tier, confirm the frontier with the expensive ones.
 
 Every change `change` is stacked on, transitively.
 
-* **Return type:**
-  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
-
 ```pycon
 >>> set_key(ancestors('c', {'c': 'b', 'b': 'a'}))
 ('a', 'b')
 ```
+
+* **Return type:**
+  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
 
 ### mergeset.anytime_answer(change_ids, conflicts, , weight, verified, tiers, cost_model=None, remaining_tiers=(), depends_on=None, spent=None, pending_limit=5, bound_search_limit=64)
 
@@ -1400,9 +1424,6 @@ The artifact root for `app_name`, honouring `$MERGESET_DATA_DIR`.
 It is a *root*, not a leaf: artifacts always go in a per-kind subfolder of
 it (see [`artifact_store()`](#mergeset.artifact_store)), so a new kind never needs a migration.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> import os, tempfile
 >>> d = tempfile.mkdtemp()
@@ -1414,15 +1435,15 @@ True
 True
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### mergeset.artifact_mall(, rootdir=None, store_factory=None, kinds=('reports', 'evaluations', 'logs', 'fixtures'), app_name='mergeset', binary=False)
 
 All the artifact stores, keyed by kind — a *mall*, in `dol` terms.
 
 Stores are built lazily, so asking for the mall never creates a directory
 for a kind you do not use.
-
-* **Return type:**
-  [`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`MutableMapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping)]
 
 ```pycon
 >>> import tempfile
@@ -1431,6 +1452,9 @@ for a kind you do not use.
 >>> list(mall['evaluations'])
 ['a.jsonl']
 ```
+
+* **Return type:**
+  [`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`MutableMapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping)]
 
 ### mergeset.artifact_path(kind, key='', , rootdir=None, app_name='mergeset')
 
@@ -1441,9 +1465,6 @@ store — the append-only evaluation log, and a subprocess told where to write
 its own output. Everything else should go through [`artifact_store()`](#mergeset.artifact_store),
 because a path is exactly the coupling the store exists to remove.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> import tempfile
 >>> root = tempfile.mkdtemp()
@@ -1451,6 +1472,9 @@ because a path is exactly the coupling the store exists to remove.
 ...     __import__('os').path.join(root, 'evaluations', 'x.jsonl')
 True
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### mergeset.artifact_store(kind, , rootdir=None, store_factory=None, app_name='mergeset', binary=False)
 
@@ -1530,13 +1554,13 @@ Unconstrained, the answer would have been the three changes that exclude
 
 Changes from local or remote branches.
 
-* **Return type:**
-  [`Iterator`](https://docs.python.org/3/library/typing.html#typing.Iterator)[[`Change`](mergeset.base.html.md#mergeset.base.Change)]
-
 ```pycon
 >>> list(branch_changes('.', []))
 []
 ```
+
+* **Return type:**
+  [`Iterator`](https://docs.python.org/3/library/typing.html#typing.Iterator)[[`Change`](mergeset.base.html.md#mergeset.base.Change)]
 
 ### mergeset.bundled_skills(skills_root=None)
 
@@ -1545,13 +1569,13 @@ Yield the directory of every bundled skill (each holding a `SKILL.md`).
 `skills_root` is resolved, so a relative one still yields links that work
 from anywhere.
 
-* **Return type:**
-  [`Iterator`](https://docs.python.org/3/library/typing.html#typing.Iterator)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]
-
 ```pycon
 >>> [p.name for p in bundled_skills()]
 ['mergeset']
 ```
+
+* **Return type:**
+  [`Iterator`](https://docs.python.org/3/library/typing.html#typing.Iterator)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]
 
 ### mergeset.callable_validation(func)
 
@@ -1594,13 +1618,13 @@ sets that survived.
 
 Normalize any iterable of change ids into a `frozenset`.
 
-* **Return type:**
-  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
-
 ```pycon
 >>> change_set(['b', 'a', 'b']) == frozenset({'a', 'b'})
 True
 ```
+
+* **Return type:**
+  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
 
 ### mergeset.changed_files(repo, base, head)
 
@@ -1628,37 +1652,37 @@ guessing intent. Anything it does resolve is flagged and its diff kept.
 
 Add every ancestor, so the set becomes a valid thing to ask for.
 
-* **Return type:**
-  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
-
 ```pycon
 >>> set_key(close_down({'c'}, {'c': 'b', 'b': 'a'}))
 ('a', 'b', 'c')
 ```
 
+* **Return type:**
+  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
+
 ### mergeset.close_up(subset, parents)
 
 Add every descendant — what dropping these changes actually costs.
-
-* **Return type:**
-  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
 
 ```pycon
 >>> set_key(close_up({'a'}, {'c': 'b', 'b': 'a'}))
 ('a', 'b', 'c')
 ```
 
+* **Return type:**
+  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
+
 ### mergeset.combine_components(per_component)
 
 Cartesian-combine per-component maximal sets into global ones.
-
-* **Return type:**
-  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]
 
 ```pycon
 >>> [set_key(s) for s in combine_components([[frozenset('a')], [frozenset('c')]])]
 [('a', 'c')]
 ```
+
+* **Return type:**
+  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]
 
 ### mergeset.command_validation(command, , timeout=None, env=None, inputs=())
 
@@ -1686,13 +1710,13 @@ Re-weight each change by the cost of dropping its whole descendant cone.
 Dropping a stack’s root drops the stack. The hitting set has to know that,
 or it will pick the “cheapest” change and take eight thousand lines with it.
 
-* **Return type:**
-  [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`float`](https://docs.python.org/3/builtins/functions.html#float)]
-
 ```pycon
 >>> cone_weights({'a': 1.0, 'b': 2.0}, {'b': 'a'})
 {'a': 3.0, 'b': 2.0}
 ```
+
+* **Return type:**
+  [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`float`](https://docs.python.org/3/builtins/functions.html#float)]
 
 ### mergeset.cost_from_log(log, , tier, declared=None, per_change=None, unmeasured_seconds=60.0)
 
@@ -1707,9 +1731,6 @@ back.
 not say — one log holds one tier’s rows by construction
 (see [`mergeset.tiers`](mergeset.tiers.html.md#module-mergeset.tiers)).
 
-* **Return type:**
-  [`MeasuredCost`](mergeset.cost.html.md#mergeset.cost.MeasuredCost)
-
 ```pycon
 >>> from mergeset.base import Evaluation, Verdict
 >>> rows = [Evaluation(frozenset({'a'}), Verdict.PASS, duration=40.0),
@@ -1719,6 +1740,9 @@ not say — one log holds one tier’s rows by construction
 50.0
 ```
 
+* **Return type:**
+  [`MeasuredCost`](mergeset.cost.html.md#mergeset.cost.MeasuredCost)
+
 ### mergeset.count_closed_subsets(parents, changes)
 
 How many downward-closed subsets exist — the size of the real search space.
@@ -1727,13 +1751,13 @@ Worth reporting: on a 15-change forest of four stacks this is 576 rather
 than 32768, which is the difference between “enumerate carefully” and
 “hopeless”.
 
-* **Return type:**
-  [`int`](https://docs.python.org/3/builtins/functions.html#int)
-
 ```pycon
 >>> count_closed_subsets({'b': 'a'}, ['a', 'b'])
 3
 ```
+
+* **Return type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
 
 ### mergeset.create_integration_branch(repo, name, base, heads, , force=False)
 
@@ -1751,13 +1775,13 @@ unless `force` is passed explicitly, and never pushes anything.
 
 Every change stacked on `change`, transitively — its *cone*.
 
-* **Return type:**
-  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
-
 ```pycon
 >>> set_key(descendants('a', {'c': 'b', 'b': 'a', 'd': 'a'}))
 ('b', 'c', 'd')
 ```
+
+* **Return type:**
+  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
 
 ### mergeset.detect_stacks(changes)
 
@@ -1767,9 +1791,6 @@ A PR whose base ref is another candidate’s head ref is *stacked*: only
 prefixes of the chain make sense as a merge set, because the child contains
 the parent. Recorded so the report can say so and the solver can be told.
 
-* **Return type:**
-  [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> a = Change(id='pr1', head='origin/a', base='origin/main', source='pr',
 ...            meta={'head_ref': 'a', 'base_ref': 'main'})
@@ -1778,6 +1799,9 @@ the parent. Recorded so the report can say so and the solver can be told.
 >>> detect_stacks([a, b])
 {'pr2': 'pr1'}
 ```
+
+* **Return type:**
+  [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### mergeset.evaluation_lines(repo, , store=None, rootdir=None, app_name='mergeset')
 
@@ -1814,9 +1838,6 @@ is how derived data ends up committed.
 `repo` is resolved to an absolute path first, so `'.'` names the current
 directory rather than collapsing every project into one `repo.jsonl`.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> import tempfile, os
 >>> p = evaluation_log_path('/x/proj/widget', rootdir=tempfile.mkdtemp())
@@ -1825,6 +1846,9 @@ True
 >>> os.path.basename(p).endswith('.jsonl')
 True
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### mergeset.fetch_pull_requests(repo_spec, , author=None, state='open', limit=100, extra_args=())
 
@@ -1960,14 +1984,14 @@ Connected components of the file-overlap graph are therefore independent
 subproblems: solve each separately and combine the answers freely, which
 turns one `2**n` search into several much smaller ones.
 
-* **Return type:**
-  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]
-
 ```pycon
 >>> files = {'a': ['x.py'], 'b': ['x.py'], 'c': ['y.py']}
 >>> [set_key(g) for g in independent_components(files, files.get)]
 [('a', 'b'), ('c',)]
 ```
+
+* **Return type:**
+  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]
 
 ### mergeset.inputs_digest(paths, , cache=FILE_DIGESTS)
 
@@ -1999,9 +2023,6 @@ edited that way, pass `cache=None`, or set
 `mergeset.validation.FILE_DIGESTS = None` to turn the cache off for every
 validator (ADR 0035).
 
-* **Return type:**
-  [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> import tempfile
 >>> with tempfile.NamedTemporaryFile('w', suffix='.py', delete=False) as f:
@@ -2016,6 +2037,9 @@ False
 ['missing']
 ```
 
+* **Return type:**
+  [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 ### mergeset.install_skills(target='~/.claude/skills', , skills_root=None, link=True, overwrite=False)
 
 Put the bundled skills where an agent host will find them.
@@ -2028,9 +2052,6 @@ skill is never silently replaced — and anything *else* sitting in the way
 `overwrite=True` is the escape hatch, and it is not gentle: it deletes
 whatever is at the destination, including a directory someone kept notes in.
 
-* **Return type:**
-  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> import tempfile
 >>> dest = tempfile.mkdtemp()
@@ -2042,6 +2063,9 @@ True
 >>> install_skills(dest)          # already there, nothing to do
 []
 ```
+
+* **Return type:**
+  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### mergeset.js_validation(, install='pnpm install --frozen-lockfile', build=None, test='pnpm run test', lint=None, lockfile='pnpm-lock.yaml', timeout=None, inputs=())
 
@@ -2063,15 +2087,15 @@ This is the *other* way to make a set valid, and it is the one the solver
 needs: when the search decides to drop a parent, the descendants have to go
 too, and no amount of wanting them back changes that.
 
-* **Return type:**
-  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
-
 ```pycon
 >>> set_key(largest_closed_subset({'b', 'c'}, {'c': 'b', 'b': 'a'}))
 ()
 >>> set_key(largest_closed_subset({'a', 'b', 'd'}, {'c': 'b', 'b': 'a'}))
 ('a', 'b', 'd')
 ```
+
+* **Return type:**
+  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
 
 ### mergeset.local_branch_names(repo, , pattern=None, exclude=())
 
@@ -2109,13 +2133,13 @@ recorded with the order that was used so the result stays reproducible.
 Stacked changes are merged parent-first; otherwise smallest-first, which
 surfaces the cheap conflicts early.
 
-* **Return type:**
-  [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> merge_order(frozenset({'b', 'a'}), {})
 ['a', 'b']
 ```
+
+* **Return type:**
+  [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### mergeset.merge_sequence(repo, base, heads)
 
@@ -2171,14 +2195,14 @@ A hitting set touches every conflict; its complement is therefore a set with
 no known conflict inside it. Enumerating hitting sets cheapest-first means
 the solver proposes dropping the *least valuable* changes first.
 
-* **Return type:**
-  [`Iterator`](https://docs.python.org/3/library/typing.html#typing.Iterator)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]
-
 ```pycon
 >>> hs = minimal_hitting_sets([frozenset({'a', 'b'}), frozenset({'b', 'c'})])
 >>> [sorted(h) for h in itertools.islice(hs, 3)]
 [['b'], ['a', 'c']]
 ```
+
+* **Return type:**
+  [`Iterator`](https://docs.python.org/3/library/typing.html#typing.Iterator)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]
 
 ### mergeset.pairwise_textual_conflicts(repo, base, heads)
 
@@ -2269,9 +2293,6 @@ analysis is exactly the case that made this necessary: the interesting thing
 about it is the *diff* against the previous run, and there is no diff if the
 previous run was clobbered.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> key = run_key('/x/proj/widget', at='2026-09-09T14-00-00Z')
 >>> key.endswith('/2026-09-09T14-00-00Z')
@@ -2279,6 +2300,9 @@ True
 >>> key.startswith('proj-widget-')
 True
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### mergeset.set_cost(cost_model, tiers, subset, , pessimistic=False)
 
@@ -2288,26 +2312,26 @@ The tiers run in order and every one of them runs, so the price of a full
 verdict is their sum — which is exactly what makes a cheap first tier worth
 having: most sets never reach the second term.
 
-* **Return type:**
-  [`float`](https://docs.python.org/3/builtins/functions.html#float)
-
 ```pycon
 >>> cost = MeasuredCost(declared={'unit': 45.0, 'e2e': 300.0})
 >>> set_cost(cost, ['unit', 'e2e'], frozenset({'a'}))
 345.0
 ```
 
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
+
 ### mergeset.set_key(ids)
 
 A stable, hashable, JSON-friendly key for a change set.
-
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)
 
 ```pycon
 >>> set_key({'b', 'a'})
 ('a', 'b')
 ```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)
 
 ### mergeset.singleton_textual_conflicts(repo, base, heads)
 
@@ -2324,13 +2348,13 @@ GitHub and still unmergeable onto the base you actually care about.
 
 The directory of skills bundled inside the installed package.
 
-* **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
-
 ```pycon
 >>> skills_dir().name
 'skills'
 ```
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
 ### mergeset.slash_separated_keys(store, , sep='/')
 
@@ -2343,9 +2367,6 @@ Without this the same key is two different keys on two machines — the
 filesystem leaking through the abstraction the store exists to provide.
 
 A no-op where the separator is already `/`.
-
-* **Return type:**
-  [`MutableMapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping)
 
 ```pycon
 >>> store = slash_separated_keys({}, sep='/')
@@ -2365,6 +2386,9 @@ callers keep using `/`:
 >>> list(store), store['a/b']
 (['a/b'], 1)
 ```
+
+* **Return type:**
+  [`MutableMapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping)
 
 ### mergeset.staged_validation(stages, , env=None, inputs=())
 
@@ -2426,15 +2450,15 @@ The members of `subset` that nothing else in `subset` is stacked on.
 
 Merging these brings the rest along for free.
 
-* **Return type:**
-  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
-
 ```pycon
 >>> set_key(tips({'a', 'b', 'c'}, {'c': 'b', 'b': 'a'}))
 ('c',)
 >>> set_key(tips({'a', 'b', 'd'}, {'b': 'a', 'd': 'a'}))
 ('b', 'd')
 ```
+
+* **Return type:**
+  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
 
 ### Modules
 

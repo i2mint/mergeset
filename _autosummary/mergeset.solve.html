@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -201,7 +202,7 @@ set — record it and ask for the next-cheapest hitting set.</p>
 </div>
 <dl class="py class">
 <dt class="sig sig-object py" id="mergeset.solve.SearchState">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.solve.</span></span><span class="sig-name descname"><span class="pre">SearchState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conflicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maximal_good_sets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elapsed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exhausted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stopped_because</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/solve.html#SearchState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.solve.SearchState" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.solve.</span></span><span class="sig-name descname"><span class="pre">SearchState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conflicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">list()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maximal_good_sets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">list()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elapsed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exhausted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stopped_because</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/solve.html#SearchState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.solve.SearchState" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Everything the search accumulated. Derived entirely from the log.</p>
 <dl class="field-list simple">
@@ -212,7 +213,7 @@ set — record it and ask for the next-cheapest hitting set.</p>
 <dd><p>Add <code class="docutils literal notranslate"><span class="pre">conflict</span></code>, keeping the list free of non-minimal members.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -231,15 +232,15 @@ answer: “we could not run the experiment” is not “the experiment failed”
 <dt class="sig sig-object py" id="mergeset.solve.combine_components">
 <span class="sig-prename descclassname"><span class="pre">mergeset.solve.</span></span><span class="sig-name descname"><span class="pre">combine_components</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">per_component</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/solve.html#combine_components"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.solve.combine_components" title="Link to this definition">#</a></dt>
 <dd><p>Cartesian-combine per-component maximal sets into global ones.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">set_key</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">combine_components</span><span class="p">([[</span><span class="nb">frozenset</span><span class="p">(</span><span class="s1">'a'</span><span class="p">)],</span> <span class="p">[</span><span class="nb">frozenset</span><span class="p">(</span><span class="s1">'c'</span><span class="p">)]])]</span>
+</span><span data-line="2"><span class="go">[('a', 'c')]</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#frozenset" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">frozenset</span></code></a>]</span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">set_key</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">combine_components</span><span class="p">([[</span><span class="nb">frozenset</span><span class="p">(</span><span class="s1">'a'</span><span class="p">)],</span> <span class="p">[</span><span class="nb">frozenset</span><span class="p">(</span><span class="s1">'c'</span><span class="p">)]])]</span>
-</span><span data-line="2"><span class="go">[('a', 'c')]</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -270,7 +271,7 @@ stops the search; partial results are always returned.</p></li>
 Lets the search shrink within the implicated changes instead of
 halving the whole set. A wrong hint costs one wasted check and then
 falls back; see <a class="reference internal" href="mergeset.attribution.html#module-mergeset.attribution" title="mergeset.attribution"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mergeset.attribution</span></code></a>.</p></li>
-<li><p><strong>on_event</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]]</span>) – <code class="docutils literal notranslate"><span class="pre">(event_name,</span> <span class="pre">payload)</span></code> progress callback.</p></li>
+<li><p><strong>on_event</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>], <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span>]]</span>) – <code class="docutils literal notranslate"><span class="pre">(event_name,</span> <span class="pre">payload)</span></code> progress callback.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -303,16 +304,16 @@ working assumption worth stating out loud) rarely conflict semantically.
 Connected components of the file-overlap graph are therefore independent
 subproblems: solve each separately and combine the answers freely, which
 turns one <code class="docutils literal notranslate"><span class="pre">2**n</span></code> search into several much smaller ones.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#frozenset" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">frozenset</span></code></a>]</span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">files</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'a'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'x.py'</span><span class="p">],</span> <span class="s1">'b'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'x.py'</span><span class="p">],</span> <span class="s1">'c'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'y.py'</span><span class="p">]}</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">set_key</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">independent_components</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">files</span><span class="o">.</span><span class="n">get</span><span class="p">)]</span>
 </span><span data-line="3"><span class="go">[('a', 'b'), ('c',)]</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#frozenset" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">frozenset</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -322,16 +323,16 @@ turns one <code class="docutils literal notranslate"><span class="pre">2**n</spa
 <p>A hitting set touches every conflict; its complement is therefore a set with
 no known conflict inside it. Enumerating hitting sets cheapest-first means
 the solver proposes dropping the <em>least valuable</em> changes first.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterator" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#frozenset" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">frozenset</span></code></a>]</span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">hs</span> <span class="o">=</span> <span class="n">minimal_hitting_sets</span><span class="p">([</span><span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">}),</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s1">'b'</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">})])</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">sorted</span><span class="p">(</span><span class="n">h</span><span class="p">)</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">hs</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
 </span><span data-line="3"><span class="go">[['b'], ['a', 'c']]</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterator" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#frozenset" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">frozenset</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -422,7 +423,7 @@ is not actually slower.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=39aadc1c"></script>
+      <script src="../_static/documentation_options.js?v=0e525676"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

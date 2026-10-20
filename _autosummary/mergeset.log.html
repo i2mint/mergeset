@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -412,11 +413,6 @@ iteration, <code class="docutils literal notranslate"><span class="pre">len</spa
 <a class="reference internal" href="#mergeset.log.EvaluationLog.record" title="mergeset.log.EvaluationLog.record"><code class="xref py py-meth docutils literal notranslate"><span class="pre">record()</span></code></a> stamps new rows with them. Nothing is removed: the other
 rows stay in the store and in <a class="reference internal" href="#mergeset.log.EvaluationLog.rows" title="mergeset.log.EvaluationLog.rows"><code class="xref py py-attr docutils literal notranslate"><span class="pre">rows</span></code></a>, and are reported by
 <a class="reference internal" href="#mergeset.log.EvaluationLog.stale" title="mergeset.log.EvaluationLog.stale"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stale</span></code></a> and <a class="reference internal" href="#mergeset.log.EvaluationLog.unpinned" title="mergeset.log.EvaluationLog.unpinned"><code class="xref py py-attr docutils literal notranslate"><span class="pre">unpinned</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#mergeset.log.EvaluationLog" title="mergeset.log.EvaluationLog"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvaluationLog</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Evaluation</span><span class="p">,</span> <span class="n">Verdict</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="n">EvaluationLog</span><span class="p">(</span><span class="n">MemoryLines</span><span class="p">())</span><span class="o">.</span><span class="n">pin</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="s1">'B'</span><span class="p">,</span> <span class="n">heads</span><span class="o">=</span><span class="p">{</span><span class="s1">'a'</span><span class="p">:</span> <span class="s1">'A1'</span><span class="p">})</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">Evaluation</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="s1">'a'</span><span class="p">),</span> <span class="n">Verdict</span><span class="o">.</span><span class="n">PASS</span><span class="p">))</span>
@@ -427,6 +423,11 @@ rows stay in the store and in <a class="reference internal" href="#mergeset.log.
 </span><span data-line="8"><span class="go">(True, 1, 1)</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#mergeset.log.EvaluationLog" title="mergeset.log.EvaluationLog"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvaluationLog</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -435,11 +436,6 @@ rows stay in the store and in <a class="reference internal" href="#mergeset.log.
 <dd><p>A view of this log scoped to <code class="docutils literal notranslate"><span class="pre">base</span></code>, these heads and <code class="docutils literal notranslate"><span class="pre">validator</span></code>.</p>
 <p>Same store, same rows; this log itself is left as it was, so a caller
 that hands one log to two analyses keeps its own view of it.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#mergeset.log.EvaluationLog" title="mergeset.log.EvaluationLog"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvaluationLog</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Evaluation</span><span class="p">,</span> <span class="n">Verdict</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="n">EvaluationLog</span><span class="p">(</span><span class="n">MemoryLines</span><span class="p">())</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">view</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">pinned</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="s1">'B'</span><span class="p">,</span> <span class="n">heads</span><span class="o">=</span><span class="p">{</span><span class="s1">'a'</span><span class="p">:</span> <span class="s1">'A1'</span><span class="p">})</span>
@@ -450,6 +446,11 @@ that hands one log to two analyses keeps its own view of it.</p>
 </span><span data-line="8"><span class="go">0</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#mergeset.log.EvaluationLog" title="mergeset.log.EvaluationLog"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvaluationLog</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -521,7 +522,7 @@ in-memory list, a <code class="docutils literal notranslate"><span class="pre">d
 <dd><p>Append one record, flushing immediately (crash-safe enough).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -548,13 +549,13 @@ in-memory list, a <code class="docutils literal notranslate"><span class="pre">d
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mergeset.log.Known.exact">
-<span class="sig-name descname"><span class="pre">exact</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="mergeset.base.html#mergeset.base.Evaluation" title="mergeset.base.Evaluation"><span class="pre">Evaluation</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.log.Known.exact" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">exact</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="mergeset.base.html#mergeset.base.Evaluation" title="mergeset.base.Evaluation"><span class="pre">Evaluation</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.log.Known.exact" title="Link to this definition">#</a></dt>
 <dd><p>The recorded evaluation, when the set itself was evaluated.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mergeset.log.Known.witness">
-<span class="sig-name descname"><span class="pre">witness</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#frozenset" title="(in Python v3.15)"><span class="pre">frozenset</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.log.Known.witness" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">witness</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#frozenset" title="(in Python v3.15)"><span class="pre">frozenset</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.log.Known.witness" title="Link to this definition">#</a></dt>
 <dd><p>The witness set that implied the verdict, when it was inferred.</p>
 </dd></dl>
 
@@ -571,7 +572,7 @@ in-memory list, a <code class="docutils literal notranslate"><span class="pre">d
 <dd><p>Append object to the end of the list.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -653,7 +654,7 @@ tell is not refuted – it is incomplete (see <a class="reference internal" href
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mergeset.log.Pins.resolver">
-<span class="sig-name descname"><span class="pre">resolver</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.log.Pins.resolver" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">resolver</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.log.Pins.resolver" title="Link to this definition">#</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">'none'</span></code> (conflicts stand), or the
 resolver’s fingerprint (i2mint/mergeset#34). <code class="docutils literal notranslate"><span class="pre">None</span></code> compares none.</p>
 <dl class="field-list simple">
@@ -679,7 +680,7 @@ validators were recorded, and <code class="docutils literal notranslate"><span c
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mergeset.log.Pins.validator">
-<span class="sig-name descname"><span class="pre">validator</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.log.Pins.validator" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">validator</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.log.Pins.validator" title="Link to this definition">#</a></dt>
 <dd><p>Fingerprint of the validator the question is asked of (<code class="docutils literal notranslate"><span class="pre">'unknown'</span></code>
 when it cannot say what it runs). <code class="docutils literal notranslate"><span class="pre">None</span></code> compares no validator at all.</p>
 </dd></dl>
@@ -716,7 +717,7 @@ same seam as everything else.</p>
 <dd><p>Append one record by rewriting the value (no append primitive here).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -776,7 +777,7 @@ same seam as everything else.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=39aadc1c"></script>
+      <script src="../_static/documentation_options.js?v=0e525676"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

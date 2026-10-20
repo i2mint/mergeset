@@ -75,9 +75,6 @@ The actionable version of a duration: “33 s of its 51 s installing
 dependencies” says what to fix, “51 s” does not. The remainder of the
 total – merging, worktree setup – is shown as `other`.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> from mergeset.base import StageRun, ValidationOutcome, Verdict
 >>> v = ValidationOutcome(True, duration=48.5, stages=[
@@ -93,6 +90,9 @@ total – merging, worktree setup – is shown as `other`.
 'setup skipped · test 6.0'
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### mergeset.report.write_reports(analysis, , title='mergeset report', formats=('markdown', 'html'), key=None, reports=None, binary_reports=None, rootdir=None)
 
 Render a run’s reports into the artifact store; return `{format: key}`.
@@ -104,9 +104,6 @@ go, so the CLI, the library and any future surface cannot drift apart on it.
 repository never overwrites the answer you are comparing against. Nothing is
 written into the analysed repository, ever: see [`mergeset.storage`](mergeset.storage.html.md#module-mergeset.storage).
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> from mergeset.analysis import Analysis
 >>> a = Analysis(repo='/x/y/proj', base='main', base_sha='0'*40, changes=[])
@@ -117,3 +114,6 @@ written into the analysed repository, ever: see [`mergeset.storage`](mergeset.st
 >>> sorted(text)
 ['run-1/REPORT.md', 'run-1/report.html']
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

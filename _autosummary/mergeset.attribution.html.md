@@ -48,20 +48,17 @@ A `diff_of` for [`suspects()`](#mergeset.attribution.suspects), reading (and cac
 
 Camel/Pascal-case identifiers named in the failure output.
 
-* **Return type:**
-  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> identifiers_in('+ "pointColorSeeds": { "$ref": "AxisDirectionType" }')
 ['pointColorSeeds', 'AxisDirectionType']
 ```
 
+* **Return type:**
+  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 ### mergeset.attribution.paths_in(text)
 
 Every source-looking path mentioned, vendor directories excluded.
-
-* **Return type:**
-  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ```pycon
 >>> paths_in('FAIL tests/unit/a.test.ts [ tests/unit/a.test.ts ]')
@@ -69,6 +66,9 @@ Every source-looking path mentioned, vendor directories excluded.
 >>> paths_in(' at Module.x node_modules/zod/util.js:15 then src/schemas.ts:89:4')
 ['src/schemas.ts']
 ```
+
+* **Return type:**
+  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### mergeset.attribution.suspects(outcome, , files_by_change, within, diff_of=None)
 

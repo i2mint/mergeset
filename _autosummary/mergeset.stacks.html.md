@@ -48,37 +48,37 @@ alias of [`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mappin
 
 Every change `change` is stacked on, transitively.
 
-* **Return type:**
-  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
-
 ```pycon
 >>> set_key(ancestors('c', {'c': 'b', 'b': 'a'}))
 ('a', 'b')
 ```
 
+* **Return type:**
+  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
+
 ### mergeset.stacks.close_down(subset, parents)
 
 Add every ancestor, so the set becomes a valid thing to ask for.
-
-* **Return type:**
-  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
 
 ```pycon
 >>> set_key(close_down({'c'}, {'c': 'b', 'b': 'a'}))
 ('a', 'b', 'c')
 ```
 
+* **Return type:**
+  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
+
 ### mergeset.stacks.close_up(subset, parents)
 
 Add every descendant — what dropping these changes actually costs.
-
-* **Return type:**
-  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
 
 ```pycon
 >>> set_key(close_up({'a'}, {'c': 'b', 'b': 'a'}))
 ('a', 'b', 'c')
 ```
+
+* **Return type:**
+  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
 
 ### mergeset.stacks.cone_weights(weights, parents)
 
@@ -87,13 +87,13 @@ Re-weight each change by the cost of dropping its whole descendant cone.
 Dropping a stack’s root drops the stack. The hitting set has to know that,
 or it will pick the “cheapest” change and take eight thousand lines with it.
 
-* **Return type:**
-  [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`float`](https://docs.python.org/3/builtins/functions.html#float)]
-
 ```pycon
 >>> cone_weights({'a': 1.0, 'b': 2.0}, {'b': 'a'})
 {'a': 3.0, 'b': 2.0}
 ```
+
+* **Return type:**
+  [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`float`](https://docs.python.org/3/builtins/functions.html#float)]
 
 ### mergeset.stacks.count_closed_subsets(parents, changes)
 
@@ -103,25 +103,25 @@ Worth reporting: on a 15-change forest of four stacks this is 576 rather
 than 32768, which is the difference between “enumerate carefully” and
 “hopeless”.
 
-* **Return type:**
-  [`int`](https://docs.python.org/3/builtins/functions.html#int)
-
 ```pycon
 >>> count_closed_subsets({'b': 'a'}, ['a', 'b'])
 3
 ```
 
+* **Return type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
+
 ### mergeset.stacks.descendants(change, parents)
 
 Every change stacked on `change`, transitively — its *cone*.
-
-* **Return type:**
-  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
 
 ```pycon
 >>> set_key(descendants('a', {'c': 'b', 'b': 'a', 'd': 'a'}))
 ('b', 'c', 'd')
 ```
+
+* **Return type:**
+  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
 
 ### mergeset.stacks.largest_closed_subset(subset, parents)
 
@@ -131,9 +131,6 @@ This is the *other* way to make a set valid, and it is the one the solver
 needs: when the search decides to drop a parent, the descendants have to go
 too, and no amount of wanting them back changes that.
 
-* **Return type:**
-  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
-
 ```pycon
 >>> set_key(largest_closed_subset({'b', 'c'}, {'c': 'b', 'b': 'a'}))
 ()
@@ -141,17 +138,20 @@ too, and no amount of wanting them back changes that.
 ('a', 'b', 'd')
 ```
 
+* **Return type:**
+  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
+
 ### mergeset.stacks.stack_roots(parents, changes)
 
 Group changes into stacks (connected components of the parent relation).
-
-* **Return type:**
-  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]
 
 ```pycon
 >>> [set_key(g) for g in stack_roots({'b': 'a', 'd': 'c'}, 'abcde')]
 [('a', 'b'), ('c', 'd'), ('e',)]
 ```
+
+* **Return type:**
+  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]
 
 ### mergeset.stacks.tips(subset, parents)
 
@@ -159,12 +159,12 @@ The members of `subset` that nothing else in `subset` is stacked on.
 
 Merging these brings the rest along for free.
 
-* **Return type:**
-  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
-
 ```pycon
 >>> set_key(tips({'a', 'b', 'c'}, {'c': 'b', 'b': 'a'}))
 ('c',)
 >>> set_key(tips({'a', 'b', 'd'}, {'b': 'a', 'd': 'a'}))
 ('b', 'd')
 ```
+
+* **Return type:**
+  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)

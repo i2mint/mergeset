@@ -33,7 +33,7 @@ Evaluation`, which is why the whole package is testable without a repository.
 | [`SearchState`](#mergeset.solve.SearchState)([conflicts, maximal_good_sets, ...])   | Everything the search accumulated.   |
 |-----------------------------------------------------------------------------------------------------|--------------------------------------|
 
-### *class* mergeset.solve.SearchState(conflicts=<factory>, maximal_good_sets=<factory>, evaluations=0, elapsed=0.0, exhausted=False, stopped_because='', error='')
+### *class* mergeset.solve.SearchState(conflicts=list(), maximal_good_sets=list(), evaluations=0, elapsed=0.0, exhausted=False, stopped_because='', error='')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -56,13 +56,13 @@ answer: “we could not run the experiment” is not “the experiment failed”
 
 Cartesian-combine per-component maximal sets into global ones.
 
-* **Return type:**
-  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]
-
 ```pycon
 >>> [set_key(s) for s in combine_components([[frozenset('a')], [frozenset('c')]])]
 [('a', 'c')]
 ```
+
+* **Return type:**
+  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]
 
 ### mergeset.solve.find_maximal_good_sets(changes, evaluate, \*, known_conflicts=(), depends_on=None, weight=None, max_evaluations=None, max_seconds=None, max_sets=None, shrink=<function quickxplain>, suspects=None, on_event=None)
 
@@ -119,14 +119,14 @@ Connected components of the file-overlap graph are therefore independent
 subproblems: solve each separately and combine the answers freely, which
 turns one `2**n` search into several much smaller ones.
 
-* **Return type:**
-  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]
-
 ```pycon
 >>> files = {'a': ['x.py'], 'b': ['x.py'], 'c': ['y.py']}
 >>> [set_key(g) for g in independent_components(files, files.get)]
 [('a', 'b'), ('c',)]
 ```
+
+* **Return type:**
+  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]
 
 ### mergeset.solve.minimal_hitting_sets(conflicts, , weight=None, limit=None)
 
@@ -136,14 +136,14 @@ A hitting set touches every conflict; its complement is therefore a set with
 no known conflict inside it. Enumerating hitting sets cheapest-first means
 the solver proposes dropping the *least valuable* changes first.
 
-* **Return type:**
-  [`Iterator`](https://docs.python.org/3/library/typing.html#typing.Iterator)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]
-
 ```pycon
 >>> hs = minimal_hitting_sets([frozenset({'a', 'b'}), frozenset({'b', 'c'})])
 >>> [sorted(h) for h in itertools.islice(hs, 3)]
 [['b'], ['a', 'c']]
 ```
+
+* **Return type:**
+  [`Iterator`](https://docs.python.org/3/library/typing.html#typing.Iterator)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]
 
 ### mergeset.solve.quickxplain(evaluate, candidates, , background=frozenset({}))
 

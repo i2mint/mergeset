@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -209,32 +210,32 @@ then it falls back to unguided shrinking; it never decides a verdict.</p>
 <dt class="sig sig-object py" id="mergeset.attribution.identifiers_in">
 <span class="sig-prename descclassname"><span class="pre">mergeset.attribution.</span></span><span class="sig-name descname"><span class="pre">identifiers_in</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/attribution.html#identifiers_in"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.attribution.identifiers_in" title="Link to this definition">#</a></dt>
 <dd><p>Camel/Pascal-case identifiers named in the failure output.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">identifiers_in</span><span class="p">(</span><span class="s1">'+ "pointColorSeeds": { "$ref": "AxisDirectionType" }'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">['pointColorSeeds', 'AxisDirectionType']</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">identifiers_in</span><span class="p">(</span><span class="s1">'+ "pointColorSeeds": { "$ref": "AxisDirectionType" }'</span><span class="p">)</span>
-</span><span data-line="2"><span class="go">['pointColorSeeds', 'AxisDirectionType']</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mergeset.attribution.paths_in">
 <span class="sig-prename descclassname"><span class="pre">mergeset.attribution.</span></span><span class="sig-name descname"><span class="pre">paths_in</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/attribution.html#paths_in"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.attribution.paths_in" title="Link to this definition">#</a></dt>
 <dd><p>Every source-looking path mentioned, vendor directories excluded.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">paths_in</span><span class="p">(</span><span class="s1">'FAIL tests/unit/a.test.ts [ tests/unit/a.test.ts ]'</span><span class="p">)</span>
 </span><span data-line="2"><span class="go">['tests/unit/a.test.ts']</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">paths_in</span><span class="p">(</span><span class="s1">' at Module.x node_modules/zod/util.js:15 then src/schemas.ts:89:4'</span><span class="p">)</span>
 </span><span data-line="4"><span class="go">['src/schemas.ts']</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -311,7 +312,7 @@ has told us nothing and blind shrinking is the honest fallback).</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=39aadc1c"></script>
+      <script src="../_static/documentation_options.js?v=0e525676"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

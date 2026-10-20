@@ -108,7 +108,7 @@ Upper estimate, in seconds. Used to *admit* work against a budget.
 * **Return type:**
   [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
-### *class* mergeset.cost.MeasuredCost(declared=<factory>, per_change=<factory>, unmeasured_seconds=60.0)
+### *class* mergeset.cost.MeasuredCost(declared=dict(), per_change=dict(), unmeasured_seconds=60.0)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -181,14 +181,14 @@ and conclude the tier is unlimited.
 
 Central estimate of what evaluating `subset` at `tier` will cost.
 
-* **Return type:**
-  [`float`](https://docs.python.org/3/builtins/functions.html#float)
-
 ```pycon
 >>> cost = MeasuredCost(declared={'unit': 10.0}, per_change={'x': -50.0})
 >>> cost.estimate('unit', frozenset({'x'}))
 0.0
 ```
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 #### forget(tier)
 
@@ -225,9 +225,6 @@ this carries is the spread *within* a regime, which is the variance no
 candidate set predicts. The expensive regime is reserved explicitly by
 the scheduler instead of being smuggled in as a hedge.
 
-* **Return type:**
-  [`float`](https://docs.python.org/3/builtins/functions.html#float)
-
 ```pycon
 >>> cost = MeasuredCost()
 >>> cost.observe('unit', frozenset({'a'}), 45.0)
@@ -237,6 +234,9 @@ the scheduler instead of being smuggled in as a hedge.
 >>> round(cost.pessimistic('unit', frozenset({'a'})), 1)
 80.0
 ```
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 #### runs(tier)
 
@@ -294,9 +294,6 @@ back.
 not say — one log holds one tier’s rows by construction
 (see [`mergeset.tiers`](mergeset.tiers.html.md#module-mergeset.tiers)).
 
-* **Return type:**
-  [`MeasuredCost`](#mergeset.cost.MeasuredCost)
-
 ```pycon
 >>> from mergeset.base import Evaluation, Verdict
 >>> rows = [Evaluation(frozenset({'a'}), Verdict.PASS, duration=40.0),
@@ -306,6 +303,9 @@ not say — one log holds one tier’s rows by construction
 50.0
 ```
 
+* **Return type:**
+  [`MeasuredCost`](#mergeset.cost.MeasuredCost)
+
 ### mergeset.cost.set_cost(cost_model, tiers, subset, , pessimistic=False)
 
 What it costs to take `subset` all the way down `tiers`.
@@ -314,11 +314,11 @@ The tiers run in order and every one of them runs, so the price of a full
 verdict is their sum — which is exactly what makes a cheap first tier worth
 having: most sets never reach the second term.
 
-* **Return type:**
-  [`float`](https://docs.python.org/3/builtins/functions.html#float)
-
 ```pycon
 >>> cost = MeasuredCost(declared={'unit': 45.0, 'e2e': 300.0})
 >>> set_cost(cost, ['unit', 'e2e'], frozenset({'a'}))
 345.0
 ```
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)

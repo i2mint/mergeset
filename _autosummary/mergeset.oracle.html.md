@@ -107,13 +107,13 @@ recorded with the order that was used so the result stays reproducible.
 Stacked changes are merged parent-first; otherwise smallest-first, which
 surfaces the cheap conflicts early.
 
-* **Return type:**
-  [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> merge_order(frozenset({'b', 'a'}), {})
 ['a', 'b']
 ```
+
+* **Return type:**
+  [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### mergeset.oracle.resolver_fingerprint_of(resolver)
 
@@ -127,9 +127,6 @@ how it resolves records [`UNKNOWN_FINGERPRINT`](mergeset.base.html.md#mergeset.b
 matches only other such rows. A user resolver may set
 `resolver.resolver_fingerprint = 'my-resolver-v2'`.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> resolver_fingerprint_of(None)
 'none'
@@ -138,3 +135,6 @@ matches only other such rows. A user resolver may set
 >>> resolver_fingerprint_of(claude_code_resolver()).startswith('claude-code:')
 True
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)

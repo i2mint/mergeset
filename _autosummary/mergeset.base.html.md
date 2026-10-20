@@ -50,7 +50,7 @@ Bases: [`MergesetError`](#mergeset.base.MergesetError)
 
 A required external capability is missing; the message says how to fix it.
 
-### *class* mergeset.base.Change(id, head, base, source='branch', weight=None, meta=<factory>)
+### *class* mergeset.base.Change(id, head, base, source='branch', weight=None, meta=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -93,7 +93,7 @@ A copy of this change carrying `weight`.
 * **Return type:**
   [`Change`](#mergeset.base.Change)
 
-### *class* mergeset.base.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=<factory>, validator=None, resolver=None, cached=False)
+### *class* mergeset.base.Evaluation(subset, verdict, stage=None, merge=None, validation=None, duration=0.0, at=None, note='', base_sha=None, heads=dict(), validator=None, resolver=None, cached=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -111,7 +111,7 @@ existed carry neither and read back as *unpinned*; see
 on that tree, the same way (i2mint/mergeset#32): the same commits under a
 different test command are a different question.
 
-#### base_sha *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### base_sha *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 Full sha of the base the set was merged onto. `None` on unpinned rows.
 
@@ -158,7 +158,7 @@ True iff the set evaluated as good.
 
 True iff the row records which commits it was evaluated against.
 
-#### resolver *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### resolver *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 Fingerprint of how conflicts were resolved when the set was merged
 ([`NO_RESOLVER`](#mergeset.base.NO_RESOLVER), or [`mergeset.oracle.resolver_fingerprint_of()`](mergeset.oracle.html.md#mergeset.oracle.resolver_fingerprint_of)).
@@ -176,7 +176,7 @@ JSON-able view; `subset` becomes a sorted list.
 
 True iff the row is a textual conflict that no resolver resolved.
 
-#### validator *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### validator *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 Fingerprint of the validator that judged the tree (see
 [`mergeset.validation.fingerprint_of()`](mergeset.validation.html.md#mergeset.validation.fingerprint_of)). `None` on rows written
@@ -234,7 +234,7 @@ aborts, because a set that was never tested has told us nothing.
 `'conflict'` (a real textual conflict) or `'error'` (the merge could
 not be attempted: bad path, missing ref, unusable worktree).
 
-#### resolved_commit *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### resolved_commit *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 base plus every head,
 conflicts resolved. A deeper tier checks this commit out instead of
@@ -369,22 +369,22 @@ Outcome of evaluating a change set.
 
 Normalize any iterable of change ids into a `frozenset`.
 
-* **Return type:**
-  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
-
 ```pycon
 >>> change_set(['b', 'a', 'b']) == frozenset({'a', 'b'})
 True
 ```
 
+* **Return type:**
+  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)
+
 ### mergeset.base.set_key(ids)
 
 A stable, hashable, JSON-friendly key for a change set.
-
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)
 
 ```pycon
 >>> set_key({'b', 'a'})
 ('a', 'b')
 ```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)

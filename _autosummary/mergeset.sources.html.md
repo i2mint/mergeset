@@ -37,13 +37,13 @@ Fields worth asking `gh` for; anything else is noise in the report.
 
 Changes from local or remote branches.
 
-* **Return type:**
-  [`Iterator`](https://docs.python.org/3/library/typing.html#typing.Iterator)[[`Change`](mergeset.base.html.md#mergeset.base.Change)]
-
 ```pycon
 >>> list(branch_changes('.', []))
 []
 ```
+
+* **Return type:**
+  [`Iterator`](https://docs.python.org/3/library/typing.html#typing.Iterator)[[`Change`](mergeset.base.html.md#mergeset.base.Change)]
 
 ### mergeset.sources.check_gh_capability()
 
@@ -67,9 +67,6 @@ A PR whose base ref is another candidate’s head ref is *stacked*: only
 prefixes of the chain make sense as a merge set, because the child contains
 the parent. Recorded so the report can say so and the solver can be told.
 
-* **Return type:**
-  [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> a = Change(id='pr1', head='origin/a', base='origin/main', source='pr',
 ...            meta={'head_ref': 'a', 'base_ref': 'main'})
@@ -78,6 +75,9 @@ the parent. Recorded so the report can say so and the solver can be told.
 >>> detect_stacks([a, b])
 {'pr2': 'pr1'}
 ```
+
+* **Return type:**
+  [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### mergeset.sources.fetch_pull_requests(repo_spec, , author=None, state='open', limit=100, extra_args=())
 

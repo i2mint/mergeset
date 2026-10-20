@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -274,7 +275,7 @@ throwaway worktree so a test suite can run on it.</p></li>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mergeset.gitops.SequenceMerge.commit">
-<span class="sig-name descname"><span class="pre">commit</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.gitops.SequenceMerge.commit" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">commit</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.gitops.SequenceMerge.commit" title="Link to this definition">#</a></dt>
 <dd><p>Commit holding base + every merged head, when the whole sequence was clean.</p>
 </dd></dl>
 
@@ -305,7 +306,7 @@ change is measured by what <em>it</em> did, not by what happened on base meanwhi
 <dd><p>Raise a fixable error if git is missing or too old for <code class="docutils literal notranslate"><span class="pre">merge-tree</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -330,15 +331,15 @@ unless <code class="docutils literal notranslate"><span class="pre">force</span>
 <dt class="sig sig-object py" id="mergeset.gitops.git">
 <span class="sig-prename descclassname"><span class="pre">mergeset.gitops.</span></span><span class="sig-name descname"><span class="pre">git</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/gitops.html#git"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.gitops.git" title="Link to this definition">#</a></dt>
 <dd><p>Run <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">-C</span> <span class="pre">repo</span> <span class="pre">*args</span></code> and capture its output.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">git</span><span class="p">(</span><span class="s1">'.'</span><span class="p">,</span> <span class="s1">'rev-parse'</span><span class="p">,</span> <span class="s1">'--git-dir'</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">True</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#mergeset.gitops.GitResult" title="mergeset.gitops.GitResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">GitResult</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">git</span><span class="p">(</span><span class="s1">'.'</span><span class="p">,</span> <span class="s1">'rev-parse'</span><span class="p">,</span> <span class="s1">'--git-dir'</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-</span><span data-line="2"><span class="go">True</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -544,7 +545,7 @@ whether B then conflicts with <em>that</em>.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=39aadc1c"></script>
+      <script src="../_static/documentation_options.js?v=0e525676"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

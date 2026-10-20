@@ -25,20 +25,20 @@ The order of operations is the whole point, because it is the order of *cost*:
 | [`Analysis`](#mergeset.analysis.Analysis)(repo, base, base_sha, changes[, ...])   | Everything a run learned.   |
 |---------------------------------------------------------------------------------------------------|-----------------------------|
 
-### *class* mergeset.analysis.Analysis(repo, base, base_sha, changes, head_shas=<factory>, maximal_sets=<factory>, conflicts=<factory>, textual_conflicts=<factory>, components=<factory>, files_by_change=<factory>, stacks=<factory>, merged_through=<factory>, weights=<factory>, own_weights=<factory>, singleton_conflicts=<factory>, components_combined=False, aborted_tier=None, aborted_phase=None, unverified_sets=<factory>, log=None, tier_logs=<factory>, searches=<factory>, notes=<factory>)
+### *class* mergeset.analysis.Analysis(repo, base, base_sha, changes, head_shas=dict(), maximal_sets=list(), conflicts=list(), textual_conflicts=list(), components=list(), files_by_change=dict(), stacks=dict(), merged_through=dict(), weights=dict(), own_weights=dict(), singleton_conflicts=dict(), components_combined=False, aborted_tier=None, aborted_phase=None, unverified_sets=list(), log=None, tier_logs=dict(), searches=list(), notes=list())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Everything a run learned. Every field is derivable from `log` + git.
 
-#### *property* aborted *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)*
+#### *property* aborted *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
 
 Why a search stopped on an `ERROR`, or `None`.
 
 An abort is not a budget stop (ADR 0017, 0036): the run could not do
 what it was asked, and what it reports is only what it had established.
 
-#### aborted_phase *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### aborted_phase *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 the tiers’
 results are complete, only that phase’s answer is missing.
@@ -46,7 +46,7 @@ results are complete, only that phase’s answer is missing.
 * **Type:**
   A phase after the tiers that aborted (`"--must-include"`)
 
-#### aborted_tier *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### aborted_tier *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 The confirm tier whose search aborted, when one did after the screen
 finished (`None`: the screen itself aborted, or nothing did).

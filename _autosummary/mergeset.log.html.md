@@ -187,9 +187,6 @@ iteration, `len`) sees only rows evaluated against these commits, and
 rows stay in the store and in [`rows`](#mergeset.log.EvaluationLog.rows), and are reported by
 [`stale`](#mergeset.log.EvaluationLog.stale) and [`unpinned`](#mergeset.log.EvaluationLog.unpinned).
 
-* **Return type:**
-  [`EvaluationLog`](#mergeset.log.EvaluationLog)
-
 ```pycon
 >>> from mergeset.base import Evaluation, Verdict
 >>> log = EvaluationLog(MemoryLines()).pin(base='B', heads={'a': 'A1'})
@@ -201,15 +198,15 @@ rows stay in the store and in [`rows`](#mergeset.log.EvaluationLog.rows), and ar
 (True, 1, 1)
 ```
 
+* **Return type:**
+  [`EvaluationLog`](#mergeset.log.EvaluationLog)
+
 #### pinned(, base, heads, validator=None, resolver=None, trust_unpinned=None)
 
 A view of this log scoped to `base`, these heads and `validator`.
 
 Same store, same rows; this log itself is left as it was, so a caller
 that hands one log to two analyses keeps its own view of it.
-
-* **Return type:**
-  [`EvaluationLog`](#mergeset.log.EvaluationLog)
 
 ```pycon
 >>> from mergeset.base import Evaluation, Verdict
@@ -221,6 +218,9 @@ that hands one log to two analyses keeps its own view of it.
 >>> len(log.pinned(base='B', heads={'a': 'A2'}))
 0
 ```
+
+* **Return type:**
+  [`EvaluationLog`](#mergeset.log.EvaluationLog)
 
 #### record(evaluation)
 
@@ -295,11 +295,11 @@ The evaluation this knowledge stands for, as a cache hit returns it.
 * **Return type:**
   [`Evaluation`](mergeset.base.html.md#mergeset.base.Evaluation)
 
-#### exact *: [Evaluation](mergeset.base.html.md#mergeset.base.Evaluation) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### exact *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[Evaluation](mergeset.base.html.md#mergeset.base.Evaluation)]* *= None*
 
 The recorded evaluation, when the set itself was evaluated.
 
-#### witness *: [frozenset](https://docs.python.org/3/builtins/stdtypes.html#frozenset) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### witness *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[frozenset](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]* *= None*
 
 The witness set that implied the verdict, when it was inferred.
 
@@ -381,7 +381,7 @@ tell is not refuted – it is incomplete (see [`complete()`](#mergeset.log.Pins.
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
-#### resolver *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### resolver *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 `'none'` (conflicts stand), or the
 resolver’s fingerprint (i2mint/mergeset#34). `None` compares none.
@@ -400,7 +400,7 @@ validators were recorded, and `trust_unpinned` would adopt it.
 * **Return type:**
   [`Evaluation`](mergeset.base.html.md#mergeset.base.Evaluation)
 
-#### validator *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### validator *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 Fingerprint of the validator the question is asked of (`'unknown'`
 when it cannot say what it runs). `None` compares no validator at all.

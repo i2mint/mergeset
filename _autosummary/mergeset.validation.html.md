@@ -166,13 +166,13 @@ classified a TypeScript repository as pytest and ran pytest in it for a
 dozen evaluations before anyone noticed. Manifests decide; a `tests/`
 directory is not evidence of a language.
 
-* **Return type:**
-  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> detect_runner('/definitely/not/a/project') is None
 True
 ```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### mergeset.validation.file_fingerprint(\*paths)
 
@@ -194,9 +194,6 @@ means unknown: such a validator’s rows are recorded as
 `UNKNOWN_FINGERPRINT` (see [`recorded_fingerprint()`](#mergeset.validation.recorded_fingerprint)), and answer
 only other validators that cannot say what they run either.
 
-* **Return type:**
-  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> fingerprint_of(command_validation('make test')) == fingerprint_of(
 ...     command_validation('make test'))
@@ -209,6 +206,9 @@ True
 >>> fingerprint_of(lambda worktree: True) is None
 True
 ```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### mergeset.validation.flake_tolerant(validate, , retries=1)
 
@@ -251,9 +251,6 @@ edited that way, pass `cache=None`, or set
 `mergeset.validation.FILE_DIGESTS = None` to turn the cache off for every
 validator (ADR 0035).
 
-* **Return type:**
-  [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> import tempfile
 >>> with tempfile.NamedTemporaryFile('w', suffix='.py', delete=False) as f:
@@ -267,6 +264,9 @@ False
 >>> list(inputs_digest([f.name]).values())
 ['missing']
 ```
+
+* **Return type:**
+  [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### mergeset.validation.js_validation(, install='pnpm install --frozen-lockfile', build=None, test='pnpm run test', lint=None, lockfile='pnpm-lock.yaml', timeout=None, inputs=())
 
@@ -311,13 +311,13 @@ A validator that runs the project’s pytest suite, fail-fast by default.
 
 The fingerprint a log row records for `validate`: never `None`.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> recorded_fingerprint(lambda worktree: True)
 'unknown'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### mergeset.validation.staged_validation(stages, , env=None, inputs=())
 

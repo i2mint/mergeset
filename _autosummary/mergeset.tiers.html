@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -280,7 +281,7 @@ passed.**</p>
 </div>
 <dl class="py class">
 <dt class="sig sig-object py" id="mergeset.tiers.AnytimeAnswer">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.tiers.</span></span><span class="sig-name descname"><span class="pre">AnytimeAnswer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">best</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_weight</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_tier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bound</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bound_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gap</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pending</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/tiers.html#AnytimeAnswer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.tiers.AnytimeAnswer" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.tiers.</span></span><span class="sig-name descname"><span class="pre">AnytimeAnswer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">best</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_weight</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_tier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bound</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bound_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gap</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pending</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">dict()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/tiers.html#AnytimeAnswer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.tiers.AnytimeAnswer" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>The best answer so far, and how much better an answer could still be.</p>
 <p><code class="docutils literal notranslate"><span class="pre">bound</span></code> is a genuine upper bound, not a hope. Every conflict — found at
@@ -297,12 +298,22 @@ exists. That is a stopping rule rather than a budget running out.</p>
 <dt class="sig sig-object py" id="mergeset.tiers.AnytimeAnswer.best">
 <span class="sig-name descname"><span class="pre">best</span></span><a class="headerlink" href="#mergeset.tiers.AnytimeAnswer.best" title="Link to this definition">#</a></dt>
 <dd><p>Heaviest set validated so far, at <code class="docutils literal notranslate"><span class="pre">best_tier</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#frozenset" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">frozenset</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mergeset.tiers.AnytimeAnswer.best_weight">
 <span class="sig-name descname"><span class="pre">best_weight</span></span><a class="headerlink" href="#mergeset.tiers.AnytimeAnswer.best_weight" title="Link to this definition">#</a></dt>
 <dd><p>Its weight (the sum of its changes’ weights).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
@@ -310,6 +321,11 @@ exists. That is a stopping rule rather than a budget running out.</p>
 <span class="sig-name descname"><span class="pre">best_tier</span></span><a class="headerlink" href="#mergeset.tiers.AnytimeAnswer.best_tier" title="Link to this definition">#</a></dt>
 <dd><p>Deepest tier that actually ran on <code class="docutils literal notranslate"><span class="pre">best</span></code>; <code class="docutils literal notranslate"><span class="pre">None</span></code> when
 nothing has been validated yet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
@@ -317,6 +333,11 @@ nothing has been validated yet.</p>
 <span class="sig-name descname"><span class="pre">full_depth</span></span><a class="headerlink" href="#mergeset.tiers.AnytimeAnswer.full_depth" title="Link to this definition">#</a></dt>
 <dd><p>True iff every tier ran on <code class="docutils literal notranslate"><span class="pre">best</span></code>. When False, <code class="docutils literal notranslate"><span class="pre">best</span></code> is
 a partial claim however good <code class="docutils literal notranslate"><span class="pre">gap</span></code> looks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
@@ -329,12 +350,22 @@ a partial claim however good <code class="docutils literal notranslate"><span cl
 <dt class="sig sig-object py" id="mergeset.tiers.AnytimeAnswer.gap">
 <span class="sig-name descname"><span class="pre">gap</span></span><a class="headerlink" href="#mergeset.tiers.AnytimeAnswer.gap" title="Link to this definition">#</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">bound</span> <span class="pre">-</span> <span class="pre">best_weight</span></code> — what might still be being missed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mergeset.tiers.AnytimeAnswer.optimal">
 <span class="sig-name descname"><span class="pre">optimal</span></span><a class="headerlink" href="#mergeset.tiers.AnytimeAnswer.optimal" title="Link to this definition">#</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">gap</span> <span class="pre">&lt;=</span> <span class="pre">0</span> <span class="pre">and</span> <span class="pre">full_depth</span></code>; nothing better exists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
@@ -343,23 +374,28 @@ a partial claim however good <code class="docutils literal notranslate"><span cl
 <dd><p><code class="docutils literal notranslate"><span class="pre">(set,</span> <span class="pre">estimated</span> <span class="pre">seconds</span> <span class="pre">to</span> <span class="pre">confirm)</span></code> for candidates not yet
 taken to full depth. The answer to “what would closing the gap
 cost”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#frozenset" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">frozenset</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mergeset.tiers.AnytimeAnswer.spent">
 <span class="sig-name descname"><span class="pre">spent</span></span><a class="headerlink" href="#mergeset.tiers.AnytimeAnswer.spent" title="Link to this definition">#</a></dt>
 <dd><p>Seconds spent, per tier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Mapping" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mergeset.tiers.AnytimeAnswer.summary">
 <span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/tiers.html#AnytimeAnswer.summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.tiers.AnytimeAnswer.summary" title="Link to this definition">#</a></dt>
 <dd><p>One line a progress display or a report can print.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">AnytimeAnswer</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">}),</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">'unit'</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span>
 </span><span data-line="2"><span class="gp">... </span>              <span class="nb">frozenset</span><span class="p">({</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">}),</span> <span class="mf">1.0</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 </span><span data-line="3"><span class="go">'best 1 change (weight 1.0, confirmed to tier `unit`); bound 2.0; gap 1.0'</span>
@@ -368,6 +404,11 @@ cost”.</p>
 </span><span data-line="6"><span class="go">'best 2 changes (weight 2.0, all tiers); provably maximal'</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -429,7 +470,7 @@ always available, which is the truth for a unit-test tier.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mergeset.tiers.TieredAnalysis">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.tiers.</span></span><span class="sig-name descname"><span class="pre">TieredAnalysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tiers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_reached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipped</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">answer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">must_include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">frozenset({})</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_including</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/tiers.html#TieredAnalysis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.tiers.TieredAnalysis" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mergeset.tiers.</span></span><span class="sig-name descname"><span class="pre">TieredAnalysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tiers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_reached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipped</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">dict()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">dict()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">dict()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">answer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">must_include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">frozenset({})</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_including</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/tiers.html#TieredAnalysis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.tiers.TieredAnalysis" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Result of a tiered run.</p>
 <p><code class="docutils literal notranslate"><span class="pre">analysis</span></code> is an ordinary <a class="reference internal" href="mergeset.analysis.html#mergeset.analysis.Analysis" title="mergeset.analysis.Analysis"><code class="xref py py-class docutils literal notranslate"><span class="pre">Analysis</span></code></a> whose
@@ -440,7 +481,7 @@ unchanged and says the right thing about tiers.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mergeset.tiers.TieredAnalysis.best_including">
-<span class="sig-name descname"><span class="pre">best_including</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#frozenset" title="(in Python v3.15)"><span class="pre">frozenset</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.tiers.TieredAnalysis.best_including" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">best_including</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#frozenset" title="(in Python v3.15)"><span class="pre">frozenset</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.tiers.TieredAnalysis.best_including" title="Link to this definition">#</a></dt>
 <dd><p>Heaviest validated set containing every change in <code class="docutils literal notranslate"><span class="pre">must_include</span></code>.
 <code class="docutils literal notranslate"><span class="pre">None</span></code> when they cannot all be kept together. A second, differently
 constrained answer – never a replacement for the first.</p>
@@ -464,7 +505,7 @@ because an estimate with no provenance reads as a fact.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mergeset.tiers.TieredAnalysis.depth_reached">
-<span class="sig-name descname"><span class="pre">depth_reached</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.tiers.TieredAnalysis.depth_reached" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">depth_reached</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#mergeset.tiers.TieredAnalysis.depth_reached" title="Link to this definition">#</a></dt>
 <dd><p>How deep validation actually got, as a tier name.</p>
 </dd></dl>
 
@@ -550,7 +591,7 @@ question alongside the main one — “the best plan that keeps this” —
 and the two can be far apart when the required change conflicts with
 members of the unconstrained best plan. Reported as
 <code class="docutils literal notranslate"><span class="pre">TieredAnalysis.best_including</span></code>; see <a class="reference internal" href="#mergeset.tiers.best_set_including" title="mergeset.tiers.best_set_including"><code class="xref py py-func docutils literal notranslate"><span class="pre">best_set_including()</span></code></a>.</p></li>
-<li><p><strong>on_event</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]]</span>) – <code class="docutils literal notranslate"><span class="pre">(event,</span> <span class="pre">payload)</span></code>. Adds <code class="docutils literal notranslate"><span class="pre">tier</span></code>, <code class="docutils literal notranslate"><span class="pre">tier_skipped</span></code> and
+<li><p><strong>on_event</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>], <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span>]]</span>) – <code class="docutils literal notranslate"><span class="pre">(event,</span> <span class="pre">payload)</span></code>. Adds <code class="docutils literal notranslate"><span class="pre">tier</span></code>, <code class="docutils literal notranslate"><span class="pre">tier_skipped</span></code> and
 <code class="docutils literal notranslate"><span class="pre">anytime</span></code> on top of the events <a class="reference internal" href="mergeset.html#mergeset.analyze" title="mergeset.analyze"><code class="xref py py-func docutils literal notranslate"><span class="pre">mergeset.analyze()</span></code></a> emits, so
 a caller can display the best-so-far after every deep run.</p></li>
 <li><p><strong>**analyze_kwargs</strong> – Everything else goes to <a class="reference internal" href="mergeset.html#mergeset.analyze" title="mergeset.analyze"><code class="xref py py-func docutils literal notranslate"><span class="pre">mergeset.analyze()</span></code></a>
@@ -718,11 +759,6 @@ flattened onto one key either.</p>
 <p><code class="docutils literal notranslate"><span class="pre">mergeset.storage.slugify</span></code> is not reused here: it always appends a digest,
 which is right for a long filesystem path and wrong for a name a person
 typed and will read back in a report.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">tier_key</span><span class="p">(</span><span class="s1">'e2e'</span><span class="p">),</span> <span class="n">tier_key</span><span class="p">(</span><span class="s1">'E2E'</span><span class="p">)</span>
 </span><span data-line="2"><span class="go">('e2e', 'e2e')</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">tier_key</span><span class="p">(</span><span class="s1">'a/b'</span><span class="p">)</span> <span class="o">==</span> <span class="n">tier_key</span><span class="p">(</span><span class="s1">'x/../y'</span><span class="p">)</span>
@@ -731,6 +767,11 @@ typed and will read back in a report.</p>
 </span><span data-line="6"><span class="go">False</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -793,7 +834,7 @@ exists to prevent — so both halves of the key are slugified.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=39aadc1c"></script>
+      <script src="../_static/documentation_options.js?v=0e525676"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -281,11 +282,6 @@ caller can paper over.</p>
 <dd><p>The artifact root for <code class="docutils literal notranslate"><span class="pre">app_name</span></code>, honouring <code class="docutils literal notranslate"><span class="pre">$MERGESET_DATA_DIR</span></code>.</p>
 <p>It is a <em>root</em>, not a leaf: artifacts always go in a per-kind subfolder of
 it (see <a class="reference internal" href="#mergeset.storage.artifact_store" title="mergeset.storage.artifact_store"><code class="xref py py-func docutils literal notranslate"><span class="pre">artifact_store()</span></code></a>), so a new kind never needs a migration.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">tempfile</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">'MERGESET_DATA_DIR'</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span>
@@ -296,6 +292,11 @@ it (see <a class="reference internal" href="#mergeset.storage.artifact_store" ti
 </span><span data-line="8"><span class="go">True</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -304,11 +305,6 @@ it (see <a class="reference internal" href="#mergeset.storage.artifact_store" ti
 <dd><p>All the artifact stores, keyed by kind — a <em>mall</em>, in <code class="docutils literal notranslate"><span class="pre">dol</span></code> terms.</p>
 <p>Stores are built lazily, so asking for the mall never creates a directory
 for a kind you do not use.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">MutableMapping</span></code></a>]</span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">mall</span> <span class="o">=</span> <span class="n">artifact_mall</span><span class="p">(</span><span class="n">rootdir</span><span class="o">=</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">())</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">mall</span><span class="p">[</span><span class="s1">'evaluations'</span><span class="p">][</span><span class="s1">'a.jsonl'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'</span><span class="si">{}</span><span class="se">\n</span><span class="s1">'</span>
@@ -316,6 +312,11 @@ for a kind you do not use.</p>
 </span><span data-line="5"><span class="go">['a.jsonl']</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">MutableMapping</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -326,11 +327,6 @@ for a kind you do not use.</p>
 store — the append-only evaluation log, and a subprocess told where to write
 its own output. Everything else should go through <a class="reference internal" href="#mergeset.storage.artifact_store" title="mergeset.storage.artifact_store"><code class="xref py py-func docutils literal notranslate"><span class="pre">artifact_store()</span></code></a>,
 because a path is exactly the coupling the store exists to remove.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">root</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">artifact_path</span><span class="p">(</span><span class="s1">'evaluations'</span><span class="p">,</span> <span class="s1">'x.jsonl'</span><span class="p">,</span> <span class="n">rootdir</span><span class="o">=</span><span class="n">root</span><span class="p">)</span> <span class="o">==</span> \
@@ -338,6 +334,11 @@ because a path is exactly the coupling the store exists to remove.</p>
 </span><span data-line="5"><span class="go">True</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -405,11 +406,6 @@ file capturing one repository’s internals into that same repository, which
 is how derived data ends up committed.</p>
 <p><code class="docutils literal notranslate"><span class="pre">repo</span></code> is resolved to an absolute path first, so <code class="docutils literal notranslate"><span class="pre">'.'</span></code> names the current
 directory rather than collapsing every project into one <code class="docutils literal notranslate"><span class="pre">repo.jsonl</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">evaluation_log_path</span><span class="p">(</span><span class="s1">'/x/proj/widget'</span><span class="p">,</span> <span class="n">rootdir</span><span class="o">=</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">())</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'proj-widget-'</span><span class="p">)</span>
@@ -418,6 +414,11 @@ directory rather than collapsing every project into one <code class="docutils li
 </span><span data-line="6"><span class="go">True</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -429,11 +430,6 @@ same repo does not overwrite the first. The 18-PR re-run of an earlier
 analysis is exactly the case that made this necessary: the interesting thing
 about it is the <em>diff</em> against the previous run, and there is no diff if the
 previous run was clobbered.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">key</span> <span class="o">=</span> <span class="n">run_key</span><span class="p">(</span><span class="s1">'/x/proj/widget'</span><span class="p">,</span> <span class="n">at</span><span class="o">=</span><span class="s1">'2026-09-09T14-00-00Z'</span><span class="p">)</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'/2026-09-09T14-00-00Z'</span><span class="p">)</span>
 </span><span data-line="3"><span class="go">True</span>
@@ -441,6 +437,11 @@ previous run was clobbered.</p>
 </span><span data-line="5"><span class="go">True</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -453,11 +454,6 @@ back under that key on Windows too, and an S3 backend uses <code class="docutils
 Without this the same key is two different keys on two machines — the
 filesystem leaking through the abstraction the store exists to provide.</p>
 <p>A no-op where the separator is already <code class="docutils literal notranslate"><span class="pre">/</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">MutableMapping</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">store</span> <span class="o">=</span> <span class="n">slash_separated_keys</span><span class="p">({},</span> <span class="n">sep</span><span class="o">=</span><span class="s1">'/'</span><span class="p">)</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">store</span><span class="p">[</span><span class="s1">'a/b'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="nb">dict</span><span class="p">(</span><span class="n">store</span><span class="p">)</span>
 </span><span data-line="3"><span class="go">{'a/b': 1}</span>
@@ -474,6 +470,11 @@ callers keep using <code class="docutils literal notranslate"><span class="pre">
 </span><span data-line="7"><span class="go">(['a/b'], 1)</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">MutableMapping</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -488,11 +489,6 @@ answer rather than an untidy one. So a short digest of the <em>full</em> input i
 appended whenever the readable part is not the whole story.</p>
 <p>The digest also survives truncation: a long parent directory used to eat the
 only component that distinguished anything.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">slugify</span><span class="p">(</span><span class="s1">'/Users/me/proj/i/mergeset'</span><span class="p">)</span>
 </span><span data-line="2"><span class="go">'i-mergeset-ed5b44'</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">slugify</span><span class="p">(</span><span class="s1">'git@github.com:i2mint/mergeset.git'</span><span class="p">)</span>
@@ -513,6 +509,11 @@ only component that distinguished anything.</p>
 </span><span data-line="4"><span class="go">True</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -557,7 +558,7 @@ only component that distinguished anything.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=39aadc1c"></script>
+      <script src="../_static/documentation_options.js?v=0e525676"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

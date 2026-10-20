@@ -60,7 +60,7 @@ Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Result of merging changes onto a base entirely in the object database.
 
-#### commit *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### commit *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 Commit holding base + every merged head, when the whole sequence was clean.
 
@@ -101,13 +101,13 @@ unless `force` is passed explicitly, and never pushes anything.
 
 Run `git -C repo *args` and capture its output.
 
-* **Return type:**
-  [`GitResult`](#mergeset.gitops.GitResult)
-
 ```pycon
 >>> git('.', 'rev-parse', '--git-dir').ok in (True, False)
 True
 ```
+
+* **Return type:**
+  [`GitResult`](#mergeset.gitops.GitResult)
 
 ### mergeset.gitops.git_version()
 

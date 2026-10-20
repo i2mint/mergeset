@@ -49,13 +49,13 @@ Yield the directory of every bundled skill (each holding a `SKILL.md`).
 `skills_root` is resolved, so a relative one still yields links that work
 from anywhere.
 
-* **Return type:**
-  [`Iterator`](https://docs.python.org/3/library/typing.html#typing.Iterator)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]
-
 ```pycon
 >>> [p.name for p in bundled_skills()]
 ['mergeset']
 ```
+
+* **Return type:**
+  [`Iterator`](https://docs.python.org/3/library/typing.html#typing.Iterator)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]
 
 ### mergeset.skills.install_skills(target='~/.claude/skills', , skills_root=None, link=True, overwrite=False)
 
@@ -69,9 +69,6 @@ skill is never silently replaced — and anything *else* sitting in the way
 `overwrite=True` is the escape hatch, and it is not gentle: it deletes
 whatever is at the destination, including a directory someone kept notes in.
 
-* **Return type:**
-  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> import tempfile
 >>> dest = tempfile.mkdtemp()
@@ -84,14 +81,17 @@ True
 []
 ```
 
+* **Return type:**
+  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 ### mergeset.skills.skills_dir()
 
 The directory of skills bundled inside the installed package.
-
-* **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
 ```pycon
 >>> skills_dir().name
 'skills'
 ```
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)

@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -207,15 +208,15 @@ solver.</p>
 <dt class="sig sig-object py" id="mergeset.sources.branch_changes">
 <span class="sig-prename descclassname"><span class="pre">mergeset.sources.</span></span><span class="sig-name descname"><span class="pre">branch_changes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">branches</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'HEAD'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/sources.html#branch_changes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.sources.branch_changes" title="Link to this definition">#</a></dt>
 <dd><p>Changes from local or remote branches.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">branch_changes</span><span class="p">(</span><span class="s1">'.'</span><span class="p">,</span> <span class="p">[]))</span>
+</span><span data-line="2"><span class="go">[]</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterator" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code></a>[<a class="reference internal" href="mergeset.base.html#mergeset.base.Change" title="mergeset.base.Change"><code class="xref py py-class docutils literal notranslate"><span class="pre">Change</span></code></a>]</span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">branch_changes</span><span class="p">(</span><span class="s1">'.'</span><span class="p">,</span> <span class="p">[]))</span>
-</span><span data-line="2"><span class="go">[]</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -224,7 +225,7 @@ solver.</p>
 <dd><p>Raise a fixable error if the GitHub CLI is unusable.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -247,11 +248,6 @@ solver.</p>
 <p>A PR whose base ref is another candidate’s head ref is <em>stacked</em>: only
 prefixes of the chain make sense as a merge set, because the child contains
 the parent. Recorded so the report can say so and the solver can be told.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Change</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">'pr1'</span><span class="p">,</span> <span class="n">head</span><span class="o">=</span><span class="s1">'origin/a'</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="s1">'origin/main'</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s1">'pr'</span><span class="p">,</span>
 </span><span data-line="2"><span class="gp">... </span>           <span class="n">meta</span><span class="o">=</span><span class="p">{</span><span class="s1">'head_ref'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">,</span> <span class="s1">'base_ref'</span><span class="p">:</span> <span class="s1">'main'</span><span class="p">})</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">Change</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">'pr2'</span><span class="p">,</span> <span class="n">head</span><span class="o">=</span><span class="s1">'origin/b'</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="s1">'origin/a'</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s1">'pr'</span><span class="p">,</span>
@@ -260,6 +256,11 @@ the parent. Recorded so the report can say so and the solver can be told.</p>
 </span><span data-line="6"><span class="go">{'pr2': 'pr1'}</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -362,7 +363,7 @@ author, age) is right there in <code class="docutils literal notranslate"><span 
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=39aadc1c"></script>
+      <script src="../_static/documentation_options.js?v=0e525676"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

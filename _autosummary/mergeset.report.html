@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -246,11 +247,6 @@ than surfacing an ImportError from three frames down.</p>
 <p>The actionable version of a duration: “33 s of its 51 s installing
 dependencies” says what to fix, “51 s” does not. The remainder of the
 total – merging, worktree setup – is shown as <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">StageRun</span><span class="p">,</span> <span class="n">ValidationOutcome</span><span class="p">,</span> <span class="n">Verdict</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">v</span> <span class="o">=</span> <span class="n">ValidationOutcome</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">48.5</span><span class="p">,</span> <span class="n">stages</span><span class="o">=</span><span class="p">[</span>
 </span><span data-line="3"><span class="gp">... </span>    <span class="n">StageRun</span><span class="p">(</span><span class="s1">'setup'</span><span class="p">,</span> <span class="mf">33.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">StageRun</span><span class="p">(</span><span class="s1">'build'</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
@@ -265,6 +261,11 @@ total – merging, worktree setup – is shown as <code class="docutils literal 
 </span><span data-line="12"><span class="go">'setup skipped · test 6.0'</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -276,11 +277,6 @@ go, so the CLI, the library and any future surface cannot drift apart on it.</p>
 <p><code class="docutils literal notranslate"><span class="pre">key</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">&lt;repo-slug&gt;/&lt;timestamp&gt;</span></code> — per run, so re-analysing a
 repository never overwrites the answer you are comparing against. Nothing is
 written into the analysed repository, ever: see <a class="reference internal" href="mergeset.storage.html#module-mergeset.storage" title="mergeset.storage"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mergeset.storage</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mergeset.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">Analysis</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Analysis</span><span class="p">(</span><span class="n">repo</span><span class="o">=</span><span class="s1">'/x/y/proj'</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="s1">'main'</span><span class="p">,</span> <span class="n">base_sha</span><span class="o">=</span><span class="s1">'0'</span><span class="o">*</span><span class="mi">40</span><span class="p">,</span> <span class="n">changes</span><span class="o">=</span><span class="p">[])</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">text</span><span class="p">,</span> <span class="n">binary</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{}</span>
@@ -291,6 +287,11 @@ written into the analysed repository, ever: see <a class="reference internal" hr
 </span><span data-line="8"><span class="go">['run-1/REPORT.md', 'run-1/report.html']</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -335,7 +336,7 @@ written into the analysed repository, ever: see <a class="reference internal" hr
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=39aadc1c"></script>
+      <script src="../_static/documentation_options.js?v=0e525676"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

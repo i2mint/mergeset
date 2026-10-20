@@ -80,7 +80,7 @@ passed.\*\*
 | [`Tier`](#mergeset.tiers.Tier)(name, validate[, cost, available])            | One rung of validation, from cheapest to dearest.                       |
 | [`TieredAnalysis`](#mergeset.tiers.TieredAnalysis)(tiers, analysis, logs, cost_model)  | Result of a tiered run.                                                 |
 
-### *class* mergeset.tiers.AnytimeAnswer(best, best_weight, best_tier, full_depth, bound, bound_set, gap, optimal, pending=(), spent=<factory>)
+### *class* mergeset.tiers.AnytimeAnswer(best, best_weight, best_tier, full_depth, bound, bound_set, gap, optimal, pending=(), spent=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -100,19 +100,31 @@ exists. That is a stopping rule rather than a budget running out.
 
 Heaviest set validated so far, at `best_tier`.
 
+* **Type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]
+
 #### best_weight
 
 Its weight (the sum of its changes’ weights).
+
+* **Type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 #### best_tier
 
 Deepest tier that actually ran on `best`; `None` when
 nothing has been validated yet.
 
+* **Type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 #### full_depth
 
 True iff every tier ran on `best`. When False, `best` is
 a partial claim however good `gap` looks.
+
+* **Type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### bound, bound_set
 
@@ -122,9 +134,15 @@ The upper bound and the set that realizes it.
 
 `bound - best_weight` — what might still be being missed.
 
+* **Type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
+
 #### optimal
 
 `gap <= 0 and full_depth`; nothing better exists.
+
+* **Type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 #### pending
 
@@ -132,16 +150,19 @@ The upper bound and the set that realizes it.
 taken to full depth. The answer to “what would closing the gap
 cost”.
 
+* **Type:**
+  [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset), [`float`](https://docs.python.org/3/builtins/functions.html#float)]]
+
 #### spent
 
 Seconds spent, per tier.
 
+* **Type:**
+  [`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`float`](https://docs.python.org/3/builtins/functions.html#float)]
+
 #### summary()
 
 One line a progress display or a report can print.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> AnytimeAnswer(frozenset({'a'}), 1.0, 'unit', False, 2.0,
@@ -151,6 +172,9 @@ One line a progress display or a report can print.
 ...               frozenset({'a', 'b'}), 0.0, True).summary()
 'best 2 changes (weight 2.0, all tiers); provably maximal'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### mergeset.tiers.MUST_INCLUDE_PHASE *= '--must-include'*
 
@@ -197,7 +221,7 @@ Whether this tier can run right now.
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
-### *class* mergeset.tiers.TieredAnalysis(tiers, analysis, logs, cost_model, depth_reached=None, skipped=<factory>, spent=<factory>, runs=<factory>, answer=None, must_include=frozenset({}), best_including=None)
+### *class* mergeset.tiers.TieredAnalysis(tiers, analysis, logs, cost_model, depth_reached=None, skipped=dict(), spent=dict(), runs=dict(), answer=None, must_include=frozenset({}), best_including=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -208,7 +232,7 @@ Result of a tiered run.
 depth validation actually reached — so every existing report renders it
 unchanged and says the right thing about tiers.
 
-#### best_including *: [frozenset](https://docs.python.org/3/builtins/stdtypes.html#frozenset) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### best_including *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[frozenset](https://docs.python.org/3/builtins/stdtypes.html#frozenset)]* *= None*
 
 Heaviest validated set containing every change in `must_include`.
 `None` when they cannot all be kept together. A second, differently
@@ -227,7 +251,7 @@ because an estimate with no provenance reads as a fact.
 * **Return type:**
   [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
-#### depth_reached *: [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### depth_reached *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 How deep validation actually got, as a tier name.
 
@@ -447,9 +471,6 @@ flattened onto one key either.
 which is right for a long filesystem path and wrong for a name a person
 typed and will read back in a report.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> tier_key('e2e'), tier_key('E2E')
 ('e2e', 'e2e')
@@ -458,6 +479,9 @@ False
 >>> '/' in tier_key('a/b')
 False
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### mergeset.tiers.tier_lines(repo, tier, , store=None)
 
