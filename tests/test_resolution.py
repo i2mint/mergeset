@@ -502,3 +502,48 @@ def test_after_an_abort_the_report_does_not_recommend_a_set_the_log_refutes(
     assert any(s.error for s in again.searches)
     assert refuted not in again.maximal_sets, again.maximal_sets
     assert any(log.known(s).verdict is Verdict.PASS for s in again.maximal_sets)
+
+
+def _oracle(repo, tmp_path, resolver):
+    return git_oracle(
+        repo,
+        resolve(repo, "main"),
+        [Change(id=n, head=resolve(repo, n), base="main") for n in ("feat-a", "feat-c", "feat-d")],
+        validate=command_validation(py_command(tmp_path, "pass", _PASS)),
+        resolver=resolver,
+    )
+
+
+def test_a_conflict_met_again_in_a_superset_is_not_resolved_again(repo, tmp_path):
+    calls = []
+    evaluate = _oracle(repo, tmp_path, _scripted_resolver(calls))
+    pair = evaluate(frozenset({"feat-a", "feat-c"}))
+    triple = evaluate(frozenset({"feat-a", "feat-c", "feat-d"}))
+    assert len(calls) == 1, calls
+    assert pair.verdict is triple.verdict is Verdict.PASS
+    assert triple.merge.assisted
+    for head in ("feat-a", "feat-c", "feat-d"):
+        assert is_ancestor(repo, resolve(repo, head), triple.merge.resolved_commit)
+    assert git(repo, "worktree", "list").stdout.strip().count("\n") == 0
+
+
+def test_a_decline_is_remembered_but_a_raising_resolver_is_not(repo, tmp_path):
+    calls = []
+
+    def decliner(worktree, files):
+        calls.append(1)
+        return False, "no"
+
+    evaluate = _oracle(repo, tmp_path, decliner)
+    for subset in ({"feat-a", "feat-c"}, {"feat-a", "feat-c", "feat-d"}):
+        assert evaluate(frozenset(subset)).verdict is Verdict.FAIL
+    assert len(calls) == 1
+
+    def raiser(worktree, files):
+        calls.append(2)
+        raise TimeoutError("slow")
+
+    evaluate = _oracle(repo, tmp_path, raiser)
+    for subset in ({"feat-a", "feat-c"}, {"feat-a", "feat-c", "feat-d"}):
+        assert evaluate(frozenset(subset)).verdict is Verdict.ERROR
+    assert calls.count(2) == 2
