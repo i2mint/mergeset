@@ -156,6 +156,9 @@ def git_oracle(
     parents = dict(depends_on or {})
     validate = validate or pytest_validation()
     emit = on_event or (lambda name, payload: None)
+    # The resolver's answer to a conflict, kept for the life of this oracle: a
+    # superset meets the same conflict again and must not pay for it again.
+    answers: dict = {}
 
     def evaluate(subset: ChangeSet) -> Evaluation:
         started = time.time()
@@ -181,7 +184,8 @@ def git_oracle(
             if worktree is None and outcome.conflicting_files:
                 if resolver is not None:
                     worktree, outcome = _try_assisted(
-                        repo, base, heads, outcome, resolver, worktree_root, emit
+                        repo, base, heads, outcome, resolver, worktree_root, emit,
+                        answers,
                     )
                 elif resolution is not None:
                     worktree, outcome = _reuse_resolution(
@@ -235,7 +239,48 @@ def git_oracle(
     return evaluate
 
 
-def _try_assisted(repo, base, heads, outcome, resolver, worktree_root, emit):
+def _conflict_key(path) -> tuple:
+    """What the resolver is shown, by content: per conflicted file its base, ours and theirs blob ids."""
+    rows = git(path, "ls-files", "-u").stdout.splitlines()
+    stages: dict = {}
+    for row in rows:
+        meta, _, name = row.partition("\t")
+        _, oid, stage = meta.split()
+        stages.setdefault(name, {})[stage] = oid
+    return tuple(sorted((name, tuple(sorted(st.items()))) for name, st in stages.items()))
+
+
+def _resolved_blobs(path, files) -> dict:
+    """``{file: (mode, blob id) | None}`` of the files in the resolver's commit (``None`` = deleted)."""
+    out = {}
+    for name in files:
+        row = git(path, "ls-tree", "HEAD", "--", name).stdout.split()
+        out[name] = (row[0], row[2]) if len(row) >= 3 else None
+    return out
+
+
+def _replay_resolution(path, blobs) -> bool:
+    """Apply stored resolved files to the conflicted merge in ``path`` and commit it."""
+    for name, blob in blobs.items():
+        if blob is None:
+            done = git(path, "rm", "-f", "-q", "--", name).ok
+        else:
+            mode, oid = blob
+            done = (
+                git(path, "update-index", "--add", "--cacheinfo", f"{mode},{oid},{name}").ok
+                and git(path, "checkout-index", "-f", "--", name).ok
+            )
+        if not done:
+            return False
+    return git(
+        path, "-c", "user.email=mergeset@localhost", "-c", "user.name=mergeset",
+        "commit", "--no-edit",
+    ).ok
+
+
+def _try_assisted(
+    repo, base, heads, outcome, resolver, worktree_root, emit, answers=None
+):
     """Second attempt at a conflicted merge, offering each conflict to ``resolver``.
 
     Every head is merged, in order, and each one that conflicts is offered to
@@ -243,7 +288,13 @@ def _try_assisted(repo, base, heads, outcome, resolver, worktree_root, emit):
     handed that half-merged tree to the resolver: the heads after it were never
     merged, yet the row claimed the whole set. The resolved merge commit is
     kept, so a deeper tier can validate the same tree (#30).
+
+    ``answers`` remembers, by the content of the conflict, what the resolver did
+    with it (a resolution or a decline), so the same conflict met again inside a
+    superset is answered without calling the resolver. A replayed resolution is
+    vouched for like a fresh one; a resolver that raised is never remembered.
     """
+    answers = {} if answers is None else answers
     emit("assisted_merge", {"files": list(outcome.conflicting_files)})
     path = _new_worktree(repo, base, worktree_root)
     if path is None:
@@ -256,6 +307,23 @@ def _try_assisted(repo, base, heads, outcome, resolver, worktree_root, emit):
         if _merge_into(path, head):
             continue
         conflicted = git(path, "diff", "--name-only", "--diff-filter=U").stdout.split()
+        key = _conflict_key(path)
+        known = answers.get(key) if key else None
+        if known is not None and known[0] == "declined":
+            emit("assisted_reuse", {"files": conflicted, "declined": True})
+            _remove_worktree(repo, path)
+            return None, outcome
+        if known is not None and _replay_resolution(path, known[1]):
+            emit("assisted_reuse", {"files": conflicted, "declined": False})
+            if not _vouches_for(path, before, head, merged, conflicted):
+                _remove_worktree(repo, path)
+                return None, outcome
+            diffs.append(known[2])
+            continue
+        if known is not None:  # the stored answer no longer applies: ask again
+            git(path, "reset", "--hard", "-q", before)
+            if _merge_into(path, head):
+                continue
         try:
             resolved, diff = resolver(
                 path, conflicted or list(outcome.conflicting_files)
@@ -273,8 +341,12 @@ def _try_assisted(repo, base, heads, outcome, resolver, worktree_root, emit):
                 detail=f"the conflict resolver raised {type(exc).__name__}: {exc}",
             )
         if not (resolved and _vouches_for(path, before, head, merged, conflicted)):
+            if key:
+                answers[key] = ("declined",)
             _remove_worktree(repo, path)
             return None, outcome
+        if key:
+            answers[key] = ("resolved", _resolved_blobs(path, conflicted), diff)
         diffs.append(diff)
     sha = resolve(path, "HEAD")
     # Reachable from a ref, or `git gc` prunes it once the worktree is gone and
