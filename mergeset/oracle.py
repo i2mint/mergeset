@@ -184,7 +184,13 @@ def git_oracle(
             if worktree is None and outcome.conflicting_files:
                 if resolver is not None:
                     worktree, outcome = _try_assisted(
-                        repo, base, heads, outcome, resolver, worktree_root, emit,
+                        repo,
+                        base,
+                        heads,
+                        outcome,
+                        resolver,
+                        worktree_root,
+                        emit,
                         answers,
                     )
                 elif resolution is not None:
@@ -247,7 +253,9 @@ def _conflict_key(path) -> tuple:
         meta, _, name = row.partition("\t")
         _, oid, stage = meta.split()
         stages.setdefault(name, {})[stage] = oid
-    return tuple(sorted((name, tuple(sorted(st.items()))) for name, st in stages.items()))
+    return tuple(
+        sorted((name, tuple(sorted(st.items()))) for name, st in stages.items())
+    )
 
 
 def _resolved_blobs(path, files) -> dict:
@@ -267,14 +275,21 @@ def _replay_resolution(path, blobs) -> bool:
         else:
             mode, oid = blob
             done = (
-                git(path, "update-index", "--add", "--cacheinfo", f"{mode},{oid},{name}").ok
+                git(
+                    path, "update-index", "--add", "--cacheinfo", f"{mode},{oid},{name}"
+                ).ok
                 and git(path, "checkout-index", "-f", "--", name).ok
             )
         if not done:
             return False
     return git(
-        path, "-c", "user.email=mergeset@localhost", "-c", "user.name=mergeset",
-        "commit", "--no-edit",
+        path,
+        "-c",
+        "user.email=mergeset@localhost",
+        "-c",
+        "user.name=mergeset",
+        "commit",
+        "--no-edit",
     ).ok
 
 
