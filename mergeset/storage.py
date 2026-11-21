@@ -138,8 +138,8 @@ def slash_separated_keys(store: MutableMapping, *, sep: str = os.sep) -> Mutable
 
     return wrap_kvs(
         store,
-        id_of_key=lambda k: k.replace("/", sep),
-        key_of_id=lambda k: k.replace(sep, "/"),
+        key_encoder=lambda k: k.replace("/", sep),
+        key_decoder=lambda k: k.replace(sep, "/"),
     )
 
 
