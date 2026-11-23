@@ -1,4 +1,4 @@
-> built 2026-11-21 18:11 UTC from d6d8aeb (main) · mergeset 0.0.37. Details: build_info.json
+> built 2026-11-23 04:50 UTC from b8e698d (main) · mergeset 0.0.38. Details: build_info.json
 
 # index.html.md
 
@@ -2837,6 +2837,18 @@ because an estimate with no provenance reads as a fact.
 
 * **Return type:**
   [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+#### credited_tier(subset, , entered=None)
+
+[`verified_tier()`](_autosummary/mergeset.html.md#mergeset.TieredAnalysis.verified_tier), crediting a tier deeper than `entered` (one this
+run did not enter, so its rows come from an earlier run) only when its exact
+PASS records the commits and a known validator, and the tier was not skipped
+for failing on the base alone (#36). A row that pins less (a Python callable’s
+`unknown` validator, a row adopted by `trust_unpinned`) is no evidence that
+a run here would pass.
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 #### depth_reached *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
@@ -6072,6 +6084,18 @@ because an estimate with no provenance reads as a fact.
 * **Return type:**
   [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
+#### credited_tier(subset, , entered=None)
+
+[`verified_tier()`](_autosummary/mergeset.tiers.html.md#mergeset.tiers.TieredAnalysis.verified_tier), crediting a tier deeper than `entered` (one this
+run did not enter, so its rows come from an earlier run) only when its exact
+PASS records the commits and a known validator, and the tier was not skipped
+for failing on the base alone (#36). A row that pins less (a Python callable’s
+`unknown` validator, a row adopted by `trust_unpinned`) is no evidence that
+a run here would pass.
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 #### depth_reached *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 How deep validation actually got, as a tier name.
@@ -6671,18 +6695,16 @@ contents join the fingerprint (see [`inputs_digest()`](_autosummary/mergeset.val
 
 # About this build
 
-This documentation was built on **2026-11-21 18:11 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/d6d8aebbb19e376a54ef0dc43f42ad0dbaa37c6e"><code>d6d8aeb</code></a> on branch <code>main</code>, for **mergeset 0.0.37** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-23 04:50 UTC** from commit <a href="https://github.com/i2mint/mergeset/commit/b8e698d74e47af5f85919a9aae40902380b2c676"><code>b8e698d</code></a> on branch <code>main</code>, for **mergeset 0.0.38** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.37) is behind the latest release on PyPI (0.0.38): `pip install mergeset` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                        |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/mergeset/commit/d6d8aebbb19e376a54ef0dc43f42ad0dbaa37c6e"><code>d6d8aebbb19e376a54ef0dc43f42ad0dbaa37c6e</code></a> |
+| Commit              | <a href="https://github.com/i2mint/mergeset/commit/b8e698d74e47af5f85919a9aae40902380b2c676"><code>b8e698d74e47af5f85919a9aae40902380b2c676</code></a> |
 | Branch              | <code>main</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                   |
 | Working tree        | clean                                                                                                                                                  |
@@ -6693,9 +6715,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/mergeset</code>                                                               |
-| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/44934044735">44934044735</a>      |
+| Run          | <a href="https://github.com/i2mint/mergeset/actions/runs/45114105135">45114105135</a>      |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>d6d8aebbb19e376a54ef0dc43f42ad0dbaa37c6e</code> (in the history of the built commit) |
+| Event commit | <code>b8e698d74e47af5f85919a9aae40902380b2c676</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6720,13 +6742,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/mergeset/0.0.38/">0.0.38</a>, newer than the documented version (0.0.37).
+Latest release: <a href="https://pypi.org/project/mergeset/0.0.38/">0.0.38</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/mergeset && cd mergeset
-git checkout d6d8aebbb19e376a54ef0dc43f42ad0dbaa37c6e
+git checkout b8e698d74e47af5f85919a9aae40902380b2c676
 pip install "epythet==0.2.23"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

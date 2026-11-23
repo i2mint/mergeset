@@ -227,6 +227,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#mergeset.TieredAnalysis"><code class="docutils literal notranslate"><span class="pre">TieredAnalysis</span></code></a><ul>
 <li><a class="reference internal" href="#mergeset.TieredAnalysis.best_including"><code class="docutils literal notranslate"><span class="pre">TieredAnalysis.best_including</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.TieredAnalysis.cost_lines"><code class="docutils literal notranslate"><span class="pre">TieredAnalysis.cost_lines()</span></code></a></li>
+<li><a class="reference internal" href="#mergeset.TieredAnalysis.credited_tier"><code class="docutils literal notranslate"><span class="pre">TieredAnalysis.credited_tier()</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.TieredAnalysis.depth_reached"><code class="docutils literal notranslate"><span class="pre">TieredAnalysis.depth_reached</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.TieredAnalysis.maximal_sets"><code class="docutils literal notranslate"><span class="pre">TieredAnalysis.maximal_sets</span></code></a></li>
 <li><a class="reference internal" href="#mergeset.TieredAnalysis.must_include"><code class="docutils literal notranslate"><span class="pre">TieredAnalysis.must_include</span></code></a></li>
@@ -1882,6 +1883,22 @@ because an estimate with no provenance reads as a fact.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mergeset.TieredAnalysis.credited_tier">
+<span class="sig-name descname"><span class="pre">credited_tier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">entered</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mergeset/tiers.html#TieredAnalysis.credited_tier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mergeset.TieredAnalysis.credited_tier" title="Link to this definition">#</a></dt>
+<dd><p><a class="reference internal" href="#mergeset.TieredAnalysis.verified_tier" title="mergeset.TieredAnalysis.verified_tier"><code class="xref py py-meth docutils literal notranslate"><span class="pre">verified_tier()</span></code></a>, crediting a tier deeper than <code class="docutils literal notranslate"><span class="pre">entered</span></code> (one this
+run did not enter, so its rows come from an earlier run) only when its exact
+PASS records the commits and a known validator, and the tier was not skipped
+for failing on the base alone (#36). A row that pins less (a Python callable’s
+<code class="docutils literal notranslate"><span class="pre">unknown</span></code> validator, a row adopted by <code class="docutils literal notranslate"><span class="pre">trust_unpinned</span></code>) is no evidence that
+a run here would pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3545,7 +3562,7 @@ exists to prevent — so both halves of the key are slugified.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=aa2ad26f"></script>
+      <script src="../_static/documentation_options.js?v=423071ad"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

@@ -251,6 +251,18 @@ because an estimate with no provenance reads as a fact.
 * **Return type:**
   [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
+#### credited_tier(subset, , entered=None)
+
+[`verified_tier()`](#mergeset.tiers.TieredAnalysis.verified_tier), crediting a tier deeper than `entered` (one this
+run did not enter, so its rows come from an earlier run) only when its exact
+PASS records the commits and a known validator, and the tier was not skipped
+for failing on the base alone (#36). A row that pins less (a Python callable’s
+`unknown` validator, a row adopted by `trust_unpinned`) is no evidence that
+a run here would pass.
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 #### depth_reached *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= None*
 
 How deep validation actually got, as a tier name.
