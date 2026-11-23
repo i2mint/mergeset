@@ -1487,10 +1487,24 @@ def _record_what_may_be_claimed(
     # was entered, so a set the aborted tier refuted stays NOT VERIFIED and one
     # it confirmed is not (#55, review).
     entered = analysis.aborted_tier or deepest
+    # A set is unverified when no tier at least as deep as the one entered holds
+    # an exact PASS for it. A deeper PASS from an earlier run counts: every tier's
+    # log is pinned to the same commits and validator (#23, #32), so it answers
+    # the same question this run would have asked (#36).
+    depth = {name: i for i, name in enumerate(names)}
+
+    def confirmed_deeper_than(subset: ChangeSet, tier: str) -> bool:
+        found = result.verified_tier(subset)
+        return found is not None and depth.get(found, -1) > depth[tier]
+
+    def shallower_than_entered(subset: ChangeSet) -> bool:
+        found = result.verified_tier(subset)
+        return found is None or depth.get(found, -1) < depth[entered]
+
     analysis.unverified_sets = (
         []
         if trusted
-        else [s for s in analysis.maximal_sets if result.verified_tier(s) != entered]
+        else [s for s in analysis.maximal_sets if shallower_than_entered(s)]
     )
     chain = " -> ".join(names)
     if deepest == names[-1] and not analysis.unverified_sets:
@@ -1519,11 +1533,31 @@ def _record_what_may_be_claimed(
         )
     else:
         missing = ", ".join(f"`{n}`" for n in names[names.index(deepest) + 1 :])
-        analysis.notes.append(
-            f"Validation was tiered ({chain}) but only reached `{deepest}`. The "
-            f"sets below were NOT validated at {missing}, and a tier that did "
-            f"not run is not a tier that passed."
-        )
+        earlier = [
+            s for s in analysis.maximal_sets if confirmed_deeper_than(s, deepest)
+        ]
+        if not earlier:
+            analysis.notes.append(
+                f"Validation was tiered ({chain}) but only reached `{deepest}`. The "
+                f"sets below were NOT validated at {missing}, and a tier that did "
+                f"not run is not a tier that passed."
+            )
+        else:
+            confirmed = "; ".join(
+                f"[{', '.join(sorted(s))}] at `{result.verified_tier(s)}`"
+                for s in earlier
+            )
+            rest = (
+                " The others were NOT validated past "
+                f"`{deepest}`, and a tier that did not run is not a tier that passed."
+                if len(earlier) < len(analysis.maximal_sets)
+                else ""
+            )
+            analysis.notes.append(
+                f"Validation was tiered ({chain}) but this run only reached "
+                f"`{deepest}`. An earlier run against the same commits and "
+                f"validators confirmed deeper: {confirmed}.{rest}"
+            )
     for tier_name, why in result.skipped.items():
         ran = "ran but" if why.startswith("it aborted") else "did not run because"
         analysis.notes.append(f"Tier `{tier_name}` {ran} {why}.")

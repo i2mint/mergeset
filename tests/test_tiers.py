@@ -1149,3 +1149,42 @@ def test_a_repeat_cut_short_by_the_budget_does_not_report_a_plan_it_refuted(
     assert result.logs["deep"].exact(refuted).verdict is Verdict.FAIL
     assert refuted not in result.maximal_sets
     assert frozenset({"feat-a", "feat-b"}) in result.maximal_sets
+
+
+def test_a_deep_pass_from_an_earlier_run_still_counts_when_the_tier_is_down(
+    repo, tmp_path
+):
+    """#36: the screen refutes ``feat-d``, the deep tier passes what reaches it.
+    Run once with both tiers, then again with the deep tier unavailable: the
+    second report must not mark the deep-confirmed set NOT VERIFIED while its
+    anytime line says "all tiers; provably maximal"."""
+    screen = _stage_validator(
+        tmp_path,
+        "screen",
+        "import os, sys\n" "sys.exit(1 if os.path.exists('new-d.txt') else 0)\n",
+    )
+    deep = _stage_validator(tmp_path, "deep", "import sys\nsys.exit(0)\n")
+    common = dict(base="main", pairwise_preoracle=False, use_ci_status=False)
+    first = analyze_tiered(
+        repo,
+        _changes(repo, ["feat-b", "feat-d"]),
+        tiers=[Tier("screen", screen), Tier("deep", deep)],
+        **common,
+    )
+    assert first.depth_reached == "deep"
+    assert first.maximal_sets == [frozenset({"feat-b"})]
+
+    second = analyze_tiered(
+        repo,
+        _changes(repo, ["feat-b", "feat-d"]),
+        tiers=[Tier("screen", screen), Tier("deep", deep, available=lambda: False)],
+        **common,
+    )
+    assert second.depth_reached == "screen"
+    assert second.maximal_sets == [frozenset({"feat-b"})]
+    assert second.verified_tier(frozenset({"feat-b"})) == "deep"
+    assert second.analysis.unverified_sets == []
+    assert second.answer.full_depth and second.answer.optimal
+    notes = "\n".join(second.analysis.notes)
+    assert "were NOT validated" not in notes
+    assert "An earlier run against the same commits and validators confirmed deeper" in notes
