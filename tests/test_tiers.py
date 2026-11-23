@@ -336,7 +336,7 @@ def test_tiers_keep_separate_logs_so_a_cheap_pass_answers_no_deep_question(
     deep = _stage_validator(
         tmp_path,
         "deep",
-        "import os, sys\n" "sys.exit(1 if os.path.exists('new-d.txt') else 0)\n",
+        "import os, sys\nsys.exit(1 if os.path.exists('new-d.txt') else 0)\n",
     )
     result = analyze_tiered(
         repo,
@@ -704,9 +704,9 @@ def test_a_cost_model_that_is_not_a_MeasuredCost_is_not_double_counted(repo):
         use_ci_status=False,
     )
     rows = sum(len(log) for log in result.logs.values())
-    assert (
-        len(cost.seen) == rows
-    ), f"{len(cost.seen)} observe() calls for {rows} log rows"
+    assert len(cost.seen) == rows, (
+        f"{len(cost.seen)} observe() calls for {rows} log rows"
+    )
 
 
 def test_the_bound_respects_stacks_so_the_certificate_is_reachable():
@@ -1091,7 +1091,10 @@ def test_a_cheaper_tier_does_not_rerun_what_a_deeper_log_refuted():
     screen_runs, deep_runs = [], []
     chain = _confirming_chain(
         [
-            (screen_log, lambda s: screen_runs.append(s) or Evaluation(s, Verdict.PASS)),
+            (
+                screen_log,
+                lambda s: screen_runs.append(s) or Evaluation(s, Verdict.PASS),
+            ),
             (deep_log, lambda s: deep_runs.append(s) or Evaluation(s, Verdict.PASS)),
         ]
     )
@@ -1149,3 +1152,78 @@ def test_a_repeat_cut_short_by_the_budget_does_not_report_a_plan_it_refuted(
     assert result.logs["deep"].exact(refuted).verdict is Verdict.FAIL
     assert refuted not in result.maximal_sets
     assert frozenset({"feat-a", "feat-b"}) in result.maximal_sets
+
+
+def test_a_deep_pass_from_an_earlier_run_still_counts_when_the_tier_is_down(
+    repo, tmp_path
+):
+    """#36: the screen refutes ``feat-d``, the deep tier passes what reaches it.
+    Run once with both tiers, then again with the deep tier unavailable: the
+    second report must not mark the deep-confirmed set NOT VERIFIED while its
+    anytime line says "all tiers; provably maximal"."""
+    screen = _stage_validator(
+        tmp_path,
+        "screen",
+        "import os, sys\nsys.exit(1 if os.path.exists('new-d.txt') else 0)\n",
+    )
+    deep = _stage_validator(tmp_path, "deep", "import sys\nsys.exit(0)\n")
+    common = dict(base="main", pairwise_preoracle=False, use_ci_status=False)
+    first = analyze_tiered(
+        repo,
+        _changes(repo, ["feat-b", "feat-d"]),
+        tiers=[Tier("screen", screen), Tier("deep", deep)],
+        **common,
+    )
+    assert first.depth_reached == "deep"
+    assert first.maximal_sets == [frozenset({"feat-b"})]
+
+    second = analyze_tiered(
+        repo,
+        _changes(repo, ["feat-b", "feat-d"]),
+        tiers=[Tier("screen", screen), Tier("deep", deep, available=lambda: False)],
+        **common,
+    )
+    assert second.depth_reached == "screen"
+    assert second.maximal_sets == [frozenset({"feat-b"})]
+    assert second.verified_tier(frozenset({"feat-b"})) == "deep"
+    assert second.analysis.unverified_sets == []
+    assert second.answer.full_depth and second.answer.optimal
+    notes = "\n".join(second.analysis.notes)
+    assert "were NOT validated" not in notes
+    assert (
+        "An earlier run against the same commits and validators confirmed deeper"
+        in notes
+    )
+
+
+def test_an_earlier_deep_pass_that_pins_no_validator_is_not_credited(repo, tmp_path):
+    """#36 review: a Python-callable tier records the validator as unknown, which
+    any other callable would match, so its earlier PASS is no evidence for a run
+    that did not reach it: the set holds at the screen only, and the answer is
+    partial."""
+    screen = _stage_validator(
+        tmp_path,
+        "screen",
+        "import os, sys\nsys.exit(1 if os.path.exists('new-d.txt') else 0)\n",
+    )
+    deep = lambda worktree: merge_only_validation()(worktree)  # noqa: E731
+    common = dict(base="main", pairwise_preoracle=False, use_ci_status=False)
+    changes = _changes(repo, ["feat-b", "feat-d"])
+    analyze_tiered(
+        repo, changes, tiers=[Tier("screen", screen), Tier("deep", deep)], **common
+    )
+    second = analyze_tiered(
+        repo,
+        changes,
+        tiers=[Tier("screen", screen), Tier("deep", deep, available=lambda: False)],
+        **common,
+    )
+    assert second.depth_reached == "screen"
+    assert second.verified_tier(frozenset({"feat-b"})) == "deep"  # on record...
+    assert second.credited_tier(frozenset({"feat-b"}), entered="screen") == "screen"
+    # ...not credited: confirmed at the screen only, so the note says it was NOT
+    # validated at `deep` and the answer is partial.
+    assert second.analysis.unverified_sets == []
+    assert not second.answer.full_depth and not second.answer.optimal
+    assert any("were NOT validated at `deep`" in n for n in second.analysis.notes)
+    assert not any("An earlier run" in n for n in second.analysis.notes)
