@@ -95,9 +95,10 @@ def _markdown_lines(analysis: Analysis, title: str) -> Iterator[str]:
         yield (
             f"> **Aborted at tier `{analysis.aborted_tier}`:** {analysis.aborted}. "
             "The tiers before it finished, so the plans below hold at the depth "
-            f"they reached (see the notes) but were **not** confirmed at "
-            f"`{analysis.aborted_tier}`. Fix the cause and re-run: decided rows "
-            "are kept, the failed one is asked again."
+            f"they reached (see the notes). A plan marked NOT VERIFIED was "
+            f"**not** confirmed at `{analysis.aborted_tier}`; the notes say which "
+            "others were, and whether by an earlier run. Fix the cause and "
+            "re-run: decided rows are kept, the failed one is asked again."
         )
         yield ""
     elif analysis.aborted:

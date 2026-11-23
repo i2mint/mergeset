@@ -283,6 +283,35 @@ class TieredAnalysis:
             lines.append(line + ".")
         return lines
 
+    def credited_tier(
+        self, subset: ChangeSet, *, entered: Optional[str] = None
+    ) -> Optional[str]:
+        """:meth:`verified_tier`, crediting a tier deeper than ``entered`` (one this
+        run did not enter, so its rows come from an earlier run) only when its exact
+        PASS records the commits and a known validator, and the tier was not skipped
+        for failing on the base alone (#36). A row that pins less (a Python callable's
+        ``unknown`` validator, a row adopted by ``trust_unpinned``) is no evidence that
+        a run here would pass.
+        """
+        from mergeset.base import UNKNOWN_FINGERPRINT
+
+        names = [t.name for t in self.tiers]
+        limit = names.index(entered) if entered in names else len(names) - 1
+        deepest = None
+        for i, tier in enumerate(self.tiers):
+            log = self.logs.get(tier.name)
+            exact = log.exact(frozenset(subset)) if log else None
+            if exact is None or exact.verdict is not Verdict.PASS:
+                return deepest
+            if i > limit and (
+                not exact.pinned
+                or exact.validator in (None, UNKNOWN_FINGERPRINT)
+                or self.skipped.get(tier.name, "").startswith(_BASE_FAILS)
+            ):
+                return deepest
+            deepest = tier.name
+        return deepest
+
     def verified_tier(self, subset: ChangeSet) -> Optional[str]:
         """The deepest tier that recorded an exact PASS for ``subset``.
 
@@ -1007,7 +1036,15 @@ def analyze_tiered(
             change_ids,
             conflicts,
             weight=weight_of_id,
-            verified=[(s, result.verified_tier(s)) for s in analysis.maximal_sets],
+            verified=[
+                (
+                    s,
+                    result.credited_tier(
+                        s, entered=analysis.aborted_tier or result.depth_reached
+                    ),
+                )
+                for s in analysis.maximal_sets
+            ],
             tiers=tiers,
             cost_model=cost_model,
             remaining_tiers=remaining,
@@ -1108,7 +1145,7 @@ def analyze_tiered(
                     result,
                     analysis,
                     tier,
-                    "it does not pass on the base alone, so every result from it "
+                    f"{_BASE_FAILS}, so every result from it "
                     f"would be meaningless ({_why(baseline)}). Fix the tier's "
                     "command or its environment, then re-run",
                     emit,
@@ -1447,6 +1484,11 @@ def _aborted(analysis: Analysis) -> Optional[str]:
     return analysis.aborted
 
 
+#: How a tier skipped for failing on the base alone is described; its earlier
+#: rows are not credited either, since its environment has drifted (#36).
+_BASE_FAILS = "it does not pass on the base alone"
+
+
 def _skip(
     result: TieredAnalysis,
     analysis: Analysis,
@@ -1493,13 +1535,27 @@ def _record_what_may_be_claimed(
     # the same question this run would have asked (#36).
     depth = {name: i for i, name in enumerate(names)}
 
+    def credited(subset: ChangeSet) -> Optional[str]:
+        return result.credited_tier(subset, entered=entered)
+
     def confirmed_deeper_than(subset: ChangeSet, tier: str) -> bool:
-        found = result.verified_tier(subset)
+        found = credited(subset)
         return found is not None and depth.get(found, -1) > depth[tier]
 
     def shallower_than_entered(subset: ChangeSet) -> bool:
-        found = result.verified_tier(subset)
+        found = credited(subset)
         return found is None or depth.get(found, -1) < depth[entered]
+
+    def earlier_note(sets: Sequence[ChangeSet]) -> str:
+        """``[a, b] at `deep`; [c] at `mid` (not at `deep`)``."""
+
+        def one(subset: ChangeSet) -> str:
+            found = credited(subset)
+            short = names[depth[found] + 1 :] if found else []
+            tail = f" (not at {', '.join(f'`{n}`' for n in short)})" if short else ""
+            return f"[{', '.join(sorted(subset))}] at `{found}`{tail}"
+
+        return "; ".join(one(s) for s in sets)
 
     analysis.unverified_sets = (
         []
@@ -1525,11 +1581,22 @@ def _record_what_may_be_claimed(
             "tier that did accept them."
         )
     elif analysis.aborted_tier:
+        earlier = [
+            s
+            for s in analysis.maximal_sets
+            if confirmed_deeper_than(s, analysis.aborted_tier)
+        ]
         analysis.notes.append(
             f"Validation was tiered ({chain}) but `{analysis.aborted_tier}` "
             f"aborted, so only `{deepest}` is claimed. A set marked NOT VERIFIED "
             f"was not confirmed at `{analysis.aborted_tier}`; one it did confirm "
-            "is not marked."
+            "before aborting is not marked."
+            + (
+                " An earlier run against the same commits and validators confirmed "
+                f"deeper: {earlier_note(earlier)}."
+                if earlier
+                else ""
+            )
         )
     else:
         missing = ", ".join(f"`{n}`" for n in names[names.index(deepest) + 1 :])
@@ -1543,13 +1610,10 @@ def _record_what_may_be_claimed(
                 f"not run is not a tier that passed."
             )
         else:
-            confirmed = "; ".join(
-                f"[{', '.join(sorted(s))}] at `{result.verified_tier(s)}`"
-                for s in earlier
-            )
+            confirmed = earlier_note(earlier)
             rest = (
-                " The others were NOT validated past "
-                f"`{deepest}`, and a tier that did not run is not a tier that passed."
+                f" The others were NOT validated at {missing}, and a tier that "
+                "did not run is not a tier that passed."
                 if len(earlier) < len(analysis.maximal_sets)
                 else ""
             )
