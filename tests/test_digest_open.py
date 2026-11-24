@@ -85,6 +85,9 @@ def test_the_cli_refuses_when_pytest_is_missing(repo, tmp_path, monkeypatch):
     bin_dir.mkdir()
     (bin_dir / "git").symlink_to(shutil.which("git"))  # git yes, pytest no
     monkeypatch.setenv("PATH", str(bin_dir))
+    # Hermetic: the user's global git config (LFS filters, a hooks path of
+    # scripts that need tools missing from this PATH) must not break the worktree.
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", os.devnull)
     out = cli.branches(["feat-b", "feat-d"], repo=repo, base="main")
     assert "cannot run yet" in str(out) and "pytest" in str(out)
 
