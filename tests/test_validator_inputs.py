@@ -266,7 +266,13 @@ def test_inputs_with_an_unfingerprinted_pytest_selection_are_refused(tmp_path):
         pytest_validation(select_paths=lambda wt: [], inputs=[str(tmp_path)])
 
 
-def test_a_bytecode_cache_written_by_the_run_is_not_an_edit(repo, tmp_path):
+def test_a_bytecode_cache_written_by_the_run_is_not_an_edit(
+    repo, tmp_path, monkeypatch
+):
+    # Hermetic: PYTHONSAFEPATH / PYTHONDONTWRITEBYTECODE in the caller's
+    # environment would stop the script importing its sibling or writing a cache.
+    monkeypatch.delenv("PYTHONSAFEPATH", raising=False)
+    monkeypatch.delenv("PYTHONDONTWRITEBYTECODE", raising=False)
     checks = tmp_path / "checks"
     checks.mkdir()
     (checks / "helper.py").write_text("OK = 0\n")
